@@ -26,3 +26,4 @@ thumbs.db
 
 storage/app/publicpublic/robots.txt
 .env
+public/storage
