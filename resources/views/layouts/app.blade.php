@@ -13,6 +13,13 @@
     <!-- Styles -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
     @stack('styles')
+
+    {{-- **Tutaj dodajemy meta‐tagi noindex/nofollow** --}}
+    @if(app()->environment() !== 'production')
+        <meta name="robots" content="noindex, nofollow">
+    @else
+        <meta name="robots" content="index, follow">
+    @endif    
 </head>
 <body>
     @include('layouts.navigation')
