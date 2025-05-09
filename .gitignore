@@ -5,7 +5,7 @@ composer.lock              # commituj tylko, gdy faktycznie chcesz „zamrozić�
 # --- Node / Vite ---
 node_modules/
 public/hot                 # plik Hot Module Reload
-public/build               # artefakty Vite (prod generujesz w CI)
+# public/build               # artefakty Vite (prod generujesz w CI)
 
 # --- Laravel ---
 storage/*
