@@ -1,5 +1,27 @@
+# --- PHP / Composer ---
 vendor/
+composer.lock              # commituj tylko, gdy faktycznie chcesz „zamrozić” wersje
+
+# --- Node / Vite ---
 node_modules/
-.env
-Dockerfile
-*.log
+public/hot                 # plik Hot Module Reload
+public/build               # artefakty Vite (prod generujesz w CI)
+
+# --- Laravel ---
+storage/*
+!storage/.gitignore        # zachowaj puste foldery
+bootstrap/cache/*
+!.docker                    # własne skrypty/konfiguracje dla Dockera
+
+# --- Env & Secrets ---
+.env                       # lokalny
+.env.*.enc                 # zaszyfrowane (laravel env:encrypt)
+.env.*.json                # dla direnv/dotenv-vault
+
+# --- IDE / OS ---
+.idea/
+.vscode/
+.DS_Store
+thumbs.db
+
+storage/app/public
