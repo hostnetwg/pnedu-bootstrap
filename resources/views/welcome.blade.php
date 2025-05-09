@@ -106,54 +106,6 @@
     </button>
 </div>
 
-<!-- ===== FEATURED SECTION ====================================== -->
-<section class="py-5 bg-light">
-    <div class="container">
-        <div class="row">
-            <div class="col-lg-8 mx-auto text-center">
-                <div class="badge bg-primary text-white mb-3">Odkryj nasze możliwości</div>
-                <h2 class="display-5 fw-bold mb-4">Wsparcie dla nauczycieli <span class="text-primary">na każdym poziomie</span></h2>
-                <p class="lead mb-5">Oferujemy kompleksowe wsparcie dla nauczycieli i placówek edukacyjnych. Wszystkie nasze szkolenia są prowadzone przez doświadczonych praktyków i dostosowane do aktualnych potrzeb edukacji.</p>
-            </div>
-        </div>
-        <div class="row g-4">
-            <div class="col-md-4">
-                <div class="card h-100 border-0 shadow-sm hover-lift">
-                    <div class="card-body p-4 text-center">
-                        <div class="rounded-circle bg-primary bg-opacity-10 p-3 d-inline-flex mb-3">
-                            <i class="bi bi-mortarboard fs-1 text-primary"></i>
-                        </div>
-                        <h3 class="h5 fw-bold">Szkolenia dla nauczycieli</h3>
-                        <p class="text-muted">Praktyczne warsztaty rozwijające kompetencje metodyczne i cyfrowe</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card h-100 border-0 shadow-sm hover-lift">
-                    <div class="card-body p-4 text-center">
-                        <div class="rounded-circle bg-primary bg-opacity-10 p-3 d-inline-flex mb-3">
-                            <i class="bi bi-briefcase fs-1 text-primary"></i>
-                        </div>
-                        <h3 class="h5 fw-bold">Wsparcie dla dyrektorów</h3>
-                        <p class="text-muted">Szkolenia z zarządzania placówką i prawa oświatowego</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card h-100 border-0 shadow-sm hover-lift">
-                    <div class="card-body p-4 text-center">
-                        <div class="rounded-circle bg-primary bg-opacity-10 p-3 d-inline-flex mb-3">
-                            <i class="bi bi-laptop fs-1 text-primary"></i>
-                        </div>
-                        <h3 class="h5 fw-bold">Technologie w edukacji</h3>
-                        <p class="text-muted">Nowoczesne narzędzia cyfrowe wspierające proces nauczania</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
 <!-- ===== UPCOMING COURSES ======================================= -->
 <section id="courses" class="py-5">
     <div class="container">
@@ -241,6 +193,54 @@
                         <div class="mt-auto pt-3">
                             <a href="#" class="btn btn-primary w-100 hover-lift">Zapisz szkołę</a>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===== FEATURED SECTION ====================================== -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 mx-auto text-center">
+                <div class="badge bg-primary text-white mb-3">Odkryj nasze możliwości</div>
+                <h2 class="display-5 fw-bold mb-4">Wsparcie dla nauczycieli <span class="text-primary">na każdym poziomie</span></h2>
+                <p class="lead mb-5">Oferujemy kompleksowe wsparcie dla nauczycieli i placówek edukacyjnych. Wszystkie nasze szkolenia są prowadzone przez doświadczonych praktyków i dostosowane do aktualnych potrzeb edukacji.</p>
+            </div>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm hover-lift">
+                    <div class="card-body p-4 text-center">
+                        <div class="rounded-circle bg-primary bg-opacity-10 p-3 d-inline-flex mb-3">
+                            <i class="bi bi-mortarboard fs-1 text-primary"></i>
+                        </div>
+                        <h3 class="h5 fw-bold">Szkolenia dla nauczycieli</h3>
+                        <p class="text-muted">Praktyczne warsztaty rozwijające kompetencje metodyczne i cyfrowe</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm hover-lift">
+                    <div class="card-body p-4 text-center">
+                        <div class="rounded-circle bg-primary bg-opacity-10 p-3 d-inline-flex mb-3">
+                            <i class="bi bi-briefcase fs-1 text-primary"></i>
+                        </div>
+                        <h3 class="h5 fw-bold">Wsparcie dla dyrektorów</h3>
+                        <p class="text-muted">Szkolenia z zarządzania placówką i prawa oświatowego</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm hover-lift">
+                    <div class="card-body p-4 text-center">
+                        <div class="rounded-circle bg-primary bg-opacity-10 p-3 d-inline-flex mb-3">
+                            <i class="bi bi-laptop fs-1 text-primary"></i>
+                        </div>
+                        <h3 class="h5 fw-bold">Technologie w edukacji</h3>
+                        <p class="text-muted">Nowoczesne narzędzia cyfrowe wspierające proces nauczania</p>
                     </div>
                 </div>
             </div>
