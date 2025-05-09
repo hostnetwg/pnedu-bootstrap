@@ -24,4 +24,5 @@ bootstrap/cache/*
 .DS_Store
 thumbs.db
 
-storage/app/public
+storage/app/publicpublic/robots.txt
+.env
