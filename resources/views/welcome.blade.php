@@ -12,7 +12,9 @@
     <div class="container">
         <p class="lead fw-semibold mb-0">
             Niepubliczny Ośrodek Doskonalenia Nauczycieli "Platforma Nowoczesnej Edukacji"<br>
-            <span class="fst-italic">AKREDYTACJA MAZOWIECKIEGO KURATORA OŚWIATY</span>
+            <span style="color: #c6a300; font-style: normal; font-weight: 600;">
+                AKREDYTACJA MAZOWIECKIEGO KURATORA OŚWIATY
+            </span>
         </p>
     </div>
 </div>
@@ -36,7 +38,10 @@
                         <a href="#courses" class="btn btn-light btn-lg">Sprawdź ofertę</a>
                     </div>
                     <div class="col-md-6 d-none d-md-block">
-                        <img src="https://placehold.co/640x320?text=Szkolenia+dla+nauczycieli" class="img-fluid rounded shadow-lg" alt="Szkolenia dla nauczycieli">
+                        <img src="{{ asset('images/carousel/szkolenia_dla_nauczycieli_02.png') }}"
+                                class="d-block w-100"
+                                alt="Szkolenia dla nauczycieli"
+                                style="height: 320px; object-fit: cover;">
                     </div>
                 </div>
             </div>
@@ -50,7 +55,7 @@
                         <a href="#courses" class="btn btn-light btn-lg">Dowiedz się więcej</a>
                     </div>
                     <div class="col-md-6 d-none d-md-block">
-                        <img src="https://placehold.co/640x320?text=Szkolenia+dla+dyrektorów" class="img-fluid rounded shadow-lg" alt="Szkolenia dla dyrektorów">
+                        <img src="images/carousel/szkolenia_dla_dyrektorow_01.png" class="img-fluid rounded shadow-lg" alt="Szkolenia dla dyrektorów">
                     </div>
                 </div>
             </div>
@@ -64,7 +69,7 @@
                         <a href="#courses" class="btn btn-light btn-lg">Zobacz ofertę</a>
                     </div>
                     <div class="col-md-6 d-none d-md-block">
-                        <img src="https://placehold.co/640x320?text=Rady+pedagogiczne" class="img-fluid rounded shadow-lg" alt="Rady pedagogiczne">
+                        <img src="images/carousel/szkolenia_dla_rad_pedagogicznych_04.png" class="img-fluid rounded shadow-lg" alt="Rady pedagogiczne">
                     </div>
                 </div>
             </div>
@@ -78,7 +83,7 @@
                         <a href="#courses" class="btn btn-light btn-lg">Zapisz się teraz</a>
                     </div>
                     <div class="col-md-6 d-none d-md-block">
-                        <img src="https://placehold.co/640x320?text=Bezpłatne+webinary" class="img-fluid rounded shadow-lg" alt="Bezpłatne webinary">
+                        <img src="images/carousel/bezplatne_webinary_01.png" class="img-fluid rounded shadow-lg" alt="Bezpłatne webinary">
                     </div>
                 </div>
             </div>
@@ -92,7 +97,7 @@
                         <a href="#courses" class="btn btn-light btn-lg">Poznaj szczegóły</a>
                     </div>
                     <div class="col-md-6 d-none d-md-block">
-                        <img src="https://placehold.co/640x320?text=TIK+w+pracy+nauczyciela" class="img-fluid rounded shadow-lg" alt="TIK w pracy nauczyciela">
+                        <img src="images/carousel/tik_w_pracy_nauczyciela_01.png" class="img-fluid rounded shadow-lg" alt="TIK w pracy nauczyciela">
                     </div>
                 </div>
             </div>
