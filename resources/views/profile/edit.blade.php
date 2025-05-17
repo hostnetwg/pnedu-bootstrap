@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container pt-3">
+<div class="container pt-3 mb-5">
     <div class="row justify-content-center">
         <div class="col-md-8">
             <h2 class="mb-3">{{ __('Profile') }}</h2>

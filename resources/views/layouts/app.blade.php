@@ -21,13 +21,13 @@
         <meta name="robots" content="index, follow">
     @endif    
 </head>
-<body>
+<body class="d-flex flex-column min-vh-100">
     @include('layouts.navigation')
 
-    <main class="@yield('main-padding', 'pt-4')">
+    <main class="flex-grow-1">
         @yield('content')
     </main>
-
+    @include('layouts.footer')
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/swiper@9/swiper-bundle.min.js"></script>
