@@ -250,32 +250,38 @@
     </div>
 </section>
 
-<!-- ===== STATS SECTION WITH COUNTER ============================= -->
-<section class="py-5 bg-primary text-white position-relative">
-    <div class="position-absolute top-0 start-0 w-100 h-100 opacity-15">
-        <div class="h-100 w-100" style="background-image: url('https://placehold.co/1200x400?text=Background'); background-size: cover;"></div>
-    </div>
-    <div class="container position-relative">
-        <div class="row text-center g-5" data-aos="fade-up">
+<!-- ===== STATS SECTION WITH COUNTER (CLEAN & LOW HEIGHT) ============================= -->
+<section class="py-3" style="background: #f6f8fa;">
+    <div class="container">
+        <div class="row text-center g-4 align-items-center" data-aos="fade-up">
             <div class="col-6 col-md-3">
-                <div class="display-4 fw-bold mb-1"><span class="counter" data-target="10000">0</span>+</div>
-                <p class="text-white-50 fw-light">Przeszkolonych nauczycieli</p>
+                <div class="display-5 fw-bold mb-1" style="color:#0056b3;">
+                    <span class="counter" data-target="10000">0</span>+
+                </div>
+                <p class="text-secondary fw-light small">Przeszkolonych nauczycieli</p>
             </div>
             <div class="col-6 col-md-3">
-                <div class="display-4 fw-bold mb-1"><span class="counter" data-target="200">0</span>+</div>
-                <p class="text-white-50 fw-light">Webinarów rocznie</p>
+                <div class="display-5 fw-bold mb-1" style="color:#0056b3;">
+                    <span class="counter" data-target="200">0</span>+
+                </div>
+                <p class="text-secondary fw-light small">Webinarów rocznie</p>
             </div>
             <div class="col-6 col-md-3">
-                <div class="display-4 fw-bold mb-1">★<span class="counter" data-target="4.9">0</span></div>
-                <p class="text-white-50 fw-light">Średnia ocena</p>
+                <div class="display-5 fw-bold mb-1" style="color:#0056b3;">
+                    ★<span class="counter" data-target="4.9">0</span>
+                </div>
+                <p class="text-secondary fw-light small">Średnia ocena</p>
             </div>
             <div class="col-6 col-md-3">
-                <div class="display-4 fw-bold mb-1"><span class="counter" data-target="100">0</span>%</div>
-                <p class="text-white-50 fw-light">Certyfikowanych szkoleń</p>
+                <div class="display-5 fw-bold mb-1" style="color:#0056b3;">
+                    <span class="counter" data-target="100">0</span>%
+                </div>
+                <p class="text-secondary fw-light small">Certyfikowanych szkoleń</p>
             </div>
         </div>
     </div>
 </section>
+
 
 <!-- ===== WHY CHOOSE US =========================================== -->
 <section class="py-5">
