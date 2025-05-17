@@ -532,11 +532,11 @@
                     </li>
                     <li class="mb-3 d-flex">
                         <i class="bi bi-envelope-fill me-2 text-primary"></i>
-                        <span>kontakt@pnedu.pl</span>
+                        <span>kontakt@nowoczesna-edukacja.pl</span>
                     </li>
                     <li class="mb-3 d-flex">
                         <i class="bi bi-geo-alt-fill me-2 text-primary"></i>
-                        <span>ul. Edukacyjna 123, 00-001 Warszawa</span>
+                        <span>ul. A. Zamoyskiego 30/14, 09-320 Bieżuń</span>
                     </li>
                 </ul>
             </div>
