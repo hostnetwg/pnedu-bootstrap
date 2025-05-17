@@ -5,10 +5,18 @@
     • Hiperłącza pozostają na "#" – właściwe route() dodasz później.
 --}}
 
-<nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
+<nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm sticky-top">
     <div class="container">
         {{-- Logo – zawsze prowadzi na stronę główną --}}
-        <a class="navbar-brand fw-bold" href="#">Platforma&nbsp;Nowoczesnej&nbsp;Edukacji</a>
+        <a href="{{ route('home') }}" class="navbar-brand d-flex align-items-center fw-bold">
+            <img src="{{ asset('images/Logo_PNG.svg') }}"
+                alt="Logo Platforma Nowoczesnej Edukacji"
+                width="52"
+                height="52"
+                class="me-2"
+                style="object-fit:contain; margin-top: -8px; margin-bottom: -8px;">
+            <span>Platforma&nbsp;Nowoczesnej&nbsp;Edukacji</span>
+        </a>
 
         {{-- Burger (mobile) --}}
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar"
@@ -22,7 +30,7 @@
             <ul class="navbar-nav me-auto mb-2 mb-lg-0"><!-- me-auto = elementy doklejone do lewej -->
 
                 {{-- Start --}}
-                <li class="nav-item"><a class="nav-link" href="#">Start</a></li>
+                <li class="nav-item"><a  href="{{ route('home') }}" class="nav-link" href="#">Start</a></li>
 
                 {{-- SZKOLENIA OTWARTE (dropdown) --}}
                 <li class="nav-item dropdown">
@@ -65,7 +73,8 @@
                             {{ Auth::user()->name }}
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                            <li><a class="dropdown-item" href="#">Panel użytkownika</a></li>
+                            <li><a href="{{ route('dashboard') }}" class="dropdown-item" href="#">Panel użytkownika</a></li>
+                            <li><a href="{{ route('profile.edit') }}" class="dropdown-item" href="#">Edytuj profil</a></li>                            
                             <li>
                                 <form method="POST" action="{{ route('logout') }}">
                                     @csrf

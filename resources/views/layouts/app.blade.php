@@ -24,7 +24,7 @@
 <body>
     @include('layouts.navigation')
 
-    <main class="pt-5">
+    <main class="@yield('main-padding', 'pt-4')">
         @yield('content')
     </main>
 

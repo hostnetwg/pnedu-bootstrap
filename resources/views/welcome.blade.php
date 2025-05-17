@@ -5,6 +5,8 @@
 
 @section('content')
 
+@section('main-padding', '')
+
 <!-- ===== HERO BANNER ======================================= -->
 <div class="bg-primary bg-gradient text-white py-3 text-center">
     <div class="container">
@@ -25,7 +27,7 @@
         <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="4" aria-label="Slide 5"></button>
     </div>
     <div class="carousel-inner">
-        <div class="carousel-item active" style="height: 500px; background: linear-gradient(135deg, #0a1126 0%, #1a2a56 100%);">
+        <div class="carousel-item active" style="height: 400px; background: linear-gradient(135deg, #0a1126 0%, #1a2a56 100%);">
             <div class="container h-100">
                 <div class="row h-100 align-items-center">
                     <div class="col-md-6 text-white">
@@ -34,12 +36,12 @@
                         <a href="#courses" class="btn btn-light btn-lg">Sprawdź ofertę</a>
                     </div>
                     <div class="col-md-6 d-none d-md-block">
-                        <img src="https://placehold.co/600x400?text=Szkolenia+dla+nauczycieli" class="img-fluid rounded shadow-lg" alt="Szkolenia dla nauczycieli">
+                        <img src="https://placehold.co/640x320?text=Szkolenia+dla+nauczycieli" class="img-fluid rounded shadow-lg" alt="Szkolenia dla nauczycieli">
                     </div>
                 </div>
             </div>
         </div>
-        <div class="carousel-item" style="height: 500px; background: linear-gradient(135deg, #14213d 0%, #2a3f5f 100%);">
+        <div class="carousel-item" style="height: 400px; background: linear-gradient(135deg, #14213d 0%, #2a3f5f 100%);">
             <div class="container h-100">
                 <div class="row h-100 align-items-center">
                     <div class="col-md-6 text-white">
@@ -48,12 +50,12 @@
                         <a href="#courses" class="btn btn-light btn-lg">Dowiedz się więcej</a>
                     </div>
                     <div class="col-md-6 d-none d-md-block">
-                        <img src="https://placehold.co/600x400?text=Szkolenia+dla+dyrektorów" class="img-fluid rounded shadow-lg" alt="Szkolenia dla dyrektorów">
+                        <img src="https://placehold.co/640x320?text=Szkolenia+dla+dyrektorów" class="img-fluid rounded shadow-lg" alt="Szkolenia dla dyrektorów">
                     </div>
                 </div>
             </div>
         </div>
-        <div class="carousel-item" style="height: 500px; background: linear-gradient(135deg, #1b1f3b 0%, #2d3558 100%);">
+        <div class="carousel-item" style="height: 400px; background: linear-gradient(135deg, #1b1f3b 0%, #2d3558 100%);">
             <div class="container h-100">
                 <div class="row h-100 align-items-center">
                     <div class="col-md-6 text-white">
@@ -62,12 +64,12 @@
                         <a href="#courses" class="btn btn-light btn-lg">Zobacz ofertę</a>
                     </div>
                     <div class="col-md-6 d-none d-md-block">
-                        <img src="https://placehold.co/600x400?text=Rady+pedagogiczne" class="img-fluid rounded shadow-lg" alt="Rady pedagogiczne">
+                        <img src="https://placehold.co/640x320?text=Rady+pedagogiczne" class="img-fluid rounded shadow-lg" alt="Rady pedagogiczne">
                     </div>
                 </div>
             </div>
         </div>
-        <div class="carousel-item" style="height: 500px; background: linear-gradient(135deg, #0b132b 0%, #1c2541 100%);">
+        <div class="carousel-item" style="height: 400px; background: linear-gradient(135deg, #0b132b 0%, #1c2541 100%);">
             <div class="container h-100">
                 <div class="row h-100 align-items-center">
                     <div class="col-md-6 text-white">
@@ -76,12 +78,12 @@
                         <a href="#courses" class="btn btn-light btn-lg">Zapisz się teraz</a>
                     </div>
                     <div class="col-md-6 d-none d-md-block">
-                        <img src="https://placehold.co/600x400?text=Bezpłatne+webinary" class="img-fluid rounded shadow-lg" alt="Bezpłatne webinary">
+                        <img src="https://placehold.co/640x320?text=Bezpłatne+webinary" class="img-fluid rounded shadow-lg" alt="Bezpłatne webinary">
                     </div>
                 </div>
             </div>
         </div>
-        <div class="carousel-item" style="height: 500px; background: linear-gradient(135deg, #061a40 0%, #0b2b63 100%);">
+        <div class="carousel-item" style="height: 400px; background: linear-gradient(135deg, #061a40 0%, #0b2b63 100%);">
             <div class="container h-100">
                 <div class="row h-100 align-items-center">
                     <div class="col-md-6 text-white">
@@ -90,7 +92,7 @@
                         <a href="#courses" class="btn btn-light btn-lg">Poznaj szczegóły</a>
                     </div>
                     <div class="col-md-6 d-none d-md-block">
-                        <img src="https://placehold.co/600x400?text=TIK+w+pracy+nauczyciela" class="img-fluid rounded shadow-lg" alt="TIK w pracy nauczyciela">
+                        <img src="https://placehold.co/640x320?text=TIK+w+pracy+nauczyciela" class="img-fluid rounded shadow-lg" alt="TIK w pracy nauczyciela">
                     </div>
                 </div>
             </div>
