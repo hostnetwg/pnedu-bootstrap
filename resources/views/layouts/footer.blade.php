@@ -63,9 +63,9 @@
         <div class="d-flex flex-column flex-md-row justify-content-between align-items-center small">
             <p class="mb-2 mb-md-0 text-light opacity-75">&copy; {{ date('Y') }} Platforma Nowoczesnej Edukacji. Wszelkie prawa zastrzeżone.</p>
             <ul class="list-inline mb-0">
-                <li class="list-inline-item"><a href="#" class="text-light opacity-75 text-decoration-none hover-lift">Polityka prywatności</a></li>
-                <li class="list-inline-item"><a href="#" class="text-light opacity-75 text-decoration-none hover-lift">Regulamin</a></li>
-                <li class="list-inline-item"><a href="#" class="text-light opacity-75 text-decoration-none hover-lift">RODO</a></li>
+                <li class="list-inline-item"><a href="{{ route('polityka-prywatnosci') }}" class="text-light opacity-75 text-decoration-none hover-lift">Polityka prywatności</a></li>
+                <li class="list-inline-item"><a href="{{ route('regulamin') }}" class="text-light opacity-75 text-decoration-none hover-lift">Regulamin</a></li>
+                <li class="list-inline-item"><a href="{{ route('rodo') }}" class="text-light opacity-75 text-decoration-none hover-lift">RODO</a></li>
             </ul>
         </div>
     </div>
