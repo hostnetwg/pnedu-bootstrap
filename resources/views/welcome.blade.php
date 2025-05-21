@@ -131,22 +131,29 @@
             <div class="col">
                 <div class="card h-100 border-0 shadow-sm hover-lift">
                     <div class="position-relative">
-                        <img src="https://placehold.co/600x300/0d6efd/ffffff?text=Canva+%F0%9F%96%A8%EF%B8%8F" class="card-img-top" alt="Canva">
-                        <div class="position-absolute top-0 end-0 bg-white p-2 m-2 rounded-pill">
-                            <span class="text-primary fw-bold">169 zł</span>
-                        </div>
+                        <img src="images\courses\2025-05-22_09-00.png" class="card-img-top" alt="Ocenianie uczniów w szkole w myśl prawa oświatowego.">
                     </div>
                     <div class="card-body d-flex flex-column p-4">
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <span class="badge bg-light text-dark">
-                                <i class="bi bi-calendar me-1"></i> 12 czerwca 2025
+                                <i class="bi bi-calendar me-1"></i> 22 maja 2025
                             </span>
                             <span class="badge bg-light text-dark">
-                                <i class="bi bi-clock me-1"></i> 17:00
+                                <i class="bi bi-clock me-1"></i> 09:00
                             </span>
                         </div>
-                        <h5 class="card-title fw-bold mb-3">Praktyczne podstawy Canvy w edukacji</h5>
-                        <p class="card-text">Tworzenie materiałów edukacyjnych, certyfikatów i grafik na potrzeby szkoły.</p>
+                        <h5 class="card-title fw-bold mb-3">Ocenianie uczniów w szkole w myśl prawa oświatowego.</h5>
+                        <p class="card-text">
+                            <ul>
+                                <li>Data: <strong>22 maja 2025 r. (czwartek)</strong></li>
+                                <li>Czas: <strong>9:00, 4 godziny</strong></li>
+                                <li>Platforma: <strong>ClickMeeting</strong></li>
+                                <li>Dostęp do nagrania: <strong>2 miesiące</strong></li>
+                                <li>Dodatkowo: <strong>materiały, certyfikat</strong></li>
+                                <li>Prowadzący: <strong>dr Roman Lorens</strong></li>
+                                <li>Cena: <strong>365 zł (brutto za osobę)</strong></li>
+                            </ul>
+                        </p>
                         <div class="mt-auto pt-3">
                             <a href="#" class="btn btn-primary w-100 hover-lift">Zapisz się</a>
                         </div>
@@ -156,22 +163,29 @@
             <div class="col">
                 <div class="card h-100 border-0 shadow-sm hover-lift">
                     <div class="position-relative">
-                        <img src="https://placehold.co/600x300/6f42c1/ffffff?text=AI+%E2%9C%8C%EF%B8%8F" class="card-img-top" alt="AI">
-                        <div class="position-absolute top-0 end-0 bg-white p-2 m-2 rounded-pill">
-                            <span class="text-primary fw-bold">189 zł</span>
-                        </div>
+                        <img src="images\courses\2025-05-27_12-00.png" class="card-img-top" alt="Podsumowanie pracy szkoły i nadzoru pedagogicznego.">
                     </div>
                     <div class="card-body d-flex flex-column p-4">
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <span class="badge bg-light text-dark">
-                                <i class="bi bi-calendar me-1"></i> 20 czerwca 2025
+                                <i class="bi bi-calendar me-1"></i> 27 maja 2025
                             </span>
                             <span class="badge bg-light text-dark">
-                                <i class="bi bi-clock me-1"></i> 18:30
+                                <i class="bi bi-clock me-1"></i> 12:00
                             </span>
                         </div>
-                        <h5 class="card-title fw-bold mb-3">Sztuczna inteligencja w pracy nauczyciela</h5>
-                        <p class="card-text">Narzędzia AI wspierające przygotowanie lekcji i indywidualizację pracy z uczniem.</p>
+                        <h5 class="card-title fw-bold mb-3">Podsumowanie pracy szkoły i nadzoru pedagogicznego.</h5>
+                        <p class="card-text">
+                            <ul>
+                                <li>Data: <strong>27 maja 2025 r. (wtorek)</strong></li>
+                                <li>Czas: <strong>12:00, 3 godziny</strong></li>
+                                <li>Platforma: <strong>ClickMeeting</strong></li>
+                                <li>Dostęp do nagrania: <strong>2 miesiące</strong></li>
+                                <li>Dodatkowo: <strong>materiały, certyfikat</strong></li>
+                                <li>Prowadząca: <strong>Anna Wojkowska</strong></li>
+                                <li>Cena: <strong>249 zł (brutto za osobę)</strong></li>
+                            </ul>
+                        </p>
                         <div class="mt-auto pt-3">
                             <a href="#" class="btn btn-primary w-100 hover-lift">Zapisz się</a>
                         </div>
@@ -181,28 +195,70 @@
             <div class="col">
                 <div class="card h-100 border-0 shadow-sm hover-lift">
                     <div class="position-relative">
-                        <img src="https://placehold.co/600x300/d63384/ffffff?text=Dyrektor+%F0%9F%91%8D" class="card-img-top" alt="Dyrektor">
-                        <div class="position-absolute top-0 end-0 bg-white p-2 m-2 rounded-pill">
-                            <span class="text-primary fw-bold">239 zł</span>
-                        </div>
+                        <img src="images\courses\2025-05-27_18-00.png" class="card-img-top" alt="Dyrektor">
                     </div>
                     <div class="card-body d-flex flex-column p-4">
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <span class="badge bg-light text-dark">
-                                <i class="bi bi-calendar me-1"></i> 28 czerwca 2025
+                                <i class="bi bi-calendar me-1"></i> 27 maja 2025
                             </span>
                             <span class="badge bg-light text-dark">
-                                <i class="bi bi-clock me-1"></i> 16:00
+                                <i class="bi bi-clock me-1"></i> 18:00
                             </span>
                         </div>
-                        <h5 class="card-title fw-bold mb-3">Szkolenie dla dyrektorów: obowiązki i prawo</h5>
-                        <p class="card-text">Kompleksowe omówienie aktualnych przepisów oraz organizacji pracy szkoły.</p>
+                        <h5 class="card-title fw-bold mb-3">Jak komunikować się z rodzicem by budować dobre relacje.</h5>
+                        <p class="card-text">
+                            <ul>
+                                <li>Data: <strong>27 maja 2025 r. (wtorek)</strong></li>
+                                <li>Czas: <strong>18:00, 2 godziny dydaktyczne</strong></li>
+                                <li>Platforma: <strong>ClickMeeting</strong></li>
+                                <li>Dostęp do nagrania: <strong>2 miesiące</strong></li>
+                                <li>Dodatkowo: <strong>certyfikat</strong></li>
+                                <li>Prowadzący: <strong>Mateusz Marciniak</strong></li>
+                                <li>Cena: <strong>159 zł (brutto za osobę)</strong></li>
+                            </ul>
+                        </p>
                         <div class="mt-auto pt-3">
-                            <a href="#" class="btn btn-primary w-100 hover-lift">Zapisz szkołę</a>
+                            <a href="#" class="btn btn-primary w-100 hover-lift">Zapisz się</a>
                         </div>
                     </div>
                 </div>
             </div>
+
+            <div class="col">
+                <div class="card h-100 border-0 shadow-sm hover-lift">
+                    <div class="position-relative">
+                        <img src="images\courses\2025-05-29_09-00.png" class="card-img-top" alt="Dyrektor">
+                    </div>
+                    <div class="card-body d-flex flex-column p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="badge bg-light text-dark">
+                                <i class="bi bi-calendar me-1"></i> 29 maja 2025
+                            </span>
+                            <span class="badge bg-light text-dark">
+                                <i class="bi bi-clock me-1"></i> 09:00
+                            </span>
+                        </div>
+                        <h5 class="card-title fw-bold mb-3">Awans zawodowy w oświacie – krok po kroku, bez tajemnic.</h5>
+                        <p class="card-text">
+                            <ul>
+                                <li>Data: <strong>29 maja 2025 r. (wtorekczwartek)</strong></li>
+                                <li>Czas: <strong>09:00, 4 godziny</strong></li>
+                                <li>Platforma: <strong>ClickMeeting</strong></li>
+                                <li>Dostęp do nagrania: <strong>2 miesiące</strong></li>
+                                <li>Dodatkowo: <strong>materiały, certyfikat</strong></li>
+                                <li>Prowadzący: <strong>dr Roman Lorens</strong></li>
+                                <li>Cena: <strong>159 zł (brutto za osobę)</strong></li>
+                            </ul>
+                        </p>
+                        <div class="mt-auto pt-3">
+                            <a href="#" class="btn btn-primary w-100 hover-lift">Zapisz się</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
         </div>
     </div>
 </section>
