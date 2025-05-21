@@ -1,5 +1,5 @@
 <div class="card">
-    <div class="card-header">{{ __('Profile Information') }}</div>
+    <div class="card-header">{{ __('Informacje o profilu') }}</div>
 
     <div class="card-body">
         <form
@@ -16,7 +16,7 @@
 
             <div class="row mb-3">
                 <label for="name" class="col-md-4 col-form-label text-md-end">
-                    {{ __('Name') }}
+                    {{ __('Imię i nazwisko') }}
                 </label>
 
                 <div class="col-md-6">
@@ -32,7 +32,7 @@
 
             <div class="row mb-3">
                 <label for="email" class="col-md-4 col-form-label text-md-end">
-                    {{ __('Email') }}
+                    {{ __('E-mail') }}
                 </label>
 
                 <div class="col-md-6">
@@ -47,16 +47,16 @@
                     @if ($user instanceof \Illuminate\Contracts\Auth\MustVerifyEmail && ! $user->hasVerifiedEmail())
                         <div class="mt-2">
                             <p class="mb-0">
-                                {{ __('Your email address is unverified.') }}
+                                {{ __('Adres e-mail nie został zweryfikowany.') }}
 
-                                <button form="send-verification" class="btn btn-link p-0">
-                                    {{ __('Click here to re-send the verification email.') }}
-                                </button>
+                            <button form="send-verification" class="btn btn-link p-0">
+                                {{ __('Kliknij tutaj, aby ponownie wysłać e-mail weryfikacyjny.') }}
+                            </button>
                             </p>
 
                             @if (session('status') === 'verification-link-sent')
                                 <div class="alert alert-success mt-3 mb-0" role="alert">
-                                    {{ __('A new verification link has been sent to your email address.') }}
+                                    {{ __('Nowy link weryfikacyjny został wysłany na Twój adres e-mail.') }}
                                 </div>
                             @endif
                         </div>
@@ -67,10 +67,10 @@
             <div class="row mb-0">
                 <div class="col-md-6 offset-md-4">
                     <button type="submit" class="btn btn-primary">
-                        {{ __('Save') }}
+                        {{ __('Zapisz') }}
                     </button>
                     @if (session('status') === 'profile-updated')
-                        <span class="m-1 fade-out">{{ __('Saved.') }}</span>
+                        <span class="m-1 fade-out">{{ __('Zapisano.') }}</span>
                     @endif
                 </div>
             </div>

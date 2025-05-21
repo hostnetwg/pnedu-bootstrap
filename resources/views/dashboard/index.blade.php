@@ -34,7 +34,7 @@
                         <div class="card-header">{{ __('Panel użytkownika') }}</div>
 
                         <div class="card-body">
-                            {{ __("You're logged in!") }}
+                            {{ __("Jesteś zalogowany!") }}
                         </div>
                     </div>
                 </div>
