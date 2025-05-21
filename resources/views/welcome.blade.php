@@ -242,7 +242,7 @@
                         <h5 class="card-title fw-bold mb-3">Awans zawodowy w oświacie – krok po kroku, bez tajemnic.</h5>
                         <p class="card-text">
                             <ul>
-                                <li>Data: <strong>29 maja 2025 r. (wtorekczwartek)</strong></li>
+                                <li>Data: <strong>29 maja 2025 r. (czwartek)</strong></li>
                                 <li>Czas: <strong>09:00, 4 godziny</strong></li>
                                 <li>Platforma: <strong>ClickMeeting</strong></li>
                                 <li>Dostęp do nagrania: <strong>2 miesiące</strong></li>
