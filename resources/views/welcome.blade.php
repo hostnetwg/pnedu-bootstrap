@@ -511,7 +511,7 @@
             <div class="col-lg-6">
                 <div class="card border-0 shadow-lg">
                     <div class="card-body p-4 p-md-5">
-                        <form method="POST" action="#">
+                        <form method="POST" action="{{ route('contact.send') }}">
                             @csrf
                             <div class="mb-4">
                                 <label for="name" class="form-label fw-semibold">Imię i nazwisko</label>
@@ -526,7 +526,7 @@
                                 <textarea class="form-control form-control-lg border-0 bg-light" id="message" name="message" rows="5" required></textarea>
                             </div>
                             <div class="mb-4 form-check">
-                                <input type="checkbox" class="form-check-input" id="consent" required>
+                                <input type="checkbox" class="form-check-input" id="consent" name="consent" required>
                                 <label class="form-check-label" for="consent">Wyrażam zgodę na przetwarzanie danych osobowych zgodnie z polityką prywatności.</label>
                             </div>
                             <button type="submit" class="btn btn-primary btn-lg w-100">Wyślij wiadomość</button>

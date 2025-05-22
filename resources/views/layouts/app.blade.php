@@ -24,6 +24,8 @@
 <body class="d-flex flex-column min-vh-100">
     @include('layouts.navigation')
 
+    @include('layouts.alerts')
+
     <main class="flex-grow-1">
         @yield('content')
     </main>
