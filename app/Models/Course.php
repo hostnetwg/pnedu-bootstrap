@@ -32,11 +32,16 @@ class Course extends Model
      */
     protected $fillable = [
         'title',
-        'date',
+        'description',
         'start_date',
         'end_date',
-        'trainer',
+        'is_paid',
+        'type',
+        'category',
         'instructor_id',
+        'image',
+        'is_active',
+        'certificate_format',
     ];
 
     /**
@@ -46,10 +51,8 @@ class Course extends Model
      */
     public function getFormattedDateAttribute()
     {
-        // Check which date field exists and use it
-        if (isset($this->attributes['date'])) {
-            return date('d.m.Y H:i', strtotime($this->date));
-        } elseif (isset($this->attributes['start_date'])) {
+        // Prioritize start_date since that's what exists in the database
+        if (isset($this->attributes['start_date'])) {
             return date('d.m.Y H:i', strtotime($this->start_date));
         } elseif (isset($this->attributes['created_at'])) {
             return date('d.m.Y H:i', strtotime($this->created_at));

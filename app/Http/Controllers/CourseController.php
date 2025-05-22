@@ -18,7 +18,9 @@ class CourseController extends Controller
     {
         try {
             $courses = Course::with('instructor')
-                ->orderBy('date', 'desc')
+                ->where('type', 'online')
+                ->where('is_active', true)
+                ->orderBy('start_date', 'desc')
                 ->get();
             return view('courses.online-live', compact('courses'));
         } catch (Exception $e) {
