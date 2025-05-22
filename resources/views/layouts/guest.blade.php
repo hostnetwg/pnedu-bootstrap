@@ -20,8 +20,14 @@
     <div id="app">
         <nav class="navbar navbar-expand-md navbar-light bg-white shadow-sm">
             <div class="container">
-                <a class="navbar-brand" href="{{ url('/') }}">
-                    {{ config('app.name', 'Laravel') }}
+                <a href="{{ route('home') }}" class="navbar-brand d-flex align-items-center fw-bold">
+                    <img src="{{ asset('images/Logo_PNG.svg') }}"
+                         alt="Logo Platforma Nowoczesnej Edukacji"
+                         width="52"
+                         height="52"
+                         class="me-2"
+                         style="object-fit:contain; margin-top: -8px; margin-bottom: -8px;">
+                    <span>Platforma&nbsp;Nowoczesnej&nbsp;Edukacji</span>
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="{{ __('Toggle navigation') }}">
                     <span class="navbar-toggler-icon"></span>
