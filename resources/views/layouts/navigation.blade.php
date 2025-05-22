@@ -40,8 +40,8 @@
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="openTrainingDropdown">
                         <li><a class="dropdown-item" href="#">Webinar</a></li>
-                        <li><a class="dropdown-item" href="#">Szkolenie online LIVE</a></li>
-                        <li><a class="dropdown-item" href="#">Warsztat online LIVE</a></li>
+                        <li><a class="dropdown-item" href="{{ route('courses.online-live') }}">Szkolenie online LIVE</a></li>
+                        <li><a class="dropdown-item" href="#">Warsztat online LIVE</a></li>
                         <li><a class="dropdown-item" href="#">Kurs online (asynchroniczny)</a></li>
                     </ul>
                 </li>

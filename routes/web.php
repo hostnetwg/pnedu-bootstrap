@@ -29,6 +29,10 @@ Route::get('/blog', function () {
     return view('blog.index');
 })->name('blog.index');
 
+// Szkolenia online LIVE
+Route::get('/szkolenia-online-live', [App\Http\Controllers\CourseController::class, 'onlineLive'])
+    ->name('courses.online-live');
+
 // Artykuły bloga
 Route::get('/blog/sztuczna-inteligencja-w-edukacji', function () {
     return view('blog.sztuczna-inteligencja-w-edukacji');
