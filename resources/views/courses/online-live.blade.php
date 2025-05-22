@@ -27,10 +27,10 @@
             @endif
             
             <div class="mb-4">
-                <form method="GET" action="" class="row g-3 align-items-end">
-                    <div class="col-md-4">
-                        <label for="instructor" class="form-label">Trener</label>
-                        <select name="instructor" id="instructor" class="form-select" onchange="this.form.submit()">
+                <form method="GET" action="" class="row g-2 align-items-end flex-nowrap flex-md-wrap">
+                    <div class="col-auto">
+                        <label for="instructor" class="form-label form-label-sm mb-1">Trener</label>
+                        <select name="instructor" id="instructor" class="form-select form-select-sm" onchange="this.form.submit()">
                             <option value="">Wszyscy trenerzy</option>
                             @foreach($instructors as $instructor)
                                 <option value="{{ $instructor->id }}" @if(isset($instructorId) && $instructorId == $instructor->id) selected @endif>
@@ -39,47 +39,47 @@
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-md-4">
-                        <label for="date_filter" class="form-label">Data szkolenia</label>
-                        <select name="date_filter" id="date_filter" class="form-select" onchange="this.form.submit()">
+                    <div class="col-auto">
+                        <label for="date_filter" class="form-label form-label-sm mb-1">Data</label>
+                        <select name="date_filter" id="date_filter" class="form-select form-select-sm" onchange="this.form.submit()">
                             <option value="all" @if(empty($dateFilter) || $dateFilter === 'all') selected @endif>Wszystkie</option>
                             <option value="upcoming" @if(isset($dateFilter) && $dateFilter === 'upcoming') selected @endif>Nadchodzące</option>
                             <option value="ongoing" @if(isset($dateFilter) && $dateFilter === 'ongoing') selected @endif>W trakcie</option>
                             <option value="archived" @if(isset($dateFilter) && $dateFilter === 'archived') selected @endif>Archiwalne</option>
                         </select>
                     </div>
-                    <div class="col-md-3">
-                        <label for="paid_filter" class="form-label">Płatność</label>
-                        <select name="paid_filter" id="paid_filter" class="form-select" onchange="this.form.submit()">
+                    <div class="col-auto">
+                        <label for="paid_filter" class="form-label form-label-sm mb-1">Płatność</label>
+                        <select name="paid_filter" id="paid_filter" class="form-select form-select-sm" onchange="this.form.submit()">
                             <option value="">Wszystkie</option>
                             <option value="paid" @if(isset($paidFilter) && $paidFilter === 'paid') selected @endif>Płatne</option>
                             <option value="free" @if(isset($paidFilter) && $paidFilter === 'free') selected @endif>Bezpłatne</option>
                         </select>
                     </div>
-                    <div class="col-md-3">
-                        <label for="type_filter" class="form-label">Typ szkolenia</label>
-                        <select name="type_filter" id="type_filter" class="form-select" onchange="this.form.submit()">
+                    <div class="col-auto">
+                        <label for="type_filter" class="form-label form-label-sm mb-1">Typ</label>
+                        <select name="type_filter" id="type_filter" class="form-select form-select-sm" onchange="this.form.submit()">
                             <option value="">Wszystkie</option>
                             <option value="online" @if(isset($typeFilter) && $typeFilter === 'online') selected @endif>Online</option>
                             <option value="offline" @if(isset($typeFilter) && $typeFilter === 'offline') selected @endif>Offline</option>
                         </select>
                     </div>
-                    <div class="col-md-3">
-                        <label for="category_filter" class="form-label">Kategoria</label>
-                        <select name="category_filter" id="category_filter" class="form-select" onchange="this.form.submit()">
+                    <div class="col-auto">
+                        <label for="category_filter" class="form-label form-label-sm mb-1">Kategoria</label>
+                        <select name="category_filter" id="category_filter" class="form-select form-select-sm" onchange="this.form.submit()">
                             <option value="">Wszystkie</option>
                             <option value="otwarte" @if(isset($categoryFilter) && $categoryFilter === 'otwarte') selected @endif>Otwarte</option>
                             <option value="zamknięte" @if(isset($categoryFilter) && $categoryFilter === 'zamknięte') selected @endif>Zamknięte</option>
                         </select>
                     </div>
-                    <div class="col-md-4">
-                        <label for="q" class="form-label">Wyszukaj szkolenie</label>
-                        <input type="text" name="q" id="q" class="form-control" value="{{ old('q', $searchQuery ?? request('q')) }}" placeholder="Wpisz tytuł lub opis..." onkeydown="if(event.key==='Enter'){this.form.submit();}">
+                    <div class="col-auto">
+                        <label for="q" class="form-label form-label-sm mb-1">Szukaj</label>
+                        <input type="text" name="q" id="q" class="form-control form-control-sm" value="{{ old('q', $searchQuery ?? request('q')) }}" placeholder="Tytuł lub opis..." onkeydown="if(event.key==='Enter'){this.form.submit();}">
+                    </div>
+                    <div class="col-auto align-self-end">
+                        <button type="submit" class="btn btn-primary btn-sm">Filtruj</button>
                     </div>
                     <input type="hidden" name="sort" value="{{ $sort ?? 'desc' }}">
-                    <div class="col-md-2">
-                        <button type="submit" class="btn btn-primary">Filtruj</button>
-                    </div>
                 </form>
             </div>
             
