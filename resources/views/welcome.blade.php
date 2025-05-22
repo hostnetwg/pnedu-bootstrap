@@ -123,7 +123,7 @@
                 <p class="lead">Zapoznaj się z naszymi najbliższymi szkoleniami i wybierz te, które najlepiej odpowiadają Twoim potrzebom zawodowym.</p>
             </div>
             <div class="col-lg-6 d-flex align-items-end justify-content-lg-end">
-                <a href="#" class="btn btn-outline-primary rounded-pill px-4">Zobacz wszystkie szkolenia</a>
+                <a href="https://nowoczesna-edukacja.pl" target="_blank" class="btn btn-outline-primary rounded-pill px-4">Zobacz wszystkie szkolenia</a>
             </div>
         </div>
         
@@ -155,7 +155,7 @@
                             </ul>
                         </p>
                         <div class="mt-auto pt-3">
-                            <a href="https://zdalna-lekcja.pl/zamowienia/formularz/?idP=65120" class="btn btn-primary w-100 hover-lift">Zapisz się</a>
+                            <a href="https://zdalna-lekcja.pl/zamowienia/formularz/?idP=65120" target="_blank" class="btn btn-primary w-100 hover-lift">Zapisz się</a>
                         </div>
                     </div>
                 </div>
@@ -187,7 +187,7 @@
                             </ul>
                         </p>
                         <div class="mt-auto pt-3">
-                            <a href="https://zdalna-lekcja.pl/zamowienia/formularz/?idP=65203" class="btn btn-primary w-100 hover-lift">Zapisz się</a>
+                            <a href="https://zdalna-lekcja.pl/zamowienia/formularz/?idP=65203" target="_blank" class="btn btn-primary w-100 hover-lift">Zapisz się</a>
                         </div>
                     </div>
                 </div>
@@ -219,7 +219,7 @@
                             </ul>
                         </p>
                         <div class="mt-auto pt-3">
-                            <a href="https://zdalna-lekcja.pl/zamowienia/formularz/?idP=64904" class="btn btn-primary w-100 hover-lift">Zapisz się</a>
+                            <a href="https://zdalna-lekcja.pl/zamowienia/formularz/?idP=64904" target="_blank" class="btn btn-primary w-100 hover-lift">Zapisz się</a>
                         </div>
                     </div>
                 </div>
@@ -251,7 +251,7 @@
                                 <li>Cena: <strong>159 zł (brutto za osobę)</strong></li>
                             </ul>
                         </p>
-                        <div class="mhttps://zdalna-lekcja.pl/zamowienia/formularz/?idP=65211" class="btn btn-primary w-100 hover-lift">Zapisz się</a>
+                        <div class="mhttps://zdalna-lekcja.pl/zamowienia/formularz/?idP=65211" target="_blank" class="btn btn-primary w-100 hover-lift">Zapisz się</a>
                         </div>
                     </div>
                 </div>
