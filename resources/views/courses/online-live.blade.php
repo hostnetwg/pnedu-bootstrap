@@ -48,6 +48,14 @@
                             <option value="archived" @if(isset($dateFilter) && $dateFilter === 'archived') selected @endif>Archiwalne</option>
                         </select>
                     </div>
+                    <div class="col-md-3">
+                        <label for="paid_filter" class="form-label">Płatność</label>
+                        <select name="paid_filter" id="paid_filter" class="form-select" onchange="this.form.submit()">
+                            <option value="">Wszystkie</option>
+                            <option value="paid" @if(isset($paidFilter) && $paidFilter === 'paid') selected @endif>Płatne</option>
+                            <option value="free" @if(isset($paidFilter) && $paidFilter === 'free') selected @endif>Bezpłatne</option>
+                        </select>
+                    </div>
                     <input type="hidden" name="sort" value="{{ $sort ?? 'desc' }}">
                     <div class="col-md-2">
                         <button type="submit" class="btn btn-primary">Filtruj</button>

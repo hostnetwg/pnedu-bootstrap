@@ -21,6 +21,7 @@ class CourseController extends Controller
             $sort = in_array($sort, ['asc', 'desc']) ? $sort : 'desc';
             $instructorId = $request->query('instructor');
             $dateFilter = $request->query('date_filter', 'all');
+            $paidFilter = $request->query('paid_filter');
 
             // Get instructors who have online courses
             $instructors = \App\Models\Instructor::whereHas('courses', function($q) {
@@ -46,12 +47,23 @@ class CourseController extends Controller
                     });
             }
 
+            if ($paidFilter === 'paid') {
+                $coursesQuery->where('is_paid', 1);
+            } elseif ($paidFilter === 'free') {
+                $coursesQuery->where('is_paid', 0);
+            }
+
             $courses = $coursesQuery
                 ->orderBy('start_date', $sort)
                 ->paginate(20)
-                ->appends(['sort' => $sort, 'instructor' => $instructorId, 'date_filter' => $dateFilter]);
+                ->appends([
+                    'sort' => $sort,
+                    'instructor' => $instructorId,
+                    'date_filter' => $dateFilter,
+                    'paid_filter' => $paidFilter
+                ]);
 
-            return view('courses.online-live', compact('courses', 'sort', 'instructors', 'instructorId', 'dateFilter'));
+            return view('courses.online-live', compact('courses', 'sort', 'instructors', 'instructorId', 'dateFilter', 'paidFilter'));
         } catch (Exception $e) {
             // Log the error for administrators
             Log::error('Error accessing courses: ' . $e->getMessage());
