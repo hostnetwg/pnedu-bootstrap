@@ -44,6 +44,7 @@
                         <select name="date_filter" id="date_filter" class="form-select" onchange="this.form.submit()">
                             <option value="all" @if(empty($dateFilter) || $dateFilter === 'all') selected @endif>Wszystkie</option>
                             <option value="upcoming" @if(isset($dateFilter) && $dateFilter === 'upcoming') selected @endif>Nadchodzące</option>
+                            <option value="ongoing" @if(isset($dateFilter) && $dateFilter === 'ongoing') selected @endif>W trakcie</option>
                             <option value="archived" @if(isset($dateFilter) && $dateFilter === 'archived') selected @endif>Archiwalne</option>
                         </select>
                     </div>

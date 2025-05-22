@@ -36,9 +36,14 @@ class CourseController extends Controller
             }
 
             if ($dateFilter === 'upcoming') {
-                $coursesQuery->where('start_date', '>=', now());
+                $coursesQuery->where('start_date', '>', now());
             } elseif ($dateFilter === 'archived') {
-                $coursesQuery->where('start_date', '<', now());
+                $coursesQuery->whereNotNull('end_date')->where('end_date', '<', now());
+            } elseif ($dateFilter === 'ongoing') {
+                $coursesQuery->where('start_date', '<=', now())
+                    ->where(function($q) {
+                        $q->whereNull('end_date')->orWhere('end_date', '>=', now());
+                    });
             }
 
             $courses = $coursesQuery
