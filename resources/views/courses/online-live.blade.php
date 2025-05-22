@@ -11,8 +11,8 @@
             <div class="card">
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table class="table table-striped">
-                            <thead>
+                        <table class="table table-striped table-hover align-middle">
+                            <thead class="table-dark">
                                 <tr>
                                     <th>Data</th>
                                     <th>Tytuł</th>
@@ -44,6 +44,11 @@
                             </tbody>
                         </table>
                     </div>
+                    @if(!isset($databaseError) || !$databaseError)
+                        <div class="d-flex justify-content-center mt-4">
+                            {{ $courses->links('pagination::bootstrap-4') }}
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>

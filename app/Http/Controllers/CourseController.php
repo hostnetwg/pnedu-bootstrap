@@ -21,7 +21,7 @@ class CourseController extends Controller
                 ->where('type', 'online')
                 ->where('is_active', true)
                 ->orderBy('start_date', 'desc')
-                ->get();
+                ->paginate(20);
             return view('courses.online-live', compact('courses'));
         } catch (Exception $e) {
             // Log the error for administrators
