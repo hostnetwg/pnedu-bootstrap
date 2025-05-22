@@ -22,6 +22,9 @@ class CourseController extends Controller
             $instructorId = $request->query('instructor');
             $dateFilter = $request->query('date_filter', 'all');
             $paidFilter = $request->query('paid_filter');
+            $typeFilter = $request->query('type_filter');
+            $categoryFilter = $request->query('category_filter');
+            $searchQuery = $request->query('q');
 
             // Get instructors who have online courses
             $instructors = \App\Models\Instructor::whereHas('courses', function($q) {
@@ -29,8 +32,13 @@ class CourseController extends Controller
             })->orderBy('last_name')->get();
 
             $coursesQuery = Course::with('instructor')
-                ->where('type', 'online')
                 ->where('is_active', true);
+
+            if ($typeFilter === 'online' || $typeFilter === 'offline') {
+                $coursesQuery->where('type', $typeFilter);
+            } else {
+                $coursesQuery->where('type', 'online'); // default
+            }
 
             if ($instructorId) {
                 $coursesQuery->where('instructor_id', $instructorId);
@@ -53,6 +61,19 @@ class CourseController extends Controller
                 $coursesQuery->where('is_paid', 0);
             }
 
+            if ($categoryFilter === 'otwarte') {
+                $coursesQuery->where('category', 'open');
+            } elseif ($categoryFilter === 'zamknięte') {
+                $coursesQuery->where('category', 'closed');
+            }
+
+            if (!empty($searchQuery)) {
+                $coursesQuery->where(function($q) use ($searchQuery) {
+                    $q->where('title', 'like', '%' . $searchQuery . '%')
+                      ->orWhere('description', 'like', '%' . $searchQuery . '%');
+                });
+            }
+
             $courses = $coursesQuery
                 ->orderBy('start_date', $sort)
                 ->paginate(20)
@@ -60,10 +81,13 @@ class CourseController extends Controller
                     'sort' => $sort,
                     'instructor' => $instructorId,
                     'date_filter' => $dateFilter,
-                    'paid_filter' => $paidFilter
+                    'paid_filter' => $paidFilter,
+                    'type_filter' => $typeFilter,
+                    'category_filter' => $categoryFilter,
+                    'q' => $searchQuery
                 ]);
 
-            return view('courses.online-live', compact('courses', 'sort', 'instructors', 'instructorId', 'dateFilter', 'paidFilter'));
+            return view('courses.online-live', compact('courses', 'sort', 'instructors', 'instructorId', 'dateFilter', 'paidFilter', 'typeFilter', 'categoryFilter', 'searchQuery'));
         } catch (Exception $e) {
             // Log the error for administrators
             Log::error('Error accessing courses: ' . $e->getMessage());

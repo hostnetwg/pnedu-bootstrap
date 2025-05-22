@@ -56,6 +56,26 @@
                             <option value="free" @if(isset($paidFilter) && $paidFilter === 'free') selected @endif>Bezpłatne</option>
                         </select>
                     </div>
+                    <div class="col-md-3">
+                        <label for="type_filter" class="form-label">Typ szkolenia</label>
+                        <select name="type_filter" id="type_filter" class="form-select" onchange="this.form.submit()">
+                            <option value="">Wszystkie</option>
+                            <option value="online" @if(isset($typeFilter) && $typeFilter === 'online') selected @endif>Online</option>
+                            <option value="offline" @if(isset($typeFilter) && $typeFilter === 'offline') selected @endif>Offline</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="category_filter" class="form-label">Kategoria</label>
+                        <select name="category_filter" id="category_filter" class="form-select" onchange="this.form.submit()">
+                            <option value="">Wszystkie</option>
+                            <option value="otwarte" @if(isset($categoryFilter) && $categoryFilter === 'otwarte') selected @endif>Otwarte</option>
+                            <option value="zamknięte" @if(isset($categoryFilter) && $categoryFilter === 'zamknięte') selected @endif>Zamknięte</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="q" class="form-label">Wyszukaj szkolenie</label>
+                        <input type="text" name="q" id="q" class="form-control" value="{{ old('q', $searchQuery ?? request('q')) }}" placeholder="Wpisz tytuł lub opis..." onkeydown="if(event.key==='Enter'){this.form.submit();}">
+                    </div>
                     <input type="hidden" name="sort" value="{{ $sort ?? 'desc' }}">
                     <div class="col-md-2">
                         <button type="submit" class="btn btn-primary">Filtruj</button>
