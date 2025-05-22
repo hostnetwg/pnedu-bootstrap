@@ -251,7 +251,8 @@
                                 <li>Cena: <strong>159 zł (brutto za osobę)</strong></li>
                             </ul>
                         </p>
-                        <div class="mhttps://zdalna-lekcja.pl/zamowienia/formularz/?idP=65211" target="_blank" class="btn btn-primary w-100 hover-lift">Zapisz się</a>
+                        <div class="mt-auto pt-3">
+                            <a href="https://zdalna-lekcja.pl/zamowienia/formularz/?idP=65211" target="_blank" class="btn btn-primary w-100 hover-lift">Zapisz się</a>
                         </div>
                     </div>
                 </div>
