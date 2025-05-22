@@ -7,10 +7,10 @@
                 <h3 class="fw-bold mb-4">Platforma Nowoczesnej Edukacji</h3>
                 <p class="text-light opacity-75 mb-4">Akredytowany Niepubliczny Ośrodek Doskonalenia Nauczycieli. Skuteczne szkolenia i wsparcie dla nauczycieli oraz kadry zarządzającej.</p>
                 <div class="d-flex gap-3 fs-4">
-                    <a href="#" class="text-light opacity-75 hover-lift"><i class="bi bi-facebook"></i></a>
-                    <a href="#" class="text-light opacity-75 hover-lift"><i class="bi bi-instagram"></i></a>
-                    <a href="#" class="text-light opacity-75 hover-lift"><i class="bi bi-youtube"></i></a>
-                    <a href="#" class="text-light opacity-75 hover-lift"><i class="bi bi-linkedin"></i></a>
+                    <a href="https://www.facebook.com/WaldemarGrabowskiEdukacja/" target="_blank" class="text-light opacity-75 hover-lift"><i class="bi bi-facebook"></i></a>
+                    <a href="https://www.instagram.com/platforma.nowoczesnej.edukacji/" target="_blank" class="text-light opacity-75 hover-lift"><i class="bi bi-instagram"></i></a>
+                    <a href="https://www.youtube.com/c/WaldemarGrabowskiEdukacja?sub_confirmation=1" target="_blank" class="text-light opacity-75 hover-lift"><i class="bi bi-youtube"></i></a>
+                    <a href="https://www.linkedin.com/in/waldemar-grabowski/" target="_blank" class="text-light opacity-75 hover-lift"><i class="bi bi-linkedin"></i></a>
                 </div>
             </div>
             
