@@ -97,7 +97,7 @@
                                             } elseif ($end && $end->lt($now)) {
                                                 $rowClass = 'table-secondary text-muted'; // archiwalne
                                             } else {
-                                                $rowClass = 'table-info'; // w trakcie
+                                                $rowClass = 'table-danger'; // w trakcie (teraz czerwony)
                                             }
                                         @endphp
                                         <tr class="{{ $rowClass }}">
