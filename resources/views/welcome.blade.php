@@ -128,137 +128,44 @@
         </div>
         
         <div class="row row-cols-1 row-cols-md-3 g-4" data-aos="fade-up">
-            <div class="col">
-                <div class="card h-100 border-0 shadow-sm hover-lift">
-                    <div class="position-relative">
-                        <img src="images\courses\2025-05-22_09-00.png" class="card-img-top" alt="Ocenianie uczniów w szkole w myśl prawa oświatowego.">
-                    </div>
-                    <div class="card-body d-flex flex-column p-4">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="badge bg-light text-dark">
-                                <i class="bi bi-calendar me-1"></i> 22 maja 2025
-                            </span>
-                            <span class="badge bg-light text-dark">
-                                <i class="bi bi-clock me-1"></i> 09:00
-                            </span>
+            @foreach($courses as $course)
+                <div class="col">
+                    <div class="card h-100 border-0 shadow-sm hover-lift">
+                        <div class="position-relative">
+                            @if(!empty($course->image))
+                                <img src="{{ 'https://adm.pnedu.pl/storage/' . ltrim($course->image, '/') }}" class="card-img-top" alt="{{ $course->title }}">
+                            @else
+                                <div class="card-img-top d-flex align-items-center justify-content-center mb-2" style="width:100%; aspect-ratio:1/1; background:#e9ecef; border: 2px solid #dee2e6; border-radius: .5rem; border-style:dashed;">
+                                    <i class="bi bi-mortarboard" style="font-size: 4rem; color: #f8f9fa;"></i>
+                                </div>
+                            @endif
                         </div>
-                        <h5 class="card-title fw-bold mb-3">Ocenianie uczniów w szkole w myśl prawa oświatowego.</h5>
-                        <p class="card-text">
-                            <ul>
-                                <li>Data: <strong>22 maja 2025 r. (czwartek)</strong></li>
-                                <li>Czas: <strong>9:00, 4 godziny</strong></li>
-                                <li>Platforma: <strong>ClickMeeting</strong></li>
-                                <li>Dostęp do nagrania: <strong>2 miesiące</strong></li>
-                                <li>Dodatkowo: <strong>materiały, certyfikat</strong></li>
-                                <li>Prowadzący: <strong>dr Roman Lorens</strong></li>
-                                <li>Cena: <strong>365 zł (brutto za osobę)</strong></li>
+                        <div class="card-body d-flex flex-column p-4">
+                            <h5 class="card-title fw-bold mb-3">{{ $course->title }}</h5>
+                            @php
+                                $start = \Carbon\Carbon::parse($course->start_date)->locale('pl');
+                                $end = $course->end_date ? \Carbon\Carbon::parse($course->end_date) : null;
+                            @endphp
+                            <ul class="list-unstyled mb-3">
+                                <li><strong>Data:</strong> {{ $start->format('d.m.Y') }}</li>
+                                <li><strong>Godzina:</strong> {{ $start->format('H:i') }}@if($end) ({{ $start->diffInMinutes($end) }} min)@endif</li>
+                                <li><strong>Dzień tygodnia:</strong> {{ $start->translatedFormat('l') }}</li>
                             </ul>
-                        </p>
-                        <div class="mt-auto pt-3">
-                            <a href="https://zdalna-lekcja.pl/zamowienia/formularz/?idP=65120" target="_blank" class="btn btn-primary w-100 hover-lift">Zapisz się</a>
+                            <p class="card-text">
+                                <strong>Trener:</strong> {{ $course->trainer }}
+                            </p>
+                            <div class="mt-auto pt-3">
+                                <a href="{{ $course->registration_url ?? '#' }}" target="_blank"
+                                   class="btn btn-warning w-100 fw-bold d-flex align-items-center justify-content-center gap-2 shadow-sm cta-btn"
+                                   style="font-size:1.15rem; letter-spacing:0.5px;">
+                                    <span>Zapisz się</span>
+                                    <i class="bi bi-arrow-right-circle-fill"></i>
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            <div class="col">
-                <div class="card h-100 border-0 shadow-sm hover-lift">
-                    <div class="position-relative">
-                        <img src="images\courses\2025-05-27_12-00.png" class="card-img-top" alt="Podsumowanie pracy szkoły i nadzoru pedagogicznego.">
-                    </div>
-                    <div class="card-body d-flex flex-column p-4">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="badge bg-light text-dark">
-                                <i class="bi bi-calendar me-1"></i> 27 maja 2025
-                            </span>
-                            <span class="badge bg-light text-dark">
-                                <i class="bi bi-clock me-1"></i> 12:00
-                            </span>
-                        </div>
-                        <h5 class="card-title fw-bold mb-3">Podsumowanie pracy szkoły i nadzoru pedagogicznego.</h5>
-                        <p class="card-text">
-                            <ul>
-                                <li>Data: <strong>27 maja 2025 r. (wtorek)</strong></li>
-                                <li>Czas: <strong>12:00, 3 godziny</strong></li>
-                                <li>Platforma: <strong>ClickMeeting</strong></li>
-                                <li>Dostęp do nagrania: <strong>2 miesiące</strong></li>
-                                <li>Dodatkowo: <strong>materiały, certyfikat</strong></li>
-                                <li>Prowadząca: <strong>Anna Wojkowska</strong></li>
-                                <li>Cena: <strong>249 zł (brutto za osobę)</strong></li>
-                            </ul>
-                        </p>
-                        <div class="mt-auto pt-3">
-                            <a href="https://zdalna-lekcja.pl/zamowienia/formularz/?idP=65203" target="_blank" class="btn btn-primary w-100 hover-lift">Zapisz się</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col">
-                <div class="card h-100 border-0 shadow-sm hover-lift">
-                    <div class="position-relative">
-                        <img src="images\courses\2025-05-27_18-00.png" class="card-img-top" alt="Dyrektor">
-                    </div>
-                    <div class="card-body d-flex flex-column p-4">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="badge bg-light text-dark">
-                                <i class="bi bi-calendar me-1"></i> 27 maja 2025
-                            </span>
-                            <span class="badge bg-light text-dark">
-                                <i class="bi bi-clock me-1"></i> 18:00
-                            </span>
-                        </div>
-                        <h5 class="card-title fw-bold mb-3">Jak komunikować się z rodzicem by budować dobre relacje.</h5>
-                        <p class="card-text">
-                            <ul>
-                                <li>Data: <strong>27 maja 2025 r. (wtorek)</strong></li>
-                                <li>Czas: <strong>18:00, 2 godziny dydaktyczne</strong></li>
-                                <li>Platforma: <strong>ClickMeeting</strong></li>
-                                <li>Dostęp do nagrania: <strong>2 miesiące</strong></li>
-                                <li>Dodatkowo: <strong>certyfikat</strong></li>
-                                <li>Prowadzący: <strong>Mateusz Marciniak</strong></li>
-                                <li>Cena: <strong>159 zł (brutto za osobę)</strong></li>
-                            </ul>
-                        </p>
-                        <div class="mt-auto pt-3">
-                            <a href="https://zdalna-lekcja.pl/zamowienia/formularz/?idP=64904" target="_blank" class="btn btn-primary w-100 hover-lift">Zapisz się</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col">
-                <div class="card h-100 border-0 shadow-sm hover-lift">
-                    <div class="position-relative">
-                        <img src="images\courses\2025-05-29_09-00.png" class="card-img-top" alt="Dyrektor">
-                    </div>
-                    <div class="card-body d-flex flex-column p-4">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="badge bg-light text-dark">
-                                <i class="bi bi-calendar me-1"></i> 29 maja 2025
-                            </span>
-                            <span class="badge bg-light text-dark">
-                                <i class="bi bi-clock me-1"></i> 09:00
-                            </span>
-                        </div>
-                        <h5 class="card-title fw-bold mb-3">Awans zawodowy w oświacie – krok po kroku, bez tajemnic.</h5>
-                        <p class="card-text">
-                            <ul>
-                                <li>Data: <strong>29 maja 2025 r. (czwartek)</strong></li>
-                                <li>Czas: <strong>09:00, 4 godziny</strong></li>
-                                <li>Platforma: <strong>ClickMeeting</strong></li>
-                                <li>Dostęp do nagrania: <strong>2 miesiące</strong></li>
-                                <li>Dodatkowo: <strong>materiały, certyfikat</strong></li>
-                                <li>Prowadzący: <strong>dr Roman Lorens</strong></li>
-                                <li>Cena: <strong>159 zł (brutto za osobę)</strong></li>
-                            </ul>
-                        </p>
-                        <div class="mt-auto pt-3">
-                            <a href="https://zdalna-lekcja.pl/zamowienia/formularz/?idP=65211" target="_blank" class="btn btn-primary w-100 hover-lift">Zapisz się</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-
+            @endforeach
         </div>
     </div>
 </section>
@@ -648,6 +555,22 @@
 
     .counter {
         animation: countUp 1s forwards;
+    }
+
+    .cta-btn {
+        transition: background 0.18s, color 0.18s, box-shadow 0.18s;
+    }
+    .cta-btn:hover, .cta-btn:focus {
+        background: #e0a800 !important;
+        color: #212529 !important;
+        box-shadow: 0 2px 12px rgba(224,168,0,0.18);
+    }
+    .cta-btn:hover i, .cta-btn:focus i {
+        transform: translateX(6px) scale(1.1);
+        transition: transform 0.18s;
+    }
+    .cta-btn i {
+        transition: transform 0.18s;
     }
 </style>
 @endpush

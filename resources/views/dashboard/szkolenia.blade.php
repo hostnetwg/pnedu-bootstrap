@@ -1,44 +1,93 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container pt-3">
+<div class="container py-4">
     <div class="row justify-content-center">
-        <div class="col-md-12">
-            <div class="row">
-                <div class="col-md-3">
-                    <div class="card mb-3">
-                        <div class="card-header">{{ __('MENU') }}</div>
-                        <div class="card-body p-0">
-                            <ul class="nav nav-pills flex-column">
-                                <li class="nav-item">
-                                    <a href="{{ route('dashboard') }}" class="nav-link">{{ __('Panel') }}</a>
-                                </li>
-                                <hr class="my-0">
-                                <li class="nav-item">
-                                    <a href="{{ route('dashboard.szkolenia') }}" class="nav-link active">{{ __('Moje szkolenia') }}</a>
-                                </li>
-                                <hr class="my-0">
-                                <li class="nav-item">
-                                    <a href="{{ route('dashboard.zaswiadczenia') }}" class="nav-link">{{ __('Zaświadczenia') }}</a>
-                                </li>
-                                <hr class="my-0">
-                                <li class="nav-item">
-                                    <a href="{{ route('dashboard.moje-dane') }}" class="nav-link">{{ __('Moje dane') }}</a>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-9">
-                    <div class="card">
-                        <div class="card-header">{{ __('Moje szkolenia') }}</div>
-                        <div class="card-body">
-                            <p>Tu znajduje się przykładowa treść podstrony Szkolenia. Możesz ją teraz dopracować według potrzeb.</p>
-                        </div>
-                    </div>
+        <div class="col-lg-3 mb-4 mb-lg-0">
+            <nav>
+                <ul class="list-unstyled dashboard-minimal-menu">
+                    <li>
+                        <a href="{{ route('dashboard') }}" class="d-flex align-items-center gap-2 @if(request()->routeIs('dashboard')) active @endif">
+                            <i class="bi bi-house-door"></i> Panel
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('dashboard.szkolenia') }}" class="d-flex align-items-center gap-2 @if(request()->routeIs('dashboard.szkolenia')) active @endif">
+                            <i class="bi bi-journal-text"></i> Moje szkolenia
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('dashboard.zaswiadczenia') }}" class="d-flex align-items-center gap-2 @if(request()->routeIs('dashboard.zaswiadczenia')) active @endif">
+                            <i class="bi bi-award"></i> Zaświadczenia
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('dashboard.moje-dane') }}" class="d-flex align-items-center gap-2 @if(request()->routeIs('dashboard.moje-dane')) active @endif">
+                            <i class="bi bi-person-circle"></i> Moje dane
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+        <div class="col-lg-9">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body py-4">
+                    <h2 class="h4 mb-4">Moje szkolenia</h2>
+                    <p>Tutaj znajdziesz listę wszystkich swoich szkoleń, zarówno ukończonych, jak i zaplanowanych. Możesz sprawdzić szczegóły, pobrać materiały lub zapisać się na nowe kursy.</p>
                 </div>
             </div>
         </div>
     </div>
 </div>
 @endsection
+
+@push('styles')
+<style>
+.dashboard-minimal-menu {
+    background: #fff;
+    padding: 0;
+    margin: 0;
+}
+.dashboard-minimal-menu li {
+    margin-bottom: 0.5rem;
+}
+.dashboard-minimal-menu a {
+    color: #6c757d;
+    font-size: 1.08rem;
+    padding: 0.75rem 1rem 0.75rem 0.5rem;
+    border-radius: 0.5rem;
+    text-decoration: none;
+    transition: background 0.15s, color 0.15s;
+    font-weight: 400;
+    position: relative;
+    display: block;
+}
+.dashboard-minimal-menu a.active, .dashboard-minimal-menu a:hover {
+    color: #0d6efd;
+    background: #f5f7fa;
+}
+.dashboard-minimal-menu i {
+    font-size: 1.2rem;
+    color: #adb5bd;
+    transition: color 0.15s;
+}
+.dashboard-minimal-menu a.active i, .dashboard-minimal-menu a:hover i {
+    color: #0d6efd;
+}
+@media (max-width: 991.98px) {
+    .dashboard-minimal-menu {
+        display: flex;
+        flex-direction: row;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+    }
+    .dashboard-minimal-menu li {
+        margin-bottom: 0;
+    }
+    .dashboard-minimal-menu a {
+        padding: 0.5rem 0.9rem;
+        font-size: 1rem;
+    }
+}
+</style>
+@endpush
