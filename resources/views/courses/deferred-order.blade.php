@@ -59,7 +59,7 @@
 <div class="container py-5">
     <div class="row justify-content-center">
         <div class="col-lg-7">
-            <h1 class="mb-4 text-center">Formularz zamówienia z odroczonym terminem płatności</h1>
+            <h1 class="mb-4 text-center">Formularz zamówienia z&nbsp;odroczonym terminem płatności</h1>
             <div class="mb-4 text-center">
                 <strong>Szkolenie:</strong> {{ $course->title }}<br>
                 <strong>Data:</strong> {{ \Carbon\Carbon::parse($course->start_date)->format('d.m.Y H:i') }}

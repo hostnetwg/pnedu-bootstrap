@@ -113,6 +113,12 @@
         letter-spacing: 0.2px;
         opacity: 0.95;
     }
+    .pay-mobile {
+        display: none;
+    }
+    .pay-mobile-bottom {
+        display: none;
+    }
     @media (max-width: 991px) {
         .course-main-row {
             flex-direction: column;
@@ -124,12 +130,33 @@
             position: static;
             margin-bottom: 2.5rem;
         }
+        .pay-mobile {
+            display: block;
+        }
+        .pay-mobile-bottom {
+            display: block;
+        }
+        .course-pay-col {
+            display: none;
+        }
     }
 </style>
 @endpush
 
 @section('content')
 <div class="container py-5">
+    <!-- MOBILE: Płatności pod grafiką, tytułem i datą -->
+    <div class="pay-mobile">
+        <div class="course-pay-box mb-4">
+            <h3>Wybierz formę płatności i&nbsp;zarezerwuj miejsce!</h3>
+            <div class="d-flex flex-column gap-2 mb-3 align-items-center">
+                <a href="{{ route('payment.online', $course->id) }}" class="btn btn-primary-custom btn-lg fw-bold shadow-sm w-100">Zapłać online</a>
+                <div class="pay-or-text">lub wypełnij</div>
+                <a href="{{ route('payment.deferred', $course->id) }}" class="btn btn-orange btn-lg fw-bold shadow-sm w-100">Formularz zamówienia z odroczonym terminem płatności</a>
+            </div>
+            <div class="mt-2 text-muted">Liczba miejsc ograniczona –<br>nie zwlekaj z&nbsp;rejestracją!</div>
+        </div>
+    </div>
     <div class="course-main-row">
         <div class="course-details-col">
             @if(!empty($course->image))
@@ -138,8 +165,17 @@
             <div class="course-title">{{ $course->title }}</div>
             <div class="course-meta">
                 <strong>Data:</strong> {{ \Carbon\Carbon::parse($course->start_date)->format('d.m.Y H:i') }}<br>
-                @if($course->end_date)
-                    <strong>Koniec:</strong> {{ \Carbon\Carbon::parse($course->end_date)->format('d.m.Y H:i') }}<br>
+                @php
+                    $duration = null;
+                    if ($course->end_date) {
+                        $start = \Carbon\Carbon::parse($course->start_date);
+                        $end = \Carbon\Carbon::parse($course->end_date);
+                        $diff = $start->diff($end);
+                        $duration = ($diff->h ? $diff->h . 'h ' : '') . ($diff->i ? $diff->i . 'min' : '');
+                    }
+                @endphp
+                @if($duration)
+                    <strong>Czas trwania:</strong> {{ $duration }}<br>
                 @endif
                 <strong>Trener:</strong> {{ $course->trainer }}
             </div>
@@ -161,6 +197,18 @@
                 </ol>
                 <h4>Dla kogo?</h4>
                 <p>Szkolenie przeznaczone jest dla nauczycieli, dyrektorów szkół oraz wszystkich osób zainteresowanych nowoczesną edukacją.</p>
+            </div>
+            <!-- MOBILE: Płatności na samym dole po opisie -->
+            <div class="pay-mobile-bottom">
+                <div class="course-pay-box mb-4">
+                    <h3>Wybierz formę płatności i&nbsp;zarezerwuj miejsce!</h3>
+                    <div class="d-flex flex-column gap-2 mb-3 align-items-center">
+                        <a href="{{ route('payment.online', $course->id) }}" class="btn btn-primary-custom btn-lg fw-bold shadow-sm w-100">Zapłać online</a>
+                        <div class="pay-or-text">lub wypełnij</div>
+                        <a href="{{ route('payment.deferred', $course->id) }}" class="btn btn-orange btn-lg fw-bold shadow-sm w-100">Formularz zamówienia z odroczonym terminem płatności</a>
+                    </div>
+                    <div class="mt-2 text-muted">Liczba miejsc ograniczona –<br>nie zwlekaj z&nbsp;rejestracją!</div>
+                </div>
             </div>
         </div>
         <div class="course-pay-col">
