@@ -141,7 +141,7 @@
                     </div>
                     <div class="mb-3">
                         <label for="participant_email" class="form-label">E-mail uczestnika <span class="text-danger">*</span></label>
-                        <input type="email" class="form-control" id="participant_email" name="participant_email" required>
+                        <input type="email" class="form-control" id="participant_email" name="participant_email" required placeholder="na ten adres zostaną przesłane dane dostępowe do szkolenia">
                     </div>
                 </fieldset>
                 <div class="order-form-section">
