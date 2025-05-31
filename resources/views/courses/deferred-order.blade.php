@@ -5,21 +5,25 @@
 @push('styles')
 <style>
     .order-form-section {
-        background: #f8fafc;
-        border-radius: 12px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-        padding: 2rem 1.5rem 1.5rem 1.5rem;
-        margin-bottom: 2.5rem;
-        border: 1px solid #e3e6ea;
+        background: linear-gradient(135deg, #f4f7fa 60%, #e3e9f3 100%);
+        border-radius: 14px;
+        box-shadow: 0 4px 18px rgba(25, 118, 210, 0.07), 0 1.5px 8px 0 rgba(0,0,0,0.04);
+        padding: 2.2rem 1.5rem 1.5rem 1.5rem;
+        margin-bottom: 2.7rem;
+        border: 2px solid #b0bec5;
+        transition: box-shadow 0.2s, border-color 0.2s;
     }
     .order-form-section legend {
-        font-size: 1.15rem;
-        font-weight: 600;
-        color: #0d6efd;
-        margin-bottom: 1rem;
-        padding: 0 0.5rem;
+        font-size: 1.18rem;
+        font-weight: 700;
+        color: #1976d2;
+        margin-bottom: 1.2rem;
+        padding: 0 0.7rem;
         width: auto;
         border-bottom: none;
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 1px 4px rgba(25, 118, 210, 0.04);
     }
     .order-form-section label .text-danger {
         margin-left: 2px;
@@ -31,7 +35,16 @@
     }
     .order-form-section input,
     .order-form-section textarea {
-        border-radius: 6px;
+        border-radius: 7px;
+        border: 1.5px solid #b0bec5;
+        background: #fafdff;
+        font-size: 1.07rem;
+    }
+    .order-form-section input:focus,
+    .order-form-section textarea:focus {
+        border-color: #1976d2;
+        box-shadow: 0 0 0 2px #bbdefb;
+        background: #fff;
     }
     .order-form-section .row > .col-md-6 {
         margin-bottom: 0.5rem;
@@ -43,14 +56,18 @@
         margin-top: 1.2rem;
     }
     .order-form-section .btn-primary {
-        font-size: 1.1rem;
+        font-size: 1.13rem;
         padding: 0.7rem 2.2rem;
-        border-radius: 6px;
+        border-radius: 7px;
+        font-weight: 600;
     }
     .order-form-section .btn-link {
         font-size: 1rem;
-        color: #0d6efd;
+        color: #1976d2;
         text-decoration: underline;
+    }
+    .order-form-section:not(:last-child) {
+        margin-bottom: 2.7rem;
     }
 </style>
 @endpush
@@ -59,7 +76,7 @@
 <div class="container py-5">
     <div class="row justify-content-center">
         <div class="col-lg-7">
-            <h1 class="mb-4 text-center">Formularz zamówienia z&nbsp;odroczonym terminem płatności</h1>
+            <h1 class="mb-4 text-center">Formularz zamówienia z odroczonym terminem płatności</h1>
             <div class="mb-4 text-center">
                 <strong>Szkolenie:</strong> {{ $course->title }}<br>
                 <strong>Data:</strong> {{ \Carbon\Carbon::parse($course->start_date)->format('d.m.Y H:i') }}
@@ -146,7 +163,7 @@
                 </fieldset>
                 <div class="order-form-section">
                     <div class="mb-3">
-                        <label for="invoice_notes" class="form-label">Uwagi do faktury</label>
+                        <label for="invoice_notes" class="form-label">Uwagi do faktury (opcjonalnie)</label>
                         <textarea class="form-control" id="invoice_notes" name="invoice_notes" rows="2"></textarea>
                     </div>
                     <div class="mb-3">
