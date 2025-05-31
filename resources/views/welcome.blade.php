@@ -155,7 +155,7 @@
                                 <strong>Trener:</strong> {{ $course->trainer }}
                             </p>
                             <div class="mt-auto pt-3">
-                                <a href="{{ $course->registration_url ?? '#' }}" target="_blank"
+                                <a href="{{ route('courses.show', $course->id) }}"
                                    class="btn btn-warning w-100 fw-bold d-flex align-items-center justify-content-center gap-2 shadow-sm cta-btn"
                                    style="font-size:1.15rem; letter-spacing:0.5px;">
                                     <span>Zapisz się</span>

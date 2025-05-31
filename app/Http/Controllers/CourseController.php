@@ -99,4 +99,31 @@ class CourseController extends Controller
             ]);
         }
     }
+
+    /**
+     * Wyświetl szczegóły szkolenia.
+     */
+    public function show($id)
+    {
+        $course = \App\Models\Course::findOrFail($id);
+        return view('courses.show', compact('course'));
+    }
+
+    /**
+     * Wyświetl stronę płatności online.
+     */
+    public function payOnline($id)
+    {
+        $course = \App\Models\Course::findOrFail($id);
+        return view('courses.pay-online', compact('course'));
+    }
+
+    /**
+     * Wyświetl formularz zamówienia z odroczonym terminem płatności.
+     */
+    public function deferredOrder($id)
+    {
+        $course = \App\Models\Course::findOrFail($id);
+        return view('courses.deferred-order', compact('course'));
+    }
 }

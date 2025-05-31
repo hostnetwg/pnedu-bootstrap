@@ -68,3 +68,10 @@ require __DIR__.'/auth.php';
 
 // Handle contact form submissions from the welcome page
 Route::post('/kontakt', [ContactController::class, 'send'])->name('contact.send');
+
+// Szczegóły szkolenia
+Route::get('/courses/{id}', [App\Http\Controllers\CourseController::class, 'show'])->name('courses.show');
+// Płatność online
+Route::get('/courses/{id}/pay-online', [App\Http\Controllers\CourseController::class, 'payOnline'])->name('payment.online');
+// Zamówienie z odroczonym terminem
+Route::get('/courses/{id}/deferred-order', [App\Http\Controllers\CourseController::class, 'deferredOrder'])->name('payment.deferred');
