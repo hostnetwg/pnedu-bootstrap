@@ -9,8 +9,8 @@ services:
     extra_hosts:
       - 'host.docker.internal:host-gateway'
     ports:
-      - '${APP_PORT:-80}:80'
-      - '${VITE_PORT:-5173}:${VITE_PORT:-5173}'
+      - '8081:80'
+      - '5174:5173'
     environment:
       WWWUSER: '${WWWUSER}'
       LARAVEL_SAIL: 1
@@ -71,7 +71,7 @@ services:
   mailpit:
     image: 'axllent/mailpit:latest'
     ports:
-      - '${FORWARD_MAILPIT_PORT:-1025}:1025'
+      - '1026:1025'
       - '${FORWARD_MAILPIT_DASHBOARD_PORT:-8025}:8025'
     networks:
       - sail
@@ -94,7 +94,7 @@ services:
       PMA_USER: ${DB_USERNAME}
       PMA_PASSWORD: ${DB_PASSWORD}
     ports:
-      - '8084:80'   # pnedu: http://localhost:8084
+      - '8082:80'   # pnedu: http://localhost:8082
     networks:
       - sail
 
