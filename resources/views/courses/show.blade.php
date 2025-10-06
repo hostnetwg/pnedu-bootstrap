@@ -181,22 +181,26 @@
             </div>
             <span class="badge bg-success mb-3">Szkolenie online</span>
             <div class="course-details-section mb-4">
-                <h4>Dlaczego warto wziąć udział?</h4>
-                <ul class="mb-3">
-                    <li>Praktyczne umiejętności do natychmiastowego wykorzystania w pracy.</li>
-                    <li>Materiały szkoleniowe i certyfikat ukończenia.</li>
-                    <li>Możliwość zadawania pytań i konsultacji z ekspertem.</li>
-                    <li>Nowoczesna, interaktywna forma prowadzenia zajęć.</li>
-                </ul>
-                <h4>Program szkolenia (przykład)</h4>
-                <ol class="mb-3">
-                    <li>Wprowadzenie i cele szkolenia</li>
-                    <li>Najważniejsze zagadnienia tematyczne</li>
-                    <li>Praca warsztatowa i przykłady praktyczne</li>
-                    <li>Sesja pytań i odpowiedzi</li>
-                </ol>
-                <h4>Dla kogo?</h4>
-                <p>Szkolenie przeznaczone jest dla nauczycieli, dyrektorów szkół oraz wszystkich osób zainteresowanych nowoczesną edukacją.</p>
+                @if(!empty($course->offer_description_html))
+                    {!! $course->offer_description_html !!}
+                @else
+                    <h4>Dlaczego warto wziąć udział?</h4>
+                    <ul class="mb-3">
+                        <li>Praktyczne umiejętności do natychmiastowego wykorzystania w pracy.</li>
+                        <li>Materiały szkoleniowe i certyfikat ukończenia.</li>
+                        <li>Możliwość zadawania pytań i konsultacji z ekspertem.</li>
+                        <li>Nowoczesna, interaktywna forma prowadzenia zajęć.</li>
+                    </ul>
+                    <h4>Program szkolenia (przykład)</h4>
+                    <ol class="mb-3">
+                        <li>Wprowadzenie i cele szkolenia</li>
+                        <li>Najważniejsze zagadnienia tematyczne</li>
+                        <li>Praca warsztatowa i przykłady praktyczne</li>
+                        <li>Sesja pytań i odpowiedzi</li>
+                    </ol>
+                    <h4>Dla kogo?</h4>
+                    <p>Szkolenie przeznaczone jest dla nauczycieli, dyrektorów szkół oraz wszystkich osób zainteresowanych nowoczesną edukacją.</p>
+                @endif
             </div>
             <!-- MOBILE: Płatności na samym dole po opisie -->
             <div class="pay-mobile-bottom">

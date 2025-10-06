@@ -106,6 +106,15 @@ class CourseController extends Controller
     public function show($id)
     {
         $course = \App\Models\Course::findOrFail($id);
+        
+        // Debug: sprawdź czy pole offer_description_html istnieje
+        \Log::info('Course data:', [
+            'id' => $course->id,
+            'title' => $course->title,
+            'offer_description_html' => $course->offer_description_html ?? 'NULL',
+            'has_offer_description' => !empty($course->offer_description_html)
+        ]);
+        
         return view('courses.show', compact('course'));
     }
 

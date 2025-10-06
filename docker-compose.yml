@@ -86,15 +86,34 @@ services:
       - sail
 
   phpmyadmin:
-    image: phpmyadmin/phpmyadmin
+    build:
+      context: .
+      dockerfile: Dockerfile.phpmyadmin
     depends_on:
       - mysql
     environment:
       PMA_HOST: mysql
       PMA_USER: ${DB_USERNAME}
       PMA_PASSWORD: ${DB_PASSWORD}
+      UPLOAD_LIMIT: 50M
     ports:
       - '8082:80'   # pnedu: http://localhost:8082
+    networks:
+      - sail
+
+  mysql-backup:
+    image: fradelg/mysql-cron-backup
+    environment:
+      - MYSQL_HOST=mysql
+      - MYSQL_USER=${DB_USERNAME}
+      - MYSQL_PASS=${DB_PASSWORD}
+      - MYSQL_DB=${DB_DATABASE}
+      - CRON_TIME=0 2 * * *
+      - MAX_BACKUPS=7
+    volumes:
+      - ./mysql-backups:/backup
+    depends_on:
+      - mysql
     networks:
       - sail
 

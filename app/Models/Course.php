@@ -33,6 +33,7 @@ class Course extends Model
     protected $fillable = [
         'title',
         'description',
+        'offer_description_html',
         'start_date',
         'end_date',
         'is_paid',
