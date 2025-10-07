@@ -92,15 +92,15 @@
         box-shadow: 0 4px 16px rgba(25, 118, 210, 0.13);
     }
     .btn-orange {
-        background: #ff9800;
+        background: #28a745;
         color: #fff;
         border: none;
     }
     .btn-orange:hover, .btn-orange:focus {
-        background: #ef6c00;
+        background: #218838;
         color: #fff;
         transform: translateY(-2px) scale(1.03);
-        box-shadow: 0 4px 16px rgba(255,152,0,0.18);
+        box-shadow: 0 4px 16px rgba(40,167,69,0.18);
     }
     .course-pay-box .text-muted {
         font-size: 0.98rem;
@@ -140,6 +140,100 @@
             display: none;
         }
     }
+
+    /* Style dla sekcji z informacjami o prowadzącym - inline w opisie kursu */
+    .instructor-section-inline {
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 1px 6px rgba(0,0,0,0.04);
+        padding: 2rem 1.5rem;
+        margin-bottom: 2.5rem;
+        border-top: 3px solid #1976d2;
+    }
+
+    .instructor-section-title-inline {
+        color: #1976d2;
+        font-weight: 600;
+        font-size: 1.3rem;
+        margin-bottom: 1.2rem;
+        margin-top: 0;
+    }
+
+    .instructor-section-title-inline i {
+        color: #1976d2;
+    }
+
+
+    .instructor-photo {
+        text-align: left;
+        margin-bottom: 1.5rem;
+    }
+
+    .instructor-photo-img {
+        max-width: 200px;
+        width: 100%;
+        height: auto;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        border: 3px solid #fff;
+    }
+
+    .instructor-bio-inline {
+        line-height: 1.7;
+    }
+
+    .instructor-bio-inline h1,
+    .instructor-bio-inline h2,
+    .instructor-bio-inline h3,
+    .instructor-bio-inline h4,
+    .instructor-bio-inline h5,
+    .instructor-bio-inline h6 {
+        color: #1976d2;
+        margin-top: 1.5rem;
+        margin-bottom: 1rem;
+        font-weight: 600;
+    }
+
+    .instructor-bio-inline h1:first-child,
+    .instructor-bio-inline h2:first-child,
+    .instructor-bio-inline h3:first-child,
+    .instructor-bio-inline h4:first-child,
+    .instructor-bio-inline h5:first-child,
+    .instructor-bio-inline h6:first-child {
+        margin-top: 0;
+    }
+
+    .instructor-bio-inline p {
+        margin-bottom: 1.2rem;
+        color: #333;
+    }
+
+    .instructor-bio-inline ul,
+    .instructor-bio-inline ol {
+        margin-bottom: 1.2rem;
+        padding-left: 1.5rem;
+    }
+
+    .instructor-bio-inline li {
+        margin-bottom: 0.5rem;
+        color: #333;
+    }
+
+    .instructor-bio-inline strong {
+        color: #1976d2;
+        font-weight: 600;
+    }
+
+    .instructor-bio-inline em {
+        color: #666;
+        font-style: italic;
+    }
+
+    @media (max-width: 768px) {
+        .instructor-photo-img {
+            max-width: 150px;
+        }
+    }
 </style>
 @endpush
 
@@ -152,7 +246,7 @@
             <div class="d-flex flex-column gap-2 mb-3 align-items-center">
                 <a href="{{ route('payment.online', $course->id) }}" class="btn btn-primary-custom btn-lg fw-bold shadow-sm w-100">Zapłać online</a>
                 <div class="pay-or-text">lub wypełnij</div>
-                <a href="{{ route('payment.deferred', $course->id) }}" class="btn btn-orange btn-lg fw-bold shadow-sm w-100">Formularz zamówienia z odroczonym terminem płatności</a>
+                <a href="{{ route('payment.deferred', $course->id) }}" class="btn btn-orange btn-lg fw-bold shadow-sm w-100">Formularz zamówienia z&nbsp;odroczonym terminem płatności</a>
             </div>
             <div class="mt-2 text-muted">Liczba miejsc ograniczona –<br>nie zwlekaj z&nbsp;rejestracją!</div>
         </div>
@@ -202,6 +296,35 @@
                     <p>Szkolenie przeznaczone jest dla nauczycieli, dyrektorów szkół oraz wszystkich osób zainteresowanych nowoczesną edukacją.</p>
                 @endif
             </div>
+            
+            <!-- Sekcja z informacjami o prowadzącym - kontynuacja opisu -->
+            @if($course->instructor && !empty($course->instructor->bio_html))
+                <div class="instructor-section-inline">
+                    <h4 class="instructor-section-title-inline">
+                        <i class="fas fa-user-tie me-2"></i>
+                        Informacja o {{ $course->trainer_title == 'Prowadzący' ? 'prowadzącym' : ($course->trainer_title == 'Prowadząca' ? 'prowadzącej' : 'trenerze') }}: 
+                        <strong>
+                            @if(!empty($course->instructor->title))
+                                {{ $course->instructor->title }} 
+                            @endif
+                            {{ $course->instructor->full_name }}
+                        </strong>
+                    </h4>
+                    
+                    @if(!empty($course->instructor->photo))
+                        <div class="instructor-photo">
+                            <img src="{{ 'https://adm.pnedu.pl/storage/' . ltrim($course->instructor->photo, '/') }}" 
+                                 alt="{{ $course->instructor->full_name }}" 
+                                 class="instructor-photo-img">
+                        </div>
+                    @endif
+                    
+                    <div class="instructor-bio-inline">
+                        {!! $course->instructor->bio_html !!}
+                    </div>
+                </div>
+            @endif
+            
             <!-- MOBILE: Płatności na samym dole po opisie -->
             <div class="pay-mobile-bottom">
                 <div class="course-pay-box mb-4">
@@ -209,7 +332,7 @@
                     <div class="d-flex flex-column gap-2 mb-3 align-items-center">
                         <a href="{{ route('payment.online', $course->id) }}" class="btn btn-primary-custom btn-lg fw-bold shadow-sm w-100">Zapłać online</a>
                         <div class="pay-or-text">lub wypełnij</div>
-                        <a href="{{ route('payment.deferred', $course->id) }}" class="btn btn-orange btn-lg fw-bold shadow-sm w-100">Formularz zamówienia z odroczonym terminem płatności</a>
+                        <a href="{{ route('payment.deferred', $course->id) }}" class="btn btn-orange btn-lg fw-bold shadow-sm w-100">Formularz zamówienia z&nbsp;odroczonym terminem płatności</a>
                     </div>
                     <div class="mt-2 text-muted">Liczba miejsc ograniczona –<br>nie zwlekaj z&nbsp;rejestracją!</div>
                 </div>
@@ -221,7 +344,7 @@
                 <div class="d-flex flex-column gap-2 mb-3 align-items-center">
                     <a href="{{ route('payment.online', $course->id) }}" class="btn btn-primary-custom btn-lg fw-bold shadow-sm w-100">Zapłać online</a>
                     <div class="pay-or-text">lub wypełnij</div>
-                    <a href="{{ route('payment.deferred', $course->id) }}" class="btn btn-orange btn-lg fw-bold shadow-sm w-100">Formularz zamówienia z odroczonym terminem płatności</a>
+                    <a href="{{ route('payment.deferred', $course->id) }}" class="btn btn-orange btn-lg fw-bold shadow-sm w-100">Formularz zamówienia z&nbsp;odroczonym terminem płatności</a>
                 </div>
                 <div class="mt-2 text-muted">Liczba miejsc ograniczona –<br>nie zwlekaj z&nbsp;rejestracją!</div>
             </div>

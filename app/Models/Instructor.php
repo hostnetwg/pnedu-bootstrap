@@ -35,6 +35,7 @@ class Instructor extends Model
         'email',
         'phone',
         'bio',
+        'bio_html',
         'photo',
         'signature',
         'is_active',
