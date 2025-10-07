@@ -112,7 +112,13 @@ class CourseController extends Controller
             'id' => $course->id,
             'title' => $course->title,
             'offer_description_html' => $course->offer_description_html ?? 'NULL',
-            'has_offer_description' => !empty($course->offer_description_html)
+            'has_offer_description' => !empty($course->offer_description_html),
+            'trainer' => $course->trainer,
+            'trainer_title' => $course->trainer_title,
+            'instructor_id' => $course->instructor_id,
+            'instructor_title' => $course->instructor->title ?? 'NULL',
+            'instructor_full_name' => $course->instructor->full_name ?? 'NULL',
+            'instructor_gender' => $course->instructor->gender ?? 'NULL'
         ]);
         
         return view('courses.show', compact('course'));

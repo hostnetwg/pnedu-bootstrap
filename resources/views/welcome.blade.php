@@ -152,7 +152,7 @@
                                 <li><strong>Dzień tygodnia:</strong> {{ $start->translatedFormat('l') }}</li>
                             </ul>
                             <p class="card-text">
-                                <strong>Trener:</strong> {{ $course->trainer }}
+                                <strong>{{ $course->trainer_title }}:</strong> {{ $course->trainer }}
                             </p>
                             <div class="mt-auto pt-3">
                                 <a href="{{ route('courses.show', $course->id) }}"

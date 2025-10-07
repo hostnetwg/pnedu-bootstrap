@@ -74,7 +74,11 @@ class Course extends Model
         }
 
         if ($this->instructor) {
-            return $this->instructor->full_name;
+            $name = $this->instructor->full_name;
+            if (!empty($this->instructor->title)) {
+                $name = $this->instructor->title . ' ' . $name;
+            }
+            return $name;
         }
 
         if (isset($this->attributes['instructor_id'])) {
@@ -82,6 +86,30 @@ class Course extends Model
         }
 
         return 'Brak trenera';
+    }
+
+    /**
+     * Get the appropriate trainer title based on gender.
+     *
+     * @return string
+     */
+    public function getTrainerTitleAttribute(): string
+    {
+        if ($this->instructor) {
+            return $this->instructor->gender_title;
+        }
+        
+        // Fallback: try to determine gender from trainer name if it's a direct string
+        if (!empty($this->attributes['trainer'])) {
+            $trainerName = $this->attributes['trainer'];
+            // Simple heuristic: if name ends with 'a' it might be female
+            if (preg_match('/\b\w*a\b$/', $trainerName)) {
+                return 'Prowadząca';
+            }
+            return 'Prowadzący';
+        }
+        
+        return 'Trener';
     }
 
     /**

@@ -177,7 +177,7 @@
                 @if($duration)
                     <strong>Czas trwania:</strong> {{ $duration }}<br>
                 @endif
-                <strong>Trener:</strong> {{ $course->trainer }}
+                <strong>{{ $course->trainer_title }}:</strong> {{ $course->trainer }}
             </div>
             <span class="badge bg-success mb-3">Szkolenie online</span>
             <div class="course-details-section mb-4">

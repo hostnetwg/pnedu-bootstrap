@@ -38,6 +38,7 @@ class Instructor extends Model
         'photo',
         'signature',
         'is_active',
+        'gender',
     ];
 
     /**
@@ -48,6 +49,41 @@ class Instructor extends Model
     public function getFullNameAttribute()
     {
         return $this->first_name . ' ' . $this->last_name;
+    }
+
+    /**
+     * Get the full name with title of the instructor.
+     *
+     * @return string
+     */
+    public function getFullNameWithTitleAttribute()
+    {
+        $name = $this->first_name . ' ' . $this->last_name;
+        if (!empty($this->title)) {
+            $name = $this->title . ' ' . $name;
+        }
+        return $name;
+    }
+
+    /**
+     * Get the appropriate title based on gender.
+     *
+     * @return string
+     */
+    public function getGenderTitleAttribute()
+    {
+        switch (strtolower($this->gender ?? '')) {
+            case 'male':
+            case 'mężczyzna':
+            case 'm':
+                return 'Prowadzący';
+            case 'female':
+            case 'kobieta':
+            case 'f':
+                return 'Prowadząca';
+            default:
+                return 'Trener';
+        }
     }
 
     /**

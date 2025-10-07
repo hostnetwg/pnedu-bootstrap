@@ -69,6 +69,32 @@
     .order-form-section:not(:last-child) {
         margin-bottom: 2.7rem;
     }
+    .course-title-section {
+        background: linear-gradient(135deg, #e3f2fd 60%, #f3e5f5 100%);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        border: 2px solid #bbdefb;
+        box-shadow: 0 4px 12px rgba(25, 118, 210, 0.1);
+    }
+    .course-title-section .course-title {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: #1976d2;
+        margin-bottom: 0.5rem;
+        line-height: 1.3;
+    }
+    .course-title-section .course-date {
+        font-size: 1.1rem;
+        color: #424242;
+        font-weight: 500;
+    }
+    .course-title-section .course-trainer {
+        font-size: 1rem;
+        color: #666;
+        font-weight: 500;
+        margin-top: 0.3rem;
+    }
 </style>
 @endpush
 
@@ -77,9 +103,12 @@
     <div class="row justify-content-center">
         <div class="col-lg-7">
             <h1 class="mb-4 text-center">Formularz zamówienia z&nbsp;odroczonym terminem płatności</h1>
-            <div class="mb-4 text-center">
-                <strong>Szkolenie:</strong> {{ $course->title }}<br>
-                <strong>Data:</strong> {{ \Carbon\Carbon::parse($course->start_date)->format('d.m.Y H:i') }}
+            <div class="course-title-section text-center">
+                <div class="course-title">{{ $course->title }}</div>
+                <div class="course-date">Data: {{ \Carbon\Carbon::parse($course->start_date)->format('d.m.Y H:i') }}</div>
+                @if(!empty($course->trainer))
+                    <div class="course-trainer">{{ $course->trainer_title }}: {{ $course->trainer }}</div>
+                @endif
             </div>
             <form method="POST" action="#">
                 @csrf
@@ -134,7 +163,7 @@
                     </div>
                 </fieldset>
                 <fieldset class="order-form-section">
-                    <legend>DANE KONTAKTOWE</legend>
+                    <legend>DANE KONTAKTOWE ZAMAWIAJĄCEGO</legend>
                     <div class="mb-3">
                         <label for="contact_phone" class="form-label">Telefon kontaktowy <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="contact_phone" name="contact_phone" required>
