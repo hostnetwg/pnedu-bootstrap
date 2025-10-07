@@ -174,7 +174,7 @@
                     </div>
                 </fieldset>
                 <fieldset class="order-form-section">
-                    <legend>DANE UCZESTNIKA</legend>
+                    <legend>DANE UCZESTNIKA SZKOLENIA</legend>
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="participant_first_name" class="form-label">Imię <span class="text-danger">*</span></label>
