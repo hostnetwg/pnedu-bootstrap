@@ -13,6 +13,7 @@ class HomeController extends Controller
             ->where('type', 'online')
             ->where('is_paid', 1)
             ->where('start_date', '>', now())
+            ->where('source_id_old', 'certgen_Publigo')
             ->orderBy('start_date', 'asc')
             ->take(6)
             ->get();

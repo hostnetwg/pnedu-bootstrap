@@ -43,6 +43,7 @@ class Course extends Model
         'image',
         'is_active',
         'certificate_format',
+        'source_id_old',
     ];
 
     /**
