@@ -95,7 +95,9 @@ services:
       PMA_HOST: mysql
       PMA_USER: ${DB_USERNAME}
       PMA_PASSWORD: ${DB_PASSWORD}
-      UPLOAD_LIMIT: 50M
+      UPLOAD_LIMIT: 100M
+      MAX_EXECUTION_TIME: 600
+      MEMORY_LIMIT: 512M
     ports:
       - '8082:80'   # pnedu: http://localhost:8082
     networks:
