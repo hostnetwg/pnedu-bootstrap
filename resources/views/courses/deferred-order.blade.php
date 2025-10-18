@@ -110,67 +110,139 @@
                     <div class="course-trainer">{{ $course->trainer_title }}: {{ $course->trainer }}</div>
                 @endif
             </div>
-            <form method="POST" action="#">
+            @if(session('success'))
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    {{ session('success') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
+
+            @if(session('error'))
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    {{ session('error') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
+
+            @if($errors->any())
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <ul class="mb-0">
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
+
+            <form method="POST" action="{{ route('payment.deferred.store', $course->id) }}">
                 @csrf
+                <!-- Hidden fields for publigo integration -->
+                {{-- Dla kursów z certgen_Publigo użyj id_old, w przeciwnym razie użyj publigo_product_id --}}
+                <input type="hidden" name="publigo_product_id" value="{{ ($course->source_id_old === 'certgen_Publigo' && $course->id_old) ? $course->id_old : $course->publigo_product_id }}">
+                <input type="hidden" name="publigo_price_id" value="{{ $course->publigo_price_id }}">
                 <fieldset class="order-form-section">
                     <legend>NABYWCA (dane do faktury)</legend>
                     <div class="mb-3">
                         <label for="buyer_name" class="form-label">Nazwa nabywcy <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="buyer_name" name="buyer_name" required>
+                        <input type="text" class="form-control @error('buyer_name') is-invalid @enderror" id="buyer_name" name="buyer_name" value="{{ old('buyer_name', 'Gmina Bieżuń') }}" required>
+                        @error('buyer_name')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
                     </div>
                     <div class="mb-3">
                         <label for="buyer_address" class="form-label">Adres <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="buyer_address" name="buyer_address" required>
+                        <input type="text" class="form-control @error('buyer_address') is-invalid @enderror" id="buyer_address" name="buyer_address" value="{{ old('buyer_address', 'ul. Warszawska 5') }}" required>
+                        @error('buyer_address')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
                     </div>
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="buyer_postcode" class="form-label">Kod pocztowy <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="buyer_postcode" name="buyer_postcode" required>
+                            <input type="text" class="form-control @error('buyer_postcode') is-invalid @enderror" id="buyer_postcode" name="buyer_postcode" value="{{ old('buyer_postcode', '09-320') }}" required>
+                            @error('buyer_postcode')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="buyer_city" class="form-label">Poczta / Miasto <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="buyer_city" name="buyer_city" required>
+                            <input type="text" class="form-control @error('buyer_city') is-invalid @enderror" id="buyer_city" name="buyer_city" value="{{ old('buyer_city', 'Bieżuń') }}" required>
+                            @error('buyer_city')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
                         </div>
                     </div>
                     <div class="mb-3">
                         <label for="buyer_nip" class="form-label">NIP <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="buyer_nip" name="buyer_nip" required>
+                        <input type="text" class="form-control @error('buyer_nip') is-invalid @enderror" id="buyer_nip" name="buyer_nip" value="{{ old('buyer_nip', '5110265245') }}" required>
+                        @error('buyer_nip')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
                     </div>
                 </fieldset>
                 <fieldset class="order-form-section">
                     <legend>ODBIORCA (opcjonalnie, jeśli inny niż nabywca)</legend>
                     <div class="mb-3">
                         <label for="recipient_name" class="form-label">Nazwa odbiorcy</label>
-                        <input type="text" class="form-control" id="recipient_name" name="recipient_name">
+                        <input type="text" class="form-control @error('recipient_name') is-invalid @enderror" id="recipient_name" name="recipient_name" value="{{ old('recipient_name', 'Szkoła Podstawowa im. Andrzeja Zamoyskiego') }}">
+                        @error('recipient_name')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
                     </div>
                     <div class="mb-3">
                         <label for="recipient_address" class="form-label">Adres</label>
-                        <input type="text" class="form-control" id="recipient_address" name="recipient_address">
+                        <input type="text" class="form-control @error('recipient_address') is-invalid @enderror" id="recipient_address" name="recipient_address" value="{{ old('recipient_address', 'ul. Andrzeja Zamoyskiego 28') }}">
+                        @error('recipient_address')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
                     </div>
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="recipient_postcode" class="form-label">Kod pocztowy</label>
-                            <input type="text" class="form-control" id="recipient_postcode" name="recipient_postcode">
+                            <input type="text" class="form-control @error('recipient_postcode') is-invalid @enderror" id="recipient_postcode" name="recipient_postcode" value="{{ old('recipient_postcode', '09-320') }}">
+                            @error('recipient_postcode')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="recipient_city" class="form-label">Poczta / Miasto</label>
-                            <input type="text" class="form-control" id="recipient_city" name="recipient_city">
+                            <input type="text" class="form-control @error('recipient_city') is-invalid @enderror" id="recipient_city" name="recipient_city" value="{{ old('recipient_city', 'Bieżuń') }}">
+                            @error('recipient_city')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
                         </div>
                     </div>
                     <div class="mb-3">
                         <label for="recipient_nip" class="form-label">NIP</label>
-                        <input type="text" class="form-control" id="recipient_nip" name="recipient_nip" placeholder="Wypełnij jeżeli wymagane">
+                        <input type="text" class="form-control @error('recipient_nip') is-invalid @enderror" id="recipient_nip" name="recipient_nip" value="{{ old('recipient_nip') }}" placeholder="Wypełnij jeżeli wymagane">
+                        @error('recipient_nip')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
                     </div>
                 </fieldset>
                 <fieldset class="order-form-section">
                     <legend>DANE KONTAKTOWE ZAMAWIAJĄCEGO</legend>
                     <div class="mb-3">
+                        <label for="contact_name" class="form-label">Nazwa/imię nazwisko <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control @error('contact_name') is-invalid @enderror" id="contact_name" name="contact_name" value="{{ old('contact_name', 'Zespół Placówek Oświatowych w Bieżuniu') }}" required>
+                        @error('contact_name')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="mb-3">
                         <label for="contact_phone" class="form-label">Telefon kontaktowy <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="contact_phone" name="contact_phone" required>
+                        <input type="text" class="form-control @error('contact_phone') is-invalid @enderror" id="contact_phone" name="contact_phone" value="{{ old('contact_phone', '23 76 876 54') }}" required>
+                        @error('contact_phone')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
                     </div>
                     <div class="mb-3">
                         <label for="contact_email" class="form-label">E-mail do przesłania faktury <span class="text-danger">*</span></label>
-                        <input type="email" class="form-control" id="contact_email" name="contact_email" required>
+                        <input type="email" class="form-control @error('contact_email') is-invalid @enderror" id="contact_email" name="contact_email" value="{{ old('contact_email', 'waldemar.grabowski@zdalna-lekcja.pl') }}" required>
+                        @error('contact_email')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
                     </div>
                 </fieldset>
                 <fieldset class="order-form-section">
@@ -178,30 +250,48 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="participant_first_name" class="form-label">Imię <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="participant_first_name" name="participant_first_name" required>
+                            <input type="text" class="form-control @error('participant_first_name') is-invalid @enderror" id="participant_first_name" name="participant_first_name" value="{{ old('participant_first_name', 'Waldemar') }}" required>
+                            @error('participant_first_name')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="participant_last_name" class="form-label">Nazwisko <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="participant_last_name" name="participant_last_name" required>
+                            <input type="text" class="form-control @error('participant_last_name') is-invalid @enderror" id="participant_last_name" name="participant_last_name" value="{{ old('participant_last_name', 'Grabowski') }}" required>
+                            @error('participant_last_name')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
                         </div>
                     </div>
                     <div class="mb-3">
                         <label for="participant_email" class="form-label">E-mail uczestnika <span class="text-danger">*</span></label>
-                        <input type="email" class="form-control" id="participant_email" name="participant_email" required placeholder="na ten adres zostaną przesłane dane dostępowe do szkolenia">
+                        <input type="email" class="form-control @error('participant_email') is-invalid @enderror" id="participant_email" name="participant_email" value="{{ old('participant_email', 'waldemar.grabowski@hostnet.pl') }}" required placeholder="na ten adres zostaną przesłane dane dostępowe do szkolenia">
+                        @error('participant_email')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
                     </div>
                 </fieldset>
                 <div class="order-form-section">
                     <div class="mb-3">
                         <label for="invoice_notes" class="form-label">Uwagi do faktury (opcjonalnie)</label>
-                        <textarea class="form-control" id="invoice_notes" name="invoice_notes" rows="2"></textarea>
+                        <textarea class="form-control @error('invoice_notes') is-invalid @enderror" id="invoice_notes" name="invoice_notes" rows="2">{{ old('invoice_notes', 'Uwaga do faktury') }}</textarea>
+                        @error('invoice_notes')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
                     </div>
                     <div class="mb-3">
                         <label for="payment_terms" class="form-label">Termin płatności (dni) <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control" id="payment_terms" name="payment_terms" value="14" min="1" required>
+                        <input type="number" class="form-control @error('payment_terms') is-invalid @enderror" id="payment_terms" name="payment_terms" value="{{ old('payment_terms', 14) }}" min="1" required>
+                        @error('payment_terms')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
                     </div>
                     <div class="mb-3 form-check">
-                        <input type="checkbox" class="form-check-input" id="consent" name="consent" required>
+                        <input type="checkbox" class="form-check-input @error('consent') is-invalid @enderror" id="consent" name="consent" {{ old('consent') ? 'checked' : '' }} required>
                         <label class="form-check-label" for="consent">Wyrażam zgodę na przetwarzanie danych osobowych zgodnie z polityką prywatności. <span class="text-danger">*</span></label>
+                        @error('consent')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
                     </div>
                     <div class="d-flex flex-column flex-md-row gap-3 mt-4">
                         <button type="submit" class="btn btn-primary flex-fill">Wyślij zamówienie</button>

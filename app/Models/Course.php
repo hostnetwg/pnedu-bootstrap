@@ -43,7 +43,10 @@ class Course extends Model
         'image',
         'is_active',
         'certificate_format',
+        'id_old',
         'source_id_old',
+        'publigo_product_id',
+        'publigo_price_id',
     ];
 
     /**

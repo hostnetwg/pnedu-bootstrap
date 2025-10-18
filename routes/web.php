@@ -71,3 +71,4 @@ Route::get('/courses/{id}', [App\Http\Controllers\CourseController::class, 'show
 Route::get('/courses/{id}/pay-online', [App\Http\Controllers\CourseController::class, 'payOnline'])->name('payment.online');
 // Zamówienie z odroczonym terminem
 Route::get('/courses/{id}/deferred-order', [App\Http\Controllers\CourseController::class, 'deferredOrder'])->name('payment.deferred');
+Route::post('/courses/{id}/deferred-order', [App\Http\Controllers\CourseController::class, 'storeDeferredOrder'])->name('payment.deferred.store');

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Course;
+use App\Models\FormOrder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Exception;
@@ -142,5 +143,121 @@ class CourseController extends Controller
     {
         $course = \App\Models\Course::findOrFail($id);
         return view('courses.deferred-order', compact('course'));
+    }
+
+    /**
+     * Zapisz zamówienie z odroczonym terminem płatności.
+     */
+    public function storeDeferredOrder(Request $request, $id)
+    {
+        $course = Course::findOrFail($id);
+
+        // Walidacja danych
+        $validated = $request->validate([
+            'buyer_name' => 'required|string|max:500',
+            'buyer_address' => 'required|string|max:500',
+            'buyer_postcode' => 'required|string|max:50',
+            'buyer_city' => 'required|string|max:255',
+            'buyer_nip' => 'required|string|max:50',
+            'recipient_name' => 'nullable|string|max:500',
+            'recipient_address' => 'nullable|string|max:500',
+            'recipient_postcode' => 'nullable|string|max:50',
+            'recipient_city' => 'nullable|string|max:255',
+            'recipient_nip' => 'nullable|string|max:50',
+            'contact_name' => 'required|string|max:255',
+            'contact_phone' => 'required|string|max:50',
+            'contact_email' => 'required|email|max:255',
+            'participant_first_name' => 'required|string|max:255',
+            'participant_last_name' => 'required|string|max:255',
+            'participant_email' => 'required|email|max:255',
+            'invoice_notes' => 'nullable|string',
+            'payment_terms' => 'required|integer|min:1',
+            'consent' => 'required|accepted',
+        ], [
+            'buyer_name.required' => 'Nazwa nabywcy jest wymagana.',
+            'buyer_address.required' => 'Adres jest wymagany.',
+            'buyer_postcode.required' => 'Kod pocztowy jest wymagany.',
+            'buyer_city.required' => 'Miasto jest wymagane.',
+            'buyer_nip.required' => 'NIP jest wymagany.',
+            'contact_name.required' => 'Nazwa/imię nazwisko jest wymagane.',
+            'contact_phone.required' => 'Telefon kontaktowy jest wymagany.',
+            'contact_email.required' => 'E-mail jest wymagany.',
+            'contact_email.email' => 'Podaj prawidłowy adres e-mail.',
+            'participant_first_name.required' => 'Imię uczestnika jest wymagane.',
+            'participant_last_name.required' => 'Nazwisko uczestnika jest wymagane.',
+            'participant_email.required' => 'E-mail uczestnika jest wymagany.',
+            'participant_email.email' => 'Podaj prawidłowy adres e-mail uczestnika.',
+            'payment_terms.required' => 'Termin płatności jest wymagany.',
+            'payment_terms.min' => 'Termin płatności musi być większy niż 0 dni.',
+            'consent.required' => 'Musisz wyrazić zgodę na przetwarzanie danych osobowych.',
+            'consent.accepted' => 'Musisz wyrazić zgodę na przetwarzanie danych osobowych.',
+        ]);
+
+        try {
+            // Określ publigo_product_id - dla kursów z Publigo użyj id_old
+            $publicoProductId = null;
+            if ($course->source_id_old === 'certgen_Publigo' && $course->id_old) {
+                $publicoProductId = $course->id_old;
+            } elseif ($course->publigo_product_id) {
+                $publicoProductId = $course->publigo_product_id;
+            }
+
+            // Utwórz zamówienie
+            $order = FormOrder::create([
+                'ident' => FormOrder::generateIdent(),
+                'ptw' => $validated['payment_terms'],
+                'order_date' => now(),
+                'product_id' => $course->id,
+                'product_name' => $course->title,
+                'product_price' => null, // Można dodać pole price w courses jeśli istnieje
+                'product_description' => strip_tags($course->description ?? ''),
+                'publigo_product_id' => $publicoProductId,
+                'publigo_price_id' => $course->publigo_price_id,
+                'publigo_sent' => 0,
+                'participant_name' => $validated['participant_first_name'] . ' ' . $validated['participant_last_name'],
+                'participant_email' => $validated['participant_email'],
+                'orderer_name' => $validated['contact_name'],
+                'orderer_address' => $validated['buyer_address'],
+                'orderer_postal_code' => $validated['buyer_postcode'],
+                'orderer_city' => $validated['buyer_city'],
+                'orderer_phone' => $validated['contact_phone'],
+                'orderer_email' => $validated['contact_email'],
+                'buyer_name' => $validated['buyer_name'],
+                'buyer_address' => $validated['buyer_address'],
+                'buyer_postal_code' => $validated['buyer_postcode'],
+                'buyer_city' => $validated['buyer_city'],
+                'buyer_nip' => $validated['buyer_nip'],
+                'recipient_name' => $validated['recipient_name'],
+                'recipient_address' => $validated['recipient_address'],
+                'recipient_postal_code' => $validated['recipient_postcode'],
+                'recipient_city' => $validated['recipient_city'],
+                'recipient_nip' => $validated['recipient_nip'],
+                'invoice_notes' => $validated['invoice_notes'],
+                'invoice_payment_delay' => $validated['payment_terms'],
+                'status_completed' => 0,
+                'ip_address' => $request->ip(),
+            ]);
+
+            Log::info('Deferred order created', [
+                'order_id' => $order->id,
+                'ident' => $order->ident,
+                'course_id' => $course->id,
+                'participant_email' => $order->participant_email,
+            ]);
+
+            return redirect()
+                ->route('courses.show', $course->id)
+                ->with('success', 'Zamówienie zostało złożone pomyślnie! Numer zamówienia: ' . $order->ident);
+
+        } catch (Exception $e) {
+            Log::error('Error creating deferred order', [
+                'error' => $e->getMessage(),
+                'course_id' => $id,
+            ]);
+
+            return back()
+                ->withInput()
+                ->with('error', 'Wystąpił błąd podczas składania zamówienia. Spróbuj ponownie.');
+        }
     }
 }
