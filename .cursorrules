@@ -1,0 +1,205 @@
+# Cursor AI Rules - Development Environment Configuration
+
+## 🔧 Development Environment
+- **OS**: Windows with WSL2 (Linux subsystem)
+- **Containerization**: Docker + Laravel Sail
+- **PHP Version**: 8.4
+- **Laravel Version**: 11.x
+- **Frontend Framework**: Bootstrap 5.2.3
+- **Package Manager**: npm/composer
+
+## ⚠️ CRITICAL: Command Execution Rules
+
+### Always use `sail` prefix for Laravel/PHP commands:
+```bash
+# ✅ CORRECT - Always use these patterns:
+sail artisan [command]
+sail composer [command]
+sail php [command]
+sail mysql
+sail test
+sail npm [command]
+
+# ❌ WRONG - Never use these directly:
+php artisan [command]
+composer [command]
+mysql
+```
+
+### Command Mapping Reference:
+| Direct Command | Sail Command |
+|---------------|--------------|
+| `php artisan migrate` | `sail artisan migrate` |
+| `php artisan make:model` | `sail artisan make:model` |
+| `composer install` | `sail composer install` |
+| `composer require` | `sail composer require` |
+| `php artisan db:seed` | `sail artisan db:seed` |
+| `php artisan tinker` | `sail artisan tinker` |
+| `npm install` | `sail npm install` |
+| `npm run dev` | `sail npm run dev` |
+| `npm run build` | `sail npm build` |
+| `phpunit` | `sail test` |
+| `mysql` | `sail mysql` |
+
+### Docker & Sail Management:
+```bash
+# Start the development environment
+sail up -d
+
+# Stop the development environment
+sail down
+
+# View logs
+sail logs
+
+# Restart services
+sail restart
+```
+
+## 🎨 Frontend Development
+
+### Framework: Bootstrap 5.2.3
+- Use Bootstrap classes and components
+- Bootstrap is already configured in the project
+- Vite is used for asset compilation
+- Sass is available for custom styling
+
+### Asset Commands:
+```bash
+# Development with hot reload
+sail npm run dev
+
+# Production build
+sail npm run build
+```
+
+## 🗄️ Database Access
+
+### MySQL Database:
+- **Host**: localhost (from host machine)
+- **Port**: 3306
+- **Access inside container**: `sail mysql`
+
+### PHPMyAdmin:
+- **URL**: http://localhost:8082
+- Already configured and running in Docker
+
+### Redis:
+- **Port**: 6379
+- Available in Docker network
+
+## 📁 Project Structure
+
+### Key Directories:
+- `/app` - Application code (Models, Controllers, etc.)
+- `/resources/views` - Blade templates
+- `/resources/js` - JavaScript files
+- `/resources/sass` - Sass/CSS files
+- `/public` - Public assets
+- `/routes` - Route definitions
+- `/database` - Migrations, seeders, factories
+- `/tests` - Test files
+
+## 🧪 Testing
+
+### Run tests:
+```bash
+# Run all tests
+sail test
+
+# Run specific test
+sail test --filter=TestName
+
+# Run with coverage
+sail test --coverage
+```
+
+## 📝 Code Style & Best Practices
+
+### Laravel Conventions:
+- Use Laravel naming conventions (PascalCase for classes, snake_case for methods)
+- Follow PSR-12 coding standards
+- Use Laravel Pint for code formatting: `sail pint`
+- Use type hints and return types
+- Write descriptive commit messages
+
+### Bootstrap Best Practices:
+- Use Bootstrap utility classes when possible
+- Maintain responsive design (mobile-first)
+- Use Bootstrap components consistently
+- Keep custom CSS minimal and organized
+
+## 🔒 Environment Variables
+- Never commit `.env` file
+- Use `.env.example` as template
+- All sensitive data in `.env`
+
+## 🚀 Common Development Workflows
+
+### Creating a new feature:
+1. `sail artisan make:model ModelName -mcr` (model, migration, controller, resource)
+2. Edit migration file
+3. `sail artisan migrate`
+4. Implement controller logic
+5. Create Blade views with Bootstrap
+6. Define routes
+7. Test with `sail test`
+
+### Adding a new package:
+```bash
+# PHP package
+sail composer require vendor/package
+
+# JavaScript package
+sail npm install package-name
+```
+
+### Database operations:
+```bash
+# Create migration
+sail artisan make:migration create_table_name
+
+# Run migrations
+sail artisan migrate
+
+# Rollback
+sail artisan migrate:rollback
+
+# Fresh migration with seeding
+sail artisan migrate:fresh --seed
+
+# Create seeder
+sail artisan make:seeder TableNameSeeder
+```
+
+## 🌐 Application URLs
+- **Main App**: http://localhost:8081
+- **PHPMyAdmin**: http://localhost:8082
+- **Mailpit**: http://localhost:8025
+- **Vite Dev Server**: http://localhost:5174
+
+## 🐛 Debugging
+- Use Laravel Pail for log monitoring: `sail artisan pail`
+- Xdebug is available (configure in `.env` with `SAIL_XDEBUG_MODE=debug`)
+- Check logs: `sail logs` or `storage/logs/laravel.log`
+
+## 📦 Important Packages Installed
+- `laravel/sail` - Docker development environment
+- `laravel/tinker` - REPL for Laravel
+- `guizoxxv/laravel-breeze-bootstrap` - Bootstrap authentication scaffolding
+- `laravel-lang/lang` - Translations
+- Bootstrap 5.2.3 - Frontend framework
+
+## 💡 Additional Notes
+- Always ensure Docker is running before executing sail commands
+- Use `sail shell` to access container bash
+- The project runs in WSL2, so file permissions are important
+- Use Git Bash or WSL terminal for best compatibility
+
+## 🎯 Priority Reminders for AI
+1. **ALWAYS** prefix Laravel/PHP/Composer commands with `sail`
+2. **ALWAYS** consider Bootstrap components and utilities first for UI
+3. **ALWAYS** use Laravel conventions and best practices
+4. **NEVER** run `php`, `composer`, or `artisan` directly without `sail`
+5. **NEVER** commit sensitive data or `.env` file
+
