@@ -145,14 +145,14 @@
                     <legend>NABYWCA (dane do faktury)</legend>
                     <div class="mb-3">
                         <label for="buyer_name" class="form-label">Nazwa nabywcy <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control @error('buyer_name') is-invalid @enderror" id="buyer_name" name="buyer_name" value="{{ old('buyer_name', 'Gmina Bieżuń') }}" required>
+                        <input type="text" class="form-control @error('buyer_name') is-invalid @enderror" id="buyer_name" name="buyer_name" value="{{ old('buyer_name') }}" required>
                         @error('buyer_name')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
                     <div class="mb-3">
                         <label for="buyer_address" class="form-label">Adres <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control @error('buyer_address') is-invalid @enderror" id="buyer_address" name="buyer_address" value="{{ old('buyer_address', 'ul. Warszawska 5') }}" required>
+                        <input type="text" class="form-control @error('buyer_address') is-invalid @enderror" id="buyer_address" name="buyer_address" value="{{ old('buyer_address') }}" required>
                         @error('buyer_address')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
@@ -160,14 +160,14 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="buyer_postcode" class="form-label">Kod pocztowy <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control @error('buyer_postcode') is-invalid @enderror" id="buyer_postcode" name="buyer_postcode" value="{{ old('buyer_postcode', '09-320') }}" required>
+                            <input type="text" class="form-control @error('buyer_postcode') is-invalid @enderror" id="buyer_postcode" name="buyer_postcode" value="{{ old('buyer_postcode') }}" required>
                             @error('buyer_postcode')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="buyer_city" class="form-label">Poczta / Miasto <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control @error('buyer_city') is-invalid @enderror" id="buyer_city" name="buyer_city" value="{{ old('buyer_city', 'Bieżuń') }}" required>
+                            <input type="text" class="form-control @error('buyer_city') is-invalid @enderror" id="buyer_city" name="buyer_city" value="{{ old('buyer_city') }}" required>
                             @error('buyer_city')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -175,7 +175,7 @@
                     </div>
                     <div class="mb-3">
                         <label for="buyer_nip" class="form-label">NIP <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control @error('buyer_nip') is-invalid @enderror" id="buyer_nip" name="buyer_nip" value="{{ old('buyer_nip', '5110265245') }}" required>
+                        <input type="text" class="form-control @error('buyer_nip') is-invalid @enderror" id="buyer_nip" name="buyer_nip" value="{{ old('buyer_nip') }}" required>
                         @error('buyer_nip')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
@@ -185,14 +185,14 @@
                     <legend>ODBIORCA (opcjonalnie, jeśli inny niż nabywca)</legend>
                     <div class="mb-3">
                         <label for="recipient_name" class="form-label">Nazwa odbiorcy</label>
-                        <input type="text" class="form-control @error('recipient_name') is-invalid @enderror" id="recipient_name" name="recipient_name" value="{{ old('recipient_name', 'Szkoła Podstawowa im. Andrzeja Zamoyskiego') }}">
+                        <input type="text" class="form-control @error('recipient_name') is-invalid @enderror" id="recipient_name" name="recipient_name" value="{{ old('recipient_name') }}">
                         @error('recipient_name')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
                     <div class="mb-3">
                         <label for="recipient_address" class="form-label">Adres</label>
-                        <input type="text" class="form-control @error('recipient_address') is-invalid @enderror" id="recipient_address" name="recipient_address" value="{{ old('recipient_address', 'ul. Andrzeja Zamoyskiego 28') }}">
+                        <input type="text" class="form-control @error('recipient_address') is-invalid @enderror" id="recipient_address" name="recipient_address" value="{{ old('recipient_address') }}">
                         @error('recipient_address')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
@@ -200,14 +200,14 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="recipient_postcode" class="form-label">Kod pocztowy</label>
-                            <input type="text" class="form-control @error('recipient_postcode') is-invalid @enderror" id="recipient_postcode" name="recipient_postcode" value="{{ old('recipient_postcode', '09-320') }}">
+                            <input type="text" class="form-control @error('recipient_postcode') is-invalid @enderror" id="recipient_postcode" name="recipient_postcode" value="{{ old('recipient_postcode') }}">
                             @error('recipient_postcode')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="recipient_city" class="form-label">Poczta / Miasto</label>
-                            <input type="text" class="form-control @error('recipient_city') is-invalid @enderror" id="recipient_city" name="recipient_city" value="{{ old('recipient_city', 'Bieżuń') }}">
+                            <input type="text" class="form-control @error('recipient_city') is-invalid @enderror" id="recipient_city" name="recipient_city" value="{{ old('recipient_city') }}">
                             @error('recipient_city')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -225,21 +225,21 @@
                     <legend>DANE KONTAKTOWE ZAMAWIAJĄCEGO</legend>
                     <div class="mb-3">
                         <label for="contact_name" class="form-label">Nazwa/imię nazwisko <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control @error('contact_name') is-invalid @enderror" id="contact_name" name="contact_name" value="{{ old('contact_name', 'Zespół Placówek Oświatowych w Bieżuniu') }}" required>
+                        <input type="text" class="form-control @error('contact_name') is-invalid @enderror" id="contact_name" name="contact_name" value="{{ old('contact_name') }}" required>
                         @error('contact_name')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
                     <div class="mb-3">
                         <label for="contact_phone" class="form-label">Telefon kontaktowy <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control @error('contact_phone') is-invalid @enderror" id="contact_phone" name="contact_phone" value="{{ old('contact_phone', '23 76 876 54') }}" required>
+                        <input type="text" class="form-control @error('contact_phone') is-invalid @enderror" id="contact_phone" name="contact_phone" value="{{ old('contact_phone') }}" required>
                         @error('contact_phone')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
                     <div class="mb-3">
                         <label for="contact_email" class="form-label">E-mail do przesłania faktury <span class="text-danger">*</span></label>
-                        <input type="email" class="form-control @error('contact_email') is-invalid @enderror" id="contact_email" name="contact_email" value="{{ old('contact_email', 'waldemar.grabowski@zdalna-lekcja.pl') }}" required>
+                        <input type="email" class="form-control @error('contact_email') is-invalid @enderror" id="contact_email" name="contact_email" value="{{ old('contact_email') }}" required>
                         @error('contact_email')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
@@ -250,14 +250,14 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="participant_first_name" class="form-label">Imię <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control @error('participant_first_name') is-invalid @enderror" id="participant_first_name" name="participant_first_name" value="{{ old('participant_first_name', 'Waldemar') }}" required>
+                            <input type="text" class="form-control @error('participant_first_name') is-invalid @enderror" id="participant_first_name" name="participant_first_name" value="{{ old('participant_first_name') }}" required>
                             @error('participant_first_name')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="participant_last_name" class="form-label">Nazwisko <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control @error('participant_last_name') is-invalid @enderror" id="participant_last_name" name="participant_last_name" value="{{ old('participant_last_name', 'Grabowski') }}" required>
+                            <input type="text" class="form-control @error('participant_last_name') is-invalid @enderror" id="participant_last_name" name="participant_last_name" value="{{ old('participant_last_name') }}" required>
                             @error('participant_last_name')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -265,7 +265,7 @@
                     </div>
                     <div class="mb-3">
                         <label for="participant_email" class="form-label">E-mail uczestnika <span class="text-danger">*</span></label>
-                        <input type="email" class="form-control @error('participant_email') is-invalid @enderror" id="participant_email" name="participant_email" value="{{ old('participant_email', 'waldemar.grabowski@hostnet.pl') }}" required placeholder="na ten adres zostaną przesłane dane dostępowe do szkolenia">
+                        <input type="email" class="form-control @error('participant_email') is-invalid @enderror" id="participant_email" name="participant_email" value="{{ old('participant_email') }}" required placeholder="na ten adres zostaną przesłane dane dostępowe do szkolenia">
                         @error('participant_email')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
@@ -274,7 +274,7 @@
                 <div class="order-form-section">
                     <div class="mb-3">
                         <label for="invoice_notes" class="form-label">Uwagi do faktury (opcjonalnie)</label>
-                        <textarea class="form-control @error('invoice_notes') is-invalid @enderror" id="invoice_notes" name="invoice_notes" rows="2">{{ old('invoice_notes', 'Uwaga do faktury') }}</textarea>
+                        <textarea class="form-control @error('invoice_notes') is-invalid @enderror" id="invoice_notes" name="invoice_notes" rows="2">{{ old('invoice_notes') }}</textarea>
                         @error('invoice_notes')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
