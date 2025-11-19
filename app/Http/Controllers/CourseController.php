@@ -6,6 +6,7 @@ use App\Models\Course;
 use App\Models\FormOrder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Exception;
 
 class CourseController extends Controller
@@ -142,7 +143,35 @@ class CourseController extends Controller
     public function deferredOrder($id)
     {
         $course = \App\Models\Course::findOrFail($id);
-        return view('courses.deferred-order', compact('course'));
+        
+        // Sprawdź czy to tryb testowy (URL kończy się na /test)
+        $isTestMode = Str::endsWith(request()->path(), '/deferred-order/test');
+        
+        // Dane testowe
+        $testData = [];
+        if ($isTestMode) {
+            $testData = [
+                'buyer_name' => 'Gmina Bieżuń',
+                'buyer_address' => 'ul. Warszawska 5',
+                'buyer_postcode' => '09-320',
+                'buyer_city' => 'Bieżuń',
+                'buyer_nip' => '5110265245',
+                'recipient_name' => 'Szkoła Podstawowa im. Andrzeja Zamoyskiego',
+                'recipient_address' => 'ul. Andrzeja Zamoyskiego 28',
+                'recipient_postcode' => '09-320',
+                'recipient_city' => 'Bieżuń',
+                'contact_name' => 'Waldemar Grabowski',
+                'contact_phone' => '501 654 274',
+                'contact_email' => 'waldemar.grabowski@zdalna-lekcja.pl',
+                'participant_first_name' => 'Waldemar',
+                'participant_last_name' => 'Grabowski',
+                'participant_email' => 'waldemar.grabowski@hostnet.pl',
+                'invoice_notes' => 'Dane testowe - Waldek',
+                'payment_terms' => 14,
+            ];
+        }
+        
+        return view('courses.deferred-order', compact('course', 'testData', 'isTestMode'));
     }
 
     /**

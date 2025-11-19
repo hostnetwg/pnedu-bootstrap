@@ -247,6 +247,9 @@
                 <a href="{{ route('payment.online', $course->id) }}" class="btn btn-primary-custom btn-lg fw-bold shadow-sm w-100">Zapłać online</a>
                 <div class="pay-or-text">lub wypełnij</div>
                 <a href="{{ route('payment.deferred', $course->id) }}" class="btn btn-orange btn-lg fw-bold shadow-sm w-100">Formularz zamówienia z&nbsp;odroczonym terminem płatności</a>
+                @if(!empty($course->id_old))
+                    <a href="https://zdalna-lekcja.pl/zamowienia/formularz/?idP={{ $course->id_old }}" target="_blank" class="btn btn-link mt-2" style="font-size: 0.95rem;">Alternatywny formularz zamówienia</a>
+                @endif
             </div>
             <div class="mt-2 text-muted">Liczba miejsc ograniczona –<br>nie zwlekaj z&nbsp;rejestracją!</div>
         </div>
@@ -333,6 +336,9 @@
                         <a href="{{ route('payment.online', $course->id) }}" class="btn btn-primary-custom btn-lg fw-bold shadow-sm w-100">Zapłać online</a>
                         <div class="pay-or-text">lub wypełnij</div>
                         <a href="{{ route('payment.deferred', $course->id) }}" class="btn btn-orange btn-lg fw-bold shadow-sm w-100">Formularz zamówienia z&nbsp;odroczonym terminem płatności</a>
+                        @if(!empty($course->id_old))
+                            <a href="https://zdalna-lekcja.pl/zamowienia/formularz/?idP={{ $course->id_old }}" target="_blank" class="btn btn-link mt-2" style="font-size: 0.95rem;">Alternatywny formularz zamówienia</a>
+                        @endif
                     </div>
                     <div class="mt-2 text-muted">Liczba miejsc ograniczona –<br>nie zwlekaj z&nbsp;rejestracją!</div>
                 </div>
@@ -345,6 +351,9 @@
                     <a href="{{ route('payment.online', $course->id) }}" class="btn btn-primary-custom btn-lg fw-bold shadow-sm w-100">Zapłać online</a>
                     <div class="pay-or-text">lub wypełnij</div>
                     <a href="{{ route('payment.deferred', $course->id) }}" class="btn btn-orange btn-lg fw-bold shadow-sm w-100">Formularz zamówienia z&nbsp;odroczonym terminem płatności</a>
+                    @if(!empty($course->id_old))
+                        <a href="https://zdalna-lekcja.pl/zamowienia/formularz/?idP={{ $course->id_old }}" target="_blank" class="btn btn-link mt-2" style="font-size: 0.95rem;">Alternatywny formularz zamówienia</a>
+                    @endif
                 </div>
                 <div class="mt-2 text-muted">Liczba miejsc ograniczona –<br>nie zwlekaj z&nbsp;rejestracją!</div>
             </div>
