@@ -18,11 +18,32 @@
         max-width: 340px;
     }
     .course-hero-img {
-        max-width: 100%;
+        max-width: 300px;
+        width: 100%;
         border-radius: 12px;
         box-shadow: 0 4px 16px rgba(13,110,253,0.08);
         background: #fff;
-        margin-bottom: 1.5rem;
+        margin-right: 2rem;
+        display: none; /* Tymczasowo ukryte do sprawdzenia układu */
+    }
+    .course-header-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 2rem;
+        margin-bottom: 1rem;
+    }
+    .course-header-content {
+        flex: 1;
+    }
+    @media (max-width: 768px) {
+        .course-header-row {
+            flex-direction: column;
+        }
+        .course-hero-img {
+            max-width: 100%;
+            margin-right: 0;
+            margin-bottom: 1.5rem;
+        }
     }
     .course-title {
         font-size: 2.1rem;
@@ -33,7 +54,7 @@
     .course-meta {
         font-size: 1.1rem;
         color: #555;
-        margin-bottom: 1.2rem;
+        margin-bottom: 1.5rem;
     }
     .course-details-section {
         background: #fff;
@@ -251,7 +272,7 @@
                         <div class="d-flex flex-column align-items-center gap-1">
                             <div class="d-flex align-items-center justify-content-center gap-2">
                                 <span class="text-muted text-decoration-line-through" style="font-size: 0.9rem;">{{ number_format($priceInfo['original_price'], 2, ',', ' ') }} PLN</span>
-                                <span class="fw-bold text-danger" style="font-size: 1.2rem;">{{ number_format($priceInfo['price'], 2, ',', ' ') }} PLN</span>
+                                <span class="fw-bold text-danger" style="font-size: 1.2rem;">{{ number_format($priceInfo['price'], 2, ',', ' ') }} PLN</span> <span class="text-danger" style="font-size: 1.2rem;">(brutto)</span>
                             </div>
                             @if($priceInfo['promotion_end'] && $priceInfo['promotion_type'] === 'time_limited')
                                 <small style="font-size: 0.85rem; color: #000;">
@@ -263,7 +284,7 @@
                             </small>
                         </div>
                     @else
-                        <span class="fw-bold" style="font-size: 1.2rem; color: #1976d2;">{{ number_format($priceInfo['price'], 2, ',', ' ') }} PLN</span>
+                        <span class="fw-bold" style="font-size: 1.2rem; color: #1976d2;">{{ number_format($priceInfo['price'], 2, ',', ' ') }} PLN</span> <span style="font-size: 1.2rem; color: #1976d2;">(brutto)</span>
                     @endif
                 </div>
             @endif
@@ -280,27 +301,37 @@
     </div>
     <div class="course-main-row">
         <div class="course-details-col">
-            @if(!empty($course->image))
-                <img src="{{ 'https://adm.pnedu.pl/storage/' . ltrim($course->image, '/') }}" class="course-hero-img" alt="{{ $course->title }}">
-            @endif
-            <div class="course-title">{!! $course->title !!}</div>
-            <div class="course-meta">
-                <strong>Data:</strong> {{ \Carbon\Carbon::parse($course->start_date)->format('d.m.Y H:i') }}<br>
-                @php
-                    $duration = null;
-                    if ($course->end_date) {
-                        $start = \Carbon\Carbon::parse($course->start_date);
-                        $end = \Carbon\Carbon::parse($course->end_date);
-                        $diff = $start->diff($end);
-                        $duration = ($diff->h ? $diff->h . 'h ' : '') . ($diff->i ? $diff->i . 'min' : '');
-                    }
-                @endphp
-                @if($duration)
-                    <strong>Czas trwania:</strong> {{ $duration }}<br>
+            <div class="course-header-row">
+                @if(!empty($course->image))
+                    <img src="{{ 'https://adm.pnedu.pl/storage/' . ltrim($course->image, '/') }}" class="course-hero-img" alt="{{ $course->title }}">
                 @endif
-                <strong>{{ $course->trainer_title }}:</strong> {{ $course->trainer }}
+                <div class="course-header-content">
+                    <div class="course-title">{!! $course->title !!}</div>
+                    <div class="course-meta">
+                        @php
+                            $startDate = \Carbon\Carbon::parse($course->start_date)->locale('pl');
+                            $dayOfWeek = $startDate->translatedFormat('l');
+                            $formattedDate = $startDate->translatedFormat('j F Y') . ' ' . $startDate->format('H:i');
+                            
+                            $duration = null;
+                            if ($course->end_date) {
+                                $end = \Carbon\Carbon::parse($course->end_date);
+                                $diff = $startDate->diff($end);
+                                $duration = ($diff->h ? $diff->h . 'h ' : '') . ($diff->i ? $diff->i . 'min' : '');
+                            }
+                        @endphp
+                        <strong>Data:</strong> {{ $formattedDate }} ({{ $dayOfWeek }})@if($duration) | <strong>Czas trwania:</strong> {{ $duration }}@endif<br>
+                        <strong>{{ $course->trainer_title }}:</strong> {{ $course->trainer }}<br>
+                        <strong>Forma:</strong> {{ ucfirst($course->type ?? 'online') }} | 
+                        @if($course->onlineDetail && !empty($course->onlineDetail->platform))
+                            <strong>Platforma:</strong> {{ $course->onlineDetail->platform }}<br>
+                        @else
+                            <strong>Platforma:</strong> Zoom<br>
+                        @endif
+                        <strong>Dodatkowo:</strong> {{ $course->additional_info ?? 'Materiały do pobrania, zaświadczenie' }}, sesja pytań i odpowiedzi, <u>{{ $course->recording_access ? 'dostęp do nagrania ' . $course->recording_access : 'dostęp do nagrania 2 miesiące' }}</u>
+                    </div>
+                </div>
             </div>
-            <span class="badge bg-success mb-3">Szkolenie online</span>
             <div class="course-details-section mb-4">
                 @if(!empty($course->offer_description_html))
                     {!! $course->offer_description_html !!}
@@ -365,7 +396,7 @@
                                 <div class="d-flex flex-column align-items-center gap-1">
                                     <div class="d-flex align-items-center justify-content-center gap-2">
                                         <span class="text-muted text-decoration-line-through" style="font-size: 0.9rem;">{{ number_format($priceInfo['original_price'], 2, ',', ' ') }} PLN</span>
-                                        <span class="fw-bold text-danger" style="font-size: 1.2rem;">{{ number_format($priceInfo['price'], 2, ',', ' ') }} PLN</span>
+                                        <span class="fw-bold text-danger" style="font-size: 1.2rem;">{{ number_format($priceInfo['price'], 2, ',', ' ') }} PLN</span> <span class="text-danger" style="font-size: 1.2rem;">(brutto)</span>
                                     </div>
                                     @if($priceInfo['promotion_end'] && $priceInfo['promotion_type'] === 'time_limited')
                                         <small style="font-size: 0.85rem; color: #000;">
@@ -377,7 +408,7 @@
                                     </small>
                                 </div>
                             @else
-                                <span class="fw-bold" style="font-size: 1.2rem; color: #1976d2;">{{ number_format($priceInfo['price'], 2, ',', ' ') }} PLN</span>
+                                <span class="fw-bold" style="font-size: 1.2rem; color: #1976d2;">{{ number_format($priceInfo['price'], 2, ',', ' ') }} PLN</span> <span style="font-size: 1.2rem; color: #1976d2;">(brutto)</span>
                             @endif
                         </div>
                     @endif
@@ -405,7 +436,7 @@
                             <div class="d-flex flex-column align-items-center gap-1">
                                 <div class="d-flex align-items-center justify-content-center gap-2">
                                     <span class="text-muted text-decoration-line-through" style="font-size: 0.9rem;">{{ number_format($priceInfo['original_price'], 2, ',', ' ') }} PLN</span>
-                                    <span class="fw-bold text-danger" style="font-size: 1.2rem;">{{ number_format($priceInfo['price'], 2, ',', ' ') }} PLN</span>
+                                    <span class="fw-bold text-danger" style="font-size: 1.2rem;">{{ number_format($priceInfo['price'], 2, ',', ' ') }} PLN</span> <span class="text-danger" style="font-size: 1.2rem;">(brutto)</span>
                                 </div>
                                 @if($priceInfo['promotion_end'] && $priceInfo['promotion_type'] === 'time_limited')
                                     <small style="font-size: 0.85rem; color: #000;">
@@ -417,7 +448,7 @@
                                 </small>
                             </div>
                         @else
-                            <span class="fw-bold" style="font-size: 1.2rem; color: #1976d2;">{{ number_format($priceInfo['price'], 2, ',', ' ') }} PLN</span>
+                            <span class="fw-bold" style="font-size: 1.2rem; color: #1976d2;">{{ number_format($priceInfo['price'], 2, ',', ' ') }} PLN</span> <span style="font-size: 1.2rem; color: #1976d2;">(brutto)</span>
                         @endif
                     </div>
                 @endif

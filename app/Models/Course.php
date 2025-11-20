@@ -5,8 +5,10 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use App\Models\Instructor;
 use App\Models\CoursePriceVariant;
+use App\Models\CourseOnlineDetail;
 
 class Course extends Model
 {
@@ -135,6 +137,16 @@ class Course extends Model
     public function priceVariants()
     {
         return $this->hasMany(CoursePriceVariant::class, 'course_id');
+    }
+
+    /**
+     * Course has one online detail.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne
+     */
+    public function onlineDetail(): HasOne
+    {
+        return $this->hasOne(CourseOnlineDetail::class, 'course_id');
     }
 
     /**

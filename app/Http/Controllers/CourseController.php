@@ -107,7 +107,7 @@ class CourseController extends Controller
      */
     public function show($id)
     {
-        $course = \App\Models\Course::with(['instructor', 'priceVariants'])->findOrFail($id);
+        $course = \App\Models\Course::with(['instructor', 'priceVariants', 'onlineDetail'])->findOrFail($id);
         
         // Debug: sprawdź czy pole offer_description_html istnieje
         \Log::info('Course data:', [
