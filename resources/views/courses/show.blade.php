@@ -12,7 +12,6 @@
     .course-details-col {
         flex: 1 1 380px;
         min-width: 0;
-        max-width: 700px;
     }
     .course-pay-col {
         flex: 0 0 340px;
