@@ -141,7 +141,7 @@
                             @endif
                         </div>
                         <div class="card-body d-flex flex-column p-4">
-                            <h5 class="card-title fw-bold mb-3">{{ $course->title }}</h5>
+                            <h5 class="card-title fw-bold mb-3">{!! $course->title !!}</h5>
                             @php
                                 $start = \Carbon\Carbon::parse($course->start_date)->locale('pl');
                                 $end = $course->end_date ? \Carbon\Carbon::parse($course->end_date) : null;

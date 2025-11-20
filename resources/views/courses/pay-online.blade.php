@@ -8,7 +8,7 @@
         <div class="col-lg-7">
             <h1 class="mb-4">Zapłać online za szkolenie</h1>
             <div class="mb-3">
-                <strong>Szkolenie:</strong> {{ $course->title }}<br>
+                <strong>Szkolenie:</strong> {!! $course->title !!}<br>
                 <strong>Data:</strong> {{ \Carbon\Carbon::parse($course->start_date)->format('d.m.Y H:i') }}
             </div>
             <div class="alert alert-info mb-4">

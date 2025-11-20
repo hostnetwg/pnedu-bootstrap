@@ -185,7 +185,7 @@
             <h1 class="mb-4 text-center">Formularz zamówienia z&nbsp;odroczonym terminem płatności</h1>
             <div class="course-title-section text-center">
                 <div class="course-topic-label">TEMAT SZKOLENIA</div>
-                <div class="course-title"><a href="{{ route('courses.show', $course->id) }}">{{ $course->title }}</a></div>
+                <div class="course-title"><a href="{{ route('courses.show', $course->id) }}">{!! $course->title !!}</a></div>
                 <div class="course-date">Data: {{ \Carbon\Carbon::parse($course->start_date)->format('d.m.Y H:i') }}</div>
                 @if(!empty($course->trainer))
                     <div class="course-trainer">{{ $course->trainer_title }}: {{ $course->trainer }}</div>

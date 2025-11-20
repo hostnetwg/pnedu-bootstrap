@@ -283,7 +283,7 @@
             @if(!empty($course->image))
                 <img src="{{ 'https://adm.pnedu.pl/storage/' . ltrim($course->image, '/') }}" class="course-hero-img" alt="{{ $course->title }}">
             @endif
-            <div class="course-title">{{ $course->title }}</div>
+            <div class="course-title">{!! $course->title !!}</div>
             <div class="course-meta">
                 <strong>Data:</strong> {{ \Carbon\Carbon::parse($course->start_date)->format('d.m.Y H:i') }}<br>
                 @php
