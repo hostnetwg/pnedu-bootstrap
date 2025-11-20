@@ -9,7 +9,8 @@ class HomeController extends Controller
 {
     public function index()
     {
-        $courses = Course::where('is_active', true)
+        $courses = Course::with('priceVariants')
+            ->where('is_active', true)
             ->where('type', 'online')
             ->where('is_paid', 1)
             ->where('start_date', '>', now())

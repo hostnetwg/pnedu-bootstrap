@@ -190,6 +190,31 @@
                 @if(!empty($course->trainer))
                     <div class="course-trainer">{{ $course->trainer_title }}: {{ $course->trainer }}</div>
                 @endif
+                @php
+                    $priceInfo = $course->getCurrentPrice();
+                @endphp
+                @if($priceInfo)
+                    <div class="mt-3">
+                        @if($priceInfo['is_promotion'] && $priceInfo['original_price'])
+                            <div class="d-flex flex-column align-items-center gap-1">
+                                <div class="d-flex align-items-center justify-content-center gap-2">
+                                    <span class="text-muted text-decoration-line-through" style="font-size: 0.9rem;">{{ number_format($priceInfo['original_price'], 2, ',', ' ') }} PLN</span>
+                                    <span class="fw-bold text-danger" style="font-size: 1.2rem;">{{ number_format($priceInfo['price'], 2, ',', ' ') }} PLN</span>
+                                </div>
+                                @if($priceInfo['promotion_end'] && $priceInfo['promotion_type'] === 'time_limited')
+                                    <small style="font-size: 0.85rem; color: #000;">
+                                        Promocja trwa do: {{ \Carbon\Carbon::parse($priceInfo['promotion_end'])->format('d.m.Y H:i') }}
+                                    </small>
+                                @endif
+                                <small style="font-size: 0.75rem; color: #aaa;">
+                                    Najniższa cena z ostatnich 30 dni przed obniżką wynosiła: <strong style="color: #aaa;">{{ number_format($priceInfo['original_price'], 2, ',', ' ') }} PLN</strong>
+                                </small>
+                            </div>
+                        @else
+                            <span class="fw-bold" style="font-size: 1.2rem; color: #1976d2;">{{ number_format($priceInfo['price'], 2, ',', ' ') }} PLN</span>
+                        @endif
+                    </div>
+                @endif
             </div>
             <div class="organizer-section">
                 <div class="organizer-title">ORGANIZATOR:</div>

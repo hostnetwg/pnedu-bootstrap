@@ -107,7 +107,7 @@ class CourseController extends Controller
      */
     public function show($id)
     {
-        $course = \App\Models\Course::findOrFail($id);
+        $course = \App\Models\Course::with(['instructor', 'priceVariants'])->findOrFail($id);
         
         // Debug: sprawdź czy pole offer_description_html istnieje
         \Log::info('Course data:', [
@@ -142,7 +142,7 @@ class CourseController extends Controller
      */
     public function deferredOrder($id)
     {
-        $course = \App\Models\Course::findOrFail($id);
+        $course = \App\Models\Course::with('priceVariants')->findOrFail($id);
         
         // Sprawdź czy to tryb testowy (URL kończy się na /test)
         $isTestMode = Str::endsWith(request()->path(), '/deferred-order/test');
@@ -179,7 +179,7 @@ class CourseController extends Controller
      */
     public function storeDeferredOrder(Request $request, $id)
     {
-        $course = Course::findOrFail($id);
+        $course = Course::with('priceVariants')->findOrFail($id);
 
         // Walidacja danych
         $validated = $request->validate([
@@ -231,6 +231,13 @@ class CourseController extends Controller
                 $publicoProductId = $course->publigo_product_id;
             }
 
+            // Pobierz aktualną cenę kursu (z uwzględnieniem promocji)
+            $currentPrice = null;
+            $priceInfo = $course->getCurrentPrice();
+            if ($priceInfo) {
+                $currentPrice = $priceInfo['price'];
+            }
+
             // Utwórz zamówienie
             $order = FormOrder::create([
                 'ident' => FormOrder::generateIdent(),
@@ -238,7 +245,7 @@ class CourseController extends Controller
                 'order_date' => now(),
                 'product_id' => $course->id,
                 'product_name' => $course->title,
-                'product_price' => null, // Można dodać pole price w courses jeśli istnieje
+                'product_price' => $currentPrice,
                 'product_description' => strip_tags($course->description ?? ''),
                 'publigo_product_id' => $publicoProductId,
                 'publigo_price_id' => $course->publigo_price_id,
