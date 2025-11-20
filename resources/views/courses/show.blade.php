@@ -26,6 +26,16 @@
         margin-right: 2rem;
         display: none; /* Tymczasowo ukryte do sprawdzenia układu */
     }
+    .instructor-photo-header {
+        flex-shrink: 0;
+        margin-right: 1.5rem;
+    }
+    .instructor-photo-header-img {
+        max-width: 120px;
+        width: auto;
+        height: auto;
+        border-radius: 12px;
+    }
     .course-header-row {
         display: flex;
         align-items: flex-start;
@@ -35,14 +45,30 @@
     .course-header-content {
         flex: 1;
     }
+    .course-meta-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 1.5rem;
+        margin-top: 0.5rem;
+    }
+    .course-meta-content {
+        flex: 1;
+    }
     @media (max-width: 768px) {
         .course-header-row {
+            flex-direction: column;
+        }
+        .course-meta-row {
             flex-direction: column;
         }
         .course-hero-img {
             max-width: 100%;
             margin-right: 0;
             margin-bottom: 1.5rem;
+        }
+        .instructor-photo-header {
+            margin-right: 0;
+            margin-bottom: 1rem;
         }
     }
     .course-title {
@@ -302,12 +328,18 @@
     <div class="course-main-row">
         <div class="course-details-col">
             <div class="course-header-row">
-                @if(!empty($course->image))
-                    <img src="{{ 'https://adm.pnedu.pl/storage/' . ltrim($course->image, '/') }}" class="course-hero-img" alt="{{ $course->title }}">
-                @endif
                 <div class="course-header-content">
                     <div class="course-title">{!! $course->title !!}</div>
-                    <div class="course-meta">
+                    <div class="course-meta-row">
+                        @if($course->instructor && !empty($course->instructor->photo))
+                            <div class="instructor-photo-header">
+                                <img src="{{ 'https://adm.pnedu.pl/storage/' . ltrim($course->instructor->photo, '/') }}" 
+                                     alt="{{ $course->instructor->full_name }}" 
+                                     class="instructor-photo-header-img">
+                            </div>
+                        @endif
+                        <div class="course-meta-content">
+                            <div class="course-meta">
                         @php
                             $startDate = \Carbon\Carbon::parse($course->start_date)->locale('pl');
                             $dayOfWeek = $startDate->translatedFormat('l');
@@ -328,7 +360,10 @@
                         @else
                             <strong>Platforma:</strong> Zoom<br>
                         @endif
-                        <strong>Dodatkowo:</strong> {{ $course->additional_info ?? 'Materiały do pobrania, zaświadczenie' }}, sesja pytań i odpowiedzi, <u>{{ $course->recording_access ? 'dostęp do nagrania ' . $course->recording_access : 'dostęp do nagrania 2 miesiące' }}</u>
+                        <strong>Dodatkowo:</strong> {{ $course->additional_info ?? 'Materiały do pobrania, zaświadczenie' }}, sesja pytań i odpowiedzi<br>
+                        <strong>Dostęp do nagrania:</strong> {{ $course->recording_access ?? '2 miesiące' }}
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
