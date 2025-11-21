@@ -18,6 +18,9 @@ bootstrap/cache/*
 .env.*.enc                 # zaszyfrowane (laravel env:encrypt)
 .env.*.json                # dla direnv/dotenv-vault
 
+# --- Database Backups ---
+mysql-backups/
+
 # --- IDE / OS ---
 .idea/
 .vscode/
