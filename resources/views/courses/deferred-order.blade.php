@@ -233,7 +233,7 @@
                 @endif
                 <div class="mt-3" style="font-size: 0.95rem; color: #333; line-height: 1.4;">
                     Niepubliczny Ośrodek Doskonalenia Nauczycieli "Platforma Nowoczesnej Edukacji",
-                    ul. A. Zamoyskiego 30/14, 09-320 Bieżuń, RSPO: 481379 NIP: 5691238763<br>
+                    ul. A. Zamoyskiego 30/14, 09-320 Bieżuń, RSPO: 481379, NIP: 5691238763<br>
                     Kontakt: e-mail: kontakt@nowoczesna-edukacja.pl, tel. 501 654 274
                 </div>
             </div>
