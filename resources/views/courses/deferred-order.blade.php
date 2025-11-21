@@ -215,7 +215,7 @@
                             <div class="d-flex flex-column align-items-center gap-1">
                                 <div class="d-flex align-items-center justify-content-center gap-2">
                                     <span class="text-muted text-decoration-line-through" style="font-size: 0.9rem;">{{ number_format($priceInfo['original_price'], 2, ',', ' ') }} PLN</span>
-                                    <span class="fw-bold text-danger" style="font-size: 1.2rem;">{{ number_format($priceInfo['price'], 2, ',', ' ') }} PLN</span>
+                                    <span class="fw-bold text-danger" style="font-size: 1.2rem;">{{ number_format($priceInfo['price'], 2, ',', ' ') }} PLN</span> <span class="text-danger" style="font-size: 1.2rem;">(brutto)</span>
                                 </div>
                                 @if($priceInfo['promotion_end'] && $priceInfo['promotion_type'] === 'time_limited')
                                     <small style="font-size: 0.85rem; color: #000;">
@@ -227,18 +227,13 @@
                                 </small>
                             </div>
                         @else
-                            <span class="fw-bold" style="font-size: 1.2rem; color: #1976d2;">{{ number_format($priceInfo['price'], 2, ',', ' ') }} PLN</span>
+                            <span class="fw-bold" style="font-size: 1.2rem; color: #1976d2;">{{ number_format($priceInfo['price'], 2, ',', ' ') }} PLN</span> <span style="font-size: 1.2rem; color: #1976d2;">(brutto)</span>
                         @endif
                     </div>
                 @endif
-            </div>
-            <div class="organizer-section">
-                <div class="organizer-title">ORGANIZATOR:</div>
-                <div class="organizer-content">
-                    <strong>Niepubliczny Ośrodek Doskonalenia Nauczycieli</strong><br>
-                    "Platforma Nowoczesnej Edukacji"<br>
-                    ul. A. Zamoyskiego 30/14, 09-320 Bieżuń<br>
-                    RSPO: 481379 NIP: 5691238763<br>
+                <div class="mt-3" style="font-size: 0.95rem; color: #333; line-height: 1.4;">
+                    Niepubliczny Ośrodek Doskonalenia Nauczycieli "Platforma Nowoczesnej Edukacji",
+                    ul. A. Zamoyskiego 30/14, 09-320 Bieżuń, RSPO: 481379 NIP: 5691238763<br>
                     Kontakt: e-mail: kontakt@nowoczesna-edukacja.pl, tel. 501 654 274
                 </div>
             </div>
@@ -274,6 +269,30 @@
                 <input type="hidden" name="publigo_product_id" value="{{ ($course->source_id_old === 'certgen_Publigo' && $course->id_old) ? $course->id_old : $course->publigo_product_id }}">
                 <input type="hidden" name="publigo_price_id" value="{{ $course->publigo_price_id }}">
                 <div class="form-sections-grid">
+                <fieldset class="order-form-section">
+                    <legend>DANE KONTAKTOWE ZAMAWIAJĄCEGO</legend>
+                    <div class="mb-3">
+                        <label for="contact_name" class="form-label">Nazwa/imię nazwisko <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control @error('contact_name') is-invalid @enderror" id="contact_name" name="contact_name" value="{{ $testData['contact_name'] ?? old('contact_name') }}" required>
+                        @error('contact_name')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="mb-3">
+                        <label for="contact_phone" class="form-label">Telefon kontaktowy <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control @error('contact_phone') is-invalid @enderror" id="contact_phone" name="contact_phone" value="{{ $testData['contact_phone'] ?? old('contact_phone') }}" required>
+                        @error('contact_phone')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="mb-3">
+                        <label for="contact_email" class="form-label">E-mail do przesłania faktury <span class="text-danger">*</span></label>
+                        <input type="email" class="form-control @error('contact_email') is-invalid @enderror" id="contact_email" name="contact_email" value="{{ $testData['contact_email'] ?? old('contact_email') }}" required>
+                        @error('contact_email')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+                </fieldset>
                 <fieldset class="order-form-section">
                     <legend>NABYWCA (dane do faktury)</legend>
                     <div class="mb-3">
@@ -350,30 +369,6 @@
                         <label for="recipient_nip" class="form-label">NIP</label>
                         <input type="text" class="form-control @error('recipient_nip') is-invalid @enderror" id="recipient_nip" name="recipient_nip" value="{{ $testData['recipient_nip'] ?? old('recipient_nip') }}" placeholder="Wypełnij jeżeli wymagane">
                         @error('recipient_nip')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-                </fieldset>
-                <fieldset class="order-form-section">
-                    <legend>DANE KONTAKTOWE ZAMAWIAJĄCEGO</legend>
-                    <div class="mb-3">
-                        <label for="contact_name" class="form-label">Nazwa/imię nazwisko <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control @error('contact_name') is-invalid @enderror" id="contact_name" name="contact_name" value="{{ $testData['contact_name'] ?? old('contact_name') }}" required>
-                        @error('contact_name')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-                    <div class="mb-3">
-                        <label for="contact_phone" class="form-label">Telefon kontaktowy <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control @error('contact_phone') is-invalid @enderror" id="contact_phone" name="contact_phone" value="{{ $testData['contact_phone'] ?? old('contact_phone') }}" required>
-                        @error('contact_phone')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-                    <div class="mb-3">
-                        <label for="contact_email" class="form-label">E-mail do przesłania faktury <span class="text-danger">*</span></label>
-                        <input type="email" class="form-control @error('contact_email') is-invalid @enderror" id="contact_email" name="contact_email" value="{{ $testData['contact_email'] ?? old('contact_email') }}" required>
-                        @error('contact_email')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>

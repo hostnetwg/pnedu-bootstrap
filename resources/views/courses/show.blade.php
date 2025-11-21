@@ -64,7 +64,7 @@
         .course-hero-img {
             max-width: 100%;
             margin-right: 0;
-            margin-bottom: 1.5rem;
+        margin-bottom: 1.5rem;
         }
         .instructor-photo-header {
             margin-right: 0;
@@ -337,21 +337,21 @@
                                      alt="{{ $course->instructor->full_name }}" 
                                      class="instructor-photo-header-img">
                             </div>
-                        @endif
+            @endif
                         <div class="course-meta-content">
-                            <div class="course-meta">
-                        @php
+            <div class="course-meta">
+                @php
                             $startDate = \Carbon\Carbon::parse($course->start_date)->locale('pl');
                             $dayOfWeek = $startDate->translatedFormat('l');
                             $formattedDate = $startDate->translatedFormat('j F Y') . ' ' . $startDate->format('H:i');
                             
-                            $duration = null;
-                            if ($course->end_date) {
-                                $end = \Carbon\Carbon::parse($course->end_date);
+                    $duration = null;
+                    if ($course->end_date) {
+                        $end = \Carbon\Carbon::parse($course->end_date);
                                 $diff = $startDate->diff($end);
-                                $duration = ($diff->h ? $diff->h . 'h ' : '') . ($diff->i ? $diff->i . 'min' : '');
-                            }
-                        @endphp
+                        $duration = ($diff->h ? $diff->h . 'h ' : '') . ($diff->i ? $diff->i . 'min' : '');
+                    }
+                @endphp
                         <strong>Data:</strong> {{ $formattedDate }} ({{ $dayOfWeek }})@if($duration) | <strong>Czas trwania:</strong> {{ $duration }}@endif<br>
                         <strong>{{ $course->trainer_title }}:</strong> {{ $course->trainer }}<br>
                         <strong>Forma:</strong> {{ ucfirst($course->type ?? 'online') }} | 
@@ -359,7 +359,7 @@
                             <strong>Platforma:</strong> {{ $course->onlineDetail->platform }}<br>
                         @else
                             <strong>Platforma:</strong> Zoom<br>
-                        @endif
+                @endif
                         <strong>Dodatkowo:</strong> {{ $course->additional_info ?? 'Materiały do pobrania, zaświadczenie' }}, sesja pytań i odpowiedzi<br>
                         <strong>Dostęp do nagrania:</strong> {{ $course->recording_access ?? '2 miesiące' }}
                             </div>
