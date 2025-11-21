@@ -1,0 +1,45 @@
+# Cursor AI Ignore File
+# Files and directories that should be excluded from Cursor AI indexing
+
+# Dependencies
+/vendor/
+/node_modules/
+
+# Build artifacts
+/public/build/
+/public/hot
+
+# Storage and cache
+/storage/framework/cache/*
+/storage/framework/sessions/*
+/storage/framework/views/*
+/storage/logs/*
+
+# Database backups (can be large)
+/mysql-backups/*.sql
+/mysql-backups/*.gz
+
+# Environment files (sensitive)
+.env
+.env.backup
+.env.production
+
+# IDE files
+/.idea/
+/.vscode/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Large compiled files
+*.log
+*.min.js
+*.min.css
+
+# Documentation that doesn't need indexing
+/storage/framework/views/*.php
+

@@ -5,7 +5,10 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use App\Models\Instructor;
+use App\Models\CoursePriceVariant;
+use App\Models\CourseOnlineDetail;
 
 class Course extends Model
 {
@@ -43,6 +46,10 @@ class Course extends Model
         'image',
         'is_active',
         'certificate_format',
+        'id_old',
+        'source_id_old',
+        'publigo_product_id',
+        'publigo_price_id',
     ];
 
     /**
@@ -120,5 +127,68 @@ class Course extends Model
     public function instructor(): BelongsTo
     {
         return $this->belongsTo(Instructor::class, 'instructor_id');
+    }
+
+    /**
+     * Course has many price variants.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function priceVariants()
+    {
+        return $this->hasMany(CoursePriceVariant::class, 'course_id');
+    }
+
+    /**
+     * Course has one online detail.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne
+     */
+    public function onlineDetail(): HasOne
+    {
+        return $this->hasOne(CourseOnlineDetail::class, 'course_id');
+    }
+
+    /**
+     * Get the current price for the course, considering promotions.
+     *
+     * @return array|null Returns ['price' => float, 'original_price' => float|null, 'is_promotion' => bool, 'promotion_end' => string|null, 'promotion_type' => string|null] or null if no price found
+     */
+    public function getCurrentPrice(): ?array
+    {
+        // Try to find price variant by course_id first
+        $priceVariant = CoursePriceVariant::where('course_id', $this->id)
+            ->where('is_active', 1)
+            ->orderBy('price', 'asc') // Get cheapest variant
+            ->first();
+
+        // If not found and we have publigo_price_id, try to find by it
+        if (!$priceVariant && $this->publigo_price_id) {
+            $priceVariant = CoursePriceVariant::where('id', $this->publigo_price_id)
+                ->where('is_active', 1)
+                ->first();
+        }
+
+        if (!$priceVariant) {
+            return null;
+        }
+
+        $isPromotionActive = $priceVariant->isPromotionActive();
+        $currentPrice = $priceVariant->getCurrentPrice();
+        $originalPrice = $isPromotionActive ? (float) $priceVariant->price : null;
+        
+        // Get promotion end date only for time_limited promotions
+        $promotionEndDate = null;
+        if ($isPromotionActive && $priceVariant->promotion_type === 'time_limited' && $priceVariant->promotion_end) {
+            $promotionEndDate = $priceVariant->promotion_end;
+        }
+
+        return [
+            'price' => round($currentPrice, 2),
+            'original_price' => $originalPrice ? round($originalPrice, 2) : null,
+            'is_promotion' => $isPromotionActive,
+            'promotion_end' => $promotionEndDate,
+            'promotion_type' => $priceVariant->promotion_type,
+        ];
     }
 }

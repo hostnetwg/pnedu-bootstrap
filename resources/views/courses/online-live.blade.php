@@ -132,7 +132,7 @@
                                         <tr class="{{ $rowClass }}">
                                             <td>{{ $course->formatted_date }}</td>
                                             <td>{{ $course->end_date ? date('d.m.Y H:i', strtotime($course->end_date)) : '-' }}</td>
-                                            <td>{{ $course->title }}</td>
+                                            <td>{!! $course->title !!}</td>
                                             <td>{{ $course->trainer }}</td>
                                         </tr>
                                     @empty

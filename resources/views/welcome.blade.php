@@ -141,7 +141,7 @@
                             @endif
                         </div>
                         <div class="card-body d-flex flex-column p-4">
-                            <h5 class="card-title fw-bold mb-3">{{ $course->title }}</h5>
+                            <h5 class="card-title fw-bold mb-3">{!! $course->title !!}</h5>
                             @php
                                 $start = \Carbon\Carbon::parse($course->start_date)->locale('pl');
                                 $end = $course->end_date ? \Carbon\Carbon::parse($course->end_date) : null;
@@ -155,6 +155,31 @@
                                 <strong>{{ $course->trainer_title }}:</strong> {{ $course->trainer }}
                             </p>
                             <div class="mt-auto pt-3">
+                                @php
+                                    $priceInfo = $course->getCurrentPrice();
+                                @endphp
+                                @if($priceInfo)
+                                    <div class="text-center mb-3">
+                                        @if($priceInfo['is_promotion'] && $priceInfo['original_price'])
+                                            <div class="d-flex flex-column align-items-center gap-1">
+                                                <div class="d-flex align-items-center justify-content-center gap-2">
+                                                    <span class="text-muted text-decoration-line-through" style="font-size: 0.9rem;">{{ number_format($priceInfo['original_price'], 2, ',', ' ') }} PLN</span>
+                                                    <span class="fw-bold text-danger" style="font-size: 1.2rem;">{{ number_format($priceInfo['price'], 2, ',', ' ') }} PLN</span> <span class="text-danger" style="font-size: 1.2rem;">(brutto)</span>
+                                                </div>
+                                                @if($priceInfo['promotion_end'] && $priceInfo['promotion_type'] === 'time_limited')
+                                                    <small style="font-size: 0.85rem; color: #000;">
+                                                        Promocja trwa do: {{ \Carbon\Carbon::parse($priceInfo['promotion_end'])->format('d.m.Y H:i') }}
+                                                    </small>
+                                                @endif
+                                                <small style="font-size: 0.75rem; color: #aaa;">
+                                                    Najniższa cena z ostatnich 30 dni przed obniżką wynosiła: <strong style="color: #aaa;">{{ number_format($priceInfo['original_price'], 2, ',', ' ') }} PLN</strong>
+                                                </small>
+                                            </div>
+                                        @else
+                                            <span class="fw-bold" style="font-size: 1.2rem; color: #1976d2;">{{ number_format($priceInfo['price'], 2, ',', ' ') }} PLN</span> <span style="font-size: 1.2rem; color: #1976d2;">(brutto)</span>
+                                        @endif
+                                    </div>
+                                @endif
                                 <a href="{{ route('courses.show', $course->id) }}"
                                    class="btn btn-warning w-100 fw-bold d-flex align-items-center justify-content-center gap-2 shadow-sm cta-btn"
                                    style="font-size:1.15rem; letter-spacing:0.5px;">

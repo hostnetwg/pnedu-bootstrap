@@ -12,18 +12,64 @@
     .course-details-col {
         flex: 1 1 380px;
         min-width: 0;
-        max-width: 700px;
     }
     .course-pay-col {
         flex: 0 0 340px;
         max-width: 340px;
     }
     .course-hero-img {
-        max-width: 100%;
+        max-width: 300px;
+        width: 100%;
         border-radius: 12px;
         box-shadow: 0 4px 16px rgba(13,110,253,0.08);
         background: #fff;
+        margin-right: 2rem;
+        display: none; /* Tymczasowo ukryte do sprawdzenia układu */
+    }
+    .instructor-photo-header {
+        flex-shrink: 0;
+        margin-right: 1.5rem;
+    }
+    .instructor-photo-header-img {
+        max-width: 120px;
+        width: auto;
+        height: auto;
+        border-radius: 12px;
+    }
+    .course-header-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 2rem;
+        margin-bottom: 1rem;
+    }
+    .course-header-content {
+        flex: 1;
+    }
+    .course-meta-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 1.5rem;
+        margin-top: 0.5rem;
+    }
+    .course-meta-content {
+        flex: 1;
+    }
+    @media (max-width: 768px) {
+        .course-header-row {
+            flex-direction: column;
+        }
+        .course-meta-row {
+            flex-direction: column;
+        }
+        .course-hero-img {
+            max-width: 100%;
+            margin-right: 0;
         margin-bottom: 1.5rem;
+        }
+        .instructor-photo-header {
+            margin-right: 0;
+            margin-bottom: 1rem;
+        }
     }
     .course-title {
         font-size: 2.1rem;
@@ -34,7 +80,7 @@
     .course-meta {
         font-size: 1.1rem;
         color: #555;
-        margin-bottom: 1.2rem;
+        margin-bottom: 1.5rem;
     }
     .course-details-section {
         background: #fff;
@@ -243,37 +289,84 @@
     <div class="pay-mobile">
         <div class="course-pay-box mb-4">
             <h3>Wybierz formę płatności i&nbsp;zarezerwuj miejsce!</h3>
+            @php
+                $priceInfo = $course->getCurrentPrice();
+            @endphp
+            @if($priceInfo)
+                <div class="text-center mb-3">
+                    @if($priceInfo['is_promotion'] && $priceInfo['original_price'])
+                        <div class="d-flex flex-column align-items-center gap-1">
+                            <div class="d-flex align-items-center justify-content-center gap-2">
+                                <span class="text-muted text-decoration-line-through" style="font-size: 0.9rem;">{{ number_format($priceInfo['original_price'], 2, ',', ' ') }} PLN</span>
+                                <span class="fw-bold text-danger" style="font-size: 1.2rem;">{{ number_format($priceInfo['price'], 2, ',', ' ') }} PLN</span> <span class="text-danger" style="font-size: 1.2rem;">(brutto)</span>
+                            </div>
+                            @if($priceInfo['promotion_end'] && $priceInfo['promotion_type'] === 'time_limited')
+                                <small style="font-size: 0.85rem; color: #000;">
+                                    Promocja trwa do: {{ \Carbon\Carbon::parse($priceInfo['promotion_end'])->format('d.m.Y H:i') }}
+                                </small>
+                            @endif
+                            <small style="font-size: 0.75rem; color: #aaa;">
+                                Najniższa cena z ostatnich 30 dni przed obniżką wynosiła: <strong style="color: #aaa;">{{ number_format($priceInfo['original_price'], 2, ',', ' ') }} PLN</strong>
+                            </small>
+                        </div>
+                    @else
+                        <span class="fw-bold" style="font-size: 1.2rem; color: #1976d2;">{{ number_format($priceInfo['price'], 2, ',', ' ') }} PLN</span> <span style="font-size: 1.2rem; color: #1976d2;">(brutto)</span>
+                    @endif
+                </div>
+            @endif
             <div class="d-flex flex-column gap-2 mb-3 align-items-center">
                 <a href="{{ route('payment.online', $course->id) }}" class="btn btn-primary-custom btn-lg fw-bold shadow-sm w-100">Zapłać online</a>
                 <div class="pay-or-text">lub wypełnij</div>
                 <a href="{{ route('payment.deferred', $course->id) }}" class="btn btn-orange btn-lg fw-bold shadow-sm w-100">Formularz zamówienia z&nbsp;odroczonym terminem płatności</a>
+                @if(!empty($course->id_old))
+                    <a href="https://zdalna-lekcja.pl/zamowienia/formularz/?idP={{ $course->id_old }}" target="_blank" class="btn btn-link mt-2" style="font-size: 0.95rem;">Alternatywny formularz zamówienia</a>
+                @endif
             </div>
             <div class="mt-2 text-muted">Liczba miejsc ograniczona –<br>nie zwlekaj z&nbsp;rejestracją!</div>
         </div>
     </div>
     <div class="course-main-row">
         <div class="course-details-col">
-            @if(!empty($course->image))
-                <img src="{{ 'https://adm.pnedu.pl/storage/' . ltrim($course->image, '/') }}" class="course-hero-img" alt="{{ $course->title }}">
+            <div class="course-header-row">
+                <div class="course-header-content">
+                    <div class="course-title">{!! $course->title !!}</div>
+                    <div class="course-meta-row">
+                        @if($course->instructor && !empty($course->instructor->photo))
+                            <div class="instructor-photo-header">
+                                <img src="{{ 'https://adm.pnedu.pl/storage/' . ltrim($course->instructor->photo, '/') }}" 
+                                     alt="{{ $course->instructor->full_name }}" 
+                                     class="instructor-photo-header-img">
+                            </div>
             @endif
-            <div class="course-title">{{ $course->title }}</div>
+                        <div class="course-meta-content">
             <div class="course-meta">
-                <strong>Data:</strong> {{ \Carbon\Carbon::parse($course->start_date)->format('d.m.Y H:i') }}<br>
                 @php
+                            $startDate = \Carbon\Carbon::parse($course->start_date)->locale('pl');
+                            $dayOfWeek = $startDate->translatedFormat('l');
+                            $formattedDate = $startDate->translatedFormat('j F Y') . ' ' . $startDate->format('H:i');
+                            
                     $duration = null;
                     if ($course->end_date) {
-                        $start = \Carbon\Carbon::parse($course->start_date);
                         $end = \Carbon\Carbon::parse($course->end_date);
-                        $diff = $start->diff($end);
+                                $diff = $startDate->diff($end);
                         $duration = ($diff->h ? $diff->h . 'h ' : '') . ($diff->i ? $diff->i . 'min' : '');
                     }
                 @endphp
-                @if($duration)
-                    <strong>Czas trwania:</strong> {{ $duration }}<br>
+                        <strong>Data:</strong> {{ $formattedDate }} ({{ $dayOfWeek }})@if($duration) | <strong>Czas trwania:</strong> {{ $duration }}@endif<br>
+                        <strong>{{ $course->trainer_title }}:</strong> {{ $course->trainer }}<br>
+                        <strong>Forma:</strong> {{ ucfirst($course->type ?? 'online') }} | 
+                        @if($course->onlineDetail && !empty($course->onlineDetail->platform))
+                            <strong>Platforma:</strong> {{ $course->onlineDetail->platform }}<br>
+                        @else
+                            <strong>Platforma:</strong> Zoom<br>
                 @endif
-                <strong>{{ $course->trainer_title }}:</strong> {{ $course->trainer }}
+                        <strong>Dodatkowo:</strong> {{ $course->additional_info ?? 'Materiały do pobrania, zaświadczenie' }}, sesja pytań i odpowiedzi<br>
+                        <strong>Dostęp do nagrania:</strong> {{ $course->recording_access ?? '2 miesiące' }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <span class="badge bg-success mb-3">Szkolenie online</span>
             <div class="course-details-section mb-4">
                 @if(!empty($course->offer_description_html))
                     {!! $course->offer_description_html !!}
@@ -329,10 +422,38 @@
             <div class="pay-mobile-bottom">
                 <div class="course-pay-box mb-4">
                     <h3>Wybierz formę płatności i&nbsp;zarezerwuj miejsce!</h3>
+                    @php
+                        $priceInfo = $course->getCurrentPrice();
+                    @endphp
+                    @if($priceInfo)
+                        <div class="text-center mb-3">
+                            @if($priceInfo['is_promotion'] && $priceInfo['original_price'])
+                                <div class="d-flex flex-column align-items-center gap-1">
+                                    <div class="d-flex align-items-center justify-content-center gap-2">
+                                        <span class="text-muted text-decoration-line-through" style="font-size: 0.9rem;">{{ number_format($priceInfo['original_price'], 2, ',', ' ') }} PLN</span>
+                                        <span class="fw-bold text-danger" style="font-size: 1.2rem;">{{ number_format($priceInfo['price'], 2, ',', ' ') }} PLN</span> <span class="text-danger" style="font-size: 1.2rem;">(brutto)</span>
+                                    </div>
+                                    @if($priceInfo['promotion_end'] && $priceInfo['promotion_type'] === 'time_limited')
+                                        <small style="font-size: 0.85rem; color: #000;">
+                                            Promocja trwa do: {{ \Carbon\Carbon::parse($priceInfo['promotion_end'])->format('d.m.Y H:i') }}
+                                        </small>
+                                    @endif
+                                    <small style="font-size: 0.75rem; color: #aaa;">
+                                        Najniższa cena z ostatnich 30 dni przed obniżką wynosiła: <strong style="color: #aaa;">{{ number_format($priceInfo['original_price'], 2, ',', ' ') }} PLN</strong>
+                                    </small>
+                                </div>
+                            @else
+                                <span class="fw-bold" style="font-size: 1.2rem; color: #1976d2;">{{ number_format($priceInfo['price'], 2, ',', ' ') }} PLN</span> <span style="font-size: 1.2rem; color: #1976d2;">(brutto)</span>
+                            @endif
+                        </div>
+                    @endif
                     <div class="d-flex flex-column gap-2 mb-3 align-items-center">
                         <a href="{{ route('payment.online', $course->id) }}" class="btn btn-primary-custom btn-lg fw-bold shadow-sm w-100">Zapłać online</a>
                         <div class="pay-or-text">lub wypełnij</div>
                         <a href="{{ route('payment.deferred', $course->id) }}" class="btn btn-orange btn-lg fw-bold shadow-sm w-100">Formularz zamówienia z&nbsp;odroczonym terminem płatności</a>
+                        @if(!empty($course->id_old))
+                            <a href="https://zdalna-lekcja.pl/zamowienia/formularz/?idP={{ $course->id_old }}" target="_blank" class="btn btn-link mt-2" style="font-size: 0.95rem;">Alternatywny formularz zamówienia</a>
+                        @endif
                     </div>
                     <div class="mt-2 text-muted">Liczba miejsc ograniczona –<br>nie zwlekaj z&nbsp;rejestracją!</div>
                 </div>
@@ -341,10 +462,38 @@
         <div class="course-pay-col">
             <div class="course-pay-box">
                 <h3>Wybierz formę płatności i&nbsp;zarezerwuj miejsce!</h3>
+                @php
+                    $priceInfo = $course->getCurrentPrice();
+                @endphp
+                @if($priceInfo)
+                    <div class="text-center mb-3">
+                        @if($priceInfo['is_promotion'] && $priceInfo['original_price'])
+                            <div class="d-flex flex-column align-items-center gap-1">
+                                <div class="d-flex align-items-center justify-content-center gap-2">
+                                    <span class="text-muted text-decoration-line-through" style="font-size: 0.9rem;">{{ number_format($priceInfo['original_price'], 2, ',', ' ') }} PLN</span>
+                                    <span class="fw-bold text-danger" style="font-size: 1.2rem;">{{ number_format($priceInfo['price'], 2, ',', ' ') }} PLN</span> <span class="text-danger" style="font-size: 1.2rem;">(brutto)</span>
+                                </div>
+                                @if($priceInfo['promotion_end'] && $priceInfo['promotion_type'] === 'time_limited')
+                                    <small style="font-size: 0.85rem; color: #000;">
+                                        Promocja trwa do: {{ \Carbon\Carbon::parse($priceInfo['promotion_end'])->format('d.m.Y H:i') }}
+                                    </small>
+                                @endif
+                                <small style="font-size: 0.75rem; color: #aaa;">
+                                    Najniższa cena z ostatnich 30 dni przed obniżką wynosiła: <strong style="color: #aaa;">{{ number_format($priceInfo['original_price'], 2, ',', ' ') }} PLN</strong>
+                                </small>
+                            </div>
+                        @else
+                            <span class="fw-bold" style="font-size: 1.2rem; color: #1976d2;">{{ number_format($priceInfo['price'], 2, ',', ' ') }} PLN</span> <span style="font-size: 1.2rem; color: #1976d2;">(brutto)</span>
+                        @endif
+                    </div>
+                @endif
                 <div class="d-flex flex-column gap-2 mb-3 align-items-center">
                     <a href="{{ route('payment.online', $course->id) }}" class="btn btn-primary-custom btn-lg fw-bold shadow-sm w-100">Zapłać online</a>
                     <div class="pay-or-text">lub wypełnij</div>
                     <a href="{{ route('payment.deferred', $course->id) }}" class="btn btn-orange btn-lg fw-bold shadow-sm w-100">Formularz zamówienia z&nbsp;odroczonym terminem płatności</a>
+                    @if(!empty($course->id_old))
+                        <a href="https://zdalna-lekcja.pl/zamowienia/formularz/?idP={{ $course->id_old }}" target="_blank" class="btn btn-link mt-2" style="font-size: 0.95rem;">Alternatywny formularz zamówienia</a>
+                    @endif
                 </div>
                 <div class="mt-2 text-muted">Liczba miejsc ograniczona –<br>nie zwlekaj z&nbsp;rejestracją!</div>
             </div>
