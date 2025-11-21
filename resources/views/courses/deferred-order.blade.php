@@ -104,7 +104,23 @@
         text-decoration: underline;
     }
     .order-form-section:not(:last-child) {
-        margin-bottom: 2.7rem;
+        margin-bottom: 0;
+    }
+    .form-sections-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 2.7rem;
+    }
+    @media (min-width: 992px) {
+        .form-sections-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+        .form-section-full-width {
+            grid-column: 1 / -1;
+        }
+        .order-form-section {
+            margin-bottom: 0;
+        }
     }
     .course-title-section {
         background: linear-gradient(135deg, #e3f2fd 60%, #f3e5f5 100%);
@@ -180,8 +196,8 @@
 
 @section('content')
 <div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-7">
+    <div class="row">
+        <div class="col-12 col-lg-12">
             <h1 class="mb-4 text-center">Formularz zamówienia z&nbsp;odroczonym terminem płatności</h1>
             <div class="course-title-section text-center">
                 <div class="course-topic-label">TEMAT SZKOLENIA</div>
@@ -257,6 +273,7 @@
                 {{-- Dla kursów z certgen_Publigo użyj id_old, w przeciwnym razie użyj publigo_product_id --}}
                 <input type="hidden" name="publigo_product_id" value="{{ ($course->source_id_old === 'certgen_Publigo' && $course->id_old) ? $course->id_old : $course->publigo_product_id }}">
                 <input type="hidden" name="publigo_price_id" value="{{ $course->publigo_price_id }}">
+                <div class="form-sections-grid">
                 <fieldset class="order-form-section">
                     <legend>NABYWCA (dane do faktury)</legend>
                     <div class="mb-3">
@@ -362,6 +379,23 @@
                     </div>
                 </fieldset>
                 <fieldset class="order-form-section">
+                    <legend>UWAGI DO FAKTURY</legend>
+                    <div class="mb-3">
+                        <label for="invoice_notes" class="form-label">Uwagi do faktury (opcjonalnie)</label>
+                        <textarea class="form-control @error('invoice_notes') is-invalid @enderror" id="invoice_notes" name="invoice_notes" rows="2">{{ $testData['invoice_notes'] ?? old('invoice_notes') }}</textarea>
+                        @error('invoice_notes')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="mb-3">
+                        <label for="payment_terms" class="form-label">Termin płatności (dni) <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control @error('payment_terms') is-invalid @enderror" id="payment_terms" name="payment_terms" value="{{ $testData['payment_terms'] ?? old('payment_terms', 14) }}" min="1" required>
+                        @error('payment_terms')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+                </fieldset>
+                <fieldset class="order-form-section form-section-full-width">
                     <legend>DANE UCZESTNIKA SZKOLENIA</legend>
                     <div class="row">
                         <div class="col-md-6 mb-3">
@@ -390,21 +424,7 @@
                         </div>
                     </div>
                 </fieldset>
-                <div class="order-form-section">
-                    <div class="mb-3">
-                        <label for="invoice_notes" class="form-label">Uwagi do faktury (opcjonalnie)</label>
-                        <textarea class="form-control @error('invoice_notes') is-invalid @enderror" id="invoice_notes" name="invoice_notes" rows="2">{{ $testData['invoice_notes'] ?? old('invoice_notes') }}</textarea>
-                        @error('invoice_notes')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-                    <div class="mb-3">
-                        <label for="payment_terms" class="form-label">Termin płatności (dni) <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control @error('payment_terms') is-invalid @enderror" id="payment_terms" name="payment_terms" value="{{ $testData['payment_terms'] ?? old('payment_terms', 14) }}" min="1" required>
-                        @error('payment_terms')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
+                <div class="order-form-section form-section-full-width">
                     <div class="mb-3 form-check">
                         <input type="checkbox" class="form-check-input @error('consent') is-invalid @enderror" id="consent" name="consent" {{ ($isTestMode ?? false) || old('consent') ? 'checked' : '' }} required>
                         <label class="form-check-label" for="consent">Wyrażam zgodę na przetwarzanie danych osobowych zgodnie z polityką prywatności. <span class="text-danger">*</span></label>
@@ -416,6 +436,7 @@
                         <button type="submit" class="btn btn-primary flex-fill">Wyślij zamówienie</button>
                         <a href="{{ route('courses.show', $course->id) }}" class="btn btn-link flex-fill">Powrót do szczegółów szkolenia</a>
                     </div>
+                </div>
                 </div>
             </form>
         </div>
