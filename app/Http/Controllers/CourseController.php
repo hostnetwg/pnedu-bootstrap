@@ -6,8 +6,11 @@ use App\Models\Course;
 use App\Models\FormOrder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Exception;
+use Barryvdh\DomPDF\Facade\Pdf;
+use App\Mail\OrderNotificationMail;
 
 class CourseController extends Controller
 {
@@ -140,16 +143,50 @@ class CourseController extends Controller
     /**
      * Wyświetl formularz zamówienia z odroczonym terminem płatności.
      */
-    public function deferredOrder($id)
+    public function deferredOrder($id, $ident = null)
     {
         $course = \App\Models\Course::with('priceVariants')->findOrFail($id);
         
         // Sprawdź czy to tryb testowy (URL kończy się na /test)
         $isTestMode = Str::endsWith(request()->path(), '/deferred-order/test');
         
-        // Dane testowe
-        $testData = [];
-        if ($isTestMode) {
+        // Sprawdź czy to edycja istniejącego zamówienia
+        $orderData = [];
+        $isEditMode = false;
+        
+        if ($ident) {
+            $existingOrder = FormOrder::where('ident', $ident)->first();
+            if ($existingOrder && $existingOrder->product_id == $id) {
+                $isEditMode = true;
+                // Wczytaj dane z zamówienia
+                $orderData = [
+                    'buyer_name' => $existingOrder->buyer_name,
+                    'buyer_address' => $existingOrder->buyer_address,
+                    'buyer_postcode' => $existingOrder->buyer_postal_code,
+                    'buyer_city' => $existingOrder->buyer_city,
+                    'buyer_nip' => $existingOrder->buyer_nip,
+                    'recipient_name' => $existingOrder->recipient_name,
+                    'recipient_address' => $existingOrder->recipient_address,
+                    'recipient_postcode' => $existingOrder->recipient_postal_code,
+                    'recipient_city' => $existingOrder->recipient_city,
+                    'recipient_nip' => $existingOrder->recipient_nip,
+                    'contact_name' => $existingOrder->orderer_name,
+                    'contact_phone' => $existingOrder->orderer_phone,
+                    'contact_email' => $existingOrder->orderer_email,
+                    'participant_first_name' => explode(' ', $existingOrder->participant_name)[0] ?? '',
+                    'participant_last_name' => implode(' ', array_slice(explode(' ', $existingOrder->participant_name), 1)),
+                    'participant_email' => $existingOrder->participant_email,
+                    'invoice_notes' => $existingOrder->invoice_notes,
+                    'payment_terms' => $existingOrder->invoice_payment_delay ?? $existingOrder->ptw,
+                    'order_id' => $existingOrder->id,
+                    'order_ident' => $existingOrder->ident,
+                ];
+            }
+        }
+        
+        // Dane testowe (tylko jeśli nie ma danych z zamówienia)
+        $testData = $orderData;
+        if (empty($testData) && $isTestMode) {
             $testData = [
                 'buyer_name' => 'Gmina Bieżuń',
                 'buyer_address' => 'ul. Warszawska 5',
@@ -171,7 +208,7 @@ class CourseController extends Controller
             ];
         }
         
-        return view('courses.deferred-order', compact('course', 'testData', 'isTestMode'));
+        return view('courses.deferred-order', compact('course', 'testData', 'isTestMode', 'isEditMode'));
     }
 
     /**
@@ -238,18 +275,23 @@ class CourseController extends Controller
                 $currentPrice = $priceInfo['price'];
             }
 
-            // Utwórz zamówienie
-            $order = FormOrder::create([
-                'ident' => FormOrder::generateIdent(),
+            // Sprawdź czy to edycja istniejącego zamówienia
+            $order = null;
+            if ($request->has('order_ident') && $request->order_ident) {
+                $order = FormOrder::where('ident', $request->order_ident)
+                    ->where('product_id', $id)
+                    ->first();
+            }
+
+            // Dane do zapisania
+            $orderData = [
                 'ptw' => $validated['payment_terms'],
-                'order_date' => now(),
                 'product_id' => $course->id,
                 'product_name' => $course->title,
                 'product_price' => $currentPrice,
                 'product_description' => strip_tags($course->description ?? ''),
                 'publigo_product_id' => $publicoProductId,
                 'publigo_price_id' => $course->publigo_price_id,
-                'publigo_sent' => 0,
                 'participant_name' => $validated['participant_first_name'] . ' ' . $validated['participant_last_name'],
                 'participant_email' => $validated['participant_email'],
                 'orderer_name' => $validated['contact_name'],
@@ -270,20 +312,36 @@ class CourseController extends Controller
                 'recipient_nip' => $validated['recipient_nip'],
                 'invoice_notes' => $validated['invoice_notes'],
                 'invoice_payment_delay' => $validated['payment_terms'],
-                'status_completed' => 0,
                 'ip_address' => $request->ip(),
-            ]);
+            ];
 
-            Log::info('Deferred order created', [
-                'order_id' => $order->id,
-                'ident' => $order->ident,
-                'course_id' => $course->id,
-                'participant_email' => $order->participant_email,
-            ]);
+            // Aktualizuj istniejące zamówienie lub utwórz nowe
+            if ($order) {
+                $order->update($orderData);
+                Log::info('Deferred order updated', [
+                    'order_id' => $order->id,
+                    'ident' => $order->ident,
+                    'course_id' => $course->id,
+                    'participant_email' => $order->participant_email,
+                ]);
+            } else {
+                $orderData['ident'] = FormOrder::generateIdent();
+                $orderData['order_date'] = now();
+                $orderData['publigo_sent'] = 0;
+                $orderData['status_completed'] = 0;
+                $order = FormOrder::create($orderData);
+                Log::info('Deferred order created', [
+                    'order_id' => $order->id,
+                    'ident' => $order->ident,
+                    'course_id' => $course->id,
+                    'participant_email' => $order->participant_email,
+                ]);
+            }
 
+            // Przekierowanie do strony podsumowania z PDF
             return redirect()
-                ->route('courses.show', $course->id)
-                ->with('success', 'Zamówienie zostało złożone pomyślnie! Numer zamówienia: ' . $order->ident);
+                ->route('orders.summary', ['ident' => $order->ident])
+                ->with('success', 'Zamówienie zostało złożone pomyślnie!');
 
         } catch (Exception $e) {
             Log::error('Error creating deferred order', [
@@ -295,5 +353,93 @@ class CourseController extends Controller
                 ->withInput()
                 ->with('error', 'Wystąpił błąd podczas składania zamówienia. Spróbuj ponownie.');
         }
+    }
+
+    /**
+     * Wyświetl podsumowanie zamówienia z PDF.
+     */
+    public function orderSummary($ident)
+    {
+        $order = FormOrder::where('ident', $ident)->firstOrFail();
+        $course = $order->course;
+
+        // Wyślij e-mail z załączonym PDF
+        try {
+            // Przygotuj listę adresów do wysłania
+            $emailsToSend = [];
+            
+            // Adres uczestnika
+            $participantEmail = $order->participant_email;
+            if ($participantEmail) {
+                $emailsToSend[] = strtolower(trim($participantEmail));
+            }
+            
+            // Adres do faktury (orderer_email)
+            $ordererEmail = $order->orderer_email;
+            if ($ordererEmail) {
+                $normalizedOrdererEmail = strtolower(trim($ordererEmail));
+                // Dodaj tylko jeśli różni się od adresu uczestnika
+                if (!in_array($normalizedOrdererEmail, $emailsToSend)) {
+                    $emailsToSend[] = $normalizedOrdererEmail;
+                }
+            }
+            
+            // Zawsze dodaj adres waldemar.grabowski@hostnet.pl
+            $adminEmail = 'waldemar.grabowski@hostnet.pl';
+            if (!in_array(strtolower($adminEmail), $emailsToSend)) {
+                $emailsToSend[] = $adminEmail;
+            }
+            
+            Log::info('Próba wysyłki e-maila z zamówieniem', [
+                'order_id' => $order->id,
+                'order_ident' => $order->ident,
+                'emails' => $emailsToSend
+            ]);
+            
+            // Wyślij e-mail na wszystkie adresy
+            foreach ($emailsToSend as $email) {
+                try {
+                    Mail::to($email)
+                        ->send(new OrderNotificationMail($order, $course));
+                    
+                    Log::info('E-mail z zamówieniem został wysłany', [
+                        'order_id' => $order->id,
+                        'order_ident' => $order->ident,
+                        'email' => $email
+                    ]);
+                } catch (Exception $emailException) {
+                    // Loguj błąd dla konkretnego adresu, ale kontynuuj wysyłkę na pozostałe
+                    Log::error('Błąd wysyłki e-maila z zamówieniem na konkretny adres: ' . $emailException->getMessage(), [
+                        'order_id' => $order->id,
+                        'order_ident' => $order->ident,
+                        'email' => $email,
+                        'exception' => $emailException->getTraceAsString()
+                    ]);
+                }
+            }
+            
+        } catch (Exception $e) {
+            // Loguj błąd, ale nie blokuj wyświetlania podsumowania
+            Log::error('Błąd wysyłki e-maila z zamówieniem: ' . $e->getMessage(), [
+                'order_id' => $order->id,
+                'order_ident' => $order->ident,
+                'exception' => $e->getTraceAsString()
+            ]);
+        }
+
+        return view('orders.summary', compact('order', 'course'));
+    }
+
+    /**
+     * Generuj PDF z zamówieniem.
+     */
+    public function orderPdf($ident)
+    {
+        $order = FormOrder::where('ident', $ident)->firstOrFail();
+        $course = $order->course;
+
+        $pdf = Pdf::loadView('orders.pdf', compact('order', 'course'));
+        
+        return $pdf->stream('zamowienie-' . $order->ident . '.pdf');
     }
 }

@@ -268,6 +268,9 @@
                 {{-- Dla kursów z certgen_Publigo użyj id_old, w przeciwnym razie użyj publigo_product_id --}}
                 <input type="hidden" name="publigo_product_id" value="{{ ($course->source_id_old === 'certgen_Publigo' && $course->id_old) ? $course->id_old : $course->publigo_product_id }}">
                 <input type="hidden" name="publigo_price_id" value="{{ $course->publigo_price_id }}">
+                @if(isset($testData['order_ident']))
+                    <input type="hidden" name="order_ident" value="{{ $testData['order_ident'] }}">
+                @endif
                 <div class="form-sections-grid">
                 <fieldset class="order-form-section">
                     <legend>DANE KONTAKTOWE ZAMAWIAJĄCEGO</legend>

@@ -21,6 +21,9 @@ bootstrap/cache/*
 # --- Database Backups ---
 mysql-backups/
 
+# --- Docker Overrides (lokalne konfiguracje) ---
+docker-compose.override.yml
+
 # --- IDE / OS ---
 .idea/
 .vscode/
