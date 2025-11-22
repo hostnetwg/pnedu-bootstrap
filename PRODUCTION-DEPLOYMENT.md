@@ -3,8 +3,33 @@
 ## Po wykonaniu git pull na produkcji wykonaj:
 
 ### 1. Zaktualizuj autoloader Composer
+
+**Opcja A:** Jeśli composer jest dostępny globalnie:
 ```bash
 composer dump-autoload
+```
+
+**Opcja B:** Jeśli composer jest w vendor/bin:
+```bash
+php vendor/bin/composer dump-autoload
+```
+
+**Opcja C:** Jeśli masz composer.phar w katalogu głównym:
+```bash
+php composer.phar dump-autoload
+```
+
+**Opcja D:** Jeśli używasz Laravel Sail:
+```bash
+./vendor/bin/sail composer dump-autoload
+# lub
+sail composer dump-autoload
+```
+
+**Opcja E:** Jeśli nie masz dostępu do composer, możesz ręcznie odświeżyć autoload:
+```bash
+php artisan clear-compiled
+php artisan optimize:clear
 ```
 
 ### 2. Wyczyść cache Laravel

@@ -136,7 +136,7 @@
                         <p class="mb-2"><i class="bi bi-calendar-event me-2"></i>Data szkolenia: {{ $course->formatted_date }}</p>
                     @endif
                     @if($order->product_price)
-                        <p class="mb-0"><i class="bi bi-currency-exchange me-2"></i>Cena: <strong>{{ number_format($order->product_price, 2, ',', ' ') }} zł (brutto)</strong></p>
+                        <p class="mb-0"><i class="bi bi-currency-exchange me-2"></i>Cena: <strong>{{ number_format($order->product_price, 2, ',', ' ') }} PLN (brutto)</strong></p>
                     @endif
                 </div>
 
