@@ -7,6 +7,7 @@ use App\Models\FormOrder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Exception;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -101,6 +102,306 @@ class CourseController extends Controller
             return view('courses.online-live', [
                 'courses' => collect([]),
                 'databaseError' => true
+            ]);
+        }
+    }
+
+    /**
+     * Wyświetl listę bezpłatnych szkoleń (TIK w pracy NAUCZYCIELA).
+     *
+     * @return \Illuminate\View\View
+     */
+    public function freeCourses(Request $request)
+    {
+        try {
+            $sort = $request->query('sort', 'desc');
+            $sort = in_array($sort, ['asc', 'desc']) ? $sort : 'desc';
+            $searchQuery = $request->query('q');
+
+            // Pobierz wszystkie course_id z course_series_course dla serii o id = 1
+            $seriesCourseIds = DB::connection('admpnedu')
+                ->table('course_series_course')
+                ->where('course_series_id', 1)
+                ->pluck('course_id')
+                ->toArray();
+
+            if (empty($seriesCourseIds)) {
+                // Jeśli brak kursów w serii, zwróć pustą kolekcję
+                $courses = Course::whereIn('id', [0])->paginate(20);
+            } else {
+                // Pobierz kursy z courses na podstawie course_id z course_series_course
+                $coursesQuery = Course::with(['instructor', 'onlineDetail'])
+                    ->whereIn('id', $seriesCourseIds)
+                    ->where('is_active', true);
+
+                if (!empty($searchQuery)) {
+                    $coursesQuery->where(function($q) use ($searchQuery) {
+                        $q->where('title', 'like', '%' . $searchQuery . '%')
+                          ->orWhere('description', 'like', '%' . $searchQuery . '%');
+                    });
+                }
+
+                // Sortowanie według daty rozpoczęcia
+                $courses = $coursesQuery
+                    ->orderBy('start_date', $sort)
+                    ->paginate(20)
+                    ->appends([
+                        'sort' => $sort,
+                        'q' => $searchQuery
+                    ]);
+            }
+
+            // Sprawdź uczestnictwo dla zalogowanego użytkownika
+            $userEmail = auth()->check() ? auth()->user()->email : null;
+            $participantCourseIds = [];
+            
+            if ($userEmail) {
+                try {
+                    $participants = DB::connection('admpnedu')
+                        ->table('participants')
+                        ->where('email', $userEmail)
+                        ->pluck('course_id')
+                        ->toArray();
+                    $participantCourseIds = $participants;
+                } catch (Exception $e) {
+                    Log::warning('Error checking participants: ' . $e->getMessage());
+                }
+            }
+
+            $pageTitle = 'TIK w pracy NAUCZYCIELA';
+            return view('courses.free', compact('courses', 'sort', 'searchQuery', 'participantCourseIds', 'pageTitle'));
+        } catch (Exception $e) {
+            Log::error('Error accessing free courses: ' . $e->getMessage());
+            
+            return view('courses.free', [
+                'courses' => collect([]),
+                'databaseError' => true,
+                'pageTitle' => 'TIK w pracy NAUCZYCIELA'
+            ]);
+        }
+    }
+
+    /**
+     * Wyświetl listę szkoleń dla serii Office 365 (course_series_id = 2).
+     *
+     * @return \Illuminate\View\View
+     */
+    public function office365Courses(Request $request)
+    {
+        try {
+            $sort = $request->query('sort', 'desc');
+            $sort = in_array($sort, ['asc', 'desc']) ? $sort : 'desc';
+            $searchQuery = $request->query('q');
+
+            // Pobierz wszystkie course_id z course_series_course dla serii o id = 2
+            $seriesCourseIds = DB::connection('admpnedu')
+                ->table('course_series_course')
+                ->where('course_series_id', 2)
+                ->pluck('course_id')
+                ->toArray();
+
+            if (empty($seriesCourseIds)) {
+                // Jeśli brak kursów w serii, zwróć pustą kolekcję
+                $courses = Course::whereIn('id', [0])->paginate(20);
+            } else {
+                // Pobierz kursy z courses na podstawie course_id z course_series_course
+                $coursesQuery = Course::with(['instructor', 'onlineDetail'])
+                    ->whereIn('id', $seriesCourseIds)
+                    ->where('is_active', true);
+
+                if (!empty($searchQuery)) {
+                    $coursesQuery->where(function($q) use ($searchQuery) {
+                        $q->where('title', 'like', '%' . $searchQuery . '%')
+                          ->orWhere('description', 'like', '%' . $searchQuery . '%');
+                    });
+                }
+
+                // Sortowanie według daty rozpoczęcia
+                $courses = $coursesQuery
+                    ->orderBy('start_date', $sort)
+                    ->paginate(20)
+                    ->appends([
+                        'sort' => $sort,
+                        'q' => $searchQuery
+                    ]);
+            }
+
+            // Sprawdź uczestnictwo dla zalogowanego użytkownika
+            $userEmail = auth()->check() ? auth()->user()->email : null;
+            $participantCourseIds = [];
+            
+            if ($userEmail) {
+                try {
+                    $participants = DB::connection('admpnedu')
+                        ->table('participants')
+                        ->where('email', $userEmail)
+                        ->pluck('course_id')
+                        ->toArray();
+                    $participantCourseIds = $participants;
+                } catch (Exception $e) {
+                    Log::warning('Error checking participants: ' . $e->getMessage());
+                }
+            }
+
+            $pageTitle = 'Szkolny ADMINISTRATOR Office 365';
+            return view('courses.free', compact('courses', 'sort', 'searchQuery', 'participantCourseIds', 'pageTitle'));
+        } catch (Exception $e) {
+            Log::error('Error accessing office365 courses: ' . $e->getMessage());
+            
+            return view('courses.free', [
+                'courses' => collect([]),
+                'databaseError' => true,
+                'pageTitle' => 'Szkolny ADMINISTRATOR Office 365'
+            ]);
+        }
+    }
+
+    /**
+     * Wyświetl listę szkoleń dla serii Akademia Rodzica (course_series_id = 3).
+     *
+     * @return \Illuminate\View\View
+     */
+    public function parentAcademyCourses(Request $request)
+    {
+        try {
+            $sort = $request->query('sort', 'desc');
+            $sort = in_array($sort, ['asc', 'desc']) ? $sort : 'desc';
+            $searchQuery = $request->query('q');
+
+            // Pobierz wszystkie course_id z course_series_course dla serii o id = 3
+            $seriesCourseIds = DB::connection('admpnedu')
+                ->table('course_series_course')
+                ->where('course_series_id', 3)
+                ->pluck('course_id')
+                ->toArray();
+
+            if (empty($seriesCourseIds)) {
+                // Jeśli brak kursów w serii, zwróć pustą kolekcję
+                $courses = Course::whereIn('id', [0])->paginate(20);
+            } else {
+                // Pobierz kursy z courses na podstawie course_id z course_series_course
+                $coursesQuery = Course::with(['instructor', 'onlineDetail'])
+                    ->whereIn('id', $seriesCourseIds)
+                    ->where('is_active', true);
+
+                if (!empty($searchQuery)) {
+                    $coursesQuery->where(function($q) use ($searchQuery) {
+                        $q->where('title', 'like', '%' . $searchQuery . '%')
+                          ->orWhere('description', 'like', '%' . $searchQuery . '%');
+                    });
+                }
+
+                // Sortowanie według daty rozpoczęcia
+                $courses = $coursesQuery
+                    ->orderBy('start_date', $sort)
+                    ->paginate(20)
+                    ->appends([
+                        'sort' => $sort,
+                        'q' => $searchQuery
+                    ]);
+            }
+
+            // Sprawdź uczestnictwo dla zalogowanego użytkownika
+            $userEmail = auth()->check() ? auth()->user()->email : null;
+            $participantCourseIds = [];
+            
+            if ($userEmail) {
+                try {
+                    $participants = DB::connection('admpnedu')
+                        ->table('participants')
+                        ->where('email', $userEmail)
+                        ->pluck('course_id')
+                        ->toArray();
+                    $participantCourseIds = $participants;
+                } catch (Exception $e) {
+                    Log::warning('Error checking participants: ' . $e->getMessage());
+                }
+            }
+
+            $pageTitle = 'Akademia Rodzica';
+            return view('courses.free', compact('courses', 'sort', 'searchQuery', 'participantCourseIds', 'pageTitle'));
+        } catch (Exception $e) {
+            Log::error('Error accessing parent academy courses: ' . $e->getMessage());
+            
+            return view('courses.free', [
+                'courses' => collect([]),
+                'databaseError' => true,
+                'pageTitle' => 'Akademia Rodzica'
+            ]);
+        }
+    }
+
+    /**
+     * Wyświetl listę szkoleń dla serii Akademia Dyrektora (course_series_id = 4).
+     *
+     * @return \Illuminate\View\View
+     */
+    public function directorAcademyCourses(Request $request)
+    {
+        try {
+            $sort = $request->query('sort', 'desc');
+            $sort = in_array($sort, ['asc', 'desc']) ? $sort : 'desc';
+            $searchQuery = $request->query('q');
+
+            // Pobierz wszystkie course_id z course_series_course dla serii o id = 4
+            $seriesCourseIds = DB::connection('admpnedu')
+                ->table('course_series_course')
+                ->where('course_series_id', 4)
+                ->pluck('course_id')
+                ->toArray();
+
+            if (empty($seriesCourseIds)) {
+                // Jeśli brak kursów w serii, zwróć pustą kolekcję
+                $courses = Course::whereIn('id', [0])->paginate(20);
+            } else {
+                // Pobierz kursy z courses na podstawie course_id z course_series_course
+                $coursesQuery = Course::with(['instructor', 'onlineDetail'])
+                    ->whereIn('id', $seriesCourseIds)
+                    ->where('is_active', true);
+
+                if (!empty($searchQuery)) {
+                    $coursesQuery->where(function($q) use ($searchQuery) {
+                        $q->where('title', 'like', '%' . $searchQuery . '%')
+                          ->orWhere('description', 'like', '%' . $searchQuery . '%');
+                    });
+                }
+
+                // Sortowanie według daty rozpoczęcia
+                $courses = $coursesQuery
+                    ->orderBy('start_date', $sort)
+                    ->paginate(20)
+                    ->appends([
+                        'sort' => $sort,
+                        'q' => $searchQuery
+                    ]);
+            }
+
+            // Sprawdź uczestnictwo dla zalogowanego użytkownika
+            $userEmail = auth()->check() ? auth()->user()->email : null;
+            $participantCourseIds = [];
+            
+            if ($userEmail) {
+                try {
+                    $participants = DB::connection('admpnedu')
+                        ->table('participants')
+                        ->where('email', $userEmail)
+                        ->pluck('course_id')
+                        ->toArray();
+                    $participantCourseIds = $participants;
+                } catch (Exception $e) {
+                    Log::warning('Error checking participants: ' . $e->getMessage());
+                }
+            }
+
+            $pageTitle = 'Akademia Dyrektora';
+            return view('courses.free', compact('courses', 'sort', 'searchQuery', 'participantCourseIds', 'pageTitle'));
+        } catch (Exception $e) {
+            Log::error('Error accessing director academy courses: ' . $e->getMessage());
+            
+            return view('courses.free', [
+                'courses' => collect([]),
+                'databaseError' => true,
+                'pageTitle' => 'Akademia Dyrektora'
             ]);
         }
     }

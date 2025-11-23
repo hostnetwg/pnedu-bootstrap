@@ -60,8 +60,24 @@
                     </ul>
                 </li>
 
-                {{-- Blog i Kontakt (również po lewej) --}}
+                {{-- Blog --}}
                 <li class="nav-item"><a class="nav-link" href="{{ route('blog.index') }}">Blog</a></li>
+
+                {{-- BEZPŁATNE (dropdown) --}}
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="freeDropdown" role="button"
+                       data-bs-toggle="dropdown" aria-expanded="false">
+                        Bezpłatne
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="freeDropdown">
+                        <li><a class="dropdown-item" href="{{ route('courses.free') }}">TIK w pracy NAUCZYCIELA</a></li>
+                        <li><a class="dropdown-item" href="{{ route('courses.office365') }}">Szkolny ADMINISTRATOR Office 365</a></li>
+                        <li><a class="dropdown-item" href="{{ route('courses.parent-academy') }}">Akademia Rodzica</a></li>
+                        <li><a class="dropdown-item" href="{{ route('courses.director-academy') }}">Akademia Dyrektora</a></li>
+                    </ul>
+                </li>
+
+                {{-- Kontakt --}}
                 <li class="nav-item"><a class="nav-link" href="#">Kontakt</a></li>
             </ul>
 

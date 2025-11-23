@@ -28,6 +28,22 @@ Route::get('/blog', function () {
 Route::get('/szkolenia-online-live', [App\Http\Controllers\CourseController::class, 'onlineLive'])
     ->name('courses.online-live');
 
+// Bezpłatne szkolenia (TIK w pracy NAUCZYCIELA)
+Route::get('/bezplatne/tik-w-pracy-nauczyciela', [App\Http\Controllers\CourseController::class, 'freeCourses'])
+    ->name('courses.free');
+
+// Bezpłatne szkolenia (Szkolny ADMINISTRATOR Office 365)
+Route::get('/bezplatne/szkolny-administrator-office-365', [App\Http\Controllers\CourseController::class, 'office365Courses'])
+    ->name('courses.office365');
+
+// Bezpłatne szkolenia (Akademia Rodzica)
+Route::get('/bezplatne/akademia-rodzica', [App\Http\Controllers\CourseController::class, 'parentAcademyCourses'])
+    ->name('courses.parent-academy');
+
+// Bezpłatne szkolenia (Akademia Dyrektora)
+Route::get('/bezplatne/akademia-dyrektora', [App\Http\Controllers\CourseController::class, 'directorAcademyCourses'])
+    ->name('courses.director-academy');
+
 // Artykuły bloga
 Route::get('/blog/sztuczna-inteligencja-w-edukacji', function () {
     return view('blog.sztuczna-inteligencja-w-edukacji');

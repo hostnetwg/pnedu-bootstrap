@@ -191,4 +191,25 @@ class Course extends Model
             'promotion_type' => $priceVariant->promotion_type,
         ];
     }
+
+    /**
+     * Get the Publigo payment URL for this course.
+     * Returns URL to Publigo cart if course is from Publigo, null otherwise.
+     *
+     * @param int|null $priceId The price variant ID from Publigo (default: 1)
+     * @return string|null
+     */
+    public function getPubligoPaymentUrl(?int $priceId = 1): ?string
+    {
+        // Check if course is from Publigo and has id_old
+        if ($this->source_id_old === 'certgen_Publigo' && !empty($this->id_old)) {
+            return sprintf(
+                'https://nowoczesna-edukacja.pl/zamowienie/?add-to-cart=%d&price-id=%d',
+                $this->id_old,
+                $priceId ?? 1
+            );
+        }
+
+        return null;
+    }
 }

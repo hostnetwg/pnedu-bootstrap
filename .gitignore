@@ -1,6 +1,7 @@
 # --- PHP / Composer ---
 vendor/
 composer.lock              # commituj tylko, gdy faktycznie chcesz „zamrozić” wersje
+composer.phar              # lokalny composer phar
 
 # --- Node / Vite ---
 node_modules/
