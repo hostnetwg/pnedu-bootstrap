@@ -119,7 +119,7 @@ class CourseController extends Controller
             $searchQuery = $request->query('q');
 
             // Pobierz wszystkie course_id z course_series_course dla serii o id = 1
-            $seriesCourseIds = DB::connection('admpnedu')
+            $seriesCourseIds = DB::connection('pneadm')
                 ->table('course_series_course')
                 ->where('course_series_id', 1)
                 ->pluck('course_id')
@@ -157,7 +157,7 @@ class CourseController extends Controller
             
             if ($userEmail) {
                 try {
-                    $participants = DB::connection('admpnedu')
+                    $participants = DB::connection('pneadm')
                         ->table('participants')
                         ->where('email', $userEmail)
                         ->pluck('course_id')
@@ -194,7 +194,7 @@ class CourseController extends Controller
             $searchQuery = $request->query('q');
 
             // Pobierz wszystkie course_id z course_series_course dla serii o id = 2
-            $seriesCourseIds = DB::connection('admpnedu')
+            $seriesCourseIds = DB::connection('pneadm')
                 ->table('course_series_course')
                 ->where('course_series_id', 2)
                 ->pluck('course_id')
@@ -232,7 +232,7 @@ class CourseController extends Controller
             
             if ($userEmail) {
                 try {
-                    $participants = DB::connection('admpnedu')
+                    $participants = DB::connection('pneadm')
                         ->table('participants')
                         ->where('email', $userEmail)
                         ->pluck('course_id')
@@ -269,7 +269,7 @@ class CourseController extends Controller
             $searchQuery = $request->query('q');
 
             // Pobierz wszystkie course_id z course_series_course dla serii o id = 3
-            $seriesCourseIds = DB::connection('admpnedu')
+            $seriesCourseIds = DB::connection('pneadm')
                 ->table('course_series_course')
                 ->where('course_series_id', 3)
                 ->pluck('course_id')
@@ -307,7 +307,7 @@ class CourseController extends Controller
             
             if ($userEmail) {
                 try {
-                    $participants = DB::connection('admpnedu')
+                    $participants = DB::connection('pneadm')
                         ->table('participants')
                         ->where('email', $userEmail)
                         ->pluck('course_id')
@@ -344,7 +344,7 @@ class CourseController extends Controller
             $searchQuery = $request->query('q');
 
             // Pobierz wszystkie course_id z course_series_course dla serii o id = 4
-            $seriesCourseIds = DB::connection('admpnedu')
+            $seriesCourseIds = DB::connection('pneadm')
                 ->table('course_series_course')
                 ->where('course_series_id', 4)
                 ->pluck('course_id')
@@ -382,7 +382,7 @@ class CourseController extends Controller
             
             if ($userEmail) {
                 try {
-                    $participants = DB::connection('admpnedu')
+                    $participants = DB::connection('pneadm')
                         ->table('participants')
                         ->where('email', $userEmail)
                         ->pluck('course_id')

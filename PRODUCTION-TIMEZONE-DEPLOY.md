@@ -59,7 +59,7 @@ sudo supervisorctl restart all
 php artisan tinker
 
 # W tinker wpisz:
-config('database.connections.admpnedu.timezone');
+config('database.connections.pneadm.timezone');
 # Powinno zwrócić: "+02:00"
 
 # Sprawdź aktualny czas:

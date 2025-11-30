@@ -22,7 +22,7 @@ Dodano linię `'timezone' => env('DB_TIMEZONE', '+02:00'),` do obu połączeń M
     'timezone' => env('DB_TIMEZONE', '+02:00'),
 ],
 
-'admpnedu' => [
+'pneadm' => [
     // ... inne opcje
     'timezone' => env('DB_TIMEZONE', '+02:00'),
 ],
@@ -121,7 +121,7 @@ sail artisan tinker
 
 # Sprawdź konfigurację:
 config('app.timezone');              # "Europe/Warsaw"
-config('database.connections.admpnedu.timezone');  # "+02:00"
+config('database.connections.pneadm.timezone');  # "+02:00"
 
 # Sprawdź czas:
 now()->format('Y-m-d H:i:s');        # Aktualny czas polski

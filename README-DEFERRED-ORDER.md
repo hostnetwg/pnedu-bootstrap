@@ -2,7 +2,7 @@
 
 ## 🎯 Co zostało zrobione
 
-Formularz zamówienia został w pełni zintegrowany z bazą danych `admpnedu`, tabela `form_orders`, z zachowaniem zgodności ze starym formularzem z platformy zdalna-lekcja.pl.
+Formularz zamówienia został w pełni zintegrowany z bazą danych `pneadm`, tabela `form_orders`, z zachowaniem zgodności ze starym formularzem z platformy zdalna-lekcja.pl.
 
 ## 🔗 Adresy
 
@@ -67,7 +67,7 @@ routes/
 
 1. **Ustaw pola publigo w bazie dla kursu**:
 ```bash
-sail mysql admpnedu -e "UPDATE courses SET publigo_product_id = 989898, publigo_price_id = 1 WHERE id = 402;"
+sail mysql pneadm -e "UPDATE courses SET publigo_product_id = 989898, publigo_price_id = 1 WHERE id = 402;"
 ```
 
 2. **Otwórz formularz**:
@@ -81,10 +81,10 @@ http://localhost:8081/courses/402/deferred-order
 
 ```bash
 # Zobacz ostatnie zamówienie
-sail mysql admpnedu -e "SELECT * FROM form_orders ORDER BY id DESC LIMIT 1\G"
+sail mysql pneadm -e "SELECT * FROM form_orders ORDER BY id DESC LIMIT 1\G"
 
 # Zobacz zamówienia dla konkretnego kursu
-sail mysql admpnedu -e "SELECT id, ident, participant_name, participant_email, order_date FROM form_orders WHERE product_id = 402 ORDER BY id DESC LIMIT 5;"
+sail mysql pneadm -e "SELECT id, ident, participant_name, participant_email, order_date FROM form_orders WHERE product_id = 402 ORDER BY id DESC LIMIT 5;"
 ```
 
 ## 📊 Przykładowe Zapytania SQL
@@ -152,7 +152,7 @@ Sprawdź:
 3. Sprawdź komunikat sukcesu
 4. Sprawdź w bazie czy rekord został zapisany:
 ```bash
-sail mysql admpnedu -e "SELECT * FROM form_orders ORDER BY id DESC LIMIT 1\G"
+sail mysql pneadm -e "SELECT * FROM form_orders ORDER BY id DESC LIMIT 1\G"
 ```
 
 ## 📝 Pola Formularza
@@ -230,7 +230,7 @@ sail restart
 ### Problem: publigo_product_id nie jest zapisywane
 **Rozwiązanie**: Sprawdź czy kurs ma ustawione to pole
 ```bash
-sail mysql admpnedu -e "SELECT id, title, publigo_product_id FROM courses WHERE id = 402;"
+sail mysql pneadm -e "SELECT id, title, publigo_product_id FROM courses WHERE id = 402;"
 ```
 
 ### Problem: Nie można otworzyć formularza
@@ -245,7 +245,7 @@ W przypadku problemów:
 1. Sprawdź logi: `storage/logs/laravel.log`
 2. Sprawdź logi Docker: `sail logs`
 3. Sprawdź routing: `sail artisan route:list`
-4. Sprawdź bazę: `sail mysql admpnedu`
+4. Sprawdź bazę: `sail mysql pneadm`
 
 ## 📚 Dokumentacja Techniczna
 
@@ -259,7 +259,7 @@ Szczegółowa dokumentacja techniczna: **DEFERRED-ORDER-IMPLEMENTATION.md**
 
 ## ✨ Podsumowanie
 
-Formularz zamówienia z odroczonym terminem płatności jest w pełni funkcjonalny i zintegrowany z bazą danych `admpnedu`. Wszystkie dane, **w tym kluczowe pole publigo_product_id**, są poprawnie zapisywane w tabeli `form_orders`.
+Formularz zamówienia z odroczonym terminem płatności jest w pełni funkcjonalny i zintegrowany z bazą danych `pneadm`. Wszystkie dane, **w tym kluczowe pole publigo_product_id**, są poprawnie zapisywane w tabeli `form_orders`.
 
 **Możesz teraz:**
 1. ✅ Przyjmować zamówienia przez formularz

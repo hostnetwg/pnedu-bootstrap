@@ -41,9 +41,15 @@
         align-items: flex-start;
         gap: 2rem;
         margin-bottom: 1rem;
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
     }
     .course-header-content {
         flex: 1;
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
     }
     .course-meta-row {
         display: flex;
@@ -88,6 +94,9 @@
         box-shadow: 0 1px 6px rgba(0,0,0,0.04);
         padding: 2rem 1.5rem;
         margin-bottom: 2.5rem;
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
     }
     .course-details-section h4 {
         color: #1976d2;

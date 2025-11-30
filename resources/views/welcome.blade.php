@@ -180,6 +180,12 @@
                                         @endif
                                     </div>
                                 @endif
+                                <div class="text-center mb-2">
+                                    <a href="{{ route('courses.show', $course->id) }}" 
+                                       class="read-more-link">
+                                        Czytaj więcej ...
+                                    </a>
+                                </div>
                                 <a href="{{ route('courses.show', $course->id) }}"
                                    class="btn btn-warning w-100 fw-bold d-flex align-items-center justify-content-center gap-2 shadow-sm cta-btn"
                                    style="font-size:1.15rem; letter-spacing:0.5px;">
@@ -596,6 +602,19 @@
     }
     .cta-btn i {
         transition: transform 0.18s;
+    }
+    
+    /* Style dla linku "Czytaj więcej" */
+    .read-more-link {
+        color: #1976d2;
+        font-size: 0.95rem;
+        font-weight: 500;
+        text-decoration: none;
+        transition: color 0.2s ease, text-decoration 0.2s ease;
+    }
+    .read-more-link:hover {
+        color: #0d47a1;
+        text-decoration: underline;
     }
 </style>
 @endpush

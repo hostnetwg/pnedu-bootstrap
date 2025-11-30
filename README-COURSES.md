@@ -1,21 +1,21 @@
 # Szkolenia Online LIVE Feature
 
-This document describes the implementation of the "Szkolenia Online LIVE" feature, which displays courses from the `admpnedu` database.
+This document describes the implementation of the "Szkolenia Online LIVE" feature, which displays courses from the `pneadm` database.
 
 ## Overview
 
-The feature allows users to view a list of courses from the `admpnedu` database, displayed in a table format with columns for date, title, and trainer, sorted from newest to oldest. The page is accessible from the navigation menu via "Szkolenia otwarte->Szkolenia online LIVE".
+The feature allows users to view a list of courses from the `pneadm` database, displayed in a table format with columns for date, title, and trainer, sorted from newest to oldest. The page is accessible from the navigation menu via "Szkolenia otwarte->Szkolenia online LIVE".
 
 ## Implementation Details
 
 The implementation includes:
 
 1. **Database Configuration**:
-   - A second database connection for "admpnedu" in `config/database.php`
-   - Environment variables in `.env` for the second database connection
+   - A second database connection for "pneadm" in `config/database.php`
+   - Environment variables in `.env` for the second database connection (DB_PNEADM_* or DB_ADMPNEDU_* for backward compatibility)
 
 2. **Model**:
-   - `Course` model that connects to the admpnedu database and the courses table
+   - `Course` model that connects to the pneadm database and the courses table
    - Formatted date accessor for better date display
 
 3. **Controller**:
@@ -34,23 +34,24 @@ The implementation includes:
 
 ## Database Access Issue
 
-The feature is currently displaying an error message because the 'sail' user doesn't have access to the 'admpnedu' database. To fix this issue, you need to either:
+The feature is currently displaying an error message because the 'sail' user doesn't have access to the 'pneadm' database. To fix this issue, you need to either:
 
-1. Grant the 'sail' user access to the 'admpnedu' database using:
+1. Grant the 'sail' user access to the 'pneadm' database using:
    ```sql
-   GRANT ALL PRIVILEGES ON admpnedu.* TO 'sail'@'%';
+   GRANT ALL PRIVILEGES ON pneadm.* TO 'sail'@'%';
    FLUSH PRIVILEGES;
    ```
 
-2. Or update the database credentials in the `.env` file to use a user that already has access to the admpnedu database:
+2. Or update the database credentials in the `.env` file to use a user that already has access to the pneadm database:
    ```
-   DB_ADMPNEDU_USERNAME=your_user
-   DB_ADMPNEDU_PASSWORD=your_password
+   DB_PNEADM_USERNAME=your_user
+   DB_PNEADM_PASSWORD=your_password
    ```
+   (or use DB_ADMPNEDU_* for backward compatibility)
 
 ## Database Structure
 
-The `admpnedu` database contains several tables, including:
+The `pneadm` database contains several tables, including:
 
 1. **courses**: The main table for course information
    - This table is expected to have columns like `title`, `date` (or `start_date`/`end_date`), and possibly `trainer` or `instructor_id`

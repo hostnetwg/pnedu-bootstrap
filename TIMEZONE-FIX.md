@@ -36,9 +36,9 @@ Dodano linię `'timezone' => env('DB_TIMEZONE', '+02:00'),` do obu połączeń:
 ],
 ```
 
-#### Połączenie 'admpnedu':
+#### Połączenie 'pneadm':
 ```php
-'admpnedu' => [
+'pneadm' => [
     'driver' => 'mysql',
     // ... inne opcje ...
     'timezone' => env('DB_TIMEZONE', '+02:00'),  // ← DODANE
@@ -90,7 +90,7 @@ DB_TIMEZONE="+02:00"
 
 ### Test 2: Sprawdź zapisany czas w bazie
 ```bash
-sail mysql admpnedu -e "SELECT 
+sail mysql pneadm -e "SELECT 
     id, 
     ident, 
     order_date,

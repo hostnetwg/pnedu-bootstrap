@@ -19,7 +19,7 @@ class Course extends Model
      *
      * @var string
      */
-    protected $connection = 'admpnedu';
+    protected $connection = 'pneadm';
 
     /**
      * The table associated with the model.

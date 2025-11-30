@@ -105,7 +105,7 @@ publigo_product_id: 123456
 
 ### Przed złożeniem zamówienia:
 ```bash
-sail exec mysql mysql -u root -ppassword admpnedu -e \
+sail exec mysql mysql -u root -ppassword pneadm -e \
   "SELECT id, id_old, source_id_old FROM courses WHERE id = 402\G"
 ```
 
@@ -118,7 +118,7 @@ source_id_old: certgen_Publigo
 
 ### Po złożeniu zamówienia:
 ```bash
-sail mysql admpnedu -e \
+sail mysql pneadm -e \
   "SELECT publigo_product_id FROM form_orders ORDER BY id DESC LIMIT 1;"
 ```
 

@@ -7,7 +7,7 @@ Formularz zamówienia z odroczonym terminem płatności został zaimplementowany
 ## 🎯 Co zostało zrobione
 
 ### 1. **Model FormOrder** (`app/Models/FormOrder.php`)
-- Połączenie z bazą `admpnedu`, tabela `form_orders`
+- Połączenie z bazą `pneadm`, tabela `form_orders`
 - Wszystkie pola z tabeli dodane do `$fillable`
 - Metoda `generateIdent()` do generowania unikalnych numerów zamówień (format: YYMMDD-XXXXXX)
 - Relacja do modelu `Course`
@@ -129,7 +129,7 @@ http://localhost:8081/courses/402/deferred-order
 - Powinno przekierować do szczegółów kursu z komunikatem sukcesu
 - Sprawdź w bazie czy rekord został zapisany:
 ```bash
-sail mysql admpnedu -e "SELECT * FROM form_orders ORDER BY id DESC LIMIT 1\G"
+sail mysql pneadm -e "SELECT * FROM form_orders ORDER BY id DESC LIMIT 1\G"
 ```
 
 ## 📝 Walidacja
@@ -211,7 +211,7 @@ sail mysql admpnedu -e "SELECT * FROM form_orders ORDER BY id DESC LIMIT 1\G"
 W przypadku problemów sprawdź:
 - Logi Laravel: `storage/logs/laravel.log`
 - Logi Docker: `sail logs`
-- Połączenie z bazą: `sail mysql admpnedu`
+- Połączenie z bazą: `sail mysql pneadm`
 
 ## ✅ Status Implementacji
 

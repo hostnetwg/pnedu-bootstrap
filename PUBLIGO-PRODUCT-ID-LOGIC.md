@@ -159,7 +159,7 @@ LIMIT 1;
 
 ### Krok 1: Sprawdź kurs
 ```bash
-sail mysql admpnedu -e "SELECT id, id_old, source_id_old, publigo_product_id FROM courses WHERE id = 402;"
+sail mysql pneadm -e "SELECT id, id_old, source_id_old, publigo_product_id FROM courses WHERE id = 402;"
 ```
 
 **Oczekiwany wynik dla kursu 402:**
@@ -175,7 +175,7 @@ id    | id_old | source_id_old   | publigo_product_id
 
 ### Krok 3: Sprawdź zapisaną wartość
 ```bash
-sail mysql admpnedu -e "SELECT publigo_product_id FROM form_orders ORDER BY id DESC LIMIT 1;"
+sail mysql pneadm -e "SELECT publigo_product_id FROM form_orders ORDER BY id DESC LIMIT 1;"
 ```
 
 **Oczekiwany wynik:**
@@ -217,12 +217,12 @@ protected $fillable = [
 
 ### Ile kursów ma source_id_old = 'certgen_Publigo'?
 ```bash
-sail mysql admpnedu -e "SELECT COUNT(*) as total FROM courses WHERE source_id_old = 'certgen_Publigo';"
+sail mysql pneadm -e "SELECT COUNT(*) as total FROM courses WHERE source_id_old = 'certgen_Publigo';"
 ```
 
 ### Ile kursów ma ręcznie ustawiony publigo_product_id?
 ```bash
-sail mysql admpnedu -e "SELECT COUNT(*) as total FROM courses WHERE publigo_product_id IS NOT NULL AND (source_id_old != 'certgen_Publigo' OR source_id_old IS NULL);"
+sail mysql pneadm -e "SELECT COUNT(*) as total FROM courses WHERE publigo_product_id IS NOT NULL AND (source_id_old != 'certgen_Publigo' OR source_id_old IS NULL);"
 ```
 
 ---

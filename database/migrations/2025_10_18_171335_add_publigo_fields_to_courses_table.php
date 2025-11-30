@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::connection('admpnedu')->table('courses', function (Blueprint $table) {
+        Schema::connection('pneadm')->table('courses', function (Blueprint $table) {
             $table->integer('publigo_product_id')->nullable()->after('certificate_template_id');
             $table->integer('publigo_price_id')->nullable()->after('publigo_product_id');
         });
@@ -22,7 +22,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::connection('admpnedu')->table('courses', function (Blueprint $table) {
+        Schema::connection('pneadm')->table('courses', function (Blueprint $table) {
             $table->dropColumn(['publigo_product_id', 'publigo_price_id']);
         });
     }

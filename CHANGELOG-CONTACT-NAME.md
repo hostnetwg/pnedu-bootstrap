@@ -90,7 +90,7 @@ Dodano nowe **wymagane pole** "Nazwa/imię nazwisko" na początku sekcji **DANE 
 2. Wyślij formularz
 3. Sprawdź w bazie:
 ```bash
-sail mysql admpnedu -e "SELECT orderer_name FROM form_orders ORDER BY id DESC LIMIT 1;"
+sail mysql pneadm -e "SELECT orderer_name FROM form_orders ORDER BY id DESC LIMIT 1;"
 ```
 4. ✅ Wartość `orderer_name` powinna być "Jan Kowalski"
 

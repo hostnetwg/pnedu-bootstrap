@@ -17,8 +17,8 @@ return [
     |--------------------------------------------------------------------------
     |
     | Tu definiujemy wszystkie połączenia. Główne połączenie "mysql" korzysta
-    | z Twoich zmiennych .env (DB_*). Dodałem też drugie połączenie "admpnedu",
-    | które bierze dane z DB_ADMPNEDU_*.
+    | z Twoich zmiennych .env (DB_*). Dodałem też drugie połączenie "pneadm",
+    | które bierze dane z DB_PNEADM_* (lub DB_ADMPNEDU_* dla zgodności wstecznej).
     |
     */
 
@@ -54,14 +54,14 @@ return [
         ],
 
         // >>> DRUGIE POŁĄCZENIE – baza "pneadm" w tym samym MySQL kontenera pnedu
-        'admpnedu' => [
+        'pneadm' => [
             'driver' => 'mysql',
             'url' => env('DATABASE_URL'),
-            'host' => env('DB_ADMPNEDU_HOST', 'mysql'),
-            'port' => env('DB_ADMPNEDU_PORT', '3306'),
-            'database' => env('DB_ADMPNEDU_DATABASE', 'pneadm'),
-            'username' => env('DB_ADMPNEDU_USERNAME', 'sail'),
-            'password' => env('DB_ADMPNEDU_PASSWORD', 'password'),
+            'host' => env('DB_PNEADM_HOST', env('DB_ADMPNEDU_HOST', 'mysql')),
+            'port' => env('DB_PNEADM_PORT', env('DB_ADMPNEDU_PORT', '3306')),
+            'database' => env('DB_PNEADM_DATABASE', env('DB_ADMPNEDU_DATABASE', 'pneadm')),
+            'username' => env('DB_PNEADM_USERNAME', env('DB_ADMPNEDU_USERNAME', 'sail')),
+            'password' => env('DB_PNEADM_PASSWORD', env('DB_ADMPNEDU_PASSWORD', 'password')),
             'unix_socket' => env('DB_SOCKET', ''),
             'charset' => 'utf8mb4',
             'collation' => 'utf8mb4_unicode_ci',
