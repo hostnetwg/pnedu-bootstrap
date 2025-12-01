@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use App\Models\Instructor;
 use App\Models\CoursePriceVariant;
 use App\Models\CourseOnlineDetail;
+use App\Models\Certificate;
 
 class Course extends Model
 {
@@ -147,6 +148,16 @@ class Course extends Model
     public function onlineDetail(): HasOne
     {
         return $this->hasOne(CourseOnlineDetail::class, 'course_id');
+    }
+
+    /**
+     * Course has many certificates.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function certificates()
+    {
+        return $this->hasMany(Certificate::class, 'course_id');
     }
 
     /**

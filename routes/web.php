@@ -94,3 +94,11 @@ Route::post('/courses/{id}/deferred-order', [App\Http\Controllers\CourseControll
 // Podsumowanie i PDF zamówienia
 Route::get('/orders/{ident}/summary', [App\Http\Controllers\CourseController::class, 'orderSummary'])->name('orders.summary');
 Route::get('/orders/{ident}/pdf', [App\Http\Controllers\CourseController::class, 'orderPdf'])->name('orders.pdf');
+
+// Generowanie zaświadczeń (tylko dla zalogowanych użytkowników)
+Route::middleware(['auth', 'verified'])->group(function () {
+    // Route z course_id (dla kompatybilności wstecznej)
+    Route::get('/courses/{course}/certificate', [App\Http\Controllers\CertificateController::class, 'generate'])->name('certificates.generate');
+    // Route z participant_id (bardziej precyzyjne, jak w pneadm-bootstrap)
+    Route::get('/certificates/generate/{participant}', [App\Http\Controllers\CertificateController::class, 'generateByParticipant'])->name('certificates.generate.by-participant');
+});

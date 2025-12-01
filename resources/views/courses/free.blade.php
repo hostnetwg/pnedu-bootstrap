@@ -82,6 +82,7 @@
                             @endphp
                             @php
                                 $isParticipant = auth()->check() && isset($participantCourseIds) && in_array($course->id, $participantCourseIds);
+                                $participantIdsByCourse = $participantIdsByCourse ?? [];
                             @endphp
                             <div class="course-item">
                                 <div class="course-image-wrapper row g-3">
@@ -105,7 +106,14 @@
                                     </div>
                                     @if($isParticipant)
                                         <div class="col d-flex align-items-center justify-content-center">
-                                            <a href="{{ route('dashboard.zaswiadczenia') }}" class="course-certificate-link" title="Pobierz zaświadczenie">
+                                            @php
+                                                // Użyj participant_id jeśli dostępne (bardziej precyzyjne), w przeciwnym razie course_id
+                                                $participantId = $participantIdsByCourse[$course->id] ?? null;
+                                                $certificateRoute = $participantId 
+                                                    ? route('certificates.generate.by-participant', $participantId)
+                                                    : route('certificates.generate', $course->id);
+                                            @endphp
+                                            <a href="{{ $certificateRoute }}" class="course-certificate-link" title="Pobierz zaświadczenie">
                                                 <img src="{{ asset('images/certificate.png') }}" alt="Zaświadczenie" class="course-certificate-icon">
                                             </a>
                                         </div>

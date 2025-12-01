@@ -154,22 +154,25 @@ class CourseController extends Controller
             // Sprawdź uczestnictwo dla zalogowanego użytkownika
             $userEmail = auth()->check() ? auth()->user()->email : null;
             $participantCourseIds = [];
+            $participantIdsByCourse = []; // Mapowanie course_id => participant_id
             
             if ($userEmail) {
                 try {
                     $participants = DB::connection('pneadm')
                         ->table('participants')
-                        ->where('email', $userEmail)
-                        ->pluck('course_id')
-                        ->toArray();
-                    $participantCourseIds = $participants;
+                        ->whereRaw('LOWER(TRIM(email)) = ?', [strtolower(trim($userEmail))])
+                        ->select('id', 'course_id')
+                        ->get();
+                    
+                    $participantCourseIds = $participants->pluck('course_id')->toArray();
+                    $participantIdsByCourse = $participants->pluck('id', 'course_id')->toArray();
                 } catch (Exception $e) {
                     Log::warning('Error checking participants: ' . $e->getMessage());
                 }
             }
 
             $pageTitle = 'TIK w pracy NAUCZYCIELA';
-            return view('courses.free', compact('courses', 'sort', 'searchQuery', 'participantCourseIds', 'pageTitle'));
+            return view('courses.free', compact('courses', 'sort', 'searchQuery', 'participantCourseIds', 'participantIdsByCourse', 'pageTitle'));
         } catch (Exception $e) {
             Log::error('Error accessing free courses: ' . $e->getMessage());
             
@@ -229,22 +232,25 @@ class CourseController extends Controller
             // Sprawdź uczestnictwo dla zalogowanego użytkownika
             $userEmail = auth()->check() ? auth()->user()->email : null;
             $participantCourseIds = [];
+            $participantIdsByCourse = []; // Mapowanie course_id => participant_id
             
             if ($userEmail) {
                 try {
                     $participants = DB::connection('pneadm')
                         ->table('participants')
-                        ->where('email', $userEmail)
-                        ->pluck('course_id')
-                        ->toArray();
-                    $participantCourseIds = $participants;
+                        ->whereRaw('LOWER(TRIM(email)) = ?', [strtolower(trim($userEmail))])
+                        ->select('id', 'course_id')
+                        ->get();
+                    
+                    $participantCourseIds = $participants->pluck('course_id')->toArray();
+                    $participantIdsByCourse = $participants->pluck('id', 'course_id')->toArray();
                 } catch (Exception $e) {
                     Log::warning('Error checking participants: ' . $e->getMessage());
                 }
             }
 
             $pageTitle = 'Szkolny ADMINISTRATOR Office 365';
-            return view('courses.free', compact('courses', 'sort', 'searchQuery', 'participantCourseIds', 'pageTitle'));
+            return view('courses.free', compact('courses', 'sort', 'searchQuery', 'participantCourseIds', 'participantIdsByCourse', 'pageTitle'));
         } catch (Exception $e) {
             Log::error('Error accessing office365 courses: ' . $e->getMessage());
             
@@ -304,22 +310,25 @@ class CourseController extends Controller
             // Sprawdź uczestnictwo dla zalogowanego użytkownika
             $userEmail = auth()->check() ? auth()->user()->email : null;
             $participantCourseIds = [];
+            $participantIdsByCourse = []; // Mapowanie course_id => participant_id
             
             if ($userEmail) {
                 try {
                     $participants = DB::connection('pneadm')
                         ->table('participants')
-                        ->where('email', $userEmail)
-                        ->pluck('course_id')
-                        ->toArray();
-                    $participantCourseIds = $participants;
+                        ->whereRaw('LOWER(TRIM(email)) = ?', [strtolower(trim($userEmail))])
+                        ->select('id', 'course_id')
+                        ->get();
+                    
+                    $participantCourseIds = $participants->pluck('course_id')->toArray();
+                    $participantIdsByCourse = $participants->pluck('id', 'course_id')->toArray();
                 } catch (Exception $e) {
                     Log::warning('Error checking participants: ' . $e->getMessage());
                 }
             }
 
             $pageTitle = 'Akademia Rodzica';
-            return view('courses.free', compact('courses', 'sort', 'searchQuery', 'participantCourseIds', 'pageTitle'));
+            return view('courses.free', compact('courses', 'sort', 'searchQuery', 'participantCourseIds', 'participantIdsByCourse', 'pageTitle'));
         } catch (Exception $e) {
             Log::error('Error accessing parent academy courses: ' . $e->getMessage());
             
@@ -379,22 +388,25 @@ class CourseController extends Controller
             // Sprawdź uczestnictwo dla zalogowanego użytkownika
             $userEmail = auth()->check() ? auth()->user()->email : null;
             $participantCourseIds = [];
+            $participantIdsByCourse = []; // Mapowanie course_id => participant_id
             
             if ($userEmail) {
                 try {
                     $participants = DB::connection('pneadm')
                         ->table('participants')
-                        ->where('email', $userEmail)
-                        ->pluck('course_id')
-                        ->toArray();
-                    $participantCourseIds = $participants;
+                        ->whereRaw('LOWER(TRIM(email)) = ?', [strtolower(trim($userEmail))])
+                        ->select('id', 'course_id')
+                        ->get();
+                    
+                    $participantCourseIds = $participants->pluck('course_id')->toArray();
+                    $participantIdsByCourse = $participants->pluck('id', 'course_id')->toArray();
                 } catch (Exception $e) {
                     Log::warning('Error checking participants: ' . $e->getMessage());
                 }
             }
 
             $pageTitle = 'Akademia Dyrektora';
-            return view('courses.free', compact('courses', 'sort', 'searchQuery', 'participantCourseIds', 'pageTitle'));
+            return view('courses.free', compact('courses', 'sort', 'searchQuery', 'participantCourseIds', 'participantIdsByCourse', 'pageTitle'));
         } catch (Exception $e) {
             Log::error('Error accessing director academy courses: ' . $e->getMessage());
             
