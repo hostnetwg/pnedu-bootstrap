@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a51be0fb67b42c10d3baac592dab6bed",
+    "content-hash": "1a09343e697d743a75921124ef58b796",
     "packages": [
         {
             "name": "archtechx/enums",
@@ -3814,8 +3814,8 @@
             "version": "dev-main",
             "dist": {
                 "type": "path",
-                "url": "/var/www/pne-certificate-generator",
-                "reference": "cdf984aa792eecd013b646545b6d6f4f4e051256"
+                "url": "../pne-certificate-generator",
+                "reference": "2fb1724d3623d2e9d4e1673214a1a645620f5664"
             },
             "require": {
                 "barryvdh/laravel-dompdf": "^3.1",
@@ -3849,7 +3849,7 @@
             ],
             "description": "Wspólny pakiet do generowania zaświadczeń dla platformy PNE",
             "transport-options": {
-                "relative": false
+                "relative": true
             }
         },
         {
