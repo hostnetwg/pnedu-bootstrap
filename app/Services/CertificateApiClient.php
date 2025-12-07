@@ -14,9 +14,10 @@ class CertificateApiClient
 
     public function __construct()
     {
-        $this->apiUrl = config('services.pneadm.api_url', '');
-        $this->apiToken = config('services.pneadm.api_token', '');
-        $this->timeout = config('services.pneadm.timeout', 30);
+        // Użyj ?? aby zapewnić, że zawsze mamy string (nie null)
+        $this->apiUrl = (string) (config('services.pneadm.api_url') ?? '');
+        $this->apiToken = (string) (config('services.pneadm.api_token') ?? '');
+        $this->timeout = (int) (config('services.pneadm.timeout', 30) ?? 30);
 
         if (empty($this->apiUrl)) {
             throw new Exception('PNEADM_API_URL is not configured');
