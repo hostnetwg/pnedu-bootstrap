@@ -6,6 +6,7 @@ services:
       args:
         WWWGROUP: '${WWWGROUP}'
     image: 'sail-8.4/app'
+    container_name: pnedu-app
     extra_hosts:
       - 'host.docker.internal:host-gateway'
     ports:
@@ -22,36 +23,16 @@ services:
       - '../pne-certificate-generator:/var/www/pne-certificate-generator'
     networks:
       - sail
+      - pne-network
     depends_on:
-      - mysql
       - redis
       - mailpit
       - selenium
+    # UWAGA: Nie ma depends_on: mysql - używamy MySQL z pneadm-bootstrap (kontener pneadm-mysql)
 
-  mysql:
-    image: 'mysql/mysql-server:8.0'
-    ports:
-      - '${FORWARD_DB_PORT:-3306}:3306'
-    environment:
-      MYSQL_ROOT_PASSWORD: '${DB_PASSWORD}'
-      MYSQL_ROOT_HOST: '%'
-      MYSQL_DATABASE: '${DB_DATABASE}'
-      MYSQL_USER: '${DB_USERNAME}'
-      MYSQL_PASSWORD: '${DB_PASSWORD}'
-      MYSQL_ALLOW_EMPTY_PASSWORD: 1
-    volumes:
-      - 'sail-mysql:/var/lib/mysql'
-      - './vendor/laravel/sail/database/mysql/create-testing-database.sh:/docker-entrypoint-initdb.d/10-create-testing-database.sh'
-    networks:
-      - sail
-    healthcheck:
-      test:
-        - CMD
-        - mysqladmin
-        - ping
-        - '-p${DB_PASSWORD}'
-      retries: 3
-      timeout: 5s
+  # USUNIĘTO: Kontener MySQL - używamy wspólnego MySQL z pneadm-bootstrap
+  # mysql:
+  #   ...
 
   redis:
     image: 'redis:alpine'
@@ -90,42 +71,46 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.phpmyadmin
-    depends_on:
-      - mysql
+    # UWAGA: Nie ma depends_on - MySQL jest w pneadm-bootstrap
     environment:
-      PMA_HOST: mysql
-      PMA_USER: ${DB_USERNAME}
-      PMA_PASSWORD: ${DB_PASSWORD}
+      PMA_HOST: pneadm-mysql
+      PMA_USER: ${DB_PNEADM_USERNAME:-sail}
+      PMA_PASSWORD: ${DB_PNEADM_PASSWORD:-password}
+      PMA_ARBITRARY: 1
       UPLOAD_LIMIT: 100M
       MAX_EXECUTION_TIME: 600
       MEMORY_LIMIT: 512M
     ports:
-      - '8082:80'   # pnedu: http://localhost:8082
+      - '8082:80'
     networks:
       - sail
+      - pne-network
+    # UWAGA: MySQL jest w kontenerze pneadm-mysql z pneadm-bootstrap
+    # PMA_ARBITRARY: 1 pozwala na dostęp do wszystkich baz, do których użytkownik ma uprawnienia
 
   mysql-backup:
     image: fradelg/mysql-cron-backup
+    # UWAGA: Nie ma depends_on - MySQL jest w pneadm-bootstrap
     environment:
-      - MYSQL_HOST=mysql
-      - MYSQL_USER=${DB_USERNAME}
-      - MYSQL_PASS=${DB_PASSWORD}
-      - MYSQL_DB=${DB_DATABASE}
+      - MYSQL_HOST=pneadm-mysql
+      - MYSQL_USER=${DB_PNEADM_USERNAME:-sail}
+      - MYSQL_PASS=${DB_PNEADM_PASSWORD:-password}
+      - MYSQL_DB=${DB_PNEADM_DATABASE:-pneadm}
       - CRON_TIME=0 2 * * *
       - MAX_BACKUPS=7
     volumes:
       - ./mysql-backups:/backup
-    depends_on:
-      - mysql
     networks:
-      - sail
+      - pne-network
+    # UWAGA: Używa MySQL z kontenera pneadm-mysql z pneadm-bootstrap
 
 networks:
   sail:
     driver: bridge
+  pne-network:
+    external: true
 
 volumes:
-  sail-mysql:
-    driver: local
+  # USUNIĘTO: sail-mysql - używamy wspólnego volume z pneadm-bootstrap
   sail-redis:
     driver: local

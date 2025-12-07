@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Certificate;
 use App\Models\Participant;
 use App\Models\Course;
-use Pne\CertificateGenerator\Services\CertificateGeneratorService;
+use App\Services\CertificateApiClient;
 use Pne\CertificateGenerator\Services\CertificateNumberGenerator;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
@@ -85,26 +85,25 @@ class CertificateController extends Controller
                 ]);
             }
 
-            // Generuj PDF używając pakietu
-            $service = app(CertificateGeneratorService::class);
+            // Generuj PDF używając API
+            $apiClient = app(CertificateApiClient::class);
             
-            $pdf = $service->generatePdf($participant->id, [
-                'connection' => 'pneadm', // Użyj połączenia pneadm
+            // Pobierz dane certyfikatu z API (zawiera numer certyfikatu)
+            $data = $apiClient->getCertificateData($participant->id, 'pneadm');
+            $certificateNumber = $data['certificate_number'] ?? $certificate->certificate_number;
+
+            // Generuj PDF przez API
+            $pdfContent = $apiClient->generatePdf($participant->id, [
+                'connection' => 'pneadm',
                 'save_to_storage' => true,
                 'cache' => false
             ]);
 
-            // Pobierz dane certyfikatu aby uzyskać ścieżkę pliku
-            $data = $service->getCertificateData($participant->id, 'pneadm');
-            $certificateNumber = $data['certificate_number'];
-
-            // Tworzenie nazwy pliku
-            $fileName = str_replace('/', '-', $certificateNumber) . '.pdf';
-            $courseFolder = 'certificates/' . $courseId;
-            $filePath = $courseFolder . '/' . $fileName;
-
-            // Pobieranie pliku PDF (pakiet już zapisał do storage)
-            return response()->download(storage_path('app/public/' . $filePath));
+            // Pobieranie pliku PDF (attachment zamiast inline - wymusza pobranie)
+            $fileName = 'certificate-' . str_replace('/', '-', $certificateNumber) . '.pdf';
+            return response($pdfContent, 200)
+                ->header('Content-Type', 'application/pdf')
+                ->header('Content-Disposition', 'attachment; filename="' . $fileName . '"');
 
         } catch (\Exception $e) {
             $errorDetails = [
@@ -189,26 +188,25 @@ class CertificateController extends Controller
                 ]);
             }
 
-            // Generuj PDF używając pakietu
-            $service = app(CertificateGeneratorService::class);
+            // Generuj PDF używając API
+            $apiClient = app(CertificateApiClient::class);
             
-            $pdf = $service->generatePdf($participant->id, [
-                'connection' => 'pneadm', // Użyj połączenia pneadm
+            // Pobierz dane certyfikatu z API (zawiera numer certyfikatu)
+            $data = $apiClient->getCertificateData($participant->id, 'pneadm');
+            $certificateNumber = $data['certificate_number'] ?? $certificate->certificate_number;
+
+            // Generuj PDF przez API
+            $pdfContent = $apiClient->generatePdf($participant->id, [
+                'connection' => 'pneadm',
                 'save_to_storage' => true,
                 'cache' => false
             ]);
 
-            // Pobierz dane certyfikatu aby uzyskać ścieżkę pliku
-            $data = $service->getCertificateData($participant->id, 'pneadm');
-            $certificateNumber = $data['certificate_number'];
-
-            // Tworzenie nazwy pliku
-            $fileName = str_replace('/', '-', $certificateNumber) . '.pdf';
-            $courseFolder = 'certificates/' . $courseId;
-            $filePath = $courseFolder . '/' . $fileName;
-
-            // Pobieranie pliku PDF (pakiet już zapisał do storage)
-            return response()->download(storage_path('app/public/' . $filePath));
+            // Pobieranie pliku PDF (attachment zamiast inline - wymusza pobranie)
+            $fileName = 'certificate-' . str_replace('/', '-', $certificateNumber) . '.pdf';
+            return response($pdfContent, 200)
+                ->header('Content-Type', 'application/pdf')
+                ->header('Content-Disposition', 'attachment; filename="' . $fileName . '"');
 
         } catch (\Exception $e) {
             $errorDetails = [

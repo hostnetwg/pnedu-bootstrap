@@ -35,4 +35,10 @@ return [
         ],
     ],
 
+    'pneadm' => [
+        'api_url' => env('PNEADM_API_URL'),
+        'api_token' => env('PNEADM_API_TOKEN'),
+        'timeout' => env('PNEADM_API_TIMEOUT', 30),
+    ],
+
 ];

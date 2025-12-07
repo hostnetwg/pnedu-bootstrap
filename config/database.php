@@ -53,7 +53,7 @@ return [
             ]) : [],
         ],
 
-        // >>> DRUGIE POŁĄCZENIE – baza "pneadm" w tym samym MySQL kontenera pnedu
+        // >>> DRUGIE POŁĄCZENIE – baza "pneadm" w wspólnym MySQL (z pneadm-bootstrap)
         'pneadm' => [
             'driver' => 'mysql',
             'url' => env('DATABASE_URL'),
@@ -62,6 +62,28 @@ return [
             'database' => env('DB_PNEADM_DATABASE', env('DB_ADMPNEDU_DATABASE', 'pneadm')),
             'username' => env('DB_PNEADM_USERNAME', env('DB_ADMPNEDU_USERNAME', 'sail')),
             'password' => env('DB_PNEADM_PASSWORD', env('DB_ADMPNEDU_PASSWORD', 'password')),
+            'unix_socket' => env('DB_SOCKET', ''),
+            'charset' => 'utf8mb4',
+            'collation' => 'utf8mb4_unicode_ci',
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'strict' => true,
+            'engine' => null,
+            'timezone' => env('DB_TIMEZONE', '+02:00'),
+            'options' => extension_loaded('pdo_mysql') ? array_filter([
+                PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
+            ]) : [],
+        ],
+
+        // >>> TRZECIE POŁĄCZENIE – baza "certgen" w wspólnym MySQL (z pneadm-bootstrap)
+        'certgen' => [
+            'driver' => 'mysql',
+            'url' => env('DATABASE_URL'),
+            'host' => env('DB_CERTGEN_HOST', 'mysql'),
+            'port' => env('DB_CERTGEN_PORT', '3306'),
+            'database' => env('DB_CERTGEN_DATABASE', 'certgen'),
+            'username' => env('DB_CERTGEN_USERNAME', 'sail'),
+            'password' => env('DB_CERTGEN_PASSWORD', 'password'),
             'unix_socket' => env('DB_SOCKET', ''),
             'charset' => 'utf8mb4',
             'collation' => 'utf8mb4_unicode_ci',
