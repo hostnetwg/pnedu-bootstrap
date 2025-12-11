@@ -32,7 +32,10 @@
         <div class="col-lg-9">
             <div class="card border-0 shadow-sm rounded-4">
                 <div class="card-body py-4">
-                    <h2 class="h4 mb-4">Moje szkolenia</h2>
+                    <h2 class="h4 mb-2">Moje szkolenia</h2>
+                    <p class="text-muted mb-4">
+                        <small>Liczba szkoleń: <strong>{{ $participants->total() }}</strong></small>
+                    </p>
                     
                     @if($participants->isEmpty())
                         <p class="text-muted">Nie jesteś jeszcze zarejestrowany na żadne szkolenie.</p>
@@ -76,9 +79,16 @@
                                             </a>
                                         </div>
                                     </div>
-                                @endif
+                                    @endif
                             @endforeach
                         </div>
+                        
+                        {{-- Paginacja --}}
+                        @if($participants->hasPages())
+                            <div class="mt-4 d-flex justify-content-center">
+                                {{ $participants->links('pagination::bootstrap-4') }}
+                            </div>
+                        @endif
                     @endif
                 </div>
             </div>
@@ -192,6 +202,32 @@
 .certificate-download-link:hover .certificate-icon {
     transform: scale(1.1);
     filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3));
+}
+.pagination {
+    margin-bottom: 0;
+}
+.pagination .page-link {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    color: #0d6efd;
+    border-color: #dee2e6;
+}
+.pagination .page-link:hover {
+    color: #0a58ca;
+    background-color: #e9ecef;
+    border-color: #dee2e6;
+}
+.pagination .page-item.active .page-link {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+    color: #fff;
+}
+.pagination .page-item.disabled .page-link {
+    color: #6c757d;
+    pointer-events: none;
+    background-color: #fff;
+    border-color: #dee2e6;
+    opacity: 0.5;
 }
 @media (max-width: 767.98px) {
     .training-item {

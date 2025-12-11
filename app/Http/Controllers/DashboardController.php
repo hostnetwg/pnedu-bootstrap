@@ -15,11 +15,15 @@ class DashboardController extends Controller
     {
         $userEmail = Auth::user()->email;
         
-        // Pobierz uczestników dla zalogowanego użytkownika (case-insensitive)
+        // Pobierz uczestników dla zalogowanego użytkownika (case-insensitive) z paginacją
+        // Sortuj po dacie szkolenia (start_date) od najnowszych
         $participants = Participant::whereRaw('LOWER(TRIM(email)) = ?', [strtolower(trim($userEmail))])
             ->with(['course.instructor'])
-            ->orderBy('created_at', 'desc')
-            ->get();
+            ->join('courses', 'participants.course_id', '=', 'courses.id')
+            ->select('participants.*')
+            ->orderBy('courses.start_date', 'desc')
+            ->orderBy('participants.created_at', 'desc') // Dodatkowe sortowanie dla szkoleń bez daty
+            ->paginate(15);
         
         return view('dashboard.szkolenia', compact('participants'));
     }
