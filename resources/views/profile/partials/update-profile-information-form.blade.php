@@ -15,14 +15,62 @@
             @method('patch')
 
             <div class="row mb-3">
-                <label for="name" class="col-md-4 col-form-label text-md-end">
-                    {{ __('Imię i nazwisko') }}
+                <label for="first_name" class="col-md-4 col-form-label text-md-end">
+                    {{ __('Imię') }}
                 </label>
 
                 <div class="col-md-6">
-                    <input id="name" type="text" class="form-control @error('name') is-invalid @enderror" name="name" value="{{ old('name', $user->name) }}" required autofocus autocomplete="name">
+                    <input id="first_name" type="text" class="form-control @error('first_name') is-invalid @enderror" name="first_name" value="{{ old('first_name', $user->first_name) }}" required autofocus autocomplete="given-name">
 
-                    @error('name')
+                    @error('first_name')
+                        <span class="invalid-feedback" role="alert">
+                            <strong>{{ $message }}</strong>
+                        </span>
+                    @enderror
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <label for="last_name" class="col-md-4 col-form-label text-md-end">
+                    {{ __('Nazwisko') }}
+                </label>
+
+                <div class="col-md-6">
+                    <input id="last_name" type="text" class="form-control @error('last_name') is-invalid @enderror" name="last_name" value="{{ old('last_name', $user->last_name) }}" required autocomplete="family-name">
+
+                    @error('last_name')
+                        <span class="invalid-feedback" role="alert">
+                            <strong>{{ $message }}</strong>
+                        </span>
+                    @enderror
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <label for="birth_date" class="col-md-4 col-form-label text-md-end">
+                    {{ __('Data urodzenia') }}
+                </label>
+
+                <div class="col-md-6">
+                    <input id="birth_date" type="date" class="form-control @error('birth_date') is-invalid @enderror" name="birth_date" value="{{ old('birth_date', $user->birth_date?->format('Y-m-d')) }}" autocomplete="bday">
+
+                    @error('birth_date')
+                        <span class="invalid-feedback" role="alert">
+                            <strong>{{ $message }}</strong>
+                        </span>
+                    @enderror
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <label for="birth_place" class="col-md-4 col-form-label text-md-end">
+                    {{ __('Miejsce urodzenia') }}
+                </label>
+
+                <div class="col-md-6">
+                    <input id="birth_place" type="text" class="form-control @error('birth_place') is-invalid @enderror" name="birth_place" value="{{ old('birth_place', $user->birth_place) }}" autocomplete="bday-location">
+
+                    @error('birth_place')
                         <span class="invalid-feedback" role="alert">
                             <strong>{{ $message }}</strong>
                         </span>

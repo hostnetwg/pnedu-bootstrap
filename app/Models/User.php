@@ -18,7 +18,10 @@ class User extends Authenticatable implements MustVerifyEmail
      * @var list<string>
      */
     protected $fillable = [
-        'name',
+        'first_name',
+        'last_name',
+        'birth_date',
+        'birth_place',
         'email',
         'password',
     ];
@@ -42,7 +45,33 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return [
             'email_verified_at' => 'datetime',
+            'birth_date' => 'date',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * Get the user's full name.
+     *
+     * @return string
+     */
+    public function getNameAttribute(): string
+    {
+        $firstName = $this->attributes['first_name'] ?? '';
+        $lastName = $this->attributes['last_name'] ?? '';
+        return trim($firstName . ' ' . $lastName);
+    }
+
+    /**
+     * Set the user's name (split into first_name and last_name).
+     *
+     * @param  string  $value
+     * @return void
+     */
+    public function setNameAttribute(string $value): void
+    {
+        $nameParts = explode(' ', trim($value), 2);
+        $this->attributes['first_name'] = $nameParts[0] ?? null;
+        $this->attributes['last_name'] = $nameParts[1] ?? null;
     }
 }
