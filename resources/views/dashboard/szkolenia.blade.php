@@ -147,7 +147,7 @@
     padding: 1.5rem;
     border: 1px solid #e9ecef;
     border-radius: 0.5rem;
-    background: #fff;
+    background: #f8f9fa;
     transition: box-shadow 0.2s ease;
 }
 .training-item:hover {
