@@ -40,14 +40,56 @@ php artisan route:clear
 php artisan view:clear
 ```
 
-### 3. Uruchom ponownie cache (opcjonalnie, dla lepszej wydajności)
+### 3. Zbuduj zasoby frontend (Vite) - **WAŻNE dla CSS/JS**
+**To jest kluczowe dla poprawnego wyświetlania formularzy logowania/rejestracji!**
+
+**Opcja A:** Jeśli npm/node są dostępne na serwerze:
+```bash
+npm install
+npm run build
+```
+
+**Opcja B:** Jeśli używasz Laravel Sail:
+```bash
+./vendor/bin/sail npm install
+./vendor/bin/sail npm run build
+# lub
+sail npm install
+sail npm run build
+```
+
+**Opcja C:** Jeśli nie masz npm/node na produkcji, zbuduj lokalnie i wgraj katalog `public/build`:
+```bash
+# Lokalnie (na swoim komputerze):
+cd /home/hostnet/WEB-APP/pnedu
+./vendor/bin/sail npm run build
+
+# Następnie wgraj cały katalog public/build na produkcję
+# (użyj scp, rsync lub innego narzędzia)
+```
+
+**Sprawdź czy pliki zostały utworzone:**
+```bash
+ls -la public/build/
+# Powinny być: manifest.json i pliki assets/*.css oraz *.js
+```
+
+**Ustaw uprawnienia do katalogu build:**
+```bash
+chmod -R 755 public/build
+chown -R www-data:www-data public/build
+# lub jeśli używasz innego użytkownika web servera:
+# chown -R apache:apache public/build
+```
+
+### 4. Uruchom ponownie cache (opcjonalnie, dla lepszej wydajności)
 ```bash
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 ```
 
-### 4. Sprawdź logi błędów
+### 5. Sprawdź logi błędów
 ```bash
 tail -f storage/logs/laravel.log
 ```
