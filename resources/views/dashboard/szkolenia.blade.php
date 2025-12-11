@@ -37,54 +37,47 @@
                     @if($participants->isEmpty())
                         <p class="text-muted">Nie jesteś jeszcze zarejestrowany na żadne szkolenie.</p>
                     @else
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>Nazwa szkolenia</th>
-                                        <th>Data szkolenia</th>
-                                        <th>Prowadzący</th>
-                                        <th class="text-center">Zaświadczenia</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($participants as $participant)
-                                        @if($participant->course)
-                                            <tr>
-                                                <td>
-                                                    <strong>{{ $participant->course->title }}</strong>
-                                                </td>
-                                                <td>
+                        <div class="training-list">
+                            @foreach($participants as $participant)
+                                @if($participant->course)
+                                    <div class="training-item">
+                                        <div class="training-content">
+                                            <h3 class="training-title">{{ $participant->course->title }}</h3>
+                                            <div class="training-meta">
+                                                <span class="training-date">
+                                                    Data: 
                                                     @if($participant->course->start_date)
                                                         {{ \Carbon\Carbon::parse($participant->course->start_date)->format('d.m.Y') }}
                                                     @else
                                                         <span class="text-muted">Brak daty</span>
                                                     @endif
-                                                </td>
-                                                <td>
+                                                </span>
+                                                <span class="training-separator">|</span>
+                                                <span class="training-instructor">
+                                                    Prowadzący: 
                                                     @if($participant->course->instructor)
                                                         {{ $participant->course->instructor->full_name }}
                                                         @if($participant->course->instructor->title)
-                                                            <small class="text-muted">({{ $participant->course->instructor->title }})</small>
+                                                            <span class="text-muted">({{ $participant->course->instructor->title }})</span>
                                                         @endif
                                                     @else
                                                         <span class="text-muted">Brak prowadzącego</span>
                                                     @endif
-                                                </td>
-                                                <td class="text-center">
-                                                    <a href="{{ route('certificates.generate.by-participant', $participant->id) }}" 
-                                                       class="certificate-download-link" 
-                                                       title="Pobierz zaświadczenie">
-                                                        <img src="{{ asset('images/certificate.png') }}" 
-                                                             alt="Zaświadczenie" 
-                                                             class="certificate-icon">
-                                                    </a>
-                                                </td>
-                                            </tr>
-                                        @endif
-                                    @endforeach
-                                </tbody>
-                            </table>
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="training-certificate">
+                                            <a href="{{ route('certificates.generate.by-participant', $participant->id) }}" 
+                                               class="certificate-download-link" 
+                                               title="Pobierz zaświadczenie">
+                                                <img src="{{ asset('images/certificate.png') }}" 
+                                                     alt="Zaświadczenie" 
+                                                     class="certificate-icon">
+                                            </a>
+                                        </div>
+                                    </div>
+                                @endif
+                            @endforeach
                         </div>
                     @endif
                 </div>
@@ -142,21 +135,77 @@
         font-size: 1rem;
     }
 }
+.training-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+.training-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 1.5rem;
+    border: 1px solid #e9ecef;
+    border-radius: 0.5rem;
+    background: #fff;
+    transition: box-shadow 0.2s ease;
+}
+.training-item:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+.training-content {
+    flex: 1;
+}
+.training-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+    color: #212529;
+}
+.training-meta {
+    font-size: 0.95rem;
+    color: #6c757d;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+}
+.training-separator {
+    color: #adb5bd;
+}
+.training-certificate {
+    margin-left: 1.5rem;
+    flex-shrink: 0;
+}
 .certificate-download-link {
     display: inline-block;
     text-decoration: none;
     transition: all 0.3s ease;
 }
 .certificate-icon {
-    width: 60px;
+    width: 250px;
     height: auto;
     display: block;
     transition: all 0.3s ease;
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.2));
 }
 .certificate-download-link:hover .certificate-icon {
-    transform: scale(1.15);
-    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+    transform: scale(1.1);
+    filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3));
+}
+@media (max-width: 767.98px) {
+    .training-item {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .training-certificate {
+        margin-left: 0;
+        margin-top: 1rem;
+        text-align: center;
+    }
+    .certificate-icon {
+        width: 200px;
+    }
 }
 </style>
 @endpush
