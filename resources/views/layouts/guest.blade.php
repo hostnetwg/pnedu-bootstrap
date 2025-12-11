@@ -13,7 +13,10 @@
     <link rel="dns-prefetch" href="//fonts.gstatic.com">
     <link href="https://fonts.bunny.net/css?family=Nunito" rel="stylesheet">
 
-    <!-- Scripts -->
+    <!-- Bootstrap CSS (CDN - niezależne od Vite) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+
+    <!-- Custom Styles (Vite - opcjonalne, jeśli są zbudowane) -->
     @vite(['resources/sass/app.scss', 'resources/js/app.js'])
 </head>
 <body>
@@ -50,5 +53,8 @@
             @yield('content')
         </main>
     </div>
+
+    <!-- Bootstrap JS (CDN - niezależne od Vite) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

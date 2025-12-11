@@ -58,28 +58,82 @@ sail npm install
 sail npm run build
 ```
 
-**Opcja C:** Jeśli nie masz npm/node na produkcji, zbuduj lokalnie i wgraj katalog `public/build`:
+**Opcja C:** Jeśli nie masz npm/node na produkcji (ZALECANE):
+
+**Krok 1 - Lokalnie (na swoim komputerze):**
 ```bash
-# Lokalnie (na swoim komputerze):
 cd /home/hostnet/WEB-APP/pnedu
 ./vendor/bin/sail npm run build
 
-# Następnie wgraj cały katalog public/build na produkcję
-# (użyj scp, rsync lub innego narzędzia)
-```
-
-**Sprawdź czy pliki zostały utworzone:**
-```bash
+# Sprawdź czy pliki zostały utworzone:
 ls -la public/build/
 # Powinny być: manifest.json i pliki assets/*.css oraz *.js
 ```
 
-**Ustaw uprawnienia do katalogu build:**
+**Krok 2 - Wgraj katalog public/build na produkcję:**
+
+**Metoda A - SCP (jeśli masz dostęp SSH):**
 ```bash
+# Z lokalnego komputera:
+scp -r public/build/ użytkownik@serwer-produkcyjny:/ścieżka/do/pnedu/public/
+
+# Przykład:
+scp -r public/build/ srv66127@h30.home.pl:/home/srv66127/app/public/
+```
+
+**Metoda B - Rsync (jeśli masz dostęp SSH):**
+```bash
+# Z lokalnego komputera:
+rsync -avz public/build/ użytkownik@serwer-produkcyjny:/ścieżka/do/pnedu/public/build/
+
+# Przykład:
+rsync -avz public/build/ srv66127@h30.home.pl:/home/srv66127/app/public/build/
+```
+
+**Metoda C - Przez FTP/SFTP:**
+1. Połącz się z serwerem przez klienta FTP (FileZilla, WinSCP, etc.)
+2. Przejdź do katalogu `public/` na serwerze
+3. Wgraj cały katalog `build/` z lokalnego `public/build/`
+
+**Krok 3 - Na produkcji: Sprawdź i ustaw uprawnienia:**
+
+**Najpierw sprawdź jaki użytkownik web servera jest używany:**
+```bash
+# Sprawdź procesy web servera:
+ps aux | grep -E 'apache|nginx|httpd' | head -1
+
+# Lub sprawdź właściciela innych plików w public/:
+ls -la public/ | head -5
+
+# Typowe użytkowniki:
+# - apache (dla Apache)
+# - nginx (dla Nginx)
+# - www-data (dla niektórych systemów)
+# - srv66127 (może być Twój użytkownik)
+```
+
+**Następnie ustaw uprawnienia (zamień USER:GROUP na właściwego użytkownika):**
+```bash
+# Jeśli używasz Apache:
 chmod -R 755 public/build
-chown -R www-data:www-data public/build
-# lub jeśli używasz innego użytkownika web servera:
-# chown -R apache:apache public/build
+chown -R apache:apache public/build
+
+# Jeśli używasz Nginx:
+chmod -R 755 public/build
+chown -R nginx:nginx public/build
+
+# Jeśli Twój użytkownik to srv66127:
+chmod -R 755 public/build
+chown -R srv66127:srv66127 public/build
+
+# Lub jeśli web server działa pod Twoim użytkownikiem:
+chmod -R 755 public/build
+```
+
+**Sprawdź czy pliki są dostępne:**
+```bash
+ls -la public/build/
+# Powinny być: manifest.json i pliki assets/*.css oraz *.js
 ```
 
 ### 4. Uruchom ponownie cache (opcjonalnie, dla lepszej wydajności)
