@@ -1,3 +1,6 @@
+// Import Bootstrap
+import 'bootstrap';
+
 // Basic JavaScript for the application
 console.log('Laravel app loaded');
 

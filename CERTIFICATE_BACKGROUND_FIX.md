@@ -62,3 +62,10 @@ Po naprawie:
   2. Plik tła istnieje w pakiecie: `/var/www/pne-certificate-generator/storage/certificates/backgrounds/`
   3. Symlink działa: `pnedu/public/storage/certificates/backgrounds -> /var/www/pne-certificate-generator/storage/certificates/backgrounds`
 
+
+
+
+
+
+
+

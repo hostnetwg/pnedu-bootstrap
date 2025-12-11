@@ -7,7 +7,6 @@ use App\Models\Certificate;
 use App\Models\Participant;
 use App\Models\Course;
 use App\Services\CertificateApiClient;
-use Pne\CertificateGenerator\Services\CertificateNumberGenerator;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
@@ -60,37 +59,20 @@ class CertificateController extends Controller
                 return redirect()->back()->with('error', 'Nie jesteś uczestnikiem tego szkolenia. Skontaktuj się z administratorem, jeśli uważasz, że to błąd.');
             }
 
-            // Pobierz kurs (pakiet pobiera dane szablonu bezpośrednio z bazy)
-            $course = Course::findOrFail($courseId);
-
-            // Sprawdź czy certyfikat już istnieje
-            $certificate = Certificate::where('participant_id', $participant->id)
-                ->where('course_id', $courseId)
-                ->first();
-
-            // Jeśli certyfikat nie istnieje, utwórz go z numerem
-            if (!$certificate) {
-                $numberGenerator = app(CertificateNumberGenerator::class);
-                $certificateNumber = $numberGenerator->formatCertificateNumber(
-                    $course,
-                    $numberGenerator->determineNextSequence($course, $numberGenerator->resolveCourseYear($course)),
-                    $numberGenerator->resolveCourseYear($course)
-                );
-
-                $certificate = Certificate::create([
-                    'participant_id' => $participant->id,
-                    'course_id' => $courseId,
-                    'certificate_number' => $certificateNumber,
-                    'generated_at' => now(),
-                ]);
-            }
-
             // Generuj PDF używając API
             $apiClient = app(CertificateApiClient::class);
             
-            // Pobierz dane certyfikatu z API (zawiera numer certyfikatu)
+            // Pobierz dane certyfikatu z API (zawiera numer certyfikatu - generowany przez pneadm-bootstrap)
             $data = $apiClient->getCertificateData($participant->id, 'pneadm');
-            $certificateNumber = $data['certificate_number'] ?? $certificate->certificate_number;
+            $certificateNumber = $data['certificate_number'] ?? null;
+            
+            if (!$certificateNumber) {
+                Log::error('Certificate number not found in API response', [
+                    'participant_id' => $participant->id,
+                    'course_id' => $courseId
+                ]);
+                return redirect()->back()->with('error', 'Nie można pobrać numeru certyfikatu. Skontaktuj się z administratorem.');
+            }
 
             // Generuj PDF przez API
             $pdfContent = $apiClient->generatePdf($participant->id, [
@@ -163,37 +145,20 @@ class CertificateController extends Controller
 
             $courseId = $participant->course_id;
 
-            // Pobierz kurs (pakiet pobiera dane szablonu bezpośrednio z bazy)
-            $course = Course::findOrFail($courseId);
-
-            // Sprawdź czy certyfikat już istnieje
-            $certificate = Certificate::where('participant_id', $participant->id)
-                ->where('course_id', $courseId)
-                ->first();
-
-            // Jeśli certyfikat nie istnieje, utwórz go z numerem
-            if (!$certificate) {
-                $numberGenerator = app(CertificateNumberGenerator::class);
-                $certificateNumber = $numberGenerator->formatCertificateNumber(
-                    $course,
-                    $numberGenerator->determineNextSequence($course, $numberGenerator->resolveCourseYear($course)),
-                    $numberGenerator->resolveCourseYear($course)
-                );
-
-                $certificate = Certificate::create([
-                    'participant_id' => $participant->id,
-                    'course_id' => $courseId,
-                    'certificate_number' => $certificateNumber,
-                    'generated_at' => now(),
-                ]);
-            }
-
             // Generuj PDF używając API
             $apiClient = app(CertificateApiClient::class);
             
-            // Pobierz dane certyfikatu z API (zawiera numer certyfikatu)
+            // Pobierz dane certyfikatu z API (zawiera numer certyfikatu - generowany przez pneadm-bootstrap)
             $data = $apiClient->getCertificateData($participant->id, 'pneadm');
-            $certificateNumber = $data['certificate_number'] ?? $certificate->certificate_number;
+            $certificateNumber = $data['certificate_number'] ?? null;
+            
+            if (!$certificateNumber) {
+                Log::error('Certificate number not found in API response', [
+                    'participant_id' => $participantId,
+                    'course_id' => $courseId
+                ]);
+                return redirect()->back()->with('error', 'Nie można pobrać numeru certyfikatu. Skontaktuj się z administratorem.');
+            }
 
             // Generuj PDF przez API
             $pdfContent = $apiClient->generatePdf($participant->id, [

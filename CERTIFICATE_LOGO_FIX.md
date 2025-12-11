@@ -82,3 +82,10 @@ Jeśli nadal występują problemy, sprawdź:
 2. Czy uprawnienia są poprawne: `chmod -R 775 storage/app/public/certificates/`
 3. Logi: `sail artisan pail` lub `tail -f storage/logs/laravel.log`
 
+
+
+
+
+
+
+

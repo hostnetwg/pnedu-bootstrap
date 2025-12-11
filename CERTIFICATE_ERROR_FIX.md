@@ -114,3 +114,10 @@ sail artisan migrate:status
 sail mysql -e "SHOW GRANTS FOR 'sail'@'%';"
 ```
 
+
+
+
+
+
+
+

@@ -51,3 +51,10 @@ Jeśli oba pokazują tę samą bazę, ale różne dane, sprawdź czy:
 - Dane w bazie są aktualne
 - Nie ma problemów z replikacją/synchronizacją bazy danych
 
+
+
+
+
+
+
+

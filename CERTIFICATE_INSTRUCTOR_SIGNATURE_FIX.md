@@ -50,3 +50,10 @@ Jeśli `marginBottom` w ustawieniach szablonu jest duży, sekcje mogą powędrow
 - ✅ Podpis instruktora powinien się teraz wyświetlać
 - ✅ Obsługa plików instruktorów z pakietu dodana
 
+
+
+
+
+
+
+

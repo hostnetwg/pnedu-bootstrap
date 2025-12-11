@@ -149,3 +149,10 @@ sail artisan vendor:publish --tag=pne-certificate-generator-views
 **Data:** 2024-11-30  
 **Status:** ✅ Gotowe do testowania
 
+
+
+
+
+
+
+

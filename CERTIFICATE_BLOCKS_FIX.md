@@ -58,3 +58,10 @@ Po naprawie:
 - ✅ Kompatybilność z obiektami i tablicami numerycznymi
 - ✅ Wszystkie szablony powinny teraz działać poprawnie na `pnedu.pl`
 
+
+
+
+
+
+
+

@@ -114,3 +114,10 @@ Logi zawierają:
 - ✅ Zaktualizowano widok `free.blade.php`
 - ✅ Zachowano kompatybilność wsteczną
 
+
+
+
+
+
+
+

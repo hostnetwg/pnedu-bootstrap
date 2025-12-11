@@ -12,8 +12,16 @@ return new class extends Migration
     public function up(): void
     {
         Schema::connection('pneadm')->table('courses', function (Blueprint $table) {
-            $table->integer('publigo_product_id')->nullable()->after('certificate_template_id');
-            $table->integer('publigo_price_id')->nullable()->after('publigo_product_id');
+            if (!Schema::connection('pneadm')->hasColumn('courses', 'publigo_product_id')) {
+                // Sprawdź czy istnieje kolumna certificate_template_id, jeśli nie - dodaj na końcu
+                $afterColumn = Schema::connection('pneadm')->hasColumn('courses', 'certificate_template_id') 
+                    ? 'certificate_template_id' 
+                    : 'certificate_format';
+                $table->integer('publigo_product_id')->nullable()->after($afterColumn);
+            }
+            if (!Schema::connection('pneadm')->hasColumn('courses', 'publigo_price_id')) {
+                $table->integer('publigo_price_id')->nullable()->after('publigo_product_id');
+            }
         });
     }
 

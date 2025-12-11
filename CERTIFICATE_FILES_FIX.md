@@ -78,3 +78,10 @@ Naprawiono konwersję `blocks` z obiektu na tablicę numeryczną w pakiecie (zob
 - Jeśli tło nie wyświetla się, sprawdź czy `show_background` jest ustawione na `1` w ustawieniach szablonu
 - Jeśli "prowadzący:" nie wyświetla się, sprawdź czy `instructor` nie jest `null` w bazie danych
 
+
+
+
+
+
+
+

@@ -71,3 +71,10 @@ Po naprawie:
   3. Czy `certificate_templates.slug` jest poprawny i odpowiada istniejącemu plikowi Blade
   4. Czy cache został wyczyszczony: `sail artisan cache:clear`
 
+
+
+
+
+
+
+
