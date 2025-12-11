@@ -86,7 +86,7 @@
                 @auth
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="bi bi-person-circle me-1"></i> {{ Auth::user()->name }}
+                            <i class="bi bi-person-circle me-1"></i> {{ Auth::user()->first_name }}
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                             <li><a href="{{ route('dashboard') }}" class="dropdown-item" href="#">Panel użytkownika</a></li>
