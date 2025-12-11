@@ -516,12 +516,17 @@ class CourseController extends Controller
                 'participant_first_name' => 'Waldemar',
                 'participant_last_name' => 'Grabowski',
                 'participant_email' => 'waldemar.grabowski@hostnet.pl',
+                'participant_birth_date' => '1970-01-01',
+                'participant_birth_place' => 'Warszawa',
                 'invoice_notes' => 'Dane testowe - Waldek',
                 'payment_terms' => 14,
             ];
         }
         
-        return view('courses.deferred-order', compact('course', 'testData', 'isTestMode', 'isEditMode'));
+        // Pobierz dane zalogowanego użytkownika (jeśli jest zalogowany)
+        $user = auth()->user();
+        
+        return view('courses.deferred-order', compact('course', 'testData', 'isTestMode', 'isEditMode', 'user'));
     }
 
     /**

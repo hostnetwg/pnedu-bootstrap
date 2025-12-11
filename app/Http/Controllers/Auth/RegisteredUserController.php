@@ -31,9 +31,14 @@ class RegisteredUserController extends Controller
     {
         $request->validate([
             'first_name' => ['required', 'string', 'max:255'],
-            'last_name' => ['required', 'string', 'max:255'],
+            'last_name' => ['nullable', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'rodo_consent' => ['required', 'accepted'],
+            'newsletter_consent' => ['sometimes', 'boolean'],
+        ], [
+            'rodo_consent.required' => 'Musisz wyrazić zgodę na przetwarzanie danych osobowych.',
+            'rodo_consent.accepted' => 'Musisz wyrazić zgodę na przetwarzanie danych osobowych.',
         ]);
 
         $user = User::create([

@@ -31,7 +31,12 @@
         <thead class="table-light"><tr><th>Cel</th><th>Podstawa prawna</th><th>Zakres danych</th></tr></thead>
         <tbody>
             <tr>
-                <td>Rejestracja i&nbsp;udział w&nbsp;szkoleniach (stacjonarnych i&nbsp;online)</td>
+                <td>Rejestracja konta użytkownika</td>
+                <td>art.&nbsp;6 ust.&nbsp;1 lit.&nbsp;b) RODO – wykonanie umowy</td>
+                <td>imię, nazwisko, e‑mail, hasło</td>
+            </tr>
+            <tr>
+                <td>Udział w&nbsp;szkoleniach (stacjonarnych i&nbsp;online)</td>
                 <td>art.&nbsp;6 ust.&nbsp;1 lit.&nbsp;b) RODO – wykonanie umowy</td>
                 <td>imię, nazwisko, e‑mail, telefon<sup>*</sup>, nazwa szkoły/pracodawcy, dane do faktury</td>
             </tr>
@@ -62,13 +67,15 @@
             </tr>
         </tbody>
     </table>
-    <p class="small"><sup>*</sup> podanie numeru telefonu jest dobrowolne, lecz ułatwia szybki kontakt w&nbsp;sprawach organizacyjnych.</p>
+    <p class="small">
+        <sup>*</sup> podanie numeru telefonu jest dobrowolne, lecz ułatwia szybki kontakt w&nbsp;sprawach organizacyjnych.
+    </p>
 
     <h2>4. Odbiorcy danych</h2>
     <p>Dane mogą być przekazywane następującym kategoriom odbiorców, z&nbsp;którymi Administrator zawarł umowy powierzenia:</p>
     <ul>
         <li><strong>SEOHOST Sp. z o.o.</strong> – hosting stron i&nbsp;baz danych (serwery w&nbsp;Polsce);</li>
-        <li><strong>Amazon Web Services Inc.</strong> (Amazon SES) – wysyłka wiadomości e‑mail;</li>
+        <li><strong>Amazon Web Services Europe</strong> (Amazon SES Europe, region Frankfurt) – wysyłka wiadomości e‑mail (serwery w&nbsp;Unii Europejskiej);</li>
         <li><strong>PayU S.A.</strong> oraz <strong>mElements S.A.</strong> (Paynow) – operatorzy płatności online;</li>
         <li><strong>Publigo Sp. z o.o.</strong> – platforma kursów online (wersja GO);</li>
         <li><strong>Biuro Rachunkowe MAKI</strong> – obsługa księgowa;</li>
@@ -76,7 +83,8 @@
     </ul>
 
     <h2>5. Przekazywanie danych poza Europejski Obszar Gospodarczy</h2>
-    <p>Dane mogą być przesyłane do&nbsp;państw trzecich (USA) w&nbsp;związku z&nbsp;korzystaniem z&nbsp;Amazon&nbsp;SES, Facebook&nbsp;Pixel oraz Google&nbsp;Analytics. Transfer odbywa się na&nbsp;podstawie <strong>standardowych klauzul umownych</strong> zatwierdzonych przez Komisję Europejską lub decyzji stwierdzających odpowiedni stopień ochrony.</p>
+    <p>Dane mogą być przesyłane do&nbsp;państw trzecich (USA) w&nbsp;związku z&nbsp;korzystaniem z&nbsp;Facebook&nbsp;Pixel oraz Google&nbsp;Analytics. Transfer odbywa się na&nbsp;podstawie <strong>standardowych klauzul umownych</strong> zatwierdzonych przez Komisję Europejską lub decyzji stwierdzających odpowiedni stopień ochrony.</p>
+    <p><strong>Uwaga:</strong> Amazon SES działa w&nbsp;regionie Europe (Frankfurt), więc dane e‑mailowe nie są przekazywane poza Europejski Obszar Gospodarczy.</p>
 
     <h2>6. Okres przechowywania danych</h2>
     <ul>
