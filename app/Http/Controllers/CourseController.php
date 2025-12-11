@@ -644,7 +644,7 @@ class CourseController extends Controller
                 ]);
             } else {
                 $orderData['ident'] = FormOrder::generateIdent();
-                $orderData['order_date'] = now();
+                $orderData['order_date'] = now('UTC');
                 $orderData['publigo_sent'] = 0;
                 $orderData['status_completed'] = 0;
                 $order = FormOrder::create($orderData);

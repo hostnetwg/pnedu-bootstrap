@@ -33,7 +33,60 @@
             <div class="card border-0 shadow-sm rounded-4">
                 <div class="card-body py-4">
                     <h2 class="h4 mb-4">Moje szkolenia</h2>
-                    <p>Tutaj znajdziesz listę wszystkich swoich szkoleń, zarówno ukończonych, jak i zaplanowanych. Możesz sprawdzić szczegóły, pobrać materiały lub zapisać się na nowe kursy.</p>
+                    
+                    @if($participants->isEmpty())
+                        <p class="text-muted">Nie jesteś jeszcze zarejestrowany na żadne szkolenie.</p>
+                    @else
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Nazwa szkolenia</th>
+                                        <th>Data szkolenia</th>
+                                        <th>Prowadzący</th>
+                                        <th class="text-center">Zaświadczenia</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($participants as $participant)
+                                        @if($participant->course)
+                                            <tr>
+                                                <td>
+                                                    <strong>{{ $participant->course->title }}</strong>
+                                                </td>
+                                                <td>
+                                                    @if($participant->course->start_date)
+                                                        {{ \Carbon\Carbon::parse($participant->course->start_date)->format('d.m.Y') }}
+                                                    @else
+                                                        <span class="text-muted">Brak daty</span>
+                                                    @endif
+                                                </td>
+                                                <td>
+                                                    @if($participant->course->instructor)
+                                                        {{ $participant->course->instructor->full_name }}
+                                                        @if($participant->course->instructor->title)
+                                                            <small class="text-muted">({{ $participant->course->instructor->title }})</small>
+                                                        @endif
+                                                    @else
+                                                        <span class="text-muted">Brak prowadzącego</span>
+                                                    @endif
+                                                </td>
+                                                <td class="text-center">
+                                                    <a href="{{ route('certificates.generate.by-participant', $participant->id) }}" 
+                                                       class="certificate-download-link" 
+                                                       title="Pobierz zaświadczenie">
+                                                        <img src="{{ asset('images/certificate.png') }}" 
+                                                             alt="Zaświadczenie" 
+                                                             class="certificate-icon">
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        @endif
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>
@@ -88,6 +141,22 @@
         padding: 0.5rem 0.9rem;
         font-size: 1rem;
     }
+}
+.certificate-download-link {
+    display: inline-block;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+.certificate-icon {
+    width: 60px;
+    height: auto;
+    display: block;
+    transition: all 0.3s ease;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+.certificate-download-link:hover .certificate-icon {
+    transform: scale(1.15);
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
 }
 </style>
 @endpush

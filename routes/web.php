@@ -58,9 +58,9 @@ Route::get('/dashboard', function () {
     return view('dashboard.index');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-Route::get('/dashboard/szkolenia', function () {
-    return view('dashboard.szkolenia');
-})->middleware(['auth', 'verified'])->name('dashboard.szkolenia');
+Route::get('/dashboard/szkolenia', [App\Http\Controllers\DashboardController::class, 'szkolenia'])
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard.szkolenia');
 
 Route::get('/dashboard/zaswiadczenia', function () {
     return view('dashboard.zaswiadczenia');
