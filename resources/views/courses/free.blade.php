@@ -119,7 +119,14 @@
                                         </div>
                                     @endif
                                 </div>
-                                <a href="{{ route('courses.show', $course->id) }}" class="text-decoration-none course-link">
+                                @php
+                                    // Dla Akademii Dyrektora, tytuł też prowadzi do YouTube (jeśli dostępne)
+                                    $titleLink = route('courses.show', $course->id);
+                                    if (($pageTitle ?? '') === 'Akademia Dyrektora' && $isYouTube) {
+                                        $titleLink = $imageLink;
+                                    }
+                                @endphp
+                                <a href="{{ $titleLink }}" class="text-decoration-none course-link" @if(($pageTitle ?? '') === 'Akademia Dyrektora' && $isYouTube) target="_blank" @endif>
                                     <div class="course-content">
                                         <h5 class="course-title">
                                             {!! $course->title !!}

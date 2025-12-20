@@ -49,9 +49,9 @@
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="freeDropdown">
                         <li><a class="dropdown-item" href="{{ route('courses.free') }}">TIK w pracy NAUCZYCIELA</a></li>
+                        <li><a class="dropdown-item" href="{{ route('courses.director-academy') }}">Akademia Dyrektora</a></li>
                         <li><a class="dropdown-item" href="{{ route('courses.office365') }}">Szkolny ADMINISTRATOR Office 365</a></li>
                         <li><a class="dropdown-item" href="{{ route('courses.parent-academy') }}">Akademia Rodzica</a></li>
-                        <li><a class="dropdown-item" href="{{ route('courses.director-academy') }}">Akademia Dyrektora</a></li>
                     </ul>
                 </li>
 
