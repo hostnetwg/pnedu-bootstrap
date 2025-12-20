@@ -29,51 +29,45 @@
             {{-- Lewa strona paska --}}
             <ul class="navbar-nav me-auto mb-2 mb-lg-0"><!-- me-auto = elementy doklejone do lewej -->
 
-                {{-- Start --}}
-                <li class="nav-item"><a  href="{{ route('home') }}" class="nav-link" href="#">Start</a></li>
-
-                {{-- SZKOLENIA OTWARTE (dropdown) --}}
+                {{-- SZKOLENIA OTWARTE (dropdown) --}}
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="openTrainingDropdown" role="button"
                        data-bs-toggle="dropdown" aria-expanded="false">
-                        Szkolenia otwarte
+                        Szkolenia
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="openTrainingDropdown">
-                        <li><a class="dropdown-item" href="#">Webinar</a></li>
-                        <li><a class="dropdown-item" href="{{ route('courses.online-live') }}">Szkolenie online LIVE</a></li>
-                        <li><a class="dropdown-item" href="#">Warsztat online LIVE</a></li>
-                        <li><a class="dropdown-item" href="#">Kurs online (asynchroniczny)</a></li>
+                        <li><a class="dropdown-item" href="{{ route('courses.individual') }}">Szkolenia indywidualne</a></li>
+                        <li><a class="dropdown-item" href="#">Szkolenia rad pedagogicznych</a></li>
                     </ul>
                 </li>
-
-                {{-- SZKOLENIA ZAMKNIĘTE (dropdown) --}}
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="closedTrainingDropdown" role="button"
-                       data-bs-toggle="dropdown" aria-expanded="false">
-                        Szkolenia zamknięte
-                    </a>
-                    <ul class="dropdown-menu" aria-labelledby="closedTrainingDropdown">
-                        <li><a class="dropdown-item" href="#">Szkolenie online LIVE (dedykowane)</a></li>
-                        <li><a class="dropdown-item" href="#">Warsztat online LIVE (dedykowany)</a></li>
-                        <li><a class="dropdown-item" href="#">Szkolenie stacjonarne – wykład</a></li>
-                        <li><a class="dropdown-item" href="#">Warsztat stacjonarny</a></li>
-                    </ul>
-                </li>
-
-                {{-- Blog --}}
-                <li class="nav-item"><a class="nav-link" href="{{ route('blog.index') }}">Blog</a></li>
 
                 {{-- BEZPŁATNE (dropdown) --}}
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="freeDropdown" role="button"
                        data-bs-toggle="dropdown" aria-expanded="false">
-                        Bezpłatne
+                        Webinary (bezpłatne)
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="freeDropdown">
                         <li><a class="dropdown-item" href="{{ route('courses.free') }}">TIK w pracy NAUCZYCIELA</a></li>
                         <li><a class="dropdown-item" href="{{ route('courses.office365') }}">Szkolny ADMINISTRATOR Office 365</a></li>
                         <li><a class="dropdown-item" href="{{ route('courses.parent-academy') }}">Akademia Rodzica</a></li>
                         <li><a class="dropdown-item" href="{{ route('courses.director-academy') }}">Akademia Dyrektora</a></li>
+                    </ul>
+                </li>
+
+                {{-- Blog --}}
+                <li class="nav-item"><a class="nav-link" href="{{ route('blog.index') }}">Blog</a></li>
+
+                {{-- O NAS (dropdown) --}}
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="aboutDropdown" role="button"
+                       data-bs-toggle="dropdown" aria-expanded="false">
+                        O nas
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="aboutDropdown">
+                        <li><a class="dropdown-item" href="#">Misja</a></li>
+                        <li><a class="dropdown-item" href="#">Zespół</a></li>
+                        <li><a class="dropdown-item" href="#">Akredytacja MKO</a></li>
                     </ul>
                 </li>
 

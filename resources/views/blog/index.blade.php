@@ -20,10 +20,7 @@
 
 <!-- ===== BLOG ARTICLES ======================================= -->
 <div class="container pt-5 pb-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
-
-            <article class="mb-5">
+    <article class="mb-5">
                 <header class="mb-4">
                     <h1 class="display-5 fw-bold">Sztuczna Inteligencja w Edukacji: Możliwości i Zagrożenia</h1>
                     <div class="text-muted mb-2">
@@ -100,9 +97,6 @@
                     </div>
                 </footer>
             </article>
-
-        </div>
-    </div>
 </div>
 
 @endsection

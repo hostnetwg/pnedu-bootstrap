@@ -28,6 +28,10 @@ Route::get('/blog', function () {
 Route::get('/szkolenia-online-live', [App\Http\Controllers\CourseController::class, 'onlineLive'])
     ->name('courses.online-live');
 
+// Szkolenia indywidualne
+Route::get('/szkolenia-indywidualne', [App\Http\Controllers\CourseController::class, 'individualCourses'])
+    ->name('courses.individual');
+
 // Bezpłatne szkolenia (TIK w pracy NAUCZYCIELA)
 Route::get('/bezplatne/tik-w-pracy-nauczyciela', [App\Http\Controllers\CourseController::class, 'freeCourses'])
     ->name('courses.free');

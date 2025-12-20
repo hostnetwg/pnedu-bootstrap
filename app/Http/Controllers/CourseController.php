@@ -22,88 +22,7 @@ class CourseController extends Controller
      */
     public function onlineLive(Request $request)
     {
-        try {
-            $sort = $request->query('sort', 'desc');
-            $sort = in_array($sort, ['asc', 'desc']) ? $sort : 'desc';
-            $instructorId = $request->query('instructor');
-            $dateFilter = $request->query('date_filter', 'all');
-            $paidFilter = $request->query('paid_filter');
-            $typeFilter = $request->query('type_filter');
-            $categoryFilter = $request->query('category_filter');
-            $searchQuery = $request->query('q');
-
-            // Get instructors who have online courses
-            $instructors = \App\Models\Instructor::whereHas('courses', function($q) {
-                $q->where('type', 'online')->where('is_active', true);
-            })->orderBy('last_name')->get();
-
-            $coursesQuery = Course::with('instructor')
-                ->where('is_active', true);
-
-            if ($typeFilter === 'online' || $typeFilter === 'offline') {
-                $coursesQuery->where('type', $typeFilter);
-            } else {
-                $coursesQuery->where('type', 'online'); // default
-            }
-
-            if ($instructorId) {
-                $coursesQuery->where('instructor_id', $instructorId);
-            }
-
-            if ($dateFilter === 'upcoming') {
-                $coursesQuery->where('start_date', '>', now());
-            } elseif ($dateFilter === 'archived') {
-                $coursesQuery->whereNotNull('end_date')->where('end_date', '<', now());
-            } elseif ($dateFilter === 'ongoing') {
-                $coursesQuery->where('start_date', '<=', now())
-                    ->where(function($q) {
-                        $q->whereNull('end_date')->orWhere('end_date', '>=', now());
-                    });
-            }
-
-            if ($paidFilter === 'paid') {
-                $coursesQuery->where('is_paid', 1);
-            } elseif ($paidFilter === 'free') {
-                $coursesQuery->where('is_paid', 0);
-            }
-
-            if ($categoryFilter === 'otwarte') {
-                $coursesQuery->where('category', 'open');
-            } elseif ($categoryFilter === 'zamknięte') {
-                $coursesQuery->where('category', 'closed');
-            }
-
-            if (!empty($searchQuery)) {
-                $coursesQuery->where(function($q) use ($searchQuery) {
-                    $q->where('title', 'like', '%' . $searchQuery . '%')
-                      ->orWhere('description', 'like', '%' . $searchQuery . '%');
-                });
-            }
-
-            $courses = $coursesQuery
-                ->orderBy('start_date', $sort)
-                ->paginate(20)
-                ->appends([
-                    'sort' => $sort,
-                    'instructor' => $instructorId,
-                    'date_filter' => $dateFilter,
-                    'paid_filter' => $paidFilter,
-                    'type_filter' => $typeFilter,
-                    'category_filter' => $categoryFilter,
-                    'q' => $searchQuery
-                ]);
-
-            return view('courses.online-live', compact('courses', 'sort', 'instructors', 'instructorId', 'dateFilter', 'paidFilter', 'typeFilter', 'categoryFilter', 'searchQuery'));
-        } catch (Exception $e) {
-            // Log the error for administrators
-            Log::error('Error accessing courses: ' . $e->getMessage());
-            
-            // Return the view with an empty collection and error flag
-            return view('courses.online-live', [
-                'courses' => collect([]),
-                'databaseError' => true
-            ]);
-        }
+        return view('courses.online-live');
     }
 
     /**
@@ -416,6 +335,46 @@ class CourseController extends Controller
                 'pageTitle' => 'Akademia Dyrektora'
             ]);
         }
+    }
+
+    /**
+     * Wyświetl listę szkoleń indywidualnych (te same co na stronie głównej).
+     *
+     * @return \Illuminate\View\View
+     */
+    public function individualCourses(Request $request)
+    {
+        // Nadchodzące szkolenia
+        $upcomingCourses = Course::with('priceVariants')
+            ->where('is_active', true)
+            ->where('type', 'online')
+            ->where('is_paid', 1)
+            ->where('start_date', '>', now())
+            ->where('source_id_old', 'certgen_Publigo')
+            ->orderBy('start_date', 'asc')
+            ->get();
+
+        // Archiwalne szkolenia (zakończone)
+        $archivedCourses = Course::with('priceVariants')
+            ->where('is_active', true)
+            ->where('type', 'online')
+            ->where('is_paid', 1)
+            ->where(function($query) {
+                $query->where(function($q) {
+                    // Szkolenia z datą zakończenia w przeszłości
+                    $q->whereNotNull('end_date')
+                      ->where('end_date', '<', now());
+                })->orWhere(function($q) {
+                    // Szkolenia bez daty zakończenia, ale z datą rozpoczęcia w przeszłości (starsze niż 30 dni)
+                    $q->whereNull('end_date')
+                      ->where('start_date', '<', now()->subDays(30));
+                });
+            })
+            ->where('source_id_old', 'certgen_Publigo')
+            ->orderBy('start_date', 'desc')
+            ->get();
+
+        return view('courses.individual', compact('upcomingCourses', 'archivedCourses'));
     }
 
     /**

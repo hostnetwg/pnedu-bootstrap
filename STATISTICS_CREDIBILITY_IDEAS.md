@@ -280,3 +280,4 @@ Po wyborze wariantu:
 4. Testy wizualne i UX
 5. Optymalizacja responsywności
 
+
