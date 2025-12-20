@@ -252,30 +252,113 @@
 <!-- ===== STATS SECTION WITH COUNTER (CLEAN & LOW HEIGHT) ============================= -->
 <section class="py-3" style="background: #f6f8fa;">
     <div class="container">
+        <!-- Badge "Dane na żywo" -->
+        <div class="text-center mb-3">
+            <span class="badge bg-success px-3 py-2" style="font-size: 0.85rem;">
+                <span class="spinner-grow spinner-grow-sm me-1" role="status" aria-hidden="true"></span>
+                Dane na żywo
+            </span>
+        </div>
+
         <div class="row text-center g-4 align-items-center" data-aos="fade-up">
             <div class="col-6 col-md-3">
                 <div class="display-5 fw-bold mb-1" style="color:#0056b3;">
-                    <span class="counter" data-target="10000">0</span>+
+                    <span class="counter" data-target="{{ $statistics['trained_teachers'] ?? 10000 }}" 
+                          data-bs-toggle="tooltip" 
+                          data-bs-placement="top" 
+                          title="Unikalni uczestnicy z bazy danych pneadm">0</span>
                 </div>
                 <p class="text-secondary fw-light small">Przeszkolonych nauczycieli</p>
             </div>
             <div class="col-6 col-md-3">
                 <div class="display-5 fw-bold mb-1" style="color:#0056b3;">
-                    <span class="counter" data-target="200">0</span>+
+                    <span class="counter" data-target="{{ $statistics['courses_this_year'] ?? 200 }}"
+                          data-bs-toggle="tooltip" 
+                          data-bs-placement="top" 
+                          title="Szkolenia z ostatnich 12 miesięcy">0</span>
                 </div>
-                <p class="text-secondary fw-light small">Webinarów rocznie</p>
+                <p class="text-secondary fw-light small">Szkoleń rocznie</p>
             </div>
             <div class="col-6 col-md-3">
                 <div class="display-5 fw-bold mb-1" style="color:#0056b3;">
-                    ★<span class="counter" data-target="4.9">0</span>
+                    ★<span class="counter" data-target="{{ $statistics['average_rating'] ?? 4.9 }}"
+                          data-bs-toggle="tooltip" 
+                          data-bs-placement="top" 
+                          title="Średnia ocena ze wszystkich ankiet uczestników">0</span><span class="fs-4 text-muted">/5</span>
                 </div>
                 <p class="text-secondary fw-light small">Średnia ocena</p>
             </div>
             <div class="col-6 col-md-3">
                 <div class="display-5 fw-bold mb-1" style="color:#0056b3;">
-                    <span class="counter" data-target="100">0</span>%
+                    <span class="counter" data-target="{{ $statistics['nps'] ?? 0 }}"
+                          data-bs-toggle="tooltip" 
+                          data-bs-placement="top" 
+                          title="Net Promoter Score - obliczany na podstawie odpowiedzi o polecanie szkoleń">0</span>%
                 </div>
-                <p class="text-secondary fw-light small">Certyfikowanych szkoleń</p>
+                <p class="text-secondary fw-light small">Wskaźnik poleceń (NPS)</p>
+            </div>
+        </div>
+
+        <!-- Informacja o aktualizacji i link do metodologii -->
+        <div class="text-center mt-4">
+            <small class="text-muted d-block mb-2">
+                Ostatnia aktualizacja: 
+                @if(isset($statistics['last_updated']))
+                    {{ $statistics['last_updated']->format('d.m.Y, H:i') }}
+                @else
+                    {{ now()->format('d.m.Y, H:i') }}
+                @endif
+            </small>
+            <a href="#statistics-methodology" 
+               class="text-decoration-none small text-primary" 
+               data-bs-toggle="collapse" 
+               role="button" 
+               aria-expanded="false" 
+               aria-controls="statistics-methodology">
+                Jak obliczamy nasze statystyki? 
+                <i class="bi bi-chevron-down"></i>
+            </a>
+        </div>
+
+        <!-- Rozwijana sekcja metodologii -->
+        <div class="collapse mt-3" id="statistics-methodology">
+            <div class="card card-body bg-white shadow-sm border-0 mt-3">
+                <h6 class="fw-bold mb-3">Metodologia obliczeń</h6>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <h6 class="small fw-bold text-primary">Przeszkolonych nauczycieli</h6>
+                        <p class="small text-muted mb-0">
+                            Liczymy unikalnych uczestników z bazy danych pneadm. Uczestnicy z emailem są liczeni po unikalnym adresie email, 
+                            a uczestnicy bez emaila po unikalnej kombinacji imię + nazwisko.
+                        </p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <h6 class="small fw-bold text-primary">Szkoleń rocznie</h6>
+                        <p class="small text-muted mb-0">
+                            Liczba szkoleń z ostatnich 12 miesięcy od daty obliczenia. Zliczamy wszystkie szkolenia 
+                            (online i stacjonarne) z datą rozpoczęcia w tym okresie.
+                        </p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <h6 class="small fw-bold text-primary">Średnia ocena</h6>
+                        <p class="small text-muted mb-0">
+                            Obliczana ze wszystkich ankiet uczestników. Dla każdej ankiety wyliczamy średnią z pytań typu "rating" (skala 1-5), 
+                            a następnie obliczamy średnią ze wszystkich ankiet.
+                        </p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <h6 class="small fw-bold text-primary">Wskaźnik poleceń (NPS)</h6>
+                        <p class="small text-muted mb-0">
+                            Net Promoter Score obliczany na podstawie odpowiedzi na pytania o polecanie szkoleń innym. 
+                            Promoters (4-5), Detractors (1-2), Passives (3). Formuła: (Promoters% - Detractors%).
+                        </p>
+                    </div>
+                </div>
+                <hr class="my-2">
+                <small class="text-muted">
+                    <i class="bi bi-info-circle"></i> 
+                    Wszystkie dane pochodzą z bazy danych pneadm i są aktualizowane automatycznie co godzinę.
+                </small>
             </div>
         </div>
     </div>
@@ -664,6 +747,12 @@
         }, { threshold: 0.1 });
 
         counters.forEach(counter => observer.observe(counter));
+
+        // Initialize Bootstrap tooltips
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
     });
 
     // Enhanced carousel autoplay and transitions

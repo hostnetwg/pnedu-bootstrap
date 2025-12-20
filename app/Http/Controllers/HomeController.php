@@ -3,10 +3,18 @@
 namespace App\Http\Controllers;
 
 use App\Models\Course;
+use App\Services\StatisticsService;
 use Illuminate\Http\Request;
 
 class HomeController extends Controller
 {
+    protected $statisticsService;
+
+    public function __construct(StatisticsService $statisticsService)
+    {
+        $this->statisticsService = $statisticsService;
+    }
+
     public function index()
     {
         $courses = Course::with('priceVariants')
@@ -18,6 +26,10 @@ class HomeController extends Controller
             ->orderBy('start_date', 'asc')
             ->take(6)
             ->get();
-        return view('welcome', compact('courses'));
+
+        // Pobierz statystyki z cache
+        $statistics = $this->statisticsService->getStatistics();
+
+        return view('welcome', compact('courses', 'statistics'));
     }
 } 
