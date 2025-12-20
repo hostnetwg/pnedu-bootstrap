@@ -266,7 +266,7 @@
                     <span class="counter" data-target="{{ $statistics['trained_teachers'] ?? 10000 }}" 
                           data-bs-toggle="tooltip" 
                           data-bs-placement="top" 
-                          title="Unikalni uczestnicy z bazy danych pneadm">0</span>
+                          title="Unikalni uczestnicy przeprowadzonych szkoleń">0</span>
                 </div>
                 <p class="text-secondary fw-light small">Przeszkolonych nauczycieli</p>
             </div>
@@ -328,7 +328,7 @@
                     <div class="col-md-6 mb-3">
                         <h6 class="small fw-bold text-primary">Przeszkolonych nauczycieli</h6>
                         <p class="small text-muted mb-0">
-                            Liczymy unikalnych uczestników z bazy danych pneadm. Uczestnicy z emailem są liczeni po unikalnym adresie email, 
+                            Liczymy unikalnych uczestników wszystkich przeprowadzonych szkoleń. Uczestnicy z emailem są liczeni po unikalnym adresie email, 
                             a uczestnicy bez emaila po unikalnej kombinacji imię + nazwisko.
                         </p>
                     </div>
@@ -350,15 +350,23 @@
                         <h6 class="small fw-bold text-primary">Wskaźnik poleceń (NPS)</h6>
                         <p class="small text-muted mb-0">
                             Net Promoter Score obliczany na podstawie odpowiedzi na pytania o polecanie szkoleń innym. 
-                            Promoters (4-5), Detractors (1-2), Passives (3). Formuła: (Promoters% - Detractors%).
+                            Promotorzy (4-5), Krytycy (1-2), Neutralni (3). Formuła: (Procent promotorów - Procent krytyków).
                         </p>
                     </div>
                 </div>
                 <hr class="my-2">
                 <small class="text-muted">
                     <i class="bi bi-info-circle"></i> 
-                    Wszystkie dane pochodzą z bazy danych pneadm i są aktualizowane automatycznie co godzinę.
+                    Wszystkie dane pochodzą z bazy przeprowadzonych szkoleń oraz wyników ankiet uczestników i są aktualizowane automatycznie raz na 24 godziny.
                 </small>
+                
+                <!-- Podpis dyrektora -->
+                <div class="mt-4 pt-3 border-top">
+                    <div class="text-end">
+                        <div class="small text-muted mb-1">dyrektor NODN "Platforma Nowoczesnej Edukacji"</div>
+                        <div class="fw-semibold">Waldemar Grabowski</div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

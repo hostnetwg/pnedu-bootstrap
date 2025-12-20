@@ -9,7 +9,7 @@ use App\Models\Survey;
 class StatisticsService
 {
     const CACHE_KEY = 'homepage_statistics';
-    const CACHE_TTL = 3600; // 1 godzina (w sekundach)
+    const CACHE_TTL = 86400; // 24 godziny (w sekundach)
 
     /**
      * Pobiera wszystkie statystyki z cache lub generuje nowe
