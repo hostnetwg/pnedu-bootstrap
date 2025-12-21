@@ -78,13 +78,13 @@
         }
     }
     .course-title {
-        font-size: 2.1rem;
+        font-size: 1.7rem;
         font-weight: 700;
         color: #1976d2;
         margin-bottom: 0.5rem;
     }
     .course-meta {
-        font-size: 1.1rem;
+        font-size: 0.9rem;
         color: #555;
         margin-bottom: 1.5rem;
     }
@@ -97,11 +97,13 @@
         width: 100%;
         max-width: 100%;
         box-sizing: border-box;
+        font-size: 0.9rem;
     }
     .course-details-section h4 {
         color: #1976d2;
         font-weight: 600;
         margin-bottom: 1.2rem;
+        font-size: 1.1rem;
     }
     .course-pay-box {
         background: linear-gradient(135deg, #e3f0ff 60%, #f8fbff 100%);
@@ -119,14 +121,14 @@
         box-shadow: 0 10px 40px 0 rgba(25, 118, 210, 0.18), 0 2px 12px 0 rgba(0,0,0,0.07);
     }
     .course-pay-box h3 {
-        font-size: 1.35rem;
+        font-size: 1.1rem;
         font-weight: 800;
         color: #1a237e;
         margin-bottom: 1.5rem;
         letter-spacing: 0.5px;
     }
     .course-pay-box .btn-lg {
-        font-size: 1.15rem;
+        font-size: 0.95rem;
         padding: 0.85rem 2.5rem;
         border-radius: 8px;
         margin: 0.5rem 0 0 0;
@@ -158,13 +160,13 @@
         box-shadow: 0 4px 16px rgba(40,167,69,0.18);
     }
     .course-pay-box .text-muted {
-        font-size: 0.98rem;
+        font-size: 0.85rem;
     }
     .pay-or-text {
         margin: 0.5rem 0 0.5rem 0;
         color: #1976d2;
         font-weight: 600;
-        font-size: 1.08rem;
+        font-size: 0.9rem;
         letter-spacing: 0.2px;
         opacity: 0.95;
     }
@@ -209,7 +211,7 @@
     .instructor-section-title-inline {
         color: #1976d2;
         font-weight: 600;
-        font-size: 1.3rem;
+        font-size: 1.1rem;
         margin-bottom: 1.2rem;
         margin-top: 0;
     }
@@ -235,6 +237,7 @@
 
     .instructor-bio-inline {
         line-height: 1.7;
+        font-size: 0.9rem;
     }
 
     .instructor-bio-inline h1,
@@ -306,8 +309,8 @@
                     @if($priceInfo['is_promotion'] && $priceInfo['original_price'])
                         <div class="d-flex flex-column align-items-center gap-1">
                             <div class="d-flex align-items-center justify-content-center gap-2">
-                                <span class="text-muted text-decoration-line-through" style="font-size: 0.9rem;">{{ number_format($priceInfo['original_price'], 2, ',', ' ') }} PLN</span>
-                                <span class="fw-bold text-danger" style="font-size: 1.2rem;">{{ number_format($priceInfo['price'], 2, ',', ' ') }} PLN</span> <span class="text-danger" style="font-size: 1.2rem;">(brutto)</span>
+                                <span class="text-muted text-decoration-line-through" style="font-size: 0.8rem;">{{ number_format($priceInfo['original_price'], 2, ',', ' ') }} PLN</span>
+                                <span class="fw-bold text-danger" style="font-size: 1rem;">{{ number_format($priceInfo['price'], 2, ',', ' ') }} PLN</span> <span class="text-danger" style="font-size: 1rem;">(brutto)</span>
                             </div>
                             @if($priceInfo['promotion_end'] && $priceInfo['promotion_type'] === 'time_limited')
                                 <small style="font-size: 0.85rem; color: #000;">
@@ -319,7 +322,7 @@
                             </small>
                         </div>
                     @else
-                        <span class="fw-bold" style="font-size: 1.2rem; color: #1976d2;">{{ number_format($priceInfo['price'], 2, ',', ' ') }} PLN</span> <span style="font-size: 1.2rem; color: #1976d2;">(brutto)</span>
+                        <span class="fw-bold" style="font-size: 1rem; color: #1976d2;">{{ number_format($priceInfo['price'], 2, ',', ' ') }} PLN</span> <span style="font-size: 1rem; color: #1976d2;">(brutto)</span>
                     @endif
                 </div>
             @endif
@@ -452,7 +455,7 @@
                                     </small>
                                 </div>
                             @else
-                                <span class="fw-bold" style="font-size: 1.2rem; color: #1976d2;">{{ number_format($priceInfo['price'], 2, ',', ' ') }} PLN</span> <span style="font-size: 1.2rem; color: #1976d2;">(brutto)</span>
+                                <span class="fw-bold" style="font-size: 1rem; color: #1976d2;">{{ number_format($priceInfo['price'], 2, ',', ' ') }} PLN</span> <span style="font-size: 1rem; color: #1976d2;">(brutto)</span>
                             @endif
                         </div>
                     @endif
@@ -461,7 +464,7 @@
                         <div class="pay-or-text">lub wypełnij</div>
                         <a href="{{ route('payment.deferred', $course->id) }}" class="btn btn-orange btn-lg fw-bold shadow-sm w-100">Formularz zamówienia z&nbsp;odroczonym terminem płatności</a>
                         @if(!empty($course->id_old))
-                            <a href="https://zdalna-lekcja.pl/zamowienia/formularz/?idP={{ $course->id_old }}" target="_blank" class="btn btn-link mt-2" style="font-size: 0.95rem;">Alternatywny formularz zamówienia</a>
+                            <a href="https://zdalna-lekcja.pl/zamowienia/formularz/?idP={{ $course->id_old }}" target="_blank" class="btn btn-link mt-2" style="font-size: 0.85rem;">Alternatywny formularz zamówienia</a>
                         @endif
                     </div>
                     <div class="mt-2 text-muted">Liczba miejsc ograniczona –<br>nie zwlekaj z&nbsp;rejestracją!</div>
@@ -492,7 +495,7 @@
                                 </small>
                             </div>
                         @else
-                            <span class="fw-bold" style="font-size: 1.2rem; color: #1976d2;">{{ number_format($priceInfo['price'], 2, ',', ' ') }} PLN</span> <span style="font-size: 1.2rem; color: #1976d2;">(brutto)</span>
+                            <span class="fw-bold" style="font-size: 1rem; color: #1976d2;">{{ number_format($priceInfo['price'], 2, ',', ' ') }} PLN</span> <span style="font-size: 1rem; color: #1976d2;">(brutto)</span>
                         @endif
                     </div>
                 @endif

@@ -23,10 +23,10 @@
 <section id="courses" class="pt-3 pb-5">
     <div class="container">
         <div class="row mb-3">
-            <div class="col-lg-6">
+            <div class="col-12">
                 <div class="badge bg-warning text-dark mb-2">Nadchodzące wydarzenia</div>
-                <h2 class="display-5 fw-bold mb-2">Szkolenia, które <span class="text-primary">rozwijają</span></h2>
-                <p class="lead mb-0" style="white-space: nowrap;">Zapoznaj się z naszymi najbliższymi szkoleniami i wybierz te, które najlepiej odpowiadają Twoim potrzebom zawodowym.</p>
+                <h3 class="fw-bold mb-2">Szkolenia, które <span class="text-primary">rozwijają</span></h3>
+                <p class="mb-0">Zapoznaj się z naszymi najbliższymi szkoleniami i wybierz te, które najlepiej odpowiadają Twoim potrzebom zawodowym.</p>
             </div>
         </div>
         
@@ -35,26 +35,28 @@
                 <div class="col">
                     <div class="card h-100 border-0 shadow-sm hover-lift">
                         <div class="position-relative">
-                            @if(!empty($course->image))
-                                <img src="{{ 'https://adm.pnedu.pl/storage/' . ltrim($course->image, '/') }}" class="card-img-top" alt="{{ $course->title }}">
-                            @else
-                                <div class="card-img-top d-flex align-items-center justify-content-center mb-2" style="width:100%; aspect-ratio:1/1; background:#e9ecef; border: 2px solid #dee2e6; border-radius: .5rem; border-style:dashed;">
-                                    <i class="bi bi-mortarboard" style="font-size: 4rem; color: #f8f9fa;"></i>
-                                </div>
-                            @endif
+                            <a href="{{ route('courses.show', $course->id) }}" style="text-decoration: none; display: block;">
+                                @if(!empty($course->image))
+                                    <img src="{{ 'https://adm.pnedu.pl/storage/' . ltrim($course->image, '/') }}" class="card-img-top" alt="{{ $course->title }}">
+                                @else
+                                    <div class="card-img-top d-flex align-items-center justify-content-center mb-2" style="width:100%; aspect-ratio:1/1; background:#e9ecef; border: 2px solid #dee2e6; border-radius: .5rem; border-style:dashed;">
+                                        <i class="bi bi-mortarboard" style="font-size: 4rem; color: #f8f9fa;"></i>
+                                    </div>
+                                @endif
+                            </a>
                         </div>
                         <div class="card-body d-flex flex-column p-4">
-                            <h5 class="card-title fw-bold mb-3">{!! $course->title !!}</h5>
+                            <h6 class="card-title fw-bold mb-3" style="font-size: 1rem;">{!! $course->title !!}</h6>
                             @php
                                 $start = \Carbon\Carbon::parse($course->start_date)->locale('pl');
                                 $end = $course->end_date ? \Carbon\Carbon::parse($course->end_date) : null;
                             @endphp
-                            <ul class="list-unstyled mb-3">
+                            <ul class="list-unstyled mb-3" style="font-size: 0.9rem;">
                                 <li><strong>Data:</strong> {{ $start->format('d.m.Y') }}</li>
                                 <li><strong>Godzina:</strong> {{ $start->format('H:i') }}@if($end) ({{ $start->diffInMinutes($end) }} min)@endif</li>
                                 <li><strong>Dzień tygodnia:</strong> {{ $start->translatedFormat('l') }}</li>
                             </ul>
-                            <p class="card-text">
+                            <p class="card-text" style="font-size: 0.9rem;">
                                 <strong>{{ $course->trainer_title }}:</strong> {{ $course->trainer }}
                             </p>
                             <div class="mt-auto pt-3">
@@ -84,8 +86,8 @@
                                         @if($priceInfo['is_promotion'] && $priceInfo['original_price'])
                                             <div class="d-flex flex-column align-items-center gap-1">
                                                 <div class="d-flex align-items-center justify-content-center gap-2">
-                                                    <span class="text-muted text-decoration-line-through" style="font-size: 0.9rem;">{{ number_format($priceInfo['original_price'], 2, ',', ' ') }} PLN</span>
-                                                    <span class="fw-bold text-danger" style="font-size: 1.2rem;">{{ number_format($priceInfo['price'], 2, ',', ' ') }} PLN</span> <span class="text-danger" style="font-size: 1.2rem;">(brutto)</span>
+                                                    <span class="text-muted text-decoration-line-through" style="font-size: 0.85rem;">{{ number_format($priceInfo['original_price'], 2, ',', ' ') }} PLN</span>
+                                                    <span class="fw-bold text-danger" style="font-size: 1rem;">{{ number_format($priceInfo['price'], 2, ',', ' ') }} PLN</span> <span class="text-danger" style="font-size: 1rem;">(brutto)</span>
                                                 </div>
                                                 @if($priceInfo['promotion_end'] && $priceInfo['promotion_type'] === 'time_limited')
                                                     <small style="font-size: 0.85rem; color: #000;">
@@ -97,19 +99,19 @@
                                                 </small>
                                             </div>
                                         @else
-                                            <span class="fw-bold" style="font-size: 1.2rem; color: #1976d2;">{{ number_format($priceInfo['price'], 2, ',', ' ') }} PLN</span> <span style="font-size: 1.2rem; color: #1976d2;">(brutto)</span>
+                                            <span class="fw-bold" style="font-size: 1rem; color: #1976d2;">{{ number_format($priceInfo['price'], 2, ',', ' ') }} PLN</span> <span style="font-size: 1rem; color: #1976d2;">(brutto)</span>
                                         @endif
                                     </div>
                                 @endif
                                 <div class="text-center mb-2">
                                     <a href="{{ route('courses.show', $course->id) }}" 
-                                       class="read-more-link">
+                                       class="read-more-link" style="font-size: 0.9rem;">
                                         Czytaj więcej ...
                                     </a>
                                 </div>
                                 <a href="{{ route('courses.show', $course->id) }}"
                                    class="btn btn-warning w-100 fw-bold d-flex align-items-center justify-content-center gap-2 shadow-sm cta-btn"
-                                   style="font-size:1.15rem; letter-spacing:0.5px;">
+                                   style="font-size:0.95rem; letter-spacing:0.5px;">
                                     <span>Zapisz się</span>
                                     <i class="bi bi-arrow-right-circle-fill"></i>
                                 </a>
