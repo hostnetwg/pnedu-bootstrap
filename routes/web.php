@@ -24,6 +24,9 @@ Route::get('/blog', function () {
     return view('blog.index');
 })->name('blog.index');
 
+// O nas - Zespół
+Route::get('/o-nas/zespol', [App\Http\Controllers\AboutController::class, 'team'])->name('about.team');
+
 // Szkolenia online LIVE
 Route::get('/szkolenia-online-live', [App\Http\Controllers\CourseController::class, 'onlineLive'])
     ->name('courses.online-live');

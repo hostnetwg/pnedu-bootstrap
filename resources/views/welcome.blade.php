@@ -8,16 +8,122 @@
 @section('main-padding', '')
 
 <!-- ===== HERO BANNER ======================================= -->
-<div class="bg-primary bg-gradient text-white py-3 text-center">
+<div class="bg-primary bg-gradient text-white py-2 text-center">
     <div class="container">
         <p class="lead fw-semibold mb-0">
             Niepubliczny Ośrodek Doskonalenia Nauczycieli "Platforma Nowoczesnej Edukacji"<br>
-            <span style="color: #c6a300; font-style: normal; font-weight: 600;">
+            <span style="color: #ffd700; font-style: normal; font-weight: 600;">
                 AKREDYTACJA MAZOWIECKIEGO KURATORA OŚWIATY
             </span>
         </p>
     </div>
 </div>
+
+<!-- ===== UPCOMING COURSES ======================================= -->
+<section id="courses" class="pt-3 pb-5">
+    <div class="container">
+        <div class="row mb-3">
+            <div class="col-lg-6">
+                <div class="badge bg-warning text-dark mb-2">Nadchodzące wydarzenia</div>
+                <h2 class="display-5 fw-bold mb-3">Szkolenia, które <span class="text-primary">rozwijają</span></h2>
+                <p class="lead">Zapoznaj się z naszymi najbliższymi szkoleniami i wybierz te, które najlepiej odpowiadają Twoim potrzebom zawodowym.</p>
+            </div>
+            <div class="col-lg-6 d-flex align-items-end justify-content-lg-end">
+                <a href="https://nowoczesna-edukacja.pl" target="_blank" class="btn btn-outline-primary rounded-pill px-4">Zobacz wszystkie szkolenia</a>
+            </div>
+        </div>
+        
+        <div class="row row-cols-1 row-cols-md-3 g-4" data-aos="fade-up">
+            @foreach($courses as $course)
+                <div class="col">
+                    <div class="card h-100 border-0 shadow-sm hover-lift">
+                        <div class="position-relative">
+                            @if(!empty($course->image))
+                                <img src="{{ 'https://adm.pnedu.pl/storage/' . ltrim($course->image, '/') }}" class="card-img-top" alt="{{ $course->title }}">
+                            @else
+                                <div class="card-img-top d-flex align-items-center justify-content-center mb-2" style="width:100%; aspect-ratio:1/1; background:#e9ecef; border: 2px solid #dee2e6; border-radius: .5rem; border-style:dashed;">
+                                    <i class="bi bi-mortarboard" style="font-size: 4rem; color: #f8f9fa;"></i>
+                                </div>
+                            @endif
+                        </div>
+                        <div class="card-body d-flex flex-column p-4">
+                            <h5 class="card-title fw-bold mb-3">{!! $course->title !!}</h5>
+                            @php
+                                $start = \Carbon\Carbon::parse($course->start_date)->locale('pl');
+                                $end = $course->end_date ? \Carbon\Carbon::parse($course->end_date) : null;
+                            @endphp
+                            <ul class="list-unstyled mb-3">
+                                <li><strong>Data:</strong> {{ $start->format('d.m.Y') }}</li>
+                                <li><strong>Godzina:</strong> {{ $start->format('H:i') }}@if($end) ({{ $start->diffInMinutes($end) }} min)@endif</li>
+                                <li><strong>Dzień tygodnia:</strong> {{ $start->translatedFormat('l') }}</li>
+                            </ul>
+                            <p class="card-text">
+                                <strong>{{ $course->trainer_title }}:</strong> {{ $course->trainer }}
+                            </p>
+                            <div class="mt-auto pt-3">
+                                @php
+                                    $priceInfo = $course->getCurrentPrice();
+                                    // Fallback: jeśli getCurrentPrice() zwraca null, spróbuj pobrać cenę z pierwszego aktywnego wariantu
+                                    if (!$priceInfo) {
+                                        // Sprawdź czy priceVariants są załadowane
+                                        if ($course->relationLoaded('priceVariants') && $course->priceVariants && $course->priceVariants->count() > 0) {
+                                            $firstVariant = $course->priceVariants->where('is_active', true)->first();
+                                            if ($firstVariant) {
+                                                $isPromotionActive = $firstVariant->isPromotionActive();
+                                                $currentPrice = $firstVariant->getCurrentPrice();
+                                                $priceInfo = [
+                                                    'price' => round((float) $currentPrice, 2),
+                                                    'original_price' => $isPromotionActive ? round((float) $firstVariant->price, 2) : null,
+                                                    'is_promotion' => $isPromotionActive,
+                                                    'promotion_end' => $isPromotionActive && $firstVariant->promotion_type === 'time_limited' ? $firstVariant->promotion_end : null,
+                                                    'promotion_type' => $firstVariant->promotion_type,
+                                                ];
+                                            }
+                                        }
+                                    }
+                                @endphp
+                                @if($priceInfo)
+                                    <div class="text-center mb-3">
+                                        @if($priceInfo['is_promotion'] && $priceInfo['original_price'])
+                                            <div class="d-flex flex-column align-items-center gap-1">
+                                                <div class="d-flex align-items-center justify-content-center gap-2">
+                                                    <span class="text-muted text-decoration-line-through" style="font-size: 0.9rem;">{{ number_format($priceInfo['original_price'], 2, ',', ' ') }} PLN</span>
+                                                    <span class="fw-bold text-danger" style="font-size: 1.2rem;">{{ number_format($priceInfo['price'], 2, ',', ' ') }} PLN</span> <span class="text-danger" style="font-size: 1.2rem;">(brutto)</span>
+                                                </div>
+                                                @if($priceInfo['promotion_end'] && $priceInfo['promotion_type'] === 'time_limited')
+                                                    <small style="font-size: 0.85rem; color: #000;">
+                                                        Promocja trwa do: {{ \Carbon\Carbon::parse($priceInfo['promotion_end'])->format('d.m.Y H:i') }}
+                                                    </small>
+                                                @endif
+                                                <small style="font-size: 0.75rem; color: #aaa;">
+                                                    Najniższa cena z ostatnich 30 dni przed obniżką wynosiła: <strong style="color: #aaa;">{{ number_format($priceInfo['original_price'], 2, ',', ' ') }} PLN</strong>
+                                                </small>
+                                            </div>
+                                        @else
+                                            <span class="fw-bold" style="font-size: 1.2rem; color: #1976d2;">{{ number_format($priceInfo['price'], 2, ',', ' ') }} PLN</span> <span style="font-size: 1.2rem; color: #1976d2;">(brutto)</span>
+                                        @endif
+                                    </div>
+                                @endif
+                                <div class="text-center mb-2">
+                                    <a href="{{ route('courses.show', $course->id) }}" 
+                                       class="read-more-link">
+                                        Czytaj więcej ...
+                                    </a>
+                                </div>
+                                <a href="{{ route('courses.show', $course->id) }}"
+                                   class="btn btn-warning w-100 fw-bold d-flex align-items-center justify-content-center gap-2 shadow-sm cta-btn"
+                                   style="font-size:1.15rem; letter-spacing:0.5px;">
+                                    <span>Zapisz się</span>
+                                    <i class="bi bi-arrow-right-circle-fill"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+    </div>
+</section>
 
 <!-- ===== IMPROVED CAROUSEL ======================================= -->
 <div id="heroCarousel" class="carousel slide carousel-fade" data-bs-ride="carousel">
@@ -112,94 +218,6 @@
         <span class="visually-hidden">Następny</span>
     </button>
 </div>
-
-<!-- ===== UPCOMING COURSES ======================================= -->
-<section id="courses" class="py-5">
-    <div class="container">
-        <div class="row mb-5">
-            <div class="col-lg-6">
-                <div class="badge bg-warning text-dark mb-2">Nadchodzące wydarzenia</div>
-                <h2 class="display-5 fw-bold mb-3">Szkolenia, które <span class="text-primary">rozwijają</span></h2>
-                <p class="lead">Zapoznaj się z naszymi najbliższymi szkoleniami i wybierz te, które najlepiej odpowiadają Twoim potrzebom zawodowym.</p>
-            </div>
-            <div class="col-lg-6 d-flex align-items-end justify-content-lg-end">
-                <a href="https://nowoczesna-edukacja.pl" target="_blank" class="btn btn-outline-primary rounded-pill px-4">Zobacz wszystkie szkolenia</a>
-            </div>
-        </div>
-        
-        <div class="row row-cols-1 row-cols-md-3 g-4" data-aos="fade-up">
-            @foreach($courses as $course)
-                <div class="col">
-                    <div class="card h-100 border-0 shadow-sm hover-lift">
-                        <div class="position-relative">
-                            @if(!empty($course->image))
-                                <img src="{{ 'https://adm.pnedu.pl/storage/' . ltrim($course->image, '/') }}" class="card-img-top" alt="{{ $course->title }}">
-                            @else
-                                <div class="card-img-top d-flex align-items-center justify-content-center mb-2" style="width:100%; aspect-ratio:1/1; background:#e9ecef; border: 2px solid #dee2e6; border-radius: .5rem; border-style:dashed;">
-                                    <i class="bi bi-mortarboard" style="font-size: 4rem; color: #f8f9fa;"></i>
-                                </div>
-                            @endif
-                        </div>
-                        <div class="card-body d-flex flex-column p-4">
-                            <h5 class="card-title fw-bold mb-3">{!! $course->title !!}</h5>
-                            @php
-                                $start = \Carbon\Carbon::parse($course->start_date)->locale('pl');
-                                $end = $course->end_date ? \Carbon\Carbon::parse($course->end_date) : null;
-                            @endphp
-                            <ul class="list-unstyled mb-3">
-                                <li><strong>Data:</strong> {{ $start->format('d.m.Y') }}</li>
-                                <li><strong>Godzina:</strong> {{ $start->format('H:i') }}@if($end) ({{ $start->diffInMinutes($end) }} min)@endif</li>
-                                <li><strong>Dzień tygodnia:</strong> {{ $start->translatedFormat('l') }}</li>
-                            </ul>
-                            <p class="card-text">
-                                <strong>{{ $course->trainer_title }}:</strong> {{ $course->trainer }}
-                            </p>
-                            <div class="mt-auto pt-3">
-                                @php
-                                    $priceInfo = $course->getCurrentPrice();
-                                @endphp
-                                @if($priceInfo)
-                                    <div class="text-center mb-3">
-                                        @if($priceInfo['is_promotion'] && $priceInfo['original_price'])
-                                            <div class="d-flex flex-column align-items-center gap-1">
-                                                <div class="d-flex align-items-center justify-content-center gap-2">
-                                                    <span class="text-muted text-decoration-line-through" style="font-size: 0.9rem;">{{ number_format($priceInfo['original_price'], 2, ',', ' ') }} PLN</span>
-                                                    <span class="fw-bold text-danger" style="font-size: 1.2rem;">{{ number_format($priceInfo['price'], 2, ',', ' ') }} PLN</span> <span class="text-danger" style="font-size: 1.2rem;">(brutto)</span>
-                                                </div>
-                                                @if($priceInfo['promotion_end'] && $priceInfo['promotion_type'] === 'time_limited')
-                                                    <small style="font-size: 0.85rem; color: #000;">
-                                                        Promocja trwa do: {{ \Carbon\Carbon::parse($priceInfo['promotion_end'])->format('d.m.Y H:i') }}
-                                                    </small>
-                                                @endif
-                                                <small style="font-size: 0.75rem; color: #aaa;">
-                                                    Najniższa cena z ostatnich 30 dni przed obniżką wynosiła: <strong style="color: #aaa;">{{ number_format($priceInfo['original_price'], 2, ',', ' ') }} PLN</strong>
-                                                </small>
-                                            </div>
-                                        @else
-                                            <span class="fw-bold" style="font-size: 1.2rem; color: #1976d2;">{{ number_format($priceInfo['price'], 2, ',', ' ') }} PLN</span> <span style="font-size: 1.2rem; color: #1976d2;">(brutto)</span>
-                                        @endif
-                                    </div>
-                                @endif
-                                <div class="text-center mb-2">
-                                    <a href="{{ route('courses.show', $course->id) }}" 
-                                       class="read-more-link">
-                                        Czytaj więcej ...
-                                    </a>
-                                </div>
-                                <a href="{{ route('courses.show', $course->id) }}"
-                                   class="btn btn-warning w-100 fw-bold d-flex align-items-center justify-content-center gap-2 shadow-sm cta-btn"
-                                   style="font-size:1.15rem; letter-spacing:0.5px;">
-                                    <span>Zapisz się</span>
-                                    <i class="bi bi-arrow-right-circle-fill"></i>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            @endforeach
-        </div>
-    </div>
-</section>
 
 <!-- ===== FEATURED SECTION ====================================== -->
 <section class="py-5 bg-light">

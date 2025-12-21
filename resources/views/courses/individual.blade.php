@@ -57,6 +57,24 @@
                             <div class="mt-auto pt-3">
                                 @php
                                     $priceInfo = $course->getCurrentPrice();
+                                    // Fallback: jeśli getCurrentPrice() zwraca null, spróbuj pobrać cenę z pierwszego aktywnego wariantu
+                                    if (!$priceInfo) {
+                                        // Sprawdź czy priceVariants są załadowane
+                                        if ($course->relationLoaded('priceVariants') && $course->priceVariants && $course->priceVariants->count() > 0) {
+                                            $firstVariant = $course->priceVariants->where('is_active', true)->first();
+                                            if ($firstVariant) {
+                                                $isPromotionActive = $firstVariant->isPromotionActive();
+                                                $currentPrice = $firstVariant->getCurrentPrice();
+                                                $priceInfo = [
+                                                    'price' => round((float) $currentPrice, 2),
+                                                    'original_price' => $isPromotionActive ? round((float) $firstVariant->price, 2) : null,
+                                                    'is_promotion' => $isPromotionActive,
+                                                    'promotion_end' => $isPromotionActive && $firstVariant->promotion_type === 'time_limited' ? $firstVariant->promotion_end : null,
+                                                    'promotion_type' => $firstVariant->promotion_type,
+                                                ];
+                                            }
+                                        }
+                                    }
                                 @endphp
                                 @if($priceInfo)
                                     <div class="text-center mb-3">
@@ -149,14 +167,6 @@
                                     <strong>{{ $course->trainer_title }}:</strong> {{ $course->trainer }}
                                 </p>
                                 <div class="mt-auto pt-3">
-                                    @php
-                                        $priceInfo = $course->getCurrentPrice();
-                                    @endphp
-                                    @if($priceInfo)
-                                        <div class="text-center mb-3">
-                                            <span class="text-muted" style="font-size: 1rem;">{{ number_format($priceInfo['price'], 2, ',', ' ') }} PLN (brutto)</span>
-                                        </div>
-                                    @endif
                                     <a href="{{ route('courses.show', $course->id) }}"
                                        class="btn btn-outline-secondary w-100 fw-bold d-flex align-items-center justify-content-center gap-2 shadow-sm"
                                        style="font-size:1.15rem; letter-spacing:0.5px;">
