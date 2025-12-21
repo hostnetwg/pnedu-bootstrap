@@ -25,11 +25,8 @@
         <div class="row mb-3">
             <div class="col-lg-6">
                 <div class="badge bg-warning text-dark mb-2">Nadchodzące wydarzenia</div>
-                <h2 class="display-5 fw-bold mb-3">Szkolenia, które <span class="text-primary">rozwijają</span></h2>
-                <p class="lead">Zapoznaj się z naszymi najbliższymi szkoleniami i wybierz te, które najlepiej odpowiadają Twoim potrzebom zawodowym.</p>
-            </div>
-            <div class="col-lg-6 d-flex align-items-end justify-content-lg-end">
-                <a href="https://nowoczesna-edukacja.pl" target="_blank" class="btn btn-outline-primary rounded-pill px-4">Zobacz wszystkie szkolenia</a>
+                <h2 class="display-5 fw-bold mb-2">Szkolenia, które <span class="text-primary">rozwijają</span></h2>
+                <p class="lead mb-0" style="white-space: nowrap;">Zapoznaj się z naszymi najbliższymi szkoleniami i wybierz te, które najlepiej odpowiadają Twoim potrzebom zawodowym.</p>
             </div>
         </div>
         
@@ -121,6 +118,12 @@
                     </div>
                 </div>
             @endforeach
+        </div>
+        
+        <div class="row mt-4">
+            <div class="col-12 text-end">
+                <a href="https://nowoczesna-edukacja.pl" target="_blank" class="btn btn-outline-primary rounded-pill px-4">Zobacz wszystkie szkolenia</a>
+            </div>
         </div>
     </div>
 </section>
