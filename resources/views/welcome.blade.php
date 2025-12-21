@@ -33,7 +33,7 @@
             </div>
         </div>
         
-        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4" data-aos="fade-up">
+        <div class="row row-cols-1 row-cols-md-3 g-4" data-aos="fade-up">
             @foreach($courses as $course)
                 <div class="col">
                     <div class="card h-100 border-0 shadow-sm hover-lift">
