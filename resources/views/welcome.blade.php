@@ -294,7 +294,7 @@
                 <p class="text-secondary fw-light small">Przeszkolonych nauczycieli</p>
             </div>
             <div class="col-6 col-md-3">
-                <div class="display-5 fw-bold mb-1" style="color:#0056b3;">
+                <div class="display-5 fw-bold" style="color:#0056b3; margin-bottom: 0.67rem; font-size: 2.68rem;">
                     <span class="counter" data-target="{{ $statistics['courses_this_year'] ?? 200 }}"
                           data-bs-toggle="tooltip" 
                           data-bs-placement="top" 
@@ -303,7 +303,7 @@
                 <p class="text-secondary fw-light small">Szkoleń rocznie</p>
             </div>
             <div class="col-6 col-md-3">
-                <div class="display-5 fw-bold mb-1" style="color:#0056b3;">
+                <div class="display-5 fw-bold" style="color:#0056b3; margin-bottom: 0.67rem; font-size: 2.68rem;">
                     ★<span class="counter" data-target="{{ $statistics['average_rating'] ?? 4.9 }}"
                           data-bs-toggle="tooltip" 
                           data-bs-placement="top" 
@@ -312,7 +312,7 @@
                 <p class="text-secondary fw-light small">Średnia ocena</p>
             </div>
             <div class="col-6 col-md-3">
-                <div class="display-5 fw-bold mb-1" style="color:#0056b3;">
+                <div class="display-5 fw-bold" style="color:#0056b3; margin-bottom: 0.67rem; font-size: 2.68rem;">
                     <span class="counter" data-target="{{ $statistics['nps'] ?? 0 }}"
                           data-bs-toggle="tooltip" 
                           data-bs-placement="top" 
