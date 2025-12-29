@@ -20,9 +20,11 @@ class HomeController extends Controller
         $courses = Course::with('priceVariants')
             ->where('is_active', true)
             ->where('type', 'online')
-            ->where('is_paid', 1)
             ->where('start_date', '>', now())
-            ->where('source_id_old', 'certgen_Publigo')
+            ->where(function($query) {
+                $query->where('source_id_old', 'certgen_Publigo')
+                      ->orWhere('source_id_old', 'BD:Certgen-education');
+            })
             ->orderBy('start_date', 'asc')
             ->take(6)
             ->get();

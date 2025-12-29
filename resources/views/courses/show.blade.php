@@ -289,50 +289,194 @@
             max-width: 150px;
         }
     }
+
+    /* Style dla pola email w formularzu zapisu */
+    .course-email-input {
+        padding: 16px;
+        font-size: 1.1rem;
+        border: 2px solid #dee2e6;
+        border-radius: 0.5rem;
+        background-color: #f8f9fa;
+        transition: all 0.3s ease;
+    }
+
+    .course-email-input:focus {
+        border-color: #0d6efd;
+        background-color: #fff;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        outline: none;
+    }
+
+    .course-email-input::placeholder {
+        color: #6c757d;
+        font-weight: 500;
+    }
+
+    /* Style dla checkboxów zgód RODO */
+    .course-pay-box .form-check {
+        margin-bottom: 0.5rem;
+    }
+
+    .course-pay-box .form-check-label {
+        font-size: 0.85rem;
+        line-height: 1.5;
+        color: #495057;
+    }
+
+    .course-pay-box .form-check-label a {
+        color: #1976d2;
+        text-decoration: underline;
+    }
+
+    .course-pay-box .form-check-label a:hover {
+        color: #0d47a1;
+    }
+
+    .course-pay-box .form-check-input:checked {
+        background-color: #1976d2;
+        border-color: #1976d2;
+    }
+
+    .course-pay-box .form-check-input:focus {
+        border-color: #1976d2;
+        box-shadow: 0 0 0 0.25rem rgba(25, 118, 210, 0.25);
+    }
 </style>
+@endpush
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Funkcja walidacji formularza
+    function validateForm(formElement) {
+        const rodoCheckbox = formElement.querySelector('input[name="rodo_consent"]');
+        if (!rodoCheckbox || !rodoCheckbox.checked) {
+            alert('Musisz wyrazić zgodę na przetwarzanie danych osobowych, aby zapisać się na szkolenie.');
+            return false;
+        }
+        return true;
+    }
+
+    // Obsługa formularza zapisu (desktop)
+    const form = document.getElementById('courseRegistrationForm');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            if (!validateForm(form)) return;
+            
+            const email = document.getElementById('registrationEmail').value;
+            const newsletterConsent = document.getElementById('newsletter_consent')?.checked || false;
+            alert('Formularz zapisu jest w przygotowaniu.\n\nTwój adres e-mail: ' + email + '\nZgoda na newsletter: ' + (newsletterConsent ? 'Tak' : 'Nie') + '\n\nFunkcjonalność zostanie wkrótce uruchomiona.');
+        });
+    }
+
+    // Obsługa formularza zapisu (mobile top)
+    const formMobile = document.getElementById('courseRegistrationFormMobile');
+    if (formMobile) {
+        formMobile.addEventListener('submit', function(e) {
+            e.preventDefault();
+            if (!validateForm(formMobile)) return;
+            
+            const email = document.getElementById('registrationEmailMobile').value;
+            const newsletterConsent = document.getElementById('newsletter_consent_mobile')?.checked || false;
+            alert('Formularz zapisu jest w przygotowaniu.\n\nTwój adres e-mail: ' + email + '\nZgoda na newsletter: ' + (newsletterConsent ? 'Tak' : 'Nie') + '\n\nFunkcjonalność zostanie wkrótce uruchomiona.');
+        });
+    }
+
+    // Obsługa formularza zapisu (mobile bottom)
+    const formMobileBottom = document.getElementById('courseRegistrationFormMobileBottom');
+    if (formMobileBottom) {
+        formMobileBottom.addEventListener('submit', function(e) {
+            e.preventDefault();
+            if (!validateForm(formMobileBottom)) return;
+            
+            const email = document.getElementById('registrationEmailMobileBottom').value;
+            const newsletterConsent = document.getElementById('newsletter_consent_mobile_bottom')?.checked || false;
+            alert('Formularz zapisu jest w przygotowaniu.\n\nTwój adres e-mail: ' + email + '\nZgoda na newsletter: ' + (newsletterConsent ? 'Tak' : 'Nie') + '\n\nFunkcjonalność zostanie wkrótce uruchomiona.');
+        });
+    }
+});
+</script>
 @endpush
 
 @section('content')
 <div class="container py-5">
     <!-- MOBILE: Płatności pod grafiką, tytułem i datą -->
     <div class="pay-mobile">
-        <div class="course-pay-box mb-4">
-            <h3>Wybierz formę płatności i&nbsp;zarezerwuj miejsce!</h3>
-            @php
-                $priceInfo = $course->getCurrentPrice();
-            @endphp
-            @if($priceInfo)
-                <div class="text-center mb-3">
-                    @if($priceInfo['is_promotion'] && $priceInfo['original_price'])
-                        <div class="d-flex flex-column align-items-center gap-1">
-                            <div class="d-flex align-items-center justify-content-center gap-2">
-                                <span class="text-muted text-decoration-line-through" style="font-size: 0.9rem;">{{ number_format($priceInfo['original_price'], 2, ',', ' ') }} PLN</span>
-                                <span class="fw-bold text-danger" style="font-size: 1.2rem;">{{ number_format($priceInfo['price'], 2, ',', ' ') }} PLN</span> <span class="text-danger" style="font-size: 1.2rem;">(brutto)</span>
-                            </div>
-                            @if($priceInfo['promotion_end'] && $priceInfo['promotion_type'] === 'time_limited')
-                                <small style="font-size: 0.85rem; color: #000;">
-                                    Promocja trwa do: {{ \Carbon\Carbon::parse($priceInfo['promotion_end'])->format('d.m.Y H:i') }}
-                                </small>
-                            @endif
-                            <small style="font-size: 0.75rem; color: #aaa;">
-                                Najniższa cena z ostatnich 30 dni przed obniżką wynosiła: <strong style="color: #aaa;">{{ number_format($priceInfo['original_price'], 2, ',', ' ') }} PLN</strong>
-                            </small>
+        @if(!$course->is_paid)
+            <!-- Formularz zapisu dla bezpłatnych szkoleń -->
+            <div class="course-pay-box mb-4">
+                <h3>Zapisz się na <br>bezpłatne<br>szkolenie online</h3>
+                    <form id="courseRegistrationFormMobile" class="text-center">
+                        <div class="mb-3">
+                            <input type="email" 
+                                   class="form-control text-center course-email-input" 
+                                   id="registrationEmailMobile" 
+                                   name="email" 
+                                   placeholder="Twój adres e-mail" 
+                                   required>
                         </div>
-                    @else
-                        <span class="fw-bold" style="font-size: 1.2rem; color: #1976d2;">{{ number_format($priceInfo['price'], 2, ',', ' ') }} PLN</span> <span style="font-size: 1.2rem; color: #1976d2;">(brutto)</span>
+                        <div class="mb-3 text-start">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="rodo_consent" id="rodo_consent_mobile" value="1" required>
+                                <label class="form-check-label small" for="rodo_consent_mobile">
+                                    Wyrażam zgodę na przetwarzanie moich danych osobowych w celu zapisu na szkolenie zgodnie z <a href="{{ route('rodo') }}" target="_blank">klauzulą informacyjną RODO</a> oraz <a href="{{ route('polityka-prywatnosci') }}" target="_blank">Polityką prywatności</a>. <span class="text-danger">*</span>
+                                </label>
+                            </div>
+                            <div class="form-check mt-2">
+                                <input class="form-check-input" type="checkbox" name="newsletter_consent" id="newsletter_consent_mobile" value="1">
+                                <label class="form-check-label small" for="newsletter_consent_mobile">
+                                    Wyrażam zgodę na otrzymywanie newslettera z materiałami edukacyjnymi i informacjami o nowych usługach (zgoda dobrowolna, można ją wycofać w każdej chwili).
+                                </label>
+                            </div>
+                        </div>
+                        <div class="d-grid mb-2">
+                            <button type="submit" class="btn btn-primary fw-bold" style="padding: 12px; font-size: 1rem;">
+                                Zapisz Mnie!
+                            </button>
+                        </div>
+                    </form>
+            </div>
+        @else
+            <!-- Płatne szkolenie - standardowe okienko -->
+            <div class="course-pay-box mb-4">
+                <h3>Wybierz formę płatności i&nbsp;zarezerwuj miejsce!</h3>
+                @php
+                    $priceInfo = $course->getCurrentPrice();
+                @endphp
+                @if($priceInfo)
+                    <div class="text-center mb-3">
+                        @if($priceInfo['is_promotion'] && $priceInfo['original_price'])
+                            <div class="d-flex flex-column align-items-center gap-1">
+                                <div class="d-flex align-items-center justify-content-center gap-2">
+                                    <span class="text-muted text-decoration-line-through" style="font-size: 0.9rem;">{{ number_format($priceInfo['original_price'], 2, ',', ' ') }} PLN</span>
+                                    <span class="fw-bold text-danger" style="font-size: 1.2rem;">{{ number_format($priceInfo['price'], 2, ',', ' ') }} PLN</span> <span class="text-danger" style="font-size: 1.2rem;">(brutto)</span>
+                                </div>
+                                @if($priceInfo['promotion_end'] && $priceInfo['promotion_type'] === 'time_limited')
+                                    <small style="font-size: 0.85rem; color: #000;">
+                                        Promocja trwa do: {{ \Carbon\Carbon::parse($priceInfo['promotion_end'])->format('d.m.Y H:i') }}
+                                    </small>
+                                @endif
+                                <small style="font-size: 0.75rem; color: #aaa;">
+                                    Najniższa cena z ostatnich 30 dni przed obniżką wynosiła: <strong style="color: #aaa;">{{ number_format($priceInfo['original_price'], 2, ',', ' ') }} PLN</strong>
+                                </small>
+                            </div>
+                        @else
+                            <span class="fw-bold" style="font-size: 1.2rem; color: #1976d2;">{{ number_format($priceInfo['price'], 2, ',', ' ') }} PLN</span> <span style="font-size: 1.2rem; color: #1976d2;">(brutto)</span>
+                        @endif
+                    </div>
+                @endif
+                <div class="d-flex flex-column gap-2 mb-3 align-items-center">
+                    <a href="{{ $course->getPubligoPaymentUrl() ?? route('payment.online', $course->id) }}" class="btn btn-primary-custom btn-lg fw-bold shadow-sm w-100">Zapłać online</a>
+                    <div class="pay-or-text">lub wypełnij</div>
+                    <a href="{{ route('payment.deferred', $course->id) }}" class="btn btn-orange btn-lg fw-bold shadow-sm w-100">Formularz zamówienia z&nbsp;odroczonym terminem płatności</a>
+                    @if(!empty($course->id_old))
+                        <a href="https://zdalna-lekcja.pl/zamowienia/formularz/?idP={{ $course->id_old }}" target="_blank" class="btn btn-link mt-2" style="font-size: 0.95rem;">Alternatywny formularz zamówienia</a>
                     @endif
                 </div>
-            @endif
-            <div class="d-flex flex-column gap-2 mb-3 align-items-center">
-                <a href="{{ $course->getPubligoPaymentUrl() ?? route('payment.online', $course->id) }}" class="btn btn-primary-custom btn-lg fw-bold shadow-sm w-100">Zapłać online</a>
-                <div class="pay-or-text">lub wypełnij</div>
-                <a href="{{ route('payment.deferred', $course->id) }}" class="btn btn-orange btn-lg fw-bold shadow-sm w-100">Formularz zamówienia z&nbsp;odroczonym terminem płatności</a>
-                @if(!empty($course->id_old))
-                    <a href="https://zdalna-lekcja.pl/zamowienia/formularz/?idP={{ $course->id_old }}" target="_blank" class="btn btn-link mt-2" style="font-size: 0.95rem;">Alternatywny formularz zamówienia</a>
-                @endif
+                <div class="mt-2 text-muted">Liczba miejsc ograniczona –<br>nie zwlekaj z&nbsp;rejestracją!</div>
             </div>
-            <div class="mt-2 text-muted">Liczba miejsc ograniczona –<br>nie zwlekaj z&nbsp;rejestracją!</div>
-        </div>
+        @endif
     </div>
     <div class="course-main-row">
         <div class="course-details-col">
@@ -429,7 +573,120 @@
             
             <!-- MOBILE: Płatności na samym dole po opisie -->
             <div class="pay-mobile-bottom">
-                <div class="course-pay-box mb-4">
+                @if(!$course->is_paid)
+                    <!-- Formularz zapisu dla bezpłatnych szkoleń -->
+                    <div class="course-pay-box mb-4">
+                        <h3>Zapisz się na <br>bezpłatne<br>szkolenie online</h3>
+                        <form id="courseRegistrationFormMobileBottom" class="text-center">
+                            <div class="mb-3">
+                                <input type="email" 
+                                       class="form-control text-center course-email-input" 
+                                       id="registrationEmailMobileBottom" 
+                                       name="email" 
+                                       placeholder="Twój adres e-mail" 
+                                       required>
+                            </div>
+                            <div class="mb-3 text-start">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="rodo_consent" id="rodo_consent_mobile_bottom" value="1" required>
+                                    <label class="form-check-label small" for="rodo_consent_mobile_bottom">
+                                        Wyrażam zgodę na przetwarzanie moich danych osobowych w celu zapisu na szkolenie zgodnie z <a href="{{ route('rodo') }}" target="_blank">klauzulą informacyjną RODO</a> oraz <a href="{{ route('polityka-prywatnosci') }}" target="_blank">Polityką prywatności</a>. <span class="text-danger">*</span>
+                                    </label>
+                                </div>
+                                <div class="form-check mt-2">
+                                    <input class="form-check-input" type="checkbox" name="newsletter_consent" id="newsletter_consent_mobile_bottom" value="1">
+                                    <label class="form-check-label small" for="newsletter_consent_mobile_bottom">
+                                        Wyrażam zgodę na otrzymywanie newslettera z materiałami edukacyjnymi i informacjami o nowych usługach (zgoda dobrowolna, można ją wycofać w każdej chwili).
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="d-grid mb-2">
+                                <button type="submit" class="btn btn-primary fw-bold" style="padding: 12px; font-size: 1rem;">
+                                    Zapisz Mnie!
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                @else
+                    <!-- Płatne szkolenie - standardowe okienko -->
+                    <div class="course-pay-box mb-4">
+                        <h3>Wybierz formę płatności i&nbsp;zarezerwuj miejsce!</h3>
+                        @php
+                            $priceInfo = $course->getCurrentPrice();
+                        @endphp
+                        @if($priceInfo)
+                            <div class="text-center mb-3">
+                                @if($priceInfo['is_promotion'] && $priceInfo['original_price'])
+                                    <div class="d-flex flex-column align-items-center gap-1">
+                                        <div class="d-flex align-items-center justify-content-center gap-2">
+                                            <span class="text-muted text-decoration-line-through" style="font-size: 0.9rem;">{{ number_format($priceInfo['original_price'], 2, ',', ' ') }} PLN</span>
+                                            <span class="fw-bold text-danger" style="font-size: 1.2rem;">{{ number_format($priceInfo['price'], 2, ',', ' ') }} PLN</span> <span class="text-danger" style="font-size: 1.2rem;">(brutto)</span>
+                                        </div>
+                                        @if($priceInfo['promotion_end'] && $priceInfo['promotion_type'] === 'time_limited')
+                                            <small style="font-size: 0.85rem; color: #000;">
+                                                Promocja trwa do: {{ \Carbon\Carbon::parse($priceInfo['promotion_end'])->format('d.m.Y H:i') }}
+                                            </small>
+                                        @endif
+                                        <small style="font-size: 0.75rem; color: #aaa;">
+                                            Najniższa cena z ostatnich 30 dni przed obniżką wynosiła: <strong style="color: #aaa;">{{ number_format($priceInfo['original_price'], 2, ',', ' ') }} PLN</strong>
+                                        </small>
+                                    </div>
+                                @else
+                                    <span class="fw-bold" style="font-size: 1.2rem; color: #1976d2;">{{ number_format($priceInfo['price'], 2, ',', ' ') }} PLN</span> <span style="font-size: 1.2rem; color: #1976d2;">(brutto)</span>
+                                @endif
+                            </div>
+                        @endif
+                        <div class="d-flex flex-column gap-2 mb-3 align-items-center">
+                            <a href="{{ $course->getPubligoPaymentUrl() ?? route('payment.online', $course->id) }}" class="btn btn-primary-custom btn-lg fw-bold shadow-sm w-100">Zapłać online</a>
+                            <div class="pay-or-text">lub wypełnij</div>
+                            <a href="{{ route('payment.deferred', $course->id) }}" class="btn btn-orange btn-lg fw-bold shadow-sm w-100">Formularz zamówienia z&nbsp;odroczonym terminem płatności</a>
+                            @if(!empty($course->id_old))
+                                <a href="https://zdalna-lekcja.pl/zamowienia/formularz/?idP={{ $course->id_old }}" target="_blank" class="btn btn-link mt-2" style="font-size: 0.95rem;">Alternatywny formularz zamówienia</a>
+                            @endif
+                        </div>
+                        <div class="mt-2 text-muted">Liczba miejsc ograniczona –<br>nie zwlekaj z&nbsp;rejestracją!</div>
+                    </div>
+                @endif
+            </div>
+        </div>
+        <div class="course-pay-col">
+            @if(!$course->is_paid)
+                <!-- Formularz zapisu dla bezpłatnych szkoleń -->
+                <div class="course-pay-box">
+                    <h3>Zapisz się na <br>bezpłatne<br>szkolenie online</h3>
+                    <form id="courseRegistrationForm" class="text-center">
+                        <div class="mb-3">
+                            <input type="email" 
+                                   class="form-control text-center course-email-input" 
+                                   id="registrationEmail" 
+                                   name="email" 
+                                   placeholder="Twój adres e-mail" 
+                                   required>
+                        </div>
+                        <div class="mb-3 text-start">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="rodo_consent" id="rodo_consent" value="1" required>
+                                <label class="form-check-label small" for="rodo_consent">
+                                    Wyrażam zgodę na przetwarzanie moich danych osobowych w celu zapisu na szkolenie zgodnie z <a href="{{ route('rodo') }}" target="_blank">klauzulą informacyjną RODO</a> oraz <a href="{{ route('polityka-prywatnosci') }}" target="_blank">Polityką prywatności</a>. <span class="text-danger">*</span>
+                                </label>
+                            </div>
+                            <div class="form-check mt-2">
+                                <input class="form-check-input" type="checkbox" name="newsletter_consent" id="newsletter_consent" value="1">
+                                <label class="form-check-label small" for="newsletter_consent">
+                                    Wyrażam zgodę na otrzymywanie newslettera z materiałami edukacyjnymi i informacjami o nowych usługach (zgoda dobrowolna, można ją wycofać w każdej chwili).
+                                </label>
+                            </div>
+                        </div>
+                        <div class="d-grid mb-2">
+                            <button type="submit" class="btn btn-primary fw-bold" style="padding: 12px; font-size: 1rem;">
+                                Zapisz Mnie!
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            @else
+                <!-- Płatne szkolenie - standardowe okienko -->
+                <div class="course-pay-box">
                     <h3>Wybierz formę płatności i&nbsp;zarezerwuj miejsce!</h3>
                     @php
                         $priceInfo = $course->getCurrentPrice();
@@ -466,46 +723,7 @@
                     </div>
                     <div class="mt-2 text-muted">Liczba miejsc ograniczona –<br>nie zwlekaj z&nbsp;rejestracją!</div>
                 </div>
-            </div>
-        </div>
-        <div class="course-pay-col">
-            <div class="course-pay-box">
-                <h3>Wybierz formę płatności i&nbsp;zarezerwuj miejsce!</h3>
-                @php
-                    $priceInfo = $course->getCurrentPrice();
-                @endphp
-                @if($priceInfo)
-                    <div class="text-center mb-3">
-                        @if($priceInfo['is_promotion'] && $priceInfo['original_price'])
-                            <div class="d-flex flex-column align-items-center gap-1">
-                                <div class="d-flex align-items-center justify-content-center gap-2">
-                                    <span class="text-muted text-decoration-line-through" style="font-size: 0.9rem;">{{ number_format($priceInfo['original_price'], 2, ',', ' ') }} PLN</span>
-                                    <span class="fw-bold text-danger" style="font-size: 1.2rem;">{{ number_format($priceInfo['price'], 2, ',', ' ') }} PLN</span> <span class="text-danger" style="font-size: 1.2rem;">(brutto)</span>
-                                </div>
-                                @if($priceInfo['promotion_end'] && $priceInfo['promotion_type'] === 'time_limited')
-                                    <small style="font-size: 0.85rem; color: #000;">
-                                        Promocja trwa do: {{ \Carbon\Carbon::parse($priceInfo['promotion_end'])->format('d.m.Y H:i') }}
-                                    </small>
-                                @endif
-                                <small style="font-size: 0.75rem; color: #aaa;">
-                                    Najniższa cena z ostatnich 30 dni przed obniżką wynosiła: <strong style="color: #aaa;">{{ number_format($priceInfo['original_price'], 2, ',', ' ') }} PLN</strong>
-                                </small>
-                            </div>
-                        @else
-                            <span class="fw-bold" style="font-size: 1.2rem; color: #1976d2;">{{ number_format($priceInfo['price'], 2, ',', ' ') }} PLN</span> <span style="font-size: 1.2rem; color: #1976d2;">(brutto)</span>
-                        @endif
-                    </div>
-                @endif
-                <div class="d-flex flex-column gap-2 mb-3 align-items-center">
-                    <a href="{{ $course->getPubligoPaymentUrl() ?? route('payment.online', $course->id) }}" class="btn btn-primary-custom btn-lg fw-bold shadow-sm w-100">Zapłać online</a>
-                    <div class="pay-or-text">lub wypełnij</div>
-                    <a href="{{ route('payment.deferred', $course->id) }}" class="btn btn-orange btn-lg fw-bold shadow-sm w-100">Formularz zamówienia z&nbsp;odroczonym terminem płatności</a>
-                    @if(!empty($course->id_old))
-                        <a href="https://zdalna-lekcja.pl/zamowienia/formularz/?idP={{ $course->id_old }}" target="_blank" class="btn btn-link mt-2" style="font-size: 0.95rem;">Alternatywny formularz zamówienia</a>
-                    @endif
-                </div>
-                <div class="mt-2 text-muted">Liczba miejsc ograniczona –<br>nie zwlekaj z&nbsp;rejestracją!</div>
-            </div>
+            @endif
         </div>
     </div>
 </div>

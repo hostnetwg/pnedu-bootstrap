@@ -58,3 +58,11 @@ Jeśli oba pokazują tę samą bazę, ale różne dane, sprawdź czy:
 
 
 
+
+
+
+
+
+
+
+

@@ -81,7 +81,13 @@
                                         }
                                     }
                                 @endphp
-                                @if($priceInfo)
+                                @if(!$course->is_paid)
+                                    <div class="text-center mb-3">
+                                        <span class="badge bg-success text-white px-3 py-2 fw-bold" style="font-size: 0.95rem;">
+                                            Bezpłatne szkolenie online
+                                        </span>
+                                    </div>
+                                @elseif($priceInfo)
                                     <div class="text-center mb-3">
                                         @if($priceInfo['is_promotion'] && $priceInfo['original_price'])
                                             <div class="d-flex flex-column align-items-center gap-1">

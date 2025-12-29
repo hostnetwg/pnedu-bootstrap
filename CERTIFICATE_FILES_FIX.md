@@ -85,3 +85,11 @@ Naprawiono konwersję `blocks` z obiektu na tablicę numeryczną w pakiecie (zob
 
 
 
+
+
+
+
+
+
+
+

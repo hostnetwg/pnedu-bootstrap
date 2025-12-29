@@ -134,3 +134,11 @@ Za każdym razem gdy zmieniasz pliki w `resources/sass/` lub `resources/js/`:
   tail -f storage/logs/laravel.log
   ```
 
+
+
+
+
+
+
+
+
