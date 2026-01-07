@@ -350,6 +350,7 @@ class CourseController extends Controller
             ->where('type', 'online')
             ->where('is_paid', 1)
             ->where('start_date', '>', now())
+            ->whereNull('deleted_at')
             ->where('source_id_old', 'certgen_Publigo')
             ->orderBy('start_date', 'asc')
             ->get();
@@ -359,6 +360,7 @@ class CourseController extends Controller
             ->where('is_active', true)
             ->where('type', 'online')
             ->where('is_paid', 1)
+            ->whereNull('deleted_at')
             ->where(function($query) {
                 $query->where(function($q) {
                     // Szkolenia z datą zakończenia w przeszłości

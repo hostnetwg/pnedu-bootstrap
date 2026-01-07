@@ -327,3 +327,5 @@ $certifiedPercentage = $totalCourses > 0
 **Czekam na Twój wybór wariantu!** 🚀
 
 
+
+

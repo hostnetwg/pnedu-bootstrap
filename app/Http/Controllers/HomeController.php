@@ -21,6 +21,7 @@ class HomeController extends Controller
             ->where('is_active', true)
             ->where('type', 'online')
             ->where('start_date', '>', now())
+            ->whereNull('deleted_at')
             ->where(function($query) {
                 $query->where('source_id_old', 'certgen_Publigo')
                       ->orWhere('source_id_old', 'BD:Certgen-education');
