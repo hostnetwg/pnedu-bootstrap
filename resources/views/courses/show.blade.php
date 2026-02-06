@@ -467,7 +467,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                 @endif
                 <div class="d-flex flex-column gap-2 mb-3 align-items-center">
-                    <a href="{{ $course->getPubligoPaymentUrl() ?? route('payment.online', $course->id) }}" class="btn btn-primary-custom btn-lg fw-bold shadow-sm w-100">Zapłać online</a>
+                    <a href="{{ $course->getPubligoPaymentUrl() ?? route('payment.online', $course->id) }}" class="btn btn-primary-custom btn-lg fw-bold shadow-sm w-100">Zapłać online PUBLIGO</a>
                     <div class="pay-or-text">lub wypełnij</div>
                     <a href="{{ route('payment.deferred', $course->id) }}" class="btn btn-orange btn-lg fw-bold shadow-sm w-100">Formularz zamówienia z&nbsp;odroczonym terminem płatności</a>
                     @if(!empty($course->id_old))
@@ -637,7 +637,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             </div>
                         @endif
                         <div class="d-flex flex-column gap-2 mb-3 align-items-center">
-                            <a href="{{ $course->getPubligoPaymentUrl() ?? route('payment.online', $course->id) }}" class="btn btn-primary-custom btn-lg fw-bold shadow-sm w-100">Zapłać online</a>
+                            <a href="{{ $course->getPubligoPaymentUrl() ?? route('payment.online', $course->id) }}" class="btn btn-primary-custom btn-lg fw-bold shadow-sm w-100">Zapłać online PUBLIGO</a>
                             <div class="pay-or-text">lub wypełnij</div>
                             <a href="{{ route('payment.deferred', $course->id) }}" class="btn btn-orange btn-lg fw-bold shadow-sm w-100">Formularz zamówienia z&nbsp;odroczonym terminem płatności</a>
                             @if(!empty($course->id_old))
@@ -714,7 +714,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         </div>
                     @endif
                     <div class="d-flex flex-column gap-2 mb-3 align-items-center">
-                        <a href="{{ $course->getPubligoPaymentUrl() ?? route('payment.online', $course->id) }}" class="btn btn-primary-custom btn-lg fw-bold shadow-sm w-100">Zapłać online</a>
+                        <a href="{{ $course->getPubligoPaymentUrl() ?? route('payment.online', $course->id) }}" class="btn btn-primary-custom btn-lg fw-bold shadow-sm w-100">Zapłać online PUBLIGO</a>
                         <div class="pay-or-text">lub wypełnij</div>
                         <a href="{{ route('payment.deferred', $course->id) }}" class="btn btn-orange btn-lg fw-bold shadow-sm w-100">Formularz zamówienia z&nbsp;odroczonym terminem płatności</a>
                         @if(!empty($course->id_old))

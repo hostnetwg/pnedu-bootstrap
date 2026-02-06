@@ -370,7 +370,7 @@
                     </div>
                     <div class="mb-3">
                         <label for="recipient_nip" class="form-label">NIP</label>
-                        <input type="text" class="form-control @error('recipient_nip') is-invalid @enderror" id="recipient_nip" name="recipient_nip" value="{{ $testData['recipient_nip'] ?? old('recipient_nip') }}" placeholder="Wypełnij jeżeli wymagane">
+                        <input type="text" class="form-control @error('recipient_nip') is-invalid @enderror" id="recipient_nip" name="recipient_nip" value="{{ $testData['recipient_nip'] ?? old('recipient_nip') }}">
                         @error('recipient_nip')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
