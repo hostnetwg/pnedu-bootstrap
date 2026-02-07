@@ -415,6 +415,209 @@ class CourseController extends Controller
     }
 
     /**
+     * Obsługa wysłania formularza płatności online.
+     */
+    public function storePayOnline(Request $request, $id)
+    {
+        $course = \App\Models\Course::findOrFail($id);
+
+        $rules = [
+            'buyer_type' => 'required|in:person,company,organisation',
+            'payment_gateway' => 'required|in:paynow,payu',
+            'email' => 'required|email',
+            'email_confirmation' => 'required|email|same:email',
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'phone' => 'required|string|max:50',
+            'order_comment' => 'nullable|string|max:2000',
+        ];
+
+        $messages = [
+            'buyer_type.required' => 'Wybierz typ zamawiającego.',
+            'buyer_type.in' => 'Wybierz prawidłowy typ zamawiającego.',
+            'payment_gateway.required' => 'Wybierz bramkę płatności.',
+            'payment_gateway.in' => 'Wybierz prawidłową bramkę płatności.',
+            'email.required' => 'Adres e-mail jest wymagany.',
+            'email.email' => 'Podaj prawidłowy adres e-mail.',
+            'email_confirmation.required' => 'Powtórzenie adresu e-mail jest wymagane.',
+            'email_confirmation.same' => 'Adresy e-mail muszą być identyczne.',
+            'first_name.required' => 'Imię jest wymagane.',
+            'last_name.required' => 'Nazwisko jest wymagane.',
+            'phone.required' => 'Numer telefonu jest wymagany.',
+        ];
+
+        $buyerType = $request->input('buyer_type', 'person');
+
+        if ($buyerType === 'person') {
+            $rules = array_merge($rules, [
+                'person_full_name' => 'required|string|max:255',
+                'person_street' => 'required|string|max:255',
+                'person_building_no' => 'required|string|max:20',
+                'person_flat_no' => 'nullable|string|max:20',
+                'person_postcode' => 'required|string|max:20',
+                'person_city' => 'required|string|max:255',
+                'person_country' => 'required|string|max:255',
+            ]);
+        } elseif ($buyerType === 'company') {
+            $rules = array_merge($rules, [
+                'company_nip' => 'required|string|max:20',
+                'company_country' => 'required|string|max:255',
+                'company_name' => 'required|string|max:255',
+                'company_street' => 'required|string|max:255',
+                'company_building_no' => 'required|string|max:20',
+                'company_flat_no' => 'nullable|string|max:20',
+                'company_postcode' => 'required|string|max:20',
+                'company_city' => 'required|string|max:255',
+            ]);
+        } elseif ($buyerType === 'organisation') {
+            $rules = array_merge($rules, [
+                'buyer_nip' => 'required|string|max:20',
+                'buyer_country' => 'required|string|max:255',
+                'buyer_name' => 'required|string|max:255',
+                'buyer_street' => 'required|string|max:255',
+                'buyer_building_no' => 'required|string|max:20',
+                'buyer_flat_no' => 'nullable|string|max:20',
+                'buyer_postcode' => 'required|string|max:20',
+                'buyer_city' => 'required|string|max:255',
+                'recipient_nip' => 'required|string|max:20',
+                'recipient_country' => 'required|string|max:255',
+                'recipient_name' => 'required|string|max:255',
+                'recipient_street' => 'required|string|max:255',
+                'recipient_building_no' => 'required|string|max:20',
+                'recipient_flat_no' => 'nullable|string|max:20',
+                'recipient_postcode' => 'required|string|max:20',
+                'recipient_city' => 'required|string|max:255',
+            ]);
+        }
+
+        $request->validate($rules, $messages);
+
+        $paymentGateway = $request->input('payment_gateway', 'payu');
+
+        if ($paymentGateway === 'payu') {
+            return $this->processPayUPayment($request, $course);
+        }
+
+        // Paynow – do implementacji
+        return redirect()->route('payment.online', $course->id)
+            ->with('info', 'Integracja z Paynow będzie dostępna wkrótce.');
+    }
+
+    /**
+     * Przetwórz płatność PayU – utwórz zamówienie i przekieruj do bramki.
+     */
+    protected function processPayUPayment(Request $request, $course)
+    {
+        $priceInfo = $course->getCurrentPrice();
+        $totalAmount = $priceInfo['price'] ?? 0;
+
+        if ($totalAmount <= 0) {
+            return redirect()->route('payment.online', $course->id)
+                ->with('error', 'To szkolenie nie ma ustawionej ceny. Skontaktuj się z organizatorem lub wybierz formularz zamówienia z odroczonym terminem płatności.')
+                ->withInput();
+        }
+
+        $addressData = $this->collectAddressData($request);
+        $formData = $request->except(['_token', 'email_confirmation']);
+
+        $order = \App\Models\OnlinePaymentOrder::create([
+            'ident' => \App\Models\OnlinePaymentOrder::generateIdent(),
+            'course_id' => $course->id,
+            'payment_gateway' => 'payu',
+            'status' => \App\Models\OnlinePaymentOrder::STATUS_PENDING,
+            'total_amount' => $totalAmount,
+            'currency' => 'PLN',
+            'buyer_type' => $request->input('buyer_type'),
+            'email' => $request->input('email'),
+            'first_name' => $request->input('first_name'),
+            'last_name' => $request->input('last_name'),
+            'phone' => $request->input('phone'),
+            'order_comment' => $request->input('order_comment'),
+            'address_data' => $addressData,
+            'form_data' => $formData,
+            'ip_address' => $request->ip(),
+        ]);
+
+        $payuService = new \App\Services\PayUService();
+        $notifyUrl = route('payment.payu.notify');
+        $continueUrl = route('payment.payu.return');
+
+        $result = $payuService->createOrder($order, $notifyUrl, $continueUrl);
+
+        if (!$result['success']) {
+            $errorMsg = $result['error'] ?? 'Nie udało się połączyć z PayU. Spróbuj ponownie.';
+            if (str_contains($errorMsg, 'tokenu')) {
+                $errorMsg .= ' Sprawdź konfigurację w .env (PAYU_CLIENT_ID, PAYU_CLIENT_SECRET, PAYU_SANDBOX) oraz logi: storage/logs/laravel.log';
+            }
+            return redirect()->route('payment.online', $course->id)
+                ->with('error', $errorMsg)
+                ->withInput();
+        }
+
+        return redirect()->away($result['redirect_uri']);
+    }
+
+    /**
+     * Zbierz dane adresowe z requesta w zależności od buyer_type.
+     */
+    protected function collectAddressData(Request $request): array
+    {
+        $type = $request->input('buyer_type', 'person');
+
+        if ($type === 'person') {
+            return [
+                'full_name' => $request->input('person_full_name'),
+                'street' => $request->input('person_street'),
+                'building_no' => $request->input('person_building_no'),
+                'flat_no' => $request->input('person_flat_no'),
+                'postcode' => $request->input('person_postcode'),
+                'city' => $request->input('person_city'),
+                'country' => $request->input('person_country'),
+            ];
+        }
+
+        if ($type === 'company') {
+            return [
+                'nip' => $request->input('company_nip'),
+                'country' => $request->input('company_country'),
+                'name' => $request->input('company_name'),
+                'street' => $request->input('company_street'),
+                'building_no' => $request->input('company_building_no'),
+                'flat_no' => $request->input('company_flat_no'),
+                'postcode' => $request->input('company_postcode'),
+                'city' => $request->input('company_city'),
+            ];
+        }
+
+        if ($type === 'organisation') {
+            return [
+                'buyer' => [
+                    'nip' => $request->input('buyer_nip'),
+                    'country' => $request->input('buyer_country'),
+                    'name' => $request->input('buyer_name'),
+                    'street' => $request->input('buyer_street'),
+                    'building_no' => $request->input('buyer_building_no'),
+                    'flat_no' => $request->input('buyer_flat_no'),
+                    'postcode' => $request->input('buyer_postcode'),
+                    'city' => $request->input('buyer_city'),
+                ],
+                'recipient' => [
+                    'nip' => $request->input('recipient_nip'),
+                    'country' => $request->input('recipient_country'),
+                    'name' => $request->input('recipient_name'),
+                    'street' => $request->input('recipient_street'),
+                    'building_no' => $request->input('recipient_building_no'),
+                    'flat_no' => $request->input('recipient_flat_no'),
+                    'postcode' => $request->input('recipient_postcode'),
+                    'city' => $request->input('recipient_city'),
+                ],
+            ];
+        }
+
+        return [];
+    }
+
+    /**
      * Wyświetl formularz zamówienia z odroczonym terminem płatności.
      */
     public function deferredOrder($id, $ident = null)
