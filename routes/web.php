@@ -92,15 +92,6 @@ Route::post('/kontakt', [ContactController::class, 'send'])->name('contact.send'
 Route::get('/courses/{id}', [App\Http\Controllers\CourseController::class, 'show'])->name('courses.show');
 // Płatność online
 Route::get('/courses/{id}/pay-online', [App\Http\Controllers\CourseController::class, 'payOnline'])->name('payment.online');
-Route::post('/courses/{id}/pay-online', [App\Http\Controllers\CourseController::class, 'storePayOnline'])->name('payment.online.store');
-
-// PayU – webhook i return (CSRF exclude dla notify w bootstrap/app.php)
-Route::post('/payment/payu/notify', [App\Http\Controllers\PaymentController::class, 'payuNotify'])->name('payment.payu.notify');
-Route::get('/payment/payu/return', [App\Http\Controllers\PaymentController::class, 'payuReturn'])->name('payment.payu.return');
-
-// Strony po płatności
-Route::get('/payment/success/{ident}', [App\Http\Controllers\PaymentController::class, 'success'])->name('payment.success');
-Route::get('/payment/pending/{ident}', [App\Http\Controllers\PaymentController::class, 'pending'])->name('payment.pending');
 // Zamówienie z odroczonym terminem
 Route::get('/courses/{id}/deferred-order/test', [App\Http\Controllers\CourseController::class, 'deferredOrder'])->name('payment.deferred.test');
 Route::get('/courses/{id}/deferred-order/edit/{ident}', [App\Http\Controllers\CourseController::class, 'deferredOrder'])->name('payment.deferred.edit');
