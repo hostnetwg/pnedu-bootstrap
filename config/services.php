@@ -41,4 +41,14 @@ return [
         'timeout' => env('PNEADM_API_TIMEOUT', 30),
     ],
 
+    'payu' => [
+        'sandbox' => filter_var(env('PAYU_SANDBOX', true), FILTER_VALIDATE_BOOLEAN),
+        'pos_id' => env('PAYU_POS_ID'),
+        'second_key' => env('PAYU_SECOND_KEY'),
+        'client_id' => env('PAYU_CLIENT_ID'),
+        'client_secret' => env('PAYU_CLIENT_SECRET'),
+        // Sandbox ma osobne POS – jeśli 4421299 nie działa w sandbox, użyj produkcji (PAYU_SANDBOX=false)
+        'base_url' => filter_var(env('PAYU_SANDBOX', true), FILTER_VALIDATE_BOOLEAN) ? 'https://secure.snd.payu.com' : 'https://secure.payu.com',
+    ],
+
 ];
