@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class OnlinePaymentOrder extends Model
@@ -59,13 +60,31 @@ class OnlinePaymentOrder extends Model
         return $this->hasMany(WebhookLog::class, 'online_payment_order_id');
     }
 
+    /**
+     * Generuj identyfikator zamówienia w formacie PNEDU_{numer_kolejny}
+     * Numer kolejny jest oparty na maksymalnym ID + 1, aby zapewnić sekwencyjność.
+     */
     public static function generateIdent(): string
     {
-        do {
-            $ident = Str::random(24);
-        } while (self::where('ident', $ident)->exists());
-
-        return $ident;
+        return DB::connection('pneadm')->transaction(function () {
+            // Użyj lockForUpdate aby uniknąć kolizji przy równoczesnych zapytaniach
+            $maxId = DB::connection('pneadm')
+                ->table('online_payment_orders')
+                ->lockForUpdate()
+                ->max('id') ?? 0;
+            
+            $nextNumber = $maxId + 1;
+            $ident = 'PNEDU_' . $nextNumber;
+            
+            // Sprawdź czy przypadkiem nie istnieje (na wypadek ręcznej edycji lub innych przypadków)
+            // Jeśli istnieje, zwiększ numer aż znajdziemy wolny
+            while (self::where('ident', $ident)->exists()) {
+                $nextNumber++;
+                $ident = 'PNEDU_' . $nextNumber;
+            }
+            
+            return $ident;
+        });
     }
 
     public function isPaid(): bool
