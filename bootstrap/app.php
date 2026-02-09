@@ -13,6 +13,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->validateCsrfTokens(except: [
             'payment/payu/notify',
+            'payment/paynow/notify',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

@@ -98,6 +98,10 @@ Route::post('/courses/{id}/pay-online', [App\Http\Controllers\CourseController::
 Route::post('/payment/payu/notify', [App\Http\Controllers\PaymentController::class, 'payuNotify'])->name('payment.payu.notify');
 Route::get('/payment/payu/return', [App\Http\Controllers\PaymentController::class, 'payuReturn'])->name('payment.payu.return');
 
+// PayNow – webhook i return (CSRF exclude dla notify w bootstrap/app.php)
+Route::post('/payment/paynow/notify', [App\Http\Controllers\PaymentController::class, 'paynowNotify'])->name('payment.paynow.notify');
+Route::get('/payment/paynow/return', [App\Http\Controllers\PaymentController::class, 'paynowReturn'])->name('payment.paynow.return');
+
 // Strony po płatności
 Route::get('/payment/success/{ident}', [App\Http\Controllers\PaymentController::class, 'success'])->name('payment.success');
 Route::get('/payment/pending/{ident}', [App\Http\Controllers\PaymentController::class, 'pending'])->name('payment.pending');

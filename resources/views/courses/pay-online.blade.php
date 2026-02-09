@@ -158,11 +158,11 @@
                 <fieldset class="order-form-section">
                     <legend>Dane do faktury</legend>
                     <div class="mb-0">
-                        <label class="form-label d-block">Typ zamawiającego <span class="text-danger">*</span></label>
+                        <label class="form-label d-block">Typ zamawiającego</label>
                         <div class="d-flex flex-wrap gap-3">
                             <div class="form-check">
-                                <input class="form-check-input @error('buyer_type') is-invalid @enderror" type="radio" name="buyer_type" id="buyer_type_person" value="person" {{ old('buyer_type', 'person') === 'person' ? 'checked' : '' }} required>
-                                <label class="form-check-label" for="buyer_type_person">Osoba fizyczna</label>
+                                <input class="form-check-input @error('buyer_type') is-invalid @enderror" type="radio" name="buyer_type" id="buyer_type_person" value="person" {{ old('buyer_type', 'person') === 'person' ? 'checked' : '' }}>
+                                <label class="form-check-label" for="buyer_type_person">Osoba fizyczna <small class="text-muted">(opcjonalne)</small></label>
                             </div>
                             <div class="form-check">
                                 <input class="form-check-input @error('buyer_type') is-invalid @enderror" type="radio" name="buyer_type" id="buyer_type_organisation" value="organisation" {{ old('buyer_type') === 'organisation' ? 'checked' : '' }}>
@@ -183,18 +183,18 @@
                 <div id="form-person" class="order-form-section buyer-type-form" data-type="person" style="display: none;">
                     <legend>Dane adresowe – Osoba fizyczna</legend>
                     <div class="mb-3">
-                        <label for="person_full_name" class="form-label">Imię i nazwisko <span class="text-danger">*</span></label>
+                        <label for="person_full_name" class="form-label">Imię i nazwisko</label>
                         <input type="text" class="form-control" id="person_full_name" name="person_full_name" value="{{ old('person_full_name') }}">
                         @error('person_full_name')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                     </div>
                     <div class="row mb-3">
                         <div class="col-12 col-md-6">
-                            <label for="person_street" class="form-label">Ulica <span class="text-danger">*</span></label>
+                            <label for="person_street" class="form-label">Ulica</label>
                             <input type="text" class="form-control" id="person_street" name="person_street" value="{{ old('person_street') }}">
                             @error('person_street')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                         </div>
                         <div class="col-6 col-md-3">
-                            <label for="person_building_no" class="form-label">Numer budynku <span class="text-danger">*</span></label>
+                            <label for="person_building_no" class="form-label">Numer budynku</label>
                             <input type="text" class="form-control" id="person_building_no" name="person_building_no" value="{{ old('person_building_no') }}">
                             @error('person_building_no')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                         </div>
@@ -205,17 +205,17 @@
                     </div>
                     <div class="row">
                         <div class="col-md-4 mb-3">
-                            <label for="person_postcode" class="form-label">Kod pocztowy <span class="text-danger">*</span></label>
+                            <label for="person_postcode" class="form-label">Kod pocztowy</label>
                             <input type="text" class="form-control" id="person_postcode" name="person_postcode" placeholder="00-000" value="{{ old('person_postcode') }}">
                             @error('person_postcode')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                         </div>
                         <div class="col-md-4 mb-3">
-                            <label for="person_city" class="form-label">Miejscowość <span class="text-danger">*</span></label>
+                            <label for="person_city" class="form-label">Miejscowość</label>
                             <input type="text" class="form-control" id="person_city" name="person_city" value="{{ old('person_city') }}">
                             @error('person_city')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                         </div>
                         <div class="col-md-4 mb-3">
-                            <label for="person_country" class="form-label">Kraj <span class="text-danger">*</span></label>
+                            <label for="person_country" class="form-label">Kraj</label>
                             <input type="text" class="form-control" id="person_country" name="person_country" value="{{ old('person_country', 'Polska') }}">
                             @error('person_country')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                         </div>
@@ -317,30 +317,30 @@
                         </div>
                     </fieldset>
                     <fieldset class="order-form-section">
-                        <legend>ODBIORCA</legend>
+                        <legend>ODBIORCA <small class="text-muted">(opcjonalne)</small></legend>
                         <div class="mb-3">
-                            <label for="recipient_nip" class="form-label">NIP <span class="text-danger">*</span></label>
+                            <label for="recipient_nip" class="form-label">NIP</label>
                             <input type="text" class="form-control" id="recipient_nip" name="recipient_nip" placeholder="0000000000" value="{{ old('recipient_nip') }}">
                             @error('recipient_nip')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                         </div>
                         <div class="mb-3">
-                            <label for="recipient_country" class="form-label">Kraj <span class="text-danger">*</span></label>
+                            <label for="recipient_country" class="form-label">Kraj</label>
                             <input type="text" class="form-control" id="recipient_country" name="recipient_country" value="{{ old('recipient_country', 'Polska') }}">
                             @error('recipient_country')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                         </div>
                         <div class="mb-3">
-                            <label for="recipient_name" class="form-label">Nazwa <span class="text-danger">*</span></label>
+                            <label for="recipient_name" class="form-label">Nazwa</label>
                             <input type="text" class="form-control" id="recipient_name" name="recipient_name" value="{{ old('recipient_name') }}">
                             @error('recipient_name')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                         </div>
                         <div class="row mb-3">
                             <div class="col-12 col-md-6">
-                                <label for="recipient_street" class="form-label">Ulica <span class="text-danger">*</span></label>
+                                <label for="recipient_street" class="form-label">Ulica</label>
                                 <input type="text" class="form-control" id="recipient_street" name="recipient_street" value="{{ old('recipient_street') }}">
                                 @error('recipient_street')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                             </div>
                             <div class="col-6 col-md-3">
-                                <label for="recipient_building_no" class="form-label">Numer budynku <span class="text-danger">*</span></label>
+                                <label for="recipient_building_no" class="form-label">Numer budynku</label>
                                 <input type="text" class="form-control" id="recipient_building_no" name="recipient_building_no" value="{{ old('recipient_building_no') }}">
                                 @error('recipient_building_no')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                             </div>
@@ -351,12 +351,12 @@
                         </div>
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label for="recipient_postcode" class="form-label">Kod pocztowy <span class="text-danger">*</span></label>
+                                <label for="recipient_postcode" class="form-label">Kod pocztowy</label>
                                 <input type="text" class="form-control" id="recipient_postcode" name="recipient_postcode" placeholder="00-000" value="{{ old('recipient_postcode') }}">
                                 @error('recipient_postcode')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label for="recipient_city" class="form-label">Miejscowość <span class="text-danger">*</span></label>
+                                <label for="recipient_city" class="form-label">Miejscowość</label>
                                 <input type="text" class="form-control" id="recipient_city" name="recipient_city" value="{{ old('recipient_city') }}">
                                 @error('recipient_city')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                             </div>
@@ -369,11 +369,11 @@
                     <label class="form-label d-block">Wybierz bramkę płatności <span class="text-danger">*</span></label>
                     <div class="d-flex flex-wrap gap-3">
                         <div class="form-check">
-                                <input class="form-check-input @error('payment_gateway') is-invalid @enderror" type="radio" name="payment_gateway" id="payment_gateway_payu" value="payu" {{ old('payment_gateway', 'payu') === 'payu' ? 'checked' : '' }} required>
+                                <input class="form-check-input @error('payment_gateway') is-invalid @enderror" type="radio" name="payment_gateway" id="payment_gateway_payu" value="payu" {{ old('payment_gateway', 'paynow') === 'payu' ? 'checked' : '' }} required>
                                 <label class="form-check-label" for="payment_gateway_payu">PayU</label>
                             </div>
                             <div class="form-check">
-                                <input class="form-check-input @error('payment_gateway') is-invalid @enderror" type="radio" name="payment_gateway" id="payment_gateway_paynow" value="paynow" {{ old('payment_gateway') === 'paynow' ? 'checked' : '' }}>
+                                <input class="form-check-input @error('payment_gateway') is-invalid @enderror" type="radio" name="payment_gateway" id="payment_gateway_paynow" value="paynow" {{ old('payment_gateway', 'paynow') === 'paynow' ? 'checked' : '' }}>
                                 <label class="form-check-label" for="payment_gateway_paynow">Paynow</label>
                             </div>
                     </div>
@@ -398,9 +398,12 @@
     var buyerTypeInputs = form.querySelectorAll('input[name="buyer_type"]');
     var typeForms = document.querySelectorAll('.buyer-type-form');
     var requiredFieldsByType = {
-        person: ['person_full_name', 'person_street', 'person_building_no', 'person_postcode', 'person_city', 'person_country'],
-        company: ['company_nip', 'company_country', 'company_name', 'company_street', 'company_building_no', 'company_postcode', 'company_city'],
-        organisation: ['buyer_nip', 'buyer_country', 'buyer_name', 'buyer_street', 'buyer_building_no', 'buyer_postcode', 'buyer_city', 'recipient_nip', 'recipient_country', 'recipient_name', 'recipient_street', 'recipient_building_no', 'recipient_postcode', 'recipient_city']
+        person: [], // Osoba fizyczna - wszystkie pola opcjonalne
+        company: ['company_nip', 'company_country', 'company_name', 'company_street', 'company_building_no', 'company_postcode', 'company_city'], // Firma - wszystkie pola required (oprócz flat_no)
+        organisation: {
+            buyer: ['buyer_nip', 'buyer_country', 'buyer_name', 'buyer_street', 'buyer_building_no', 'buyer_postcode', 'buyer_city'], // NABYWCA - wszystkie required
+            recipient: [] // ODBIORCA - wszystkie opcjonalne (ale jeśli podane dane, to recipient_nip required - sprawdzane w walidacji backend)
+        }
     };
 
     function getCurrentType() {
@@ -413,25 +416,84 @@
         typeForms.forEach(function(el) {
             var visible = el.getAttribute('data-type') === type;
             el.style.display = visible ? 'block' : 'none';
+            
             var inputs = el.querySelectorAll('input, select');
             inputs.forEach(function(inp) {
-                if (inp.name && requiredFieldsByType[type] && requiredFieldsByType[type].indexOf(inp.name) !== -1) {
-                    inp.required = visible;
+                if (!inp.name) return;
+                
+                if (type === 'person') {
+                    // Osoba fizyczna - wszystkie pola opcjonalne
+                    inp.required = false;
+                } else if (type === 'company') {
+                    // Firma - pola z listy required
+                    inp.required = requiredFieldsByType.company.indexOf(inp.name) !== -1;
+                } else if (type === 'organisation') {
+                    // Instytucja - NABYWCA required, ODBIORCA opcjonalny
+                    var isBuyerField = requiredFieldsByType.organisation.buyer.indexOf(inp.name) !== -1;
+                    var isRecipientField = inp.name && inp.name.startsWith('recipient_');
+                    
+                    if (isBuyerField) {
+                        inp.required = true;
+                    } else if (isRecipientField) {
+                        // ODBIORCA - wszystkie opcjonalne (walidacja recipient_nip jeśli podane dane - w backend)
+                        inp.required = false;
+                    } else {
+                        inp.required = false;
+                    }
                 } else {
                     inp.required = false;
                 }
             });
         });
     }
+    
+    // Dla instytucji - dynamiczna walidacja recipient_nip jeśli podane dane odbiorcy
+    function checkRecipientNipRequirement() {
+        var type = getCurrentType();
+        if (type !== 'organisation') return;
+        
+        var recipientNip = document.getElementById('recipient_nip');
+        var recipientFields = ['recipient_name', 'recipient_street', 'recipient_city', 'recipient_postcode', 'recipient_country'];
+        var hasRecipientData = recipientFields.some(function(fieldName) {
+            var field = document.getElementById(fieldName);
+            return field && field.value.trim() !== '';
+        });
+        
+        if (recipientNip) {
+            recipientNip.required = hasRecipientData;
+        }
+    }
+    
+    // Dodaj event listenery dla pól odbiorcy w instytucji
+    function setupRecipientValidation() {
+        var recipientFields = ['recipient_name', 'recipient_street', 'recipient_city', 'recipient_postcode', 'recipient_country', 'recipient_nip'];
+        recipientFields.forEach(function(fieldName) {
+            var field = document.getElementById(fieldName);
+            if (field) {
+                field.addEventListener('input', checkRecipientNipRequirement);
+                field.addEventListener('blur', checkRecipientNipRequirement);
+            }
+        });
+    }
 
     buyerTypeInputs.forEach(function(inp) {
-        inp.addEventListener('change', toggleForms);
+        inp.addEventListener('change', function() {
+            toggleForms();
+            setupRecipientValidation();
+            checkRecipientNipRequirement();
+        });
     });
 
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', toggleForms);
+        document.addEventListener('DOMContentLoaded', function() {
+            toggleForms();
+            setupRecipientValidation();
+            checkRecipientNipRequirement();
+        });
     } else {
         toggleForms();
+        setupRecipientValidation();
+        checkRecipientNipRequirement();
     }
 
     form.addEventListener('submit', function(e) {

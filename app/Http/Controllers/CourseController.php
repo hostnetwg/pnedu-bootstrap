@@ -422,7 +422,7 @@ class CourseController extends Controller
         $course = \App\Models\Course::findOrFail($id);
 
         $rules = [
-            'buyer_type' => 'required|in:person,company,organisation',
+            'buyer_type' => 'nullable|in:person,company,organisation',
             'payment_gateway' => 'required|in:paynow,payu',
             'email' => 'required|email',
             'email_confirmation' => 'required|email|same:email',
@@ -448,17 +448,22 @@ class CourseController extends Controller
 
         $buyerType = $request->input('buyer_type', 'person');
 
+        // Logika walidacji faktury:
+        // - Osoba fizyczna: faktura opcjonalna (wszystkie pola nullable)
+        // - Firma: faktura obowiązkowa (wszystkie pola required)
+        // - Instytucja: NABYWCA obowiązkowy, ODBIORCA opcjonalny (ale jeśli podane dane odbiorcy, to recipient_nip required)
         if ($buyerType === 'person') {
             $rules = array_merge($rules, [
-                'person_full_name' => 'required|string|max:255',
-                'person_street' => 'required|string|max:255',
-                'person_building_no' => 'required|string|max:20',
+                'person_full_name' => 'nullable|string|max:255',
+                'person_street' => 'nullable|string|max:255',
+                'person_building_no' => 'nullable|string|max:20',
                 'person_flat_no' => 'nullable|string|max:20',
-                'person_postcode' => 'required|string|max:20',
-                'person_city' => 'required|string|max:255',
-                'person_country' => 'required|string|max:255',
+                'person_postcode' => 'nullable|string|max:20',
+                'person_city' => 'nullable|string|max:255',
+                'person_country' => 'nullable|string|max:255',
             ]);
         } elseif ($buyerType === 'company') {
+            // Firma - faktura obowiązkowa
             $rules = array_merge($rules, [
                 'company_nip' => 'required|string|max:20',
                 'company_country' => 'required|string|max:255',
@@ -470,6 +475,7 @@ class CourseController extends Controller
                 'company_city' => 'required|string|max:255',
             ]);
         } elseif ($buyerType === 'organisation') {
+            // Instytucja - NABYWCA obowiązkowy, ODBIORCA opcjonalny
             $rules = array_merge($rules, [
                 'buyer_nip' => 'required|string|max:20',
                 'buyer_country' => 'required|string|max:255',
@@ -479,28 +485,47 @@ class CourseController extends Controller
                 'buyer_flat_no' => 'nullable|string|max:20',
                 'buyer_postcode' => 'required|string|max:20',
                 'buyer_city' => 'required|string|max:255',
-                'recipient_nip' => 'required|string|max:20',
-                'recipient_country' => 'required|string|max:255',
-                'recipient_name' => 'required|string|max:255',
-                'recipient_street' => 'required|string|max:255',
-                'recipient_building_no' => 'required|string|max:20',
+                // ODBIORCA - opcjonalny, ale jeśli podane jakiekolwiek dane, to recipient_nip required
+                'recipient_nip' => 'nullable|string|max:20',
+                'recipient_country' => 'nullable|string|max:255',
+                'recipient_name' => 'nullable|string|max:255',
+                'recipient_street' => 'nullable|string|max:255',
+                'recipient_building_no' => 'nullable|string|max:20',
                 'recipient_flat_no' => 'nullable|string|max:20',
-                'recipient_postcode' => 'required|string|max:20',
-                'recipient_city' => 'required|string|max:255',
+                'recipient_postcode' => 'nullable|string|max:20',
+                'recipient_city' => 'nullable|string|max:255',
             ]);
         }
 
         $request->validate($rules, $messages);
 
-        $paymentGateway = $request->input('payment_gateway', 'payu');
+        // Dodatkowa walidacja dla instytucji: jeśli podane dane odbiorcy, to recipient_nip jest wymagany
+        if ($buyerType === 'organisation') {
+            $hasRecipientData = $request->filled('recipient_name') || 
+                                $request->filled('recipient_street') || 
+                                $request->filled('recipient_city') || 
+                                $request->filled('recipient_postcode') ||
+                                $request->filled('recipient_country');
+            
+            if ($hasRecipientData && !$request->filled('recipient_nip')) {
+                return redirect()->back()
+                    ->withErrors(['recipient_nip' => 'NIP odbiorcy jest wymagany, jeśli podano dane odbiorcy.'])
+                    ->withInput();
+            }
+        }
+
+        $paymentGateway = $request->input('payment_gateway', 'paynow');
 
         if ($paymentGateway === 'payu') {
             return $this->processPayUPayment($request, $course);
         }
 
-        // Paynow – do implementacji
+        if ($paymentGateway === 'paynow') {
+            return $this->processPayNowPayment($request, $course);
+        }
+
         return redirect()->route('payment.online', $course->id)
-            ->with('info', 'Integracja z Paynow będzie dostępna wkrótce.');
+            ->with('error', 'Nieznana bramka płatności.');
     }
 
     /**
@@ -555,6 +580,60 @@ class CourseController extends Controller
         }
 
         return redirect()->away($result['redirect_uri']);
+    }
+
+    /**
+     * Przetwórz płatność PayNow – utwórz zamówienie i przekieruj do bramki.
+     */
+    protected function processPayNowPayment(Request $request, $course)
+    {
+        $priceInfo = $course->getCurrentPrice();
+        $totalAmount = $priceInfo['price'] ?? 0;
+
+        if ($totalAmount <= 0) {
+            return redirect()->route('payment.online', $course->id)
+                ->with('error', 'To szkolenie nie ma ustawionej ceny. Skontaktuj się z organizatorem lub wybierz formularz zamówienia z odroczonym terminem płatności.')
+                ->withInput();
+        }
+
+        $addressData = $this->collectAddressData($request);
+        $formData = $request->except(['_token', 'email_confirmation']);
+
+        $order = \App\Models\OnlinePaymentOrder::create([
+            'ident' => \App\Models\OnlinePaymentOrder::generateIdent(),
+            'course_id' => $course->id,
+            'payment_gateway' => 'paynow',
+            'status' => \App\Models\OnlinePaymentOrder::STATUS_PENDING,
+            'total_amount' => $totalAmount,
+            'currency' => 'PLN',
+            'buyer_type' => $request->input('buyer_type'),
+            'email' => $request->input('email'),
+            'first_name' => $request->input('first_name'),
+            'last_name' => $request->input('last_name'),
+            'phone' => $request->input('phone'),
+            'order_comment' => $request->input('order_comment'),
+            'address_data' => $addressData,
+            'form_data' => $formData,
+            'ip_address' => $request->ip(),
+        ]);
+
+        $paynowService = new \App\Services\PayNowService();
+        $notifyUrl = route('payment.paynow.notify');
+        $continueUrl = route('payment.paynow.return');
+
+        $result = $paynowService->createOrder($order, $notifyUrl, $continueUrl);
+
+        if (!$result['success']) {
+            $errorMsg = $result['error'] ?? 'Nie udało się połączyć z PayNow. Spróbuj ponownie.';
+            if (str_contains($errorMsg, 'konfiguracji')) {
+                $errorMsg .= ' Sprawdź konfigurację w .env (PAYNOW_API_KEY, PAYNOW_SIGNATURE_KEY, PAYNOW_SANDBOX) oraz logi: storage/logs/laravel.log';
+            }
+            return redirect()->route('payment.online', $course->id)
+                ->with('error', $errorMsg)
+                ->withInput();
+        }
+
+        return redirect()->away($result['redirect_url']);
     }
 
     /**

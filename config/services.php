@@ -51,4 +51,11 @@ return [
         'base_url' => filter_var(env('PAYU_SANDBOX', true), FILTER_VALIDATE_BOOLEAN) ? 'https://secure.snd.payu.com' : 'https://secure.payu.com',
     ],
 
+    'paynow' => [
+        'sandbox' => filter_var(env('PAYNOW_SANDBOX', true), FILTER_VALIDATE_BOOLEAN),
+        'api_key' => env('PAYNOW_API_KEY'),
+        'signature_key' => env('PAYNOW_SIGNATURE_KEY'),
+        'base_url' => filter_var(env('PAYNOW_SANDBOX', true), FILTER_VALIDATE_BOOLEAN) ? 'https://api.sandbox.paynow.pl' : 'https://api.paynow.pl',
+    ],
+
 ];
