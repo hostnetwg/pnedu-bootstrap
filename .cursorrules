@@ -203,3 +203,39 @@ sail artisan make:seeder TableNameSeeder
 4. **NEVER** run `php`, `composer`, or `artisan` directly without `sail`
 5. **NEVER** commit sensitive data or `.env` file
 
+## 🗄️ Database Migrations - CRITICAL RULE
+
+### ⚠️ MIGRATION LOCATION RULE - ALWAYS FOLLOW THIS:
+
+**Migracje do bazy `pneadm` → w projekcie `pneadm-bootstrap`**
+- Wszystkie migracje dotyczące tabel w bazie `pneadm` MUSZĄ być w katalogu:
+  - `pneadm-bootstrap/database/migrations/`
+- Przykłady tabel w bazie `pneadm`: `form_orders`, `online_payment_orders`, `payment_webhook_logs`, `courses`, `participants`, etc.
+
+**Migracje do bazy `pnedu` → w projekcie `pnedu`**
+- Wszystkie migracje dotyczące tabel w bazie `pnedu` MUSZĄ być w katalogu:
+  - `pnedu/database/migrations/`
+- Przykłady tabel w bazie `pnedu`: `users`, `password_reset_tokens`, `sessions`, etc.
+
+### Jak sprawdzić do której bazy należy tabela?
+- Sprawdź w modelu Eloquent: `protected $connection = 'pneadm'` → migracja w `pneadm-bootstrap`
+- Brak `$connection` lub `protected $connection = 'mysql'` w `pnedu` → migracja w `pnedu`
+- Sprawdź w `config/database.php` jakie są dostępne połączenia
+
+### Przykłady:
+```php
+// ✅ DOBRZE - Model w pnedu używa connection('pneadm')
+// Migracja w: pneadm-bootstrap/database/migrations/2026_02_09_000001_create_payment_webhook_logs_table.php
+Schema::connection('pneadm')->create('payment_webhook_logs', ...);
+
+// ✅ DOBRZE - Model w pneadm-bootstrap używa domyślnego connection (pneadm)
+// Migracja w: pneadm-bootstrap/database/migrations/2026_02_06_000001_create_online_payment_orders_table.php
+Schema::create('online_payment_orders', ...); // Domyślnie baza pneadm
+
+// ✅ DOBRZE - Tabela w bazie pnedu (domyślna)
+// Migracja w: pnedu/database/migrations/2024_01_01_000001_create_users_table.php
+Schema::create('users', ...); // Domyślnie baza pnedu
+```
+
+**ZASADA:** Migracja zawsze w projekcie, który odpowiada za bazę danych, do której należy tabela!
+

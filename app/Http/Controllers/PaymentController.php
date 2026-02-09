@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\OnlinePaymentOrder;
+use App\Models\WebhookLog;
 use App\Services\PayUService;
 use App\Services\PayNowService;
 use Illuminate\Http\Request;
@@ -21,26 +22,52 @@ class PaymentController extends Controller
         $orderId = $request->input('order.orderId');
         $extOrderId = $request->input('order.extOrderId');
         $status = $request->input('order.status');
+        $payload = $request->all();
+
+        // Loguj webhook do bazy danych
+        $webhookLog = WebhookLog::create([
+            'online_payment_order_id' => 0, // Zaktualizujemy po znalezieniu zamówienia
+            'payment_gateway' => 'payu',
+            'gateway_payment_id' => $orderId,
+            'external_id' => $extOrderId,
+            'status' => $status,
+            'payload' => $payload,
+            'ip_address' => $request->ip(),
+        ]);
 
         if (empty($extOrderId)) {
             Log::warning('PayU notify: brak extOrderId');
+            $webhookLog->update(['error_message' => 'Brak extOrderId']);
             return response('', 200); // PayU oczekuje 200
         }
 
         $order = OnlinePaymentOrder::where('ident', $extOrderId)->first();
         if (!$order) {
             Log::warning('PayU notify: nie znaleziono zamówienia', ['extOrderId' => $extOrderId]);
+            $webhookLog->update(['error_message' => 'Nie znaleziono zamówienia']);
             return response('', 200);
         }
 
+        // Zaktualizuj webhook log z ID zamówienia
+        $webhookLog->update(['online_payment_order_id' => $order->id]);
+
         // Statusy PayU: PENDING, NEW, COMPLETED, CANCELED, REJECTED itd.
         $payuStatus = strtoupper($status ?? '');
-        if ($payuStatus === 'COMPLETED') {
-            $order->update(['status' => OnlinePaymentOrder::STATUS_PAID]);
-            Log::info('PayU: płatność potwierdzona', ['ident' => $extOrderId]);
-            // TODO: rejestracja uczestnika, wysłanie maila, faktura
-        } elseif (in_array($payuStatus, ['CANCELED', 'REJECTED', 'EXPIRED'])) {
-            $order->update(['status' => OnlinePaymentOrder::STATUS_CANCELLED]);
+        $mappedStatus = WebhookLog::mapStatus('payu', $payuStatus);
+        
+        if ($mappedStatus) {
+            $order->update(['status' => $mappedStatus]);
+            $webhookLog->update([
+                'status_mapped' => $mappedStatus,
+                'signature_valid' => true, // PayU nie wymaga weryfikacji podpisu w REST API
+            ]);
+            
+            if ($payuStatus === 'COMPLETED') {
+                Log::info('PayU: płatność potwierdzona', ['ident' => $extOrderId]);
+                // TODO: rejestracja uczestnika, wysłanie maila, faktura
+            }
+        } else {
+            $webhookLog->update(['error_message' => 'Nieznany status: ' . $payuStatus]);
         }
 
         return response('', 200);
@@ -107,41 +134,70 @@ class PaymentController extends Controller
         $externalId = $request->input('externalId');
         $status = $request->input('status');
         $signature = $request->header('Signature');
+        $payload = $request->all();
+
+        // Loguj webhook do bazy danych
+        $webhookLog = WebhookLog::create([
+            'online_payment_order_id' => 0, // Zaktualizujemy po znalezieniu zamówienia
+            'payment_gateway' => 'paynow',
+            'gateway_payment_id' => $paymentId,
+            'external_id' => $externalId,
+            'status' => $status,
+            'payload' => $payload,
+            'signature' => $signature,
+            'ip_address' => $request->ip(),
+        ]);
 
         if (empty($externalId)) {
             Log::warning('PayNow notify: brak externalId');
+            $webhookLog->update(['error_message' => 'Brak externalId']);
             return response('', 200); // PayNow oczekuje 200
         }
 
         // Weryfikuj podpis webhooka
         $paynowService = new PayNowService();
-        $payload = $request->all();
+        $signatureValid = false;
         
-        if ($signature && !$paynowService->verifyWebhookSignature($signature, $payload)) {
-            Log::warning('PayNow notify: nieprawidłowy podpis', [
-                'externalId' => $externalId,
-                'paymentId' => $paymentId,
-            ]);
-            return response('', 200); // Zwróć 200, ale nie przetwarzaj
+        if ($signature) {
+            $signatureValid = $paynowService->verifyWebhookSignature($signature, $payload);
+            $webhookLog->update(['signature_valid' => $signatureValid]);
+            
+            if (!$signatureValid) {
+                Log::warning('PayNow notify: nieprawidłowy podpis', [
+                    'externalId' => $externalId,
+                    'paymentId' => $paymentId,
+                ]);
+                $webhookLog->update(['error_message' => 'Nieprawidłowy podpis webhooka']);
+                return response('', 200); // Zwróć 200, ale nie przetwarzaj
+            }
         }
 
         $order = OnlinePaymentOrder::where('ident', $externalId)->first();
         if (!$order) {
             Log::warning('PayNow notify: nie znaleziono zamówienia', ['externalId' => $externalId]);
+            $webhookLog->update(['error_message' => 'Nie znaleziono zamówienia']);
             return response('', 200);
         }
 
+        // Zaktualizuj webhook log z ID zamówienia
+        $webhookLog->update(['online_payment_order_id' => $order->id]);
+
         // Statusy PayNow: NEW, PENDING, CONFIRMED, ERROR, REJECTED, EXPIRED, CANCELLED
         $paynowStatus = strtoupper($status ?? '');
-        if ($paynowStatus === 'CONFIRMED') {
-            $order->update(['status' => OnlinePaymentOrder::STATUS_PAID]);
-            Log::info('PayNow: płatność potwierdzona', ['ident' => $externalId, 'paymentId' => $paymentId]);
-            // TODO: rejestracja uczestnika, wysłanie maila, faktura
-        } elseif (in_array($paynowStatus, ['CANCELLED', 'REJECTED', 'EXPIRED', 'ERROR'])) {
-            $order->update(['status' => OnlinePaymentOrder::STATUS_CANCELLED]);
-            Log::info('PayNow: płatność anulowana', ['ident' => $externalId, 'status' => $paynowStatus]);
-        } elseif ($paynowStatus === 'PENDING') {
-            $order->update(['status' => OnlinePaymentOrder::STATUS_PENDING]);
+        $mappedStatus = WebhookLog::mapStatus('paynow', $paynowStatus);
+        
+        if ($mappedStatus) {
+            $order->update(['status' => $mappedStatus]);
+            $webhookLog->update(['status_mapped' => $mappedStatus]);
+            
+            if ($paynowStatus === 'CONFIRMED') {
+                Log::info('PayNow: płatność potwierdzona', ['ident' => $externalId, 'paymentId' => $paymentId]);
+                // TODO: rejestracja uczestnika, wysłanie maila, faktura
+            } elseif (in_array($paynowStatus, ['CANCELLED', 'REJECTED', 'EXPIRED', 'ERROR'])) {
+                Log::info('PayNow: płatność anulowana', ['ident' => $externalId, 'status' => $paynowStatus]);
+            }
+        } else {
+            $webhookLog->update(['error_message' => 'Nieznany status: ' . $paynowStatus]);
         }
 
         return response('', 200);
