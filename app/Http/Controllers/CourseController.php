@@ -799,7 +799,6 @@ class CourseController extends Controller
             'participant_email' => 'required|email|max:255',
             'invoice_notes' => 'nullable|string',
             'payment_terms' => 'required|integer|min:1',
-            'consent' => 'required|accepted',
         ], [
             'buyer_name.required' => 'Nazwa nabywcy jest wymagana.',
             'buyer_address.required' => 'Adres jest wymagany.',
@@ -816,8 +815,6 @@ class CourseController extends Controller
             'participant_email.email' => 'Podaj prawidłowy adres e-mail uczestnika.',
             'payment_terms.required' => 'Termin płatności jest wymagany.',
             'payment_terms.min' => 'Termin płatności musi być większy niż 0 dni.',
-            'consent.required' => 'Musisz wyrazić zgodę na przetwarzanie danych osobowych.',
-            'consent.accepted' => 'Musisz wyrazić zgodę na przetwarzanie danych osobowych.',
         ]);
 
         try {

@@ -423,13 +423,6 @@
                     </div>
                 </fieldset>
                 <div class="order-form-section form-section-full-width">
-                    <div class="mb-3 form-check">
-                        <input type="checkbox" class="form-check-input @error('consent') is-invalid @enderror" id="consent" name="consent" {{ ($isTestMode ?? false) || old('consent') ? 'checked' : '' }} required>
-                        <label class="form-check-label" for="consent">Wyrażam zgodę na przetwarzanie danych osobowych zgodnie z polityką prywatności. <span class="text-danger">*</span></label>
-                        @error('consent')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
                     <div class="d-flex flex-column flex-md-row gap-3 mt-4">
                         <button type="submit" class="btn btn-primary flex-fill">Wyślij zamówienie</button>
                         <a href="{{ route('courses.show', $course->id) }}" class="btn btn-link flex-fill">Powrót do szczegółów szkolenia</a>
