@@ -5,10 +5,12 @@ namespace App\Http\Controllers;
 use App\Models\OnlinePaymentOrder;
 use App\Models\WebhookLog;
 use App\Models\Participant;
+use App\Models\CoursePriceVariant;
 use App\Services\PayUService;
 use App\Services\PayNowService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
 
 class PaymentController extends Controller
 {
@@ -278,6 +280,9 @@ class PaymentController extends Controller
                 ->max('order') ?? 0;
             $nextOrder = $maxOrder + 1;
 
+            // Oblicz datę wygaśnięcia dostępu na podstawie wariantu cenowego
+            $accessExpiresAt = $this->calculateAccessExpirationDate($order);
+
             // Utwórz uczestnika
             $participant = Participant::create([
                 'course_id' => $order->course_id,
@@ -287,7 +292,7 @@ class PaymentController extends Controller
                 'email' => $order->email,
                 'birth_date' => null, // Dane urodzenia nie są dostępne w zamówieniu
                 'birth_place' => null,
-                'access_expires_at' => null, // Można później dodać logikę ustawiania terminu dostępu
+                'access_expires_at' => $accessExpiresAt,
             ]);
 
             Log::info('PaymentController: uczestnik zarejestrowany', [
@@ -296,6 +301,7 @@ class PaymentController extends Controller
                 'course_title' => $order->course->title,
                 'email' => $order->email,
                 'order_ident' => $order->ident,
+                'access_expires_at' => $accessExpiresAt ? $accessExpiresAt->format('Y-m-d H:i:s') : 'bezterminowy',
             ]);
 
             return $participant;
@@ -305,6 +311,137 @@ class PaymentController extends Controller
                 'order_id' => $order->id,
                 'course_id' => $order->course_id,
                 'email' => $order->email,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            return null;
+        }
+    }
+
+    /**
+     * Oblicz datę wygaśnięcia dostępu na podstawie wariantu cenowego kursu.
+     * 
+     * @param OnlinePaymentOrder $order
+     * @return \Carbon\Carbon|null
+     */
+    protected function calculateAccessExpirationDate(OnlinePaymentOrder $order): ?Carbon
+    {
+        try {
+            // Załaduj kurs z wariantami cenowymi
+            $course = $order->course;
+            if (!$course) {
+                return null;
+            }
+
+            // Spróbuj znaleźć wariant cenowy z form_data (jeśli został zapisany)
+            $priceVariantId = null;
+            if ($order->form_data && is_array($order->form_data)) {
+                $priceVariantId = $order->form_data['price_variant_id'] ?? null;
+            }
+
+            // Znajdź wariant cenowy
+            $priceVariant = null;
+            if ($priceVariantId) {
+                $priceVariant = CoursePriceVariant::where('id', $priceVariantId)
+                    ->where('course_id', $course->id)
+                    ->where('is_active', true)
+                    ->first();
+            }
+
+            // Jeśli nie znaleziono wariantu z form_data, użyj najtańszego aktywnego wariantu
+            if (!$priceVariant) {
+                $priceVariant = CoursePriceVariant::where('course_id', $course->id)
+                    ->where('is_active', true)
+                    ->orderBy('price', 'asc')
+                    ->first();
+            }
+
+            // Jeśli nie ma wariantu cenowego, zwróć null
+            if (!$priceVariant) {
+                Log::warning('PaymentController: brak wariantu cenowego dla kursu', [
+                    'course_id' => $course->id,
+                    'order_id' => $order->id,
+                ]);
+                return null;
+            }
+
+            $now = Carbon::now();
+            $accessType = $priceVariant->access_type;
+
+            // Oblicz datę wygaśnięcia na podstawie typu dostępu
+            switch ($accessType) {
+                case '1': // Bezterminowy, z natychmiastowym dostępem
+                    return null; // Bezterminowy dostęp
+
+                case '2': // Bezterminowy, od określonej daty
+                    // Bezterminowy, więc zwracamy null
+                    return null;
+
+                case '3': // Przez określony czas, z natychmiastowym dostępem
+                    if ($priceVariant->access_duration_value && $priceVariant->access_duration_unit) {
+                        $expiresAt = $now->copy();
+                        switch ($priceVariant->access_duration_unit) {
+                            case 'hours':
+                                $expiresAt->addHours($priceVariant->access_duration_value);
+                                break;
+                            case 'days':
+                                $expiresAt->addDays($priceVariant->access_duration_value);
+                                break;
+                            case 'months':
+                                $expiresAt->addMonths($priceVariant->access_duration_value);
+                                break;
+                            case 'years':
+                                $expiresAt->addYears($priceVariant->access_duration_value);
+                                break;
+                        }
+                        return $expiresAt;
+                    }
+                    return null;
+
+                case '4': // Od określonej daty, z ustaloną datą końca
+                    if ($priceVariant->access_end_datetime) {
+                        return Carbon::parse($priceVariant->access_end_datetime);
+                    }
+                    return null;
+
+                case '5': // Przez określony czas, od określonej daty
+                    $startDate = $priceVariant->access_start_datetime 
+                        ? Carbon::parse($priceVariant->access_start_datetime)
+                        : $now;
+                    
+                    if ($priceVariant->access_duration_value && $priceVariant->access_duration_unit) {
+                        $expiresAt = $startDate->copy();
+                        switch ($priceVariant->access_duration_unit) {
+                            case 'hours':
+                                $expiresAt->addHours($priceVariant->access_duration_value);
+                                break;
+                            case 'days':
+                                $expiresAt->addDays($priceVariant->access_duration_value);
+                                break;
+                            case 'months':
+                                $expiresAt->addMonths($priceVariant->access_duration_value);
+                                break;
+                            case 'years':
+                                $expiresAt->addYears($priceVariant->access_duration_value);
+                                break;
+                        }
+                        return $expiresAt;
+                    }
+                    return null;
+
+                default:
+                    Log::warning('PaymentController: nieznany typ dostępu', [
+                        'access_type' => $accessType,
+                        'variant_id' => $priceVariant->id,
+                        'course_id' => $course->id,
+                    ]);
+                    return null;
+            }
+
+        } catch (\Exception $e) {
+            Log::error('PaymentController: błąd podczas obliczania daty wygaśnięcia', [
+                'order_id' => $order->id,
+                'course_id' => $order->course_id,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
