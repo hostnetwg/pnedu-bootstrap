@@ -82,20 +82,168 @@ class PaymentController extends Controller
      */
     public function payuReturn(Request $request)
     {
+        // Loguj wszystkie dane przychodzące z PayU dla debugowania
+        Log::info('PayU return received', [
+            'query_params' => $request->query(),
+            'post_data' => $request->all(),
+            'method' => $request->method(),
+            'url' => $request->fullUrl(),
+        ]);
+
+        // Spróbuj znaleźć extOrderId w różnych miejscach
+        // PayU może przekazywać dane w query string, POST body lub JSON (jak w notify)
         $extOrderId = $request->query('extOrderId')
             ?? $request->query('orderId')
             ?? $request->input('order.extOrderId')
-            ?? $request->input('extOrderId');
+            ?? $request->input('extOrderId')
+            ?? $request->input('orderId')
+            ?? $request->json('order.extOrderId')
+            ?? $request->json('extOrderId');
 
-        if (empty($extOrderId)) {
-            return redirect()->route('home')
-                ->with('error', 'Brak identyfikatora zamówienia. Sprawdź e-mail z potwierdzeniem płatności.');
+        // Jeśli mamy orderId (PayU order ID), spróbuj znaleźć zamówienie po payu_order_id
+        $payuOrderId = $request->query('orderId') 
+            ?? $request->input('orderId')
+            ?? $request->json('order.orderId')
+            ?? $request->json('orderId');
+        
+        $order = null;
+        
+        // 1. Spróbuj znaleźć po extOrderId z URL/body
+        if (!empty($extOrderId)) {
+            $order = OnlinePaymentOrder::where('ident', $extOrderId)->with('course')->first();
+        }
+        
+        // 2. Jeśli nie znaleziono, spróbuj po payu_order_id
+        if (!$order && !empty($payuOrderId)) {
+            $order = OnlinePaymentOrder::where('payu_order_id', $payuOrderId)->with('course')->first();
+            
+            if ($order) {
+                Log::info('PayU return: znaleziono zamówienie po payu_order_id', [
+                    'payu_order_id' => $payuOrderId,
+                    'order_ident' => $order->ident,
+                ]);
+            }
         }
 
-        $order = OnlinePaymentOrder::where('ident', $extOrderId)->with('course')->first();
+        // 3. Fallback: sprawdź sesję (zapisaliśmy ident przed przekierowaniem)
         if (!$order) {
+            $sessionOrderIdent = session('payu_order_ident');
+            if ($sessionOrderIdent) {
+                $order = OnlinePaymentOrder::where('ident', $sessionOrderIdent)->with('course')->first();
+                
+                if ($order) {
+                    Log::info('PayU return: znaleziono zamówienie z sesji', [
+                        'order_ident' => $order->ident,
+                    ]);
+                    // Usuń z sesji po użyciu
+                    session()->forget('payu_order_ident');
+                    session()->forget('payu_order_email');
+                }
+            }
+        }
+
+        // 4. Fallback: spróbuj znaleźć ostatnie zamówienie użytkownika po email z sesji
+        if (!$order) {
+            $sessionEmail = session('payu_order_email');
+            if ($sessionEmail) {
+                $order = OnlinePaymentOrder::where('email', $sessionEmail)
+                    ->where('payment_gateway', 'payu')
+                    ->orderBy('created_at', 'desc')
+                    ->with('course')
+                    ->first();
+                
+                if ($order) {
+                    Log::info('PayU return: znaleziono ostatnie zamówienie po email z sesji', [
+                        'email' => $sessionEmail,
+                        'order_ident' => $order->ident,
+                    ]);
+                    session()->forget('payu_order_email');
+                }
+            }
+        }
+
+        // 5. Fallback: spróbuj znaleźć ostatnie zamówienie PayU z tego IP (ostatnie 5 minut)
+        if (!$order) {
+            $userIp = $request->ip();
+            $order = OnlinePaymentOrder::where('payment_gateway', 'payu')
+                ->where('ip_address', $userIp)
+                ->where('created_at', '>=', now()->subMinutes(5))
+                ->orderBy('created_at', 'desc')
+                ->with('course')
+                ->first();
+            
+            if ($order) {
+                Log::info('PayU return: znaleziono ostatnie zamówienie po IP', [
+                    'ip' => $userIp,
+                    'order_ident' => $order->ident,
+                ]);
+            }
+        }
+
+        // Jeśli nadal nie znaleziono zamówienia, ale mamy payuOrderId, spróbuj użyć API PayU
+        if (!$order && !empty($payuOrderId)) {
+            try {
+                $payuService = new PayUService();
+                $orderStatus = $payuService->getOrderStatus($payuOrderId);
+                
+                if ($orderStatus && isset($orderStatus['orders'][0]['extOrderId'])) {
+                    $extOrderIdFromApi = $orderStatus['orders'][0]['extOrderId'];
+                    $order = OnlinePaymentOrder::where('ident', $extOrderIdFromApi)->with('course')->first();
+                    
+                    if ($order) {
+                        Log::info('PayU return: znaleziono zamówienie przez API PayU', [
+                            'payu_order_id' => $payuOrderId,
+                            'extOrderId_from_api' => $extOrderIdFromApi,
+                            'order_ident' => $order->ident,
+                        ]);
+                    }
+                }
+            } catch (\Exception $e) {
+                Log::error('PayU return: błąd podczas pobierania statusu z API', [
+                    'payu_order_id' => $payuOrderId,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        // Jeśli nadal nie znaleziono, ale mamy payuOrderId, spróbuj użyć API PayU
+        if (!$order && !empty($payuOrderId)) {
+            try {
+                $payuService = new PayUService();
+                $orderStatus = $payuService->getOrderStatus($payuOrderId);
+                
+                if ($orderStatus && isset($orderStatus['orders'][0]['extOrderId'])) {
+                    $extOrderIdFromApi = $orderStatus['orders'][0]['extOrderId'];
+                    $order = OnlinePaymentOrder::where('ident', $extOrderIdFromApi)->with('course')->first();
+                    
+                    if ($order) {
+                        Log::info('PayU return: znaleziono zamówienie przez API PayU', [
+                            'payu_order_id' => $payuOrderId,
+                            'extOrderId_from_api' => $extOrderIdFromApi,
+                            'order_ident' => $order->ident,
+                        ]);
+                    }
+                }
+            } catch (\Exception $e) {
+                Log::error('PayU return: błąd podczas pobierania statusu z API', [
+                    'payu_order_id' => $payuOrderId,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        if (!$order) {
+            Log::warning('PayU return: nie znaleziono zamówienia', [
+                'extOrderId' => $extOrderId,
+                'payuOrderId' => $payuOrderId,
+                'session_order_ident' => session('payu_order_ident'),
+                'session_email' => session('payu_order_email'),
+                'user_ip' => $request->ip(),
+                'query_params' => $request->query(),
+                'post_data' => $request->all(),
+            ]);
             return redirect()->route('home')
-                ->with('error', 'Nie znaleziono zamówienia.');
+                ->with('error', 'Nie znaleziono zamówienia. Sprawdź e-mail z potwierdzeniem płatności lub skontaktuj się z obsługą.');
         }
 
         if ($order->isPaid()) {

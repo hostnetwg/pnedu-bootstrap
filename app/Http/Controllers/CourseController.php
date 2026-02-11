@@ -579,6 +579,11 @@ class CourseController extends Controller
                 ->withInput();
         }
 
+        // Zapisz ident zamówienia w sesji jako fallback dla return URL
+        // PayU może nie przekazywać parametrów w return URL
+        session(['payu_order_ident' => $order->ident]);
+        session(['payu_order_email' => $order->email]);
+
         return redirect()->away($result['redirect_uri']);
     }
 
