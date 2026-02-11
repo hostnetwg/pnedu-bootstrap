@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\OnlinePaymentOrder;
 use App\Models\WebhookLog;
+use App\Models\Participant;
 use App\Services\PayUService;
 use App\Services\PayNowService;
 use Illuminate\Http\Request;
@@ -64,7 +65,7 @@ class PaymentController extends Controller
             
             if ($payuStatus === 'COMPLETED') {
                 Log::info('PayU: płatność potwierdzona', ['ident' => $extOrderId]);
-                // TODO: rejestracja uczestnika, wysłanie maila, faktura
+                $this->registerParticipant($order);
             }
         } else {
             $webhookLog->update(['error_message' => 'Nieznany status: ' . $payuStatus]);
@@ -192,7 +193,7 @@ class PaymentController extends Controller
             
             if ($paynowStatus === 'CONFIRMED') {
                 Log::info('PayNow: płatność potwierdzona', ['ident' => $externalId, 'paymentId' => $paymentId]);
-                // TODO: rejestracja uczestnika, wysłanie maila, faktura
+                $this->registerParticipant($order);
             } elseif (in_array($paynowStatus, ['CANCELLED', 'REJECTED', 'EXPIRED', 'ERROR'])) {
                 Log::info('PayNow: płatność anulowana', ['ident' => $externalId, 'status' => $paynowStatus]);
             }
@@ -236,5 +237,78 @@ class PaymentController extends Controller
 
         return redirect()->route('payment.pending', $order->ident)
             ->with('info', 'Płatność jest w trakcie realizacji. Otrzymasz potwierdzenie na adres e-mail.');
+    }
+
+    /**
+     * Zarejestruj uczestnika w tabeli participants po potwierdzeniu płatności.
+     * 
+     * @param OnlinePaymentOrder $order
+     * @return Participant|null
+     */
+    protected function registerParticipant(OnlinePaymentOrder $order): ?Participant
+    {
+        try {
+            // Załaduj kurs z relacją
+            $order->load('course');
+            
+            if (!$order->course) {
+                Log::error('PaymentController: brak kursu dla zamówienia', [
+                    'order_id' => $order->id,
+                    'course_id' => $order->course_id,
+                ]);
+                return null;
+            }
+
+            // Sprawdź czy uczestnik już istnieje (po email i course_id)
+            $existingParticipant = Participant::where('course_id', $order->course_id)
+                ->where('email', $order->email)
+                ->first();
+
+            if ($existingParticipant) {
+                Log::info('PaymentController: uczestnik już istnieje', [
+                    'participant_id' => $existingParticipant->id,
+                    'course_id' => $order->course_id,
+                    'email' => $order->email,
+                ]);
+                return $existingParticipant;
+            }
+
+            // Oblicz kolejność (order) - następny numer po ostatnim uczestniku tego kursu
+            $maxOrder = Participant::where('course_id', $order->course_id)
+                ->max('order') ?? 0;
+            $nextOrder = $maxOrder + 1;
+
+            // Utwórz uczestnika
+            $participant = Participant::create([
+                'course_id' => $order->course_id,
+                'order' => $nextOrder,
+                'first_name' => $order->first_name,
+                'last_name' => $order->last_name,
+                'email' => $order->email,
+                'birth_date' => null, // Dane urodzenia nie są dostępne w zamówieniu
+                'birth_place' => null,
+                'access_expires_at' => null, // Można później dodać logikę ustawiania terminu dostępu
+            ]);
+
+            Log::info('PaymentController: uczestnik zarejestrowany', [
+                'participant_id' => $participant->id,
+                'course_id' => $order->course_id,
+                'course_title' => $order->course->title,
+                'email' => $order->email,
+                'order_ident' => $order->ident,
+            ]);
+
+            return $participant;
+
+        } catch (\Exception $e) {
+            Log::error('PaymentController: błąd podczas rejestracji uczestnika', [
+                'order_id' => $order->id,
+                'course_id' => $order->course_id,
+                'email' => $order->email,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            return null;
+        }
     }
 }
