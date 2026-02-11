@@ -8,8 +8,10 @@ use App\Models\Participant;
 use App\Models\CoursePriceVariant;
 use App\Services\PayUService;
 use App\Services\PayNowService;
+use App\Mail\PaymentNotificationMail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Carbon\Carbon;
 
 class PaymentController extends Controller
@@ -66,8 +68,27 @@ class PaymentController extends Controller
             ]);
             
             if ($payuStatus === 'COMPLETED') {
-                Log::info('PayU: płatność potwierdzona', ['ident' => $extOrderId]);
+                Log::info('PayU: płatność potwierdzona - rozpoczynam przetwarzanie', [
+                    'ident' => $extOrderId,
+                    'order_id' => $order->id,
+                    'mapped_status' => $mappedStatus,
+                    'current_status' => $order->status,
+                ]);
+                // Odśwież model, aby mieć aktualny status
+                $order->refresh();
+                Log::info('PayU: status zamówienia po refresh', [
+                    'order_id' => $order->id,
+                    'status' => $order->status,
+                    'is_paid' => $order->isPaid(),
+                ]);
                 $this->registerParticipant($order);
+                $this->sendPaymentNotificationEmail($order);
+            } else {
+                Log::info('PayU: status nie jest COMPLETED', [
+                    'ident' => $extOrderId,
+                    'payu_status' => $payuStatus,
+                    'mapped_status' => $mappedStatus,
+                ]);
             }
         } else {
             $webhookLog->update(['error_message' => 'Nieznany status: ' . $payuStatus]);
@@ -342,8 +363,22 @@ class PaymentController extends Controller
             $webhookLog->update(['status_mapped' => $mappedStatus]);
             
             if ($paynowStatus === 'CONFIRMED') {
-                Log::info('PayNow: płatność potwierdzona', ['ident' => $externalId, 'paymentId' => $paymentId]);
+                Log::info('PayNow: płatność potwierdzona - rozpoczynam przetwarzanie', [
+                    'ident' => $externalId,
+                    'paymentId' => $paymentId,
+                    'order_id' => $order->id,
+                    'mapped_status' => $mappedStatus,
+                    'current_status' => $order->status,
+                ]);
+                // Odśwież model, aby mieć aktualny status
+                $order->refresh();
+                Log::info('PayNow: status zamówienia po refresh', [
+                    'order_id' => $order->id,
+                    'status' => $order->status,
+                    'is_paid' => $order->isPaid(),
+                ]);
                 $this->registerParticipant($order);
+                $this->sendPaymentNotificationEmail($order);
             } elseif (in_array($paynowStatus, ['CANCELLED', 'REJECTED', 'EXPIRED', 'ERROR'])) {
                 Log::info('PayNow: płatność anulowana', ['ident' => $externalId, 'status' => $paynowStatus]);
             }
@@ -594,6 +629,62 @@ class PaymentController extends Controller
                 'trace' => $e->getTraceAsString(),
             ]);
             return null;
+        }
+    }
+
+    /**
+     * Wyślij e-mail do super administratora o nowej płatności online.
+     * 
+     * @param OnlinePaymentOrder $order
+     * @return void
+     */
+    protected function sendPaymentNotificationEmail(OnlinePaymentOrder $order): void
+    {
+        try {
+            // Załaduj kurs z relacją
+            $order->load('course');
+            
+            // Sprawdź czy zamówienie jest opłacone
+            if (!$order->isPaid()) {
+                Log::warning('PaymentController: próba wysłania e-maila dla nieopłaconego zamówienia', [
+                    'order_id' => $order->id,
+                    'order_ident' => $order->ident,
+                    'status' => $order->status,
+                ]);
+                return;
+            }
+            
+            // Adres e-mail super administratora
+            $adminEmail = 'waldemar.grabowski@hostnet.pl';
+            
+            Log::info('PaymentController: rozpoczynam wysyłkę e-maila o płatności', [
+                'order_id' => $order->id,
+                'order_ident' => $order->ident,
+                'admin_email' => $adminEmail,
+                'mail_driver' => config('mail.default'),
+                'mail_host' => config('mail.mailers.smtp.host'),
+                'mail_port' => config('mail.mailers.smtp.port'),
+                'note' => config('mail.mailers.smtp.host') === 'mailpit' ? 'E-mail trafi do Mailpit (http://localhost:8025)' : 'E-mail będzie wysłany przez SMTP',
+            ]);
+            
+            // Wyślij e-mail
+            Mail::to($adminEmail)->send(new PaymentNotificationMail($order));
+            
+            Log::info('PaymentController: e-mail o płatności wysłany do administratora', [
+                'order_id' => $order->id,
+                'order_ident' => $order->ident,
+                'admin_email' => $adminEmail,
+                'mail_driver' => config('mail.default'),
+                'mail_host' => config('mail.mailers.smtp.host'),
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('PaymentController: błąd podczas wysyłki e-maila o płatności', [
+                'order_id' => $order->id,
+                'order_ident' => $order->ident,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
         }
     }
 }
