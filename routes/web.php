@@ -69,6 +69,10 @@ Route::get('/dashboard/szkolenia', [App\Http\Controllers\DashboardController::cl
     ->middleware(['auth', 'verified'])
     ->name('dashboard.szkolenia');
 
+Route::get('/dashboard/szkolenia/{participant}/wideo', [App\Http\Controllers\DashboardController::class, 'szkoleniaWideo'])
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard.szkolenia.wideo');
+
 Route::get('/dashboard/zaswiadczenia', function () {
     return view('dashboard.zaswiadczenia');
 })->middleware(['auth', 'verified'])->name('dashboard.zaswiadczenia');

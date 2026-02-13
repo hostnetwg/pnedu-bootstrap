@@ -14,8 +14,8 @@ class AboutController extends Controller
      */
     public function team()
     {
-        // Pobierz dane dyrektora (instruktor ID = 1)
-        $director = Instructor::find(1);
+        // Pobierz dyrektora (instruktor ID = 1) tylko jeśli ma statut aktywny
+        $director = Instructor::where('id', 1)->where('is_active', true)->first();
         
         // Pobierz wszystkich aktywnych trenerów (oprócz dyrektora) posortowanych według ID
         $instructors = Instructor::where('is_active', true)

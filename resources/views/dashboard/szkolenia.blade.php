@@ -45,7 +45,38 @@
                                 @if($participant->course)
                                     <div class="training-item">
                                         <div class="training-content">
-                                            <h3 class="training-title">{{ $participant->course->title }}</h3>
+                                            <h3 class="training-title">
+                                                @php
+                                                    $firstVideo = $participant->course->videos->first();
+                                                    $videoAccessActive = $firstVideo && $participant->hasActiveAccess();
+                                                @endphp
+                                                @if($firstVideo && $videoAccessActive)
+                                                    <a href="{{ route('dashboard.szkolenia.wideo', $participant) }}" class="training-title-link" title="Otwórz nagranie szkolenia">
+                                                        {{ $participant->course->title }}
+                                                        <i class="bi bi-camera-video ms-1" style="font-size: 0.9em; opacity: 0.7;"></i>
+                                                    </a>
+                                                @elseif($firstVideo && !$videoAccessActive)
+                                                    <span class="training-title-link training-title-link--disabled" title="Dostęp do nagrania wygasł">
+                                                        {{ $participant->course->title }}
+                                                        <i class="bi bi-camera-video-off ms-1 text-muted" style="font-size: 0.9em;"></i>
+                                                    </span>
+                                                @else
+                                                    {{ $participant->course->title }}
+                                                @endif
+                                            </h3>
+                                            @if($firstVideo)
+                                                <p class="training-access-term mb-2">
+                                                    @if($participant->access_expires_at)
+                                                        @if($participant->hasActiveAccess())
+                                                            <span class="text-success"><i class="bi bi-clock me-1"></i>Data wygaśnięcia dostępu do nagrania: {{ $participant->access_expires_at->format('d.m.Y H:i') }}</span>
+                                                        @else
+                                                            <span class="text-danger"><i class="bi bi-clock-history me-1"></i>Data wygaśnięcia dostępu do nagrania: {{ $participant->access_expires_at->format('d.m.Y H:i') }} (wygasło)</span>
+                                                        @endif
+                                                    @else
+                                                        <span class="text-muted"><i class="bi bi-infinity me-1"></i>Bezterminowy dostęp do nagrania</span>
+                                                    @endif
+                                                </p>
+                                            @endif
                                             <div class="training-meta">
                                                 <span class="training-date">
                                                     Data: 
@@ -171,6 +202,25 @@
     font-weight: 600;
     margin-bottom: 0.75rem;
     color: #212529;
+}
+.training-title-link {
+    color: inherit;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+.training-title-link:hover {
+    color: #0d6efd;
+}
+.training-title-link--disabled {
+    cursor: not-allowed;
+    color: #6c757d !important;
+}
+.training-title-link--disabled:hover {
+    color: #6c757d !important;
+}
+.training-access-term {
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
 }
 .training-meta {
     font-size: 0.95rem;

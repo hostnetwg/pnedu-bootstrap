@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use App\Models\Instructor;
 use App\Models\CoursePriceVariant;
 use App\Models\CourseOnlineDetail;
+use App\Models\CourseVideo;
 use App\Models\Certificate;
 
 class Course extends Model
@@ -158,6 +159,16 @@ class Course extends Model
     public function certificates()
     {
         return $this->hasMany(Certificate::class, 'course_id');
+    }
+
+    /**
+     * Course has many videos (nagrania wideo).
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function videos()
+    {
+        return $this->hasMany(CourseVideo::class)->orderBy('order');
     }
 
     /**
