@@ -94,6 +94,7 @@ Route::post('/kontakt', [ContactController::class, 'send'])->name('contact.send'
 
 // Szczegóły szkolenia
 Route::get('/courses/{id}', [App\Http\Controllers\CourseController::class, 'show'])->name('courses.show');
+Route::post('/courses/{id}/register', [App\Http\Controllers\CourseController::class, 'register'])->name('courses.register');
 // Płatność online
 Route::get('/courses/{id}/pay-online', [App\Http\Controllers\CourseController::class, 'payOnline'])->name('payment.online');
 Route::post('/courses/{id}/pay-online', [App\Http\Controllers\CourseController::class, 'storePayOnline'])->name('payment.online.store');

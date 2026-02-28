@@ -347,9 +347,11 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Funkcja walidacji formularza
+    var courseRegisterUrl = @json(route('courses.register', $course->id));
+    var csrfToken = @json(csrf_token());
+
     function validateForm(formElement) {
-        const rodoCheckbox = formElement.querySelector('input[name="rodo_consent"]');
+        var rodoCheckbox = formElement.querySelector('input[name="rodo_consent"]');
         if (!rodoCheckbox || !rodoCheckbox.checked) {
             alert('Musisz wyrazić zgodę na przetwarzanie danych osobowych, aby zapisać się na szkolenie.');
             return false;
@@ -357,44 +359,84 @@ document.addEventListener('DOMContentLoaded', function() {
         return true;
     }
 
-    // Obsługa formularza zapisu (desktop)
-    const form = document.getElementById('courseRegistrationForm');
-    if (form) {
+    function getSubmitButton(form) {
+        return form.querySelector('button[type="submit"]');
+    }
+
+    function setSubmitting(form, submitting) {
+        var btn = getSubmitButton(form);
+        if (btn) {
+            btn.disabled = submitting;
+            btn.textContent = submitting ? 'Zapisywanie…' : 'Zapisz Mnie!';
+        }
+    }
+
+    function showMessage(form, success, message) {
+        var box = form.querySelector('.registration-message');
+        if (!box) {
+            box = document.createElement('div');
+            box.className = 'registration-message mt-2';
+            form.appendChild(box);
+        }
+        box.className = 'registration-message mt-2 alert alert-' + (success ? 'success' : 'danger');
+        box.textContent = message;
+        box.style.display = 'block';
+    }
+
+    function submitRegistration(form, email, newsletterConsent) {
+        setSubmitting(form, true);
+        var prevMsg = form.querySelector('.registration-message');
+        if (prevMsg) prevMsg.remove();
+
+        fetch(courseRegisterUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+            },
+            body: (function() {
+                var payload = { email: email, rodo_consent: true };
+                if (newsletterConsent) payload.newsletter_consent = 1;
+                return JSON.stringify(payload);
+            })()
+        })
+        .then(function(r) { return r.json().then(function(data) { return { ok: r.ok, status: r.status, data: data }; }); })
+        .then(function(result) {
+            setSubmitting(form, false);
+            if (result.ok && result.data.success) {
+                showMessage(form, true, result.data.message);
+                form.reset();
+            } else {
+                showMessage(form, false, result.data.message || 'Wystąpił błąd. Spróbuj później.');
+            }
+        })
+        .catch(function() {
+            setSubmitting(form, false);
+            showMessage(form, false, 'Wystąpił błąd połączenia. Sprawdź internet i spróbuj ponownie.');
+        });
+    }
+
+    function bindForm(form, emailInputId, newsletterCheckboxId) {
+        if (!form) return;
         form.addEventListener('submit', function(e) {
             e.preventDefault();
             if (!validateForm(form)) return;
-            
-            const email = document.getElementById('registrationEmail').value;
-            const newsletterConsent = document.getElementById('newsletter_consent')?.checked || false;
-            alert('Formularz zapisu jest w przygotowaniu.\n\nTwój adres e-mail: ' + email + '\nZgoda na newsletter: ' + (newsletterConsent ? 'Tak' : 'Nie') + '\n\nFunkcjonalność zostanie wkrótce uruchomiona.');
+            var emailEl = document.getElementById(emailInputId);
+            var newsletterEl = document.getElementById(newsletterCheckboxId);
+            var email = emailEl ? emailEl.value.trim() : '';
+            var newsletterConsent = newsletterEl ? newsletterEl.checked : false;
+            if (!email) {
+                alert('Podaj adres e-mail.');
+                return;
+            }
+            submitRegistration(form, email, newsletterConsent);
         });
     }
 
-    // Obsługa formularza zapisu (mobile top)
-    const formMobile = document.getElementById('courseRegistrationFormMobile');
-    if (formMobile) {
-        formMobile.addEventListener('submit', function(e) {
-            e.preventDefault();
-            if (!validateForm(formMobile)) return;
-            
-            const email = document.getElementById('registrationEmailMobile').value;
-            const newsletterConsent = document.getElementById('newsletter_consent_mobile')?.checked || false;
-            alert('Formularz zapisu jest w przygotowaniu.\n\nTwój adres e-mail: ' + email + '\nZgoda na newsletter: ' + (newsletterConsent ? 'Tak' : 'Nie') + '\n\nFunkcjonalność zostanie wkrótce uruchomiona.');
-        });
-    }
-
-    // Obsługa formularza zapisu (mobile bottom)
-    const formMobileBottom = document.getElementById('courseRegistrationFormMobileBottom');
-    if (formMobileBottom) {
-        formMobileBottom.addEventListener('submit', function(e) {
-            e.preventDefault();
-            if (!validateForm(formMobileBottom)) return;
-            
-            const email = document.getElementById('registrationEmailMobileBottom').value;
-            const newsletterConsent = document.getElementById('newsletter_consent_mobile_bottom')?.checked || false;
-            alert('Formularz zapisu jest w przygotowaniu.\n\nTwój adres e-mail: ' + email + '\nZgoda na newsletter: ' + (newsletterConsent ? 'Tak' : 'Nie') + '\n\nFunkcjonalność zostanie wkrótce uruchomiona.');
-        });
-    }
+    bindForm(document.getElementById('courseRegistrationForm'), 'registrationEmail', 'newsletter_consent');
+    bindForm(document.getElementById('courseRegistrationFormMobile'), 'registrationEmailMobile', 'newsletter_consent_mobile');
+    bindForm(document.getElementById('courseRegistrationFormMobileBottom'), 'registrationEmailMobileBottom', 'newsletter_consent_mobile_bottom');
 });
 </script>
 @endpush
@@ -516,6 +558,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 @endif
                         <strong>Dodatkowo:</strong> {{ $course->additional_info ?? 'Materiały do pobrania, zaświadczenie' }}, sesja pytań i odpowiedzi<br>
                         <strong>Dostęp do nagrania:</strong> {{ $course->recording_access ?? '2 miesiące' }}
+                                @if(!$course->is_paid)
+                                <br><span class="fw-semibold" style="color: #198754; font-size: 1rem;">Udział w szkoleniu bezpłatny.</span>
+                                @endif
                             </div>
                         </div>
                     </div>

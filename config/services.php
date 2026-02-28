@@ -58,4 +58,10 @@ return [
         'base_url' => filter_var(env('PAYNOW_SANDBOX', true), FILTER_VALIDATE_BOOLEAN) ? 'https://api.sandbox.paynow.pl' : 'https://api.paynow.pl',
     ],
 
+    // Sendy – te same zmienne i wartości domyślne co w pneadm-bootstrap (config/sendy.php)
+    'sendy' => [
+        'url' => env('SENDY_URL', env('SENDY_BASE_URL', 'https://sendyhost.net')),
+        'api_key' => env('SENDY_API_KEY', 'QWVN3gYyibFsPWh39Til'),
+    ],
+
 ];
