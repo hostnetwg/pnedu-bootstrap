@@ -557,10 +557,12 @@ document.addEventListener('DOMContentLoaded', function() {
                             <strong>Platforma:</strong> Zoom<br>
                 @endif
                         <strong>Dodatkowo:</strong> {{ $course->additional_info ?? 'Materiały do pobrania, zaświadczenie' }}, sesja pytań i odpowiedzi<br>
-                        <strong>Dostęp do nagrania:</strong> {{ $course->recording_access ?? '2 miesiące' }}
-                                @if(!$course->is_paid)
-                                <br><span class="fw-semibold" style="color: #198754; font-size: 1rem;">Udział w szkoleniu bezpłatny.</span>
-                                @endif
+                        @if($course->is_paid)
+                        <strong>Dostęp do nagrania:</strong> {{ $course->recording_access ?? '2 miesiące' }}<br>
+                        @endif
+                        @if(!$course->is_paid)
+                        <span class="fw-semibold" style="color: #198754; font-size: 1rem;">Udział w szkoleniu bezpłatny.</span>
+                        @endif
                             </div>
                         </div>
                     </div>
