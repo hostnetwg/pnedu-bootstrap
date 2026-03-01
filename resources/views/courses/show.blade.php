@@ -347,96 +347,17 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    var courseRegisterUrl = @json(route('courses.register', $course->id));
-    var csrfToken = @json(csrf_token());
-
-    function validateForm(formElement) {
-        var rodoCheckbox = formElement.querySelector('input[name="rodo_consent"]');
-        if (!rodoCheckbox || !rodoCheckbox.checked) {
-            alert('Musisz wyrazić zgodę na przetwarzanie danych osobowych, aby zapisać się na szkolenie.');
-            return false;
-        }
-        return true;
-    }
-
-    function getSubmitButton(form) {
-        return form.querySelector('button[type="submit"]');
-    }
-
-    function setSubmitting(form, submitting) {
-        var btn = getSubmitButton(form);
-        if (btn) {
-            btn.disabled = submitting;
-            btn.textContent = submitting ? 'Zapisywanie…' : 'Zapisz Mnie!';
-        }
-    }
-
-    function showMessage(form, success, message) {
-        var box = form.querySelector('.registration-message');
-        if (!box) {
-            box = document.createElement('div');
-            box.className = 'registration-message mt-2';
-            form.appendChild(box);
-        }
-        box.className = 'registration-message mt-2 alert alert-' + (success ? 'success' : 'danger');
-        box.textContent = message;
-        box.style.display = 'block';
-    }
-
-    function submitRegistration(form, email, newsletterConsent) {
-        setSubmitting(form, true);
-        var prevMsg = form.querySelector('.registration-message');
-        if (prevMsg) prevMsg.remove();
-
-        fetch(courseRegisterUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'X-CSRF-TOKEN': csrfToken,
-            },
-            body: (function() {
-                var payload = { email: email, rodo_consent: true };
-                if (newsletterConsent) payload.newsletter_consent = 1;
-                return JSON.stringify(payload);
-            })()
-        })
-        .then(function(r) { return r.json().then(function(data) { return { ok: r.ok, status: r.status, data: data }; }); })
-        .then(function(result) {
-            setSubmitting(form, false);
-            if (result.ok && result.data.success) {
-                showMessage(form, true, result.data.message);
-                form.reset();
-            } else {
-                showMessage(form, false, result.data.message || 'Wystąpił błąd. Spróbuj później.');
-            }
-        })
-        .catch(function() {
-            setSubmitting(form, false);
-            showMessage(form, false, 'Wystąpił błąd połączenia. Sprawdź internet i spróbuj ponownie.');
-        });
-    }
-
-    function bindForm(form, emailInputId, newsletterCheckboxId) {
+    // Walidacja zgody RODO przed wysłaniem formularza (formularze wysyłane klasycznie POST → przekierowanie na stronę główną)
+    [document.getElementById('courseRegistrationForm'), document.getElementById('courseRegistrationFormMobile'), document.getElementById('courseRegistrationFormMobileBottom')].forEach(function(form) {
         if (!form) return;
         form.addEventListener('submit', function(e) {
-            e.preventDefault();
-            if (!validateForm(form)) return;
-            var emailEl = document.getElementById(emailInputId);
-            var newsletterEl = document.getElementById(newsletterCheckboxId);
-            var email = emailEl ? emailEl.value.trim() : '';
-            var newsletterConsent = newsletterEl ? newsletterEl.checked : false;
-            if (!email) {
-                alert('Podaj adres e-mail.');
-                return;
+            var rodo = form.querySelector('input[name="rodo_consent"]');
+            if (!rodo || !rodo.checked) {
+                e.preventDefault();
+                alert('Musisz wyrazić zgodę na przetwarzanie danych osobowych, aby zapisać się na szkolenie.');
             }
-            submitRegistration(form, email, newsletterConsent);
         });
-    }
-
-    bindForm(document.getElementById('courseRegistrationForm'), 'registrationEmail', 'newsletter_consent');
-    bindForm(document.getElementById('courseRegistrationFormMobile'), 'registrationEmailMobile', 'newsletter_consent_mobile');
-    bindForm(document.getElementById('courseRegistrationFormMobileBottom'), 'registrationEmailMobileBottom', 'newsletter_consent_mobile_bottom');
+    });
 });
 </script>
 @endpush
@@ -449,7 +370,8 @@ document.addEventListener('DOMContentLoaded', function() {
             <!-- Formularz zapisu dla bezpłatnych szkoleń -->
             <div class="course-pay-box mb-4">
                 <h3>Zapisz się na <br>bezpłatne<br>szkolenie online</h3>
-                    <form id="courseRegistrationFormMobile" class="text-center">
+                    <form id="courseRegistrationFormMobile" class="text-center" method="POST" action="{{ route('courses.register', $course->id) }}">
+                        @csrf
                         <div class="mb-3">
                             <input type="email" 
                                    class="form-control text-center course-email-input" 
@@ -625,7 +547,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     <!-- Formularz zapisu dla bezpłatnych szkoleń -->
                     <div class="course-pay-box mb-4">
                         <h3>Zapisz się na <br>bezpłatne<br>szkolenie online</h3>
-                        <form id="courseRegistrationFormMobileBottom" class="text-center">
+                        <form id="courseRegistrationFormMobileBottom" class="text-center" method="POST" action="{{ route('courses.register', $course->id) }}">
+                            @csrf
                             <div class="mb-3">
                                 <input type="email" 
                                        class="form-control text-center course-email-input" 
@@ -703,7 +626,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 <!-- Formularz zapisu dla bezpłatnych szkoleń -->
                 <div class="course-pay-box">
                     <h3>Zapisz się na <br>bezpłatne<br>szkolenie online</h3>
-                    <form id="courseRegistrationForm" class="text-center">
+                    <form id="courseRegistrationForm" class="text-center" method="POST" action="{{ route('courses.register', $course->id) }}">
+                        @csrf
                         <div class="mb-3">
                             <input type="email" 
                                    class="form-control text-center course-email-input" 

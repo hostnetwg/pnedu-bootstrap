@@ -7,6 +7,15 @@
 
 @section('main-padding', '')
 
+@if(session('course_registration_message'))
+<div class="container mt-3 mb-3">
+    <div class="alert alert-{{ session('course_registration_success') ? 'success' : 'danger' }} alert-dismissible fade show mb-0" role="alert">
+        {{ session('course_registration_message') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Zamknij"></button>
+    </div>
+</div>
+@endif
+
 <!-- ===== HERO BANNER ======================================= -->
 <div class="bg-primary bg-gradient text-white py-2 text-center">
     <div class="container">

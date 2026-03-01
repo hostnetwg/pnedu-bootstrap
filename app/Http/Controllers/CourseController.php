@@ -408,22 +408,28 @@ class CourseController extends Controller
 
     /**
      * Zapis na bezpłatne szkolenie – dodanie e-maila do list Sendy (TIK, opcjonalnie NAUCZYCIELE).
-     * Wymagane: prawidłowy e-mail oraz zgoda RODO (checkbox 1). Zgoda na newsletter (checkbox 2) = dopisanie do listy NAUCZYCIELE.
+     * Po przesłaniu przekierowanie na stronę główną z komunikatem w sesji.
      */
     public function register(Request $request, $id)
     {
-        $validated = $request->validate([
-            'email' => ['required', 'email:rfc,dns'],
-            'rodo_consent' => ['required', 'accepted'],
-            'newsletter_consent' => ['sometimes', 'boolean'],
-        ], [
-            'email.required' => 'Podaj adres e-mail.',
-            'email.email' => 'Podaj prawidłowy adres e-mail.',
-            'rodo_consent.accepted' => 'Musisz wyrazić zgodę na przetwarzanie danych osobowych.',
-        ]);
+        try {
+            $validated = $request->validate([
+                'email' => ['required', 'email:rfc,dns'],
+                'rodo_consent' => ['required', 'accepted'],
+                'newsletter_consent' => ['sometimes', 'boolean'],
+            ], [
+                'email.required' => 'Podaj adres e-mail.',
+                'email.email' => 'Podaj prawidłowy adres e-mail.',
+                'rodo_consent.accepted' => 'Musisz wyrazić zgodę na przetwarzanie danych osobowych.',
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $message = collect($e->errors())->flatten()->first() ?? 'Wystąpił błąd w formularzu.';
+            return redirect()->route('home')
+                ->with('course_registration_success', false)
+                ->with('course_registration_message', $message);
+        }
 
         $email = $validated['email'];
-        // Zgoda na newsletter tylko gdy drugi checkbox zaznaczony – odczyt wprost z requestu (0/1 z JSON)
         $newsletterConsent = filter_var($request->input('newsletter_consent'), FILTER_VALIDATE_BOOLEAN);
 
         $sendyUrl = config('services.sendy.url');
@@ -431,26 +437,23 @@ class CourseController extends Controller
 
         if (empty($sendyUrl) || empty($sendyApiKey)) {
             Log::warning('Sendy not configured: missing SENDY_URL or SENDY_API_KEY');
-            return response()->json([
-                'success' => false,
-                'message' => 'Zapis na szkolenie jest tymczasowo niedostępny. Spróbuj później.',
-            ], 503);
+            return redirect()->route('home')
+                ->with('course_registration_success', false)
+                ->with('course_registration_message', 'Zapis na szkolenie jest tymczasowo niedostępny. Spróbuj później.');
         }
 
         $sendy = new SendyService($sendyUrl, $sendyApiKey);
         $result = $sendy->subscribeCourseRegistration($email, $newsletterConsent);
 
         if (!$result['tik']) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Nie udało się zapisać na listę. Sprawdź adres e-mail lub spróbuj później.',
-            ], 422);
+            return redirect()->route('home')
+                ->with('course_registration_success', false)
+                ->with('course_registration_message', 'Nie udało się zapisać na listę. Sprawdź adres e-mail lub spróbuj później.');
         }
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Dziękujemy! Zostałeś zapisany na szkolenie. Na podany adres e-mail wyślemy potwierdzenie i link do spotkania.',
-        ]);
+        return redirect()->route('home')
+            ->with('course_registration_success', true)
+            ->with('course_registration_message', 'Dziękujemy! Zostałeś zapisany na szkolenie. Na podany adres e-mail wyślemy potwierdzenie i link do spotkania.');
     }
 
     /**
