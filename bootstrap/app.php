@@ -15,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'payment/payu/notify',
             'payment/paynow/notify',
             'certificate-registration/*', // formularz publiczny po linku z tokenem – token w URL jest wystarczającą ochroną
+            'certificate/*',             // podgląd/pobieranie zaświadczeń i formularz daty/miejsca urodzenia – token w URL jest wystarczającą ochroną (unika 419 przy wygasłej sesji)
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

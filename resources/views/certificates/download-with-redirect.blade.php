@@ -30,12 +30,31 @@
     var downloadUrl = {!! json_encode($downloadUrl) !!};
     var homeUrl = {!! json_encode($homeUrl) !!};
     var frame = document.getElementById('certificate-download-frame');
-    if (frame && downloadUrl) {
-        frame.src = downloadUrl;
-    }
-    setTimeout(function() {
+    var redirected = false;
+    var redirectDelayMs = 1500;
+    var maxWaitMs = 90000;
+
+    function goHome() {
+        if (redirected) return;
+        redirected = true;
         window.location.href = homeUrl || '/';
-    }, 2500);
+    }
+
+    if (frame && downloadUrl) {
+        frame.addEventListener('load', function() {
+            setTimeout(goHome, redirectDelayMs);
+        });
+        frame.addEventListener('error', function() {
+            setTimeout(goHome, redirectDelayMs);
+        });
+        frame.src = downloadUrl;
+    } else {
+        setTimeout(goHome, redirectDelayMs);
+    }
+
+    setTimeout(function() {
+        if (!redirected) goHome();
+    }, maxWaitMs);
 })();
 </script>
 @endsection
