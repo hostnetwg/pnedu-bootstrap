@@ -395,6 +395,16 @@
                 </fieldset>
                 <fieldset class="order-form-section form-section-full-width">
                     <legend>DANE UCZESTNIKA SZKOLENIA</legend>
+                    <div class="mb-3">
+                        <label for="participant_email" class="form-label">E-mail uczestnika <span class="text-danger">*</span></label>
+                        <input type="email" class="form-control @error('participant_email') is-invalid @enderror" id="participant_email" name="participant_email" value="{{ $testData['participant_email'] ?? old('participant_email', auth()->check() ? auth()->user()->email : '') }}" required placeholder="na ten adres zostaną przesłane dane dostępowe do szkolenia" autocomplete="email">
+                        @error('participant_email')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                        <div class="form-info-text mt-2" id="participant-email-info-text">
+                            Zalecane jest podanie indywidualnego adresu e-mail uczestnika, a nie ogólnego adresu placówki – adres e-mail jest powiązany z danym uczestnikiem szkolenia; w przeciwnym razie mogą wystąpić błędy przy generowaniu zaświadczenia. Na podany adres zostanie utworzone konto na platformie z dostępem do zasobów szkolenia; jeśli konto już istnieje, zasoby zostaną do niego dodane.
+                        </div>
+                    </div>
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="participant_first_name" class="form-label">Imię <span class="text-danger">*</span></label>
@@ -411,16 +421,6 @@
                             @enderror
                         </div>
                     </div>
-                    <div class="mb-3">
-                        <label for="participant_email" class="form-label">E-mail uczestnika <span class="text-danger">*</span></label>
-                        <input type="email" class="form-control @error('participant_email') is-invalid @enderror" id="participant_email" name="participant_email" value="{{ $testData['participant_email'] ?? old('participant_email', auth()->check() ? auth()->user()->email : '') }}" required placeholder="na ten adres zostaną przesłane dane dostępowe do szkolenia">
-                        @error('participant_email')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                        <div class="form-info-text">
-                            Na podany adres e-mail zostanie automatycznie utworzone konto na platformie z dostępem do zasobów szkolenia oraz imiennego zaświadczenia. Jeśli konto już istnieje, zasoby zostaną do niego dodane. Prosimy o podanie indywidualnego adresu e-mail uczestnika (nie ogólnego adresu szkolnego) - jest to niezbędne do prawidłowego generowania zaświadczeń.
-                        </div>
-                    </div>
                 </fieldset>
                 <div class="order-form-section form-section-full-width">
                     <div class="d-flex flex-column flex-md-row gap-3 mt-4">
@@ -433,4 +433,66 @@
         </div>
     </div>
 </div>
+
+<script>
+(function() {
+    var lookupPath = {!! json_encode(parse_url(route('courses.participant-lookup'), PHP_URL_PATH)) !!};
+    if (!lookupPath) lookupPath = '/courses/participant-lookup-by-email';
+    var emailInput = document.getElementById('participant_email');
+    var infoEl = document.getElementById('participant-email-info-text');
+    if (!emailInput || !infoEl) return;
+
+    function runLookup() {
+        var email = (emailInput.value || '').trim();
+        if (!email || email.indexOf('@') === -1) {
+            infoEl.classList.remove('text-danger');
+            return;
+        }
+        fetch(lookupPath + '?email=' + encodeURIComponent(email), {
+            method: 'GET',
+            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+            credentials: 'same-origin'
+        })
+            .then(function(r) {
+                return r.text().then(function(text) {
+                    if (!r.ok) return null;
+                    try { return JSON.parse(text); } catch (e) { return null; }
+                });
+            })
+            .then(function(data) {
+                if (data && data.found === true) {
+                    infoEl.classList.add('text-danger');
+                } else {
+                    infoEl.classList.remove('text-danger');
+                }
+            })
+            .catch(function() {
+                infoEl.classList.remove('text-danger');
+            });
+    }
+
+    var debounceTimer;
+    function scheduleLookup() {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(runLookup, 500);
+    }
+
+    emailInput.addEventListener('blur', scheduleLookup);
+    emailInput.addEventListener('input', scheduleLookup);
+    emailInput.addEventListener('keyup', scheduleLookup);
+    emailInput.addEventListener('paste', function() { setTimeout(scheduleLookup, 100); });
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(function() {
+                if ((emailInput.value || '').trim().indexOf('@') !== -1) runLookup();
+            }, 300);
+        });
+    } else {
+        setTimeout(function() {
+            if ((emailInput.value || '').trim().indexOf('@') !== -1) runLookup();
+        }, 300);
+    }
+})();
+</script>
 @endsection 

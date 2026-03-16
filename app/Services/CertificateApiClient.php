@@ -155,6 +155,64 @@ class CertificateApiClient
     }
 
     /**
+     * Tworzy rekord certyfikatu jeśli nie istnieje (ensure).
+     *
+     * @param int $participantId
+     * @param string|null $connection
+     * @return array { success, certificate_number, already_existed? }
+     * @throws Exception
+     */
+    public function ensureCertificate(int $participantId, ?string $connection = null): array
+    {
+        $url = rtrim($this->apiUrl, '/') . '/api/certificates/ensure';
+        $payload = ['participant_id' => $participantId];
+        if ($connection) {
+            $payload['connection'] = $connection;
+        }
+
+        $response = Http::timeout($this->timeout)
+            ->withToken($this->apiToken)
+            ->post($url, $payload);
+
+        if ($response->successful()) {
+            return $response->json();
+        }
+
+        $msg = $response->json()['message'] ?? 'Unknown error';
+        throw new Exception("Certificate ensure API error: {$msg}");
+    }
+
+    /**
+     * Aktualizuje datę i miejsce urodzenia uczestnika/ów (po tokenie i course_id).
+     *
+     * @param string $token
+     * @param int $courseId
+     * @param string $birthDate Y-m-d
+     * @param string $birthPlace
+     * @return array { success, updated_count }
+     * @throws Exception
+     */
+    public function updateBirthData(string $token, int $courseId, string $birthDate, string $birthPlace): array
+    {
+        $url = rtrim($this->apiUrl, '/') . '/api/participants/update-birth-data';
+        $response = Http::timeout($this->timeout)
+            ->withToken($this->apiToken)
+            ->post($url, [
+                'token' => $token,
+                'course_id' => $courseId,
+                'birth_date' => $birthDate,
+                'birth_place' => $birthPlace,
+            ]);
+
+        if ($response->successful()) {
+            return $response->json();
+        }
+
+        $msg = $response->json()['message'] ?? $response->json()['error'] ?? 'Unknown error';
+        throw new Exception("Update birth data API error: {$msg}");
+    }
+
+    /**
      * Health check endpoint
      *
      * @return bool

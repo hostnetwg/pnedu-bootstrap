@@ -92,6 +92,8 @@ require __DIR__.'/auth.php';
 // Handle contact form submissions from the welcome page
 Route::post('/kontakt', [ContactController::class, 'send'])->name('contact.send');
 
+// Lookup uczestnika po e-mailu (musi być przed /courses/{id})
+Route::get('/courses/participant-lookup-by-email', [App\Http\Controllers\CourseController::class, 'participantLookupByEmail'])->name('courses.participant-lookup');
 // Szczegóły szkolenia
 Route::get('/courses/{id}', [App\Http\Controllers\CourseController::class, 'show'])->name('courses.show');
 Route::post('/courses/{id}/register', [App\Http\Controllers\CourseController::class, 'register'])->name('courses.register');
@@ -119,6 +121,17 @@ Route::post('/courses/{id}/deferred-order', [App\Http\Controllers\CourseControll
 // Podsumowanie i PDF zamówienia
 Route::get('/orders/{ident}/summary', [App\Http\Controllers\CourseController::class, 'orderSummary'])->name('orders.summary');
 Route::get('/orders/{ident}/pdf', [App\Http\Controllers\CourseController::class, 'orderPdf'])->name('orders.pdf');
+
+// Rejestracja zaświadczenia (formularz po tokenie – zapis do participants w pneadm)
+Route::get('/certificate-registration/{token}', [App\Http\Controllers\CertificateRegistrationController::class, 'show'])->name('certificate-registration.show');
+Route::post('/certificate-registration/{token}', [App\Http\Controllers\CertificateRegistrationController::class, 'submit'])->name('certificate-registration.submit');
+
+// Link z tokenem – lista szkoleń i pobieranie zaświadczeń (bez logowania)
+Route::get('/certificates/{token}', [App\Http\Controllers\CertificateController::class, 'showListByToken'])->name('certificates.list-by-token');
+Route::get('/certificate/{token}/{course}', [App\Http\Controllers\CertificateController::class, 'showCertificateByToken'])->name('certificates.show-by-token');
+Route::post('/certificate/{token}/{course}', [App\Http\Controllers\CertificateController::class, 'submitBirthDataByToken'])->name('certificates.submit-birth-data');
+Route::get('/certificate/{token}/{course}/download-with-redirect', [App\Http\Controllers\CertificateController::class, 'downloadWithRedirectPage'])->name('certificates.download-with-redirect');
+Route::get('/certificate/{token}/{course}/download', [App\Http\Controllers\CertificateController::class, 'downloadByToken'])->name('certificates.download-by-token');
 
 // Generowanie zaświadczeń (tylko dla zalogowanych użytkowników)
 Route::middleware(['auth', 'verified'])->group(function () {

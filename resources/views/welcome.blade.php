@@ -16,6 +16,70 @@
 </div>
 @endif
 
+@if(session('certificate_registration_success'))
+    <!-- Modal z podziękowaniem za udział w szkoleniu / rejestrację zaświadczenia -->
+    <div class="modal fade" id="certificateRegistrationThanksModal" tabindex="-1" aria-labelledby="certificateRegistrationThanksLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg overflow-hidden">
+                <div class="bg-success bg-gradient text-white px-3 py-2 d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center">
+                        <span class="me-2"><i class="bi bi-patch-check-fill"></i></span>
+                        <h2 class="h6 mb-0 text-uppercase">Rejestracja zaświadczenia</h2>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-light border-0" data-bs-dismiss="modal" aria-label="Zamknij">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+                <div class="modal-body p-4 p-md-5 d-flex flex-column flex-md-row align-items-center">
+                    <div class="me-md-4 mb-3 mb-md-0 text-center">
+                        <img src="{{ asset('logo-pne.png') }}" alt="Platforma Nowoczesnej Edukacji" style="max-width: 210px; height: auto;">
+                    </div>
+                    <div class="text-center">
+                        <h2 class="h4 mb-3 text-primary">Dziękujemy za udział w szkoleniu.</h2>
+                        <p class="mb-3 mt-2 small">
+                            Postaramy się jak najszybciej przygotować Twoje zaświadczenie. Jeżeli nie otrzymasz go w ciągu
+                            <strong>3–4 dni</strong>, napisz do nas na adres:
+                            <a href="mailto:kontakt@nowoczesna-edukacja.pl">kontakt@nowoczesna-edukacja.pl</a>.
+                        </p>
+                        <p class="mb-3 fw-semibold text-muted">Miłego dnia :)</p>
+                        <hr class="my-3">
+                        <p class="mb-0" style="color:#0d47a1; font-size: 0.95rem;">
+                            <strong style="color:#0d47a1; font-size: 1rem;">ORGANIZATOR</strong><br>
+                            Niepubliczny Ośrodek Doskonalenia Nauczycieli<br>
+                            „Platforma Nowoczesnej Edukacji”<br>
+                            tel. 501 654 274, <a href="mailto:kontakt@nowoczesna-edukacja.pl" style="color:#0d47a1;">kontakt@nowoczesna-edukacja.pl</a><br>
+                            <a href="https://pnedu.pl" target="_blank" rel="noopener noreferrer" style="color:#0d47a1;">pnedu.pl</a>
+                        </p>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0 pb-4 pe-4">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zamknij</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @push('scripts')
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                var modalEl = document.getElementById('certificateRegistrationThanksModal');
+                if (modalEl) {
+                    var thanksModal = new bootstrap.Modal(modalEl);
+                    thanksModal.show();
+
+                    // Automatyczne zamknięcie po 60 sekundach, jeśli użytkownik nie zamknie sam
+                    setTimeout(function () {
+                        // Sprawdź, czy modal nadal jest otwarty
+                        if (modalEl.classList.contains('show')) {
+                            thanksModal.hide();
+                        }
+                    }, 60000);
+                }
+            });
+        </script>
+    @endpush
+@endif
+
 <!-- ===== HERO BANNER ======================================= -->
 <div class="bg-primary bg-gradient text-white py-2 text-center">
     <div class="container">

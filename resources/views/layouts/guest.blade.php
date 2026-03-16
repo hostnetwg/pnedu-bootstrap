@@ -15,6 +15,7 @@
 
     <!-- Bootstrap CSS (CDN - niezależne od Vite) -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 
     <!-- Custom Styles (Vite - opcjonalne, jeśli są zbudowane) -->
     @vite(['resources/sass/app.scss', 'resources/js/app.js'])

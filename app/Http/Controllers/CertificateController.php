@@ -6,10 +6,9 @@ use Illuminate\Http\Request;
 use App\Models\Certificate;
 use App\Models\Participant;
 use App\Models\Course;
+use App\Models\ParticipantDownloadToken;
 use App\Services\CertificateApiClient;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\DB;
 
 class CertificateController extends Controller
 {
@@ -195,6 +194,269 @@ class CertificateController extends Controller
             }
 
             return redirect()->back()->with('error', $errorMessage);
+        }
+    }
+
+    /**
+     * Lista szkoleń uczestnika po tokenie (bez logowania).
+     * URL: /certificates/{token}
+     */
+    public function showListByToken(string $token)
+    {
+        $tokenRecord = ParticipantDownloadToken::findByToken($token);
+        if (!$tokenRecord) {
+            abort(404, 'Link jest nieprawidłowy lub wygasł.');
+        }
+
+        $emailNormalized = $tokenRecord->email_normalized;
+        $participants = Participant::whereRaw('LOWER(TRIM(email)) = ?', [$emailNormalized])
+            ->with(['course.instructor', 'certificate'])
+            ->orderByDesc('course_id')
+            ->get();
+
+        $statusMap = [
+            'download_enabled' => 'pobierz',
+            'in_preparation' => 'w_przygotowaniu',
+            'no_certificate' => 'brak',
+        ];
+        $items = [];
+        foreach ($participants as $participant) {
+            $course = $participant->course;
+            if (!$course) {
+                continue;
+            }
+            $certStatus = $course->certificate_download_status ?? 'in_preparation';
+            $canDownload = ($certStatus === 'download_enabled');
+            $items[] = [
+                'participant' => $participant,
+                'course' => $course,
+                'certificate' => $participant->certificate,
+                'status' => $statusMap[$certStatus] ?? 'w_przygotowaniu',
+                'status_key' => $certStatus,
+                'can_download' => $canDownload,
+            ];
+        }
+
+        return view('certificates.list-by-token', [
+            'token' => $token,
+            'items' => $items,
+        ]);
+    }
+
+    /**
+     * Strona zaświadczenia po tokenie: formularz danych urodzenia (gdy brak) lub podgląd + przycisk pobierz.
+     * URL: GET /certificate/{token}/{course}
+     */
+    public function showCertificateByToken(Request $request, string $token, $courseId)
+    {
+        $tokenRecord = ParticipantDownloadToken::findByToken($token);
+        if (!$tokenRecord) {
+            abort(404, 'Link jest nieprawidłowy lub wygasł.');
+        }
+
+        $emailNormalized = $tokenRecord->email_normalized;
+        $participant = Participant::whereRaw('LOWER(TRIM(email)) = ?', [$emailNormalized])
+            ->where('course_id', $courseId)
+            ->with('course.instructor')
+            ->first();
+
+        if (!$participant) {
+            abort(404, 'Nie znaleziono uczestnictwa w tym szkoleniu.');
+        }
+
+        $course = $participant->course;
+        $status = $course->certificate_download_status ?? 'in_preparation';
+        if ($status !== 'download_enabled') {
+            abort(403, 'Pobieranie zaświadczeń dla tego szkolenia nie jest udostępnione.');
+        }
+
+        $isPaid = (bool) ($course->is_paid ?? true);
+        $hasBirthData = $participant->birth_date && trim((string) $participant->birth_place) !== '';
+        $forceEdit = $request->query('edit') === '1';
+
+        if ($isPaid && (!$hasBirthData || $forceEdit)) {
+            return view('certificates.birth-data-form', [
+                'token' => $token,
+                'course' => $course,
+                'participant' => $participant,
+                'optional' => false,
+            ]);
+        }
+
+        if (!$isPaid && $forceEdit) {
+            return view('certificates.birth-data-form', [
+                'token' => $token,
+                'course' => $course,
+                'participant' => $participant,
+                'optional' => true,
+            ]);
+        }
+
+        return view('certificates.preview-and-download', [
+            'token' => $token,
+            'course' => $course,
+            'participant' => $participant,
+        ]);
+    }
+
+    /**
+     * Zapis danych urodzenia z formularza (POST).
+     * Dla płatnych: pola wymagane. Dla bezpłatnych (optional=1): pola opcjonalne; jeśli oba puste – powrót do podglądu.
+     */
+    public function submitBirthDataByToken(Request $request, string $token, $courseId)
+    {
+        $optional = $request->boolean('optional');
+
+        if ($optional) {
+            $birthDate = $request->input('birth_date');
+            $birthPlace = trim((string) $request->input('birth_place', ''));
+            if (empty($birthDate) && $birthPlace === '') {
+                return redirect()->route('certificates.show-by-token', ['token' => $token, 'course' => $courseId])
+                    ->with('info', 'Możesz pobrać zaświadczenie bez tych danych.');
+            }
+            $request->validate([
+                'birth_date' => 'required|date',
+                'birth_place' => 'required|string|max:255',
+            ]);
+        } else {
+            $request->validate([
+                'birth_date' => 'required|date',
+                'birth_place' => 'required|string|max:255',
+            ]);
+        }
+
+        $tokenRecord = ParticipantDownloadToken::findByToken($token);
+        if (!$tokenRecord) {
+            return redirect()->back()->withErrors(['error' => 'Link jest nieprawidłowy lub wygasł.']);
+        }
+
+        $participant = Participant::whereRaw('LOWER(TRIM(email)) = ?', [$tokenRecord->email_normalized])
+            ->where('course_id', $courseId)
+            ->first();
+        if (!$participant) {
+            return redirect()->back()->withErrors(['error' => 'Nie znaleziono uczestnictwa.']);
+        }
+
+        try {
+            $api = app(CertificateApiClient::class);
+            $api->updateBirthData(
+                $token,
+                (int) $courseId,
+                $request->input('birth_date'),
+                $request->input('birth_place')
+            );
+        } catch (\Exception $e) {
+            Log::warning('Certificate birth data update failed', ['error' => $e->getMessage()]);
+            return redirect()->back()->withErrors(['error' => 'Nie udało się zapisać danych. Spróbuj ponownie.'])->withInput();
+        }
+
+        return redirect()->route('certificates.show-by-token', ['token' => $token, 'course' => $courseId])
+            ->with('success', 'Dane zostały zapisane. Sprawdź je poniżej i pobierz zaświadczenie.');
+    }
+
+    /**
+     * Generowanie i pobieranie PDF (ensure cert + generate). URL: GET /certificate/{token}/{course}/download
+     */
+    public function downloadByToken(string $token, $courseId)
+    {
+        $tokenRecord = ParticipantDownloadToken::findByToken($token);
+        if (!$tokenRecord) {
+            abort(404, 'Link jest nieprawidłowy lub wygasł.');
+        }
+
+        $emailNormalized = $tokenRecord->email_normalized;
+        $participant = Participant::whereRaw('LOWER(TRIM(email)) = ?', [$emailNormalized])
+            ->where('course_id', $courseId)
+            ->with('course.instructor')
+            ->first();
+
+        if (!$participant) {
+            abort(404, 'Nie znaleziono uczestnictwa w tym szkoleniu.');
+        }
+
+        $course = $participant->course;
+        if (($course->certificate_download_status ?? '') !== 'download_enabled') {
+            abort(403, 'Pobieranie zaświadczeń dla tego szkolenia nie jest udostępnione.');
+        }
+
+        $isPaid = (bool) ($course->is_paid ?? true);
+        if ($isPaid && (!$participant->birth_date || trim((string) $participant->birth_place) === '')) {
+            return redirect()->route('certificates.show-by-token', ['token' => $token, 'course' => $courseId])
+                ->with('error', 'Do pobrania zaświadczenia wymagane są data i miejsce urodzenia.');
+        }
+
+        return $this->performDownloadByToken($participant, $courseId, $token);
+    }
+
+    /**
+     * Strona „Trwa pobieranie…” – uruchamia pobranie PDF w tle i po chwili przekierowuje na stronę główną.
+     */
+    public function downloadWithRedirectPage(string $token, $courseId)
+    {
+        $tokenRecord = ParticipantDownloadToken::findByToken($token);
+        if (!$tokenRecord) {
+            abort(404, 'Link jest nieprawidłowy lub wygasł.');
+        }
+
+        $emailNormalized = $tokenRecord->email_normalized;
+        $participant = Participant::whereRaw('LOWER(TRIM(email)) = ?', [$emailNormalized])
+            ->where('course_id', $courseId)
+            ->with('course.instructor')
+            ->first();
+
+        if (!$participant) {
+            abort(404, 'Nie znaleziono uczestnictwa w tym szkoleniu.');
+        }
+
+        $course = $participant->course;
+        if (($course->certificate_download_status ?? '') !== 'download_enabled') {
+            abort(403, 'Pobieranie zaświadczeń dla tego szkolenia nie jest udostępnione.');
+        }
+
+        $downloadUrl = route('certificates.download-by-token', ['token' => $token, 'course' => $courseId]);
+        $homeUrl = route('home');
+
+        return view('certificates.download-with-redirect', [
+            'downloadUrl' => $downloadUrl,
+            'homeUrl' => $homeUrl,
+        ]);
+    }
+
+    /**
+     * Wspólna logika generowania i zwrotu PDF (używana przez downloadByToken).
+     */
+    protected function performDownloadByToken($participant, $courseId, string $token)
+    {
+        try {
+            $apiClient = app(CertificateApiClient::class);
+            $apiClient->ensureCertificate($participant->id, 'pneadm');
+            $data = $apiClient->getCertificateData($participant->id, 'pneadm');
+            $certificateNumber = $data['certificate_number'] ?? null;
+            if (!$certificateNumber) {
+                Log::error('Certificate download by token: no certificate number', [
+                    'participant_id' => $participant->id,
+                    'course_id' => $courseId,
+                ]);
+                abort(500, 'Nie można wygenerować zaświadczenia.');
+            }
+
+            $pdfContent = $apiClient->generatePdf($participant->id, [
+                'connection' => 'pneadm',
+                'save_to_storage' => true,
+                'cache' => false,
+            ]);
+
+            $fileName = 'zaswiadczenie_' . str_replace('/', '-', $certificateNumber) . '.pdf';
+            return response($pdfContent, 200)
+                ->header('Content-Type', 'application/pdf')
+                ->header('Content-Disposition', 'attachment; filename="' . $fileName . '"');
+        } catch (\Exception $e) {
+            Log::error('Certificate download by token failed', [
+                'participant_id' => $participant->id,
+                'course_id' => $courseId,
+                'error' => $e->getMessage(),
+            ]);
+            abort(500, 'Wystąpił błąd podczas generowania zaświadczenia. Spróbuj ponownie później.');
         }
     }
 }

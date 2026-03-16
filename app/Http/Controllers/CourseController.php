@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Course;
 use App\Models\FormOrder;
+use App\Models\Participant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -815,8 +816,6 @@ class CourseController extends Controller
                 'participant_first_name' => 'Waldemar',
                 'participant_last_name' => 'Grabowski',
                 'participant_email' => 'waldemar.grabowski@hostnet.pl',
-                'participant_birth_date' => '1970-01-01',
-                'participant_birth_place' => 'Warszawa',
                 'invoice_notes' => 'Dane testowe - Waldek',
                 'payment_terms' => 14,
             ];
@@ -826,6 +825,33 @@ class CourseController extends Controller
         $user = auth()->user();
         
         return view('courses.deferred-order', compact('course', 'testData', 'isTestMode', 'isEditMode', 'user'));
+    }
+
+    /**
+     * Sprawdzenie, czy w bazie participants jest już uczestnik z podanym e-mailem (dla autouzupełnienia w formularzu zamówienia).
+     * GET ?email=...
+     */
+    public function participantLookupByEmail(Request $request)
+    {
+        $email = $request->query('email');
+        $email = $email ? trim($email) : '';
+        if ($email === '' || strpos($email, '@') === false) {
+            return response()->json(['found' => false], 200, ['Content-Type' => 'application/json']);
+        }
+        $normalized = strtolower($email);
+        $participant = Participant::whereRaw('LOWER(TRIM(email)) = ?', [$normalized])
+            ->orderByDesc('id')
+            ->first();
+        if (!$participant) {
+            return response()->json(['found' => false], 200, ['Content-Type' => 'application/json']);
+        }
+        return response()->json([
+            'found' => true,
+            'first_name' => (string) ($participant->first_name ?? ''),
+            'last_name' => (string) ($participant->last_name ?? ''),
+            'birth_date' => $participant->birth_date ? $participant->birth_date->format('d.m.Y') : null,
+            'birth_place' => $participant->birth_place ? (string) $participant->birth_place : null,
+        ], 200, ['Content-Type' => 'application/json']);
     }
 
     /**

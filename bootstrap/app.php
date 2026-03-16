@@ -14,6 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->validateCsrfTokens(except: [
             'payment/payu/notify',
             'payment/paynow/notify',
+            'certificate-registration/*', // formularz publiczny po linku z tokenem – token w URL jest wystarczającą ochroną
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
