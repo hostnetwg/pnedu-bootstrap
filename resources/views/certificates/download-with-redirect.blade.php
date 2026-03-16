@@ -23,15 +23,12 @@
     </div>
 </div>
 
-<iframe id="certificate-download-frame" style="position:absolute;width:0;height:0;border:0;" title="Pobieranie pliku"></iframe>
-
 <script>
 (function() {
     var downloadUrl = {!! json_encode($downloadUrl) !!};
     var homeUrl = {!! json_encode($homeUrl) !!};
-    var frame = document.getElementById('certificate-download-frame');
     var redirected = false;
-    var redirectDelayMs = 1500;
+    var redirectDelayMs = 400;
     var maxWaitMs = 90000;
 
     function goHome() {
@@ -40,17 +37,41 @@
         window.location.href = homeUrl || '/';
     }
 
-    if (frame && downloadUrl) {
-        frame.addEventListener('load', function() {
-            setTimeout(goHome, redirectDelayMs);
-        });
-        frame.addEventListener('error', function() {
-            setTimeout(goHome, redirectDelayMs);
-        });
-        frame.src = downloadUrl;
-    } else {
+    if (!downloadUrl) {
         setTimeout(goHome, redirectDelayMs);
+        return;
     }
+
+    fetch(downloadUrl, { credentials: 'same-origin' })
+        .then(function(r) {
+            if (!r.ok) {
+                goHome();
+                return null;
+            }
+            var cd = r.headers.get('Content-Disposition');
+            var filename = 'zaswiadczenie.pdf';
+            if (cd) {
+                var m = cd.match(/filename="?([^";]+)"?/);
+                if (m) filename = m[1].trim();
+            }
+            return r.blob().then(function(blob) { return { blob: blob, filename: filename }; });
+        })
+        .then(function(data) {
+            if (!data) return;
+            var url = URL.createObjectURL(data.blob);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = data.filename;
+            a.style.display = 'none';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            setTimeout(goHome, redirectDelayMs);
+        })
+        .catch(function() {
+            setTimeout(goHome, redirectDelayMs);
+        });
 
     setTimeout(function() {
         if (!redirected) goHome();
