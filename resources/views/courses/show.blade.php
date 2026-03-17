@@ -431,12 +431,23 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                 @endif
                 <div class="d-flex flex-column gap-2 mb-3 align-items-center">
-                    <a href="{{ $course->getPubligoPaymentUrl() ?? route('payment.online', $course->id) }}" class="btn btn-primary-custom btn-lg fw-bold shadow-sm w-100">Zapłać online PUBLIGO</a>
-                    <a href="{{ route('payment.online', $course->id) }}" class="btn btn-lg fw-bold shadow-sm w-100 text-white" style="background-color: #6f42c1; border-color: #6f42c1;">Zapłać online</a>
-                    <div class="pay-or-text">lub wypełnij</div>
-                    <a href="{{ route('payment.deferred', $course->id) }}" class="btn btn-orange btn-lg fw-bold shadow-sm w-100">Formularz zamówienia z&nbsp;odroczonym terminem płatności</a>
-                    @if(!empty($course->id_old))
-                        <a href="https://zdalna-lekcja.pl/zamowienia/formularz/?idP={{ $course->id_old }}" target="_blank" class="btn btn-link mt-2" style="font-size: 0.95rem;">Alternatywny formularz zamówienia</a>
+                    @if($paymentOptions['show_pay_publigo'] ?? true)
+                        <a href="{{ $course->getPubligoPaymentUrl() ?? route('payment.online', $course->id) }}" target="_blank" class="btn btn-primary-custom btn-lg fw-bold shadow-sm w-100">Zapłać online PUBLIGO</a>
+                    @endif
+                    @if($paymentOptions['show_pay_online'] ?? true)
+                        <a href="{{ route('payment.online', $course->id) }}" class="btn btn-lg fw-bold shadow-sm w-100 text-white" style="background-color: #6f42c1; border-color: #6f42c1;">Zapłać online</a>
+                    @endif
+                    @if(($paymentOptions['show_deferred_order'] ?? true) || ($paymentOptions['show_order_form'] ?? true) || ($paymentOptions['show_order_form_alt'] ?? true))
+                        <div class="pay-or-text">lub wypełnij</div>
+                    @endif
+                    @if($paymentOptions['show_deferred_order'] ?? true)
+                        <a href="{{ route('payment.deferred', $course->id) }}" class="btn btn-orange btn-lg fw-bold shadow-sm w-100">Formularz zamówienia z&nbsp;odroczonym terminem płatności</a>
+                    @endif
+                    @if($paymentOptions['show_order_form'] ?? true)
+                        <a href="{{ route('payment.order-form', $course->id) }}" class="btn btn-outline-primary btn-lg fw-bold shadow-sm w-100">Formularz zamówienia</a>
+                    @endif
+                    @if((($paymentOptions['show_order_form_alt'] ?? true) && !empty($course->id_old)))
+                        <a href="https://zdalna-lekcja.pl/zamowienia/formularz/?idP={{ $course->id_old }}" target="_blank" class="btn btn-lg fw-bold shadow-sm w-100 text-white" style="background-color: #0d6b0d; border-color: #0d6b0d;">Formularz zamówienia z&nbsp;odroczonym terminem płatności</a>
                     @endif
                 </div>
                 <div class="mt-2 text-muted">Liczba miejsc ograniczona –<br>nie zwlekaj z&nbsp;rejestracją!</div>
@@ -608,12 +619,23 @@ document.addEventListener('DOMContentLoaded', function() {
                             </div>
                         @endif
                         <div class="d-flex flex-column gap-2 mb-3 align-items-center">
-                            <a href="{{ $course->getPubligoPaymentUrl() ?? route('payment.online', $course->id) }}" class="btn btn-primary-custom btn-lg fw-bold shadow-sm w-100">Zapłać online PUBLIGO</a>
-                            <a href="{{ route('payment.online', $course->id) }}" class="btn btn-lg fw-bold shadow-sm w-100 text-white" style="background-color: #6f42c1; border-color: #6f42c1;">Zapłać online</a>
-                            <div class="pay-or-text">lub wypełnij</div>
-                            <a href="{{ route('payment.deferred', $course->id) }}" class="btn btn-orange btn-lg fw-bold shadow-sm w-100">Formularz zamówienia z&nbsp;odroczonym terminem płatności</a>
-                            @if(!empty($course->id_old))
-                                <a href="https://zdalna-lekcja.pl/zamowienia/formularz/?idP={{ $course->id_old }}" target="_blank" class="btn btn-link mt-2" style="font-size: 0.95rem;">Alternatywny formularz zamówienia</a>
+                            @if($paymentOptions['show_pay_publigo'] ?? true)
+                                <a href="{{ $course->getPubligoPaymentUrl() ?? route('payment.online', $course->id) }}" target="_blank" class="btn btn-primary-custom btn-lg fw-bold shadow-sm w-100">Zapłać online PUBLIGO</a>
+                            @endif
+                            @if($paymentOptions['show_pay_online'] ?? true)
+                                <a href="{{ route('payment.online', $course->id) }}" class="btn btn-lg fw-bold shadow-sm w-100 text-white" style="background-color: #6f42c1; border-color: #6f42c1;">Zapłać online</a>
+                            @endif
+                            @if(($paymentOptions['show_deferred_order'] ?? true) || ($paymentOptions['show_order_form'] ?? true) || ($paymentOptions['show_order_form_alt'] ?? true))
+                                <div class="pay-or-text">lub wypełnij</div>
+                            @endif
+                            @if($paymentOptions['show_deferred_order'] ?? true)
+                                <a href="{{ route('payment.deferred', $course->id) }}" class="btn btn-orange btn-lg fw-bold shadow-sm w-100">Formularz zamówienia z&nbsp;odroczonym terminem płatności</a>
+                            @endif
+                            @if($paymentOptions['show_order_form'] ?? true)
+                                <a href="{{ route('payment.order-form', $course->id) }}" class="btn btn-outline-primary btn-lg fw-bold shadow-sm w-100">Formularz zamówienia</a>
+                            @endif
+                            @if((($paymentOptions['show_order_form_alt'] ?? true) && !empty($course->id_old)))
+                                <a href="https://zdalna-lekcja.pl/zamowienia/formularz/?idP={{ $course->id_old }}" target="_blank" class="btn btn-lg fw-bold shadow-sm w-100 text-white" style="background-color: #0d6b0d; border-color: #0d6b0d;">Formularz zamówienia z&nbsp;odroczonym terminem płatności</a>
                             @endif
                         </div>
                         <div class="mt-2 text-muted">Liczba miejsc ograniczona –<br>nie zwlekaj z&nbsp;rejestracją!</div>
@@ -687,12 +709,23 @@ document.addEventListener('DOMContentLoaded', function() {
                         </div>
                     @endif
                     <div class="d-flex flex-column gap-2 mb-3 align-items-center">
-                        <a href="{{ $course->getPubligoPaymentUrl() ?? route('payment.online', $course->id) }}" class="btn btn-primary-custom btn-lg fw-bold shadow-sm w-100">Zapłać online PUBLIGO</a>
-                        <a href="{{ route('payment.online', $course->id) }}" class="btn btn-lg fw-bold shadow-sm w-100 text-white" style="background-color: #6f42c1; border-color: #6f42c1;">Zapłać online</a>
-                        <div class="pay-or-text">lub wypełnij</div>
-                        <a href="{{ route('payment.deferred', $course->id) }}" class="btn btn-orange btn-lg fw-bold shadow-sm w-100">Formularz zamówienia z&nbsp;odroczonym terminem płatności</a>
-                        @if(!empty($course->id_old))
-                            <a href="https://zdalna-lekcja.pl/zamowienia/formularz/?idP={{ $course->id_old }}" target="_blank" class="btn btn-link mt-2" style="font-size: 0.95rem;">Alternatywny formularz zamówienia</a>
+                        @if($paymentOptions['show_pay_publigo'] ?? true)
+                            <a href="{{ $course->getPubligoPaymentUrl() ?? route('payment.online', $course->id) }}" target="_blank" class="btn btn-primary-custom btn-lg fw-bold shadow-sm w-100">Zapłać online PUBLIGO</a>
+                        @endif
+                        @if($paymentOptions['show_pay_online'] ?? true)
+                            <a href="{{ route('payment.online', $course->id) }}" class="btn btn-lg fw-bold shadow-sm w-100 text-white" style="background-color: #6f42c1; border-color: #6f42c1;">Zapłać online</a>
+                        @endif
+                        @if(($paymentOptions['show_deferred_order'] ?? true) || ($paymentOptions['show_order_form'] ?? true) || ($paymentOptions['show_order_form_alt'] ?? true))
+                            <div class="pay-or-text">lub wypełnij</div>
+                        @endif
+                        @if($paymentOptions['show_deferred_order'] ?? true)
+                            <a href="{{ route('payment.deferred', $course->id) }}" class="btn btn-orange btn-lg fw-bold shadow-sm w-100">Formularz zamówienia z&nbsp;odroczonym terminem płatności</a>
+                        @endif
+                        @if($paymentOptions['show_order_form'] ?? true)
+                            <a href="{{ route('payment.order-form', $course->id) }}" class="btn btn-outline-primary btn-lg fw-bold shadow-sm w-100">Formularz zamówienia</a>
+                        @endif
+                        @if((($paymentOptions['show_order_form_alt'] ?? true) && !empty($course->id_old)))
+                            <a href="https://zdalna-lekcja.pl/zamowienia/formularz/?idP={{ $course->id_old }}" target="_blank" class="btn btn-lg fw-bold shadow-sm w-100 text-white" style="background-color: #0d6b0d; border-color: #0d6b0d;">Formularz zamówienia z&nbsp;odroczonym terminem płatności</a>
                         @endif
                     </div>
                     <div class="mt-2 text-muted">Liczba miejsc ograniczona –<br>nie zwlekaj z&nbsp;rejestracją!</div>

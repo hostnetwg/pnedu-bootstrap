@@ -404,7 +404,8 @@ class CourseController extends Controller
             'has_instructor_bio' => !empty($course->instructor->bio_html)
         ]);
         
-        return view('courses.show', compact('course'));
+        $paymentOptions = \App\Models\PaymentDisplayOption::getForCoursePage();
+        return view('courses.show', compact('course', 'paymentOptions'));
     }
 
     /**
@@ -828,6 +829,77 @@ class CourseController extends Controller
     }
 
     /**
+     * Wyświetl nowy formularz zamówienia (kopia, do dalszych zmian).
+     */
+    public function orderForm($id, $ident = null)
+    {
+        $course = \App\Models\Course::with('priceVariants')->findOrFail($id);
+
+        // Tryb testowy dla nowej ścieżki (opcjonalnie): /order-form?test=1
+        $isTestMode = (bool) request()->boolean('test');
+
+        // Sprawdź czy to edycja istniejącego zamówienia (opcjonalnie, przez ident)
+        $orderData = [];
+        $isEditMode = false;
+
+        if ($ident) {
+            $existingOrder = FormOrder::where('ident', $ident)->first();
+            if ($existingOrder && $existingOrder->product_id == $id) {
+                $isEditMode = true;
+                $orderData = [
+                    'buyer_name' => $existingOrder->buyer_name,
+                    'buyer_address' => $existingOrder->buyer_address,
+                    'buyer_postcode' => $existingOrder->buyer_postal_code,
+                    'buyer_city' => $existingOrder->buyer_city,
+                    'buyer_nip' => $existingOrder->buyer_nip,
+                    'recipient_name' => $existingOrder->recipient_name,
+                    'recipient_address' => $existingOrder->recipient_address,
+                    'recipient_postcode' => $existingOrder->recipient_postal_code,
+                    'recipient_city' => $existingOrder->recipient_city,
+                    'recipient_nip' => $existingOrder->recipient_nip,
+                    'contact_name' => $existingOrder->orderer_name,
+                    'contact_phone' => $existingOrder->orderer_phone,
+                    'contact_email' => $existingOrder->orderer_email,
+                    'participant_first_name' => explode(' ', $existingOrder->participant_name)[0] ?? '',
+                    'participant_last_name' => implode(' ', array_slice(explode(' ', $existingOrder->participant_name), 1)),
+                    'participant_email' => $existingOrder->participant_email,
+                    'invoice_notes' => $existingOrder->invoice_notes,
+                    'payment_terms' => $existingOrder->invoice_payment_delay ?? $existingOrder->ptw,
+                    'order_id' => $existingOrder->id,
+                    'order_ident' => $existingOrder->ident,
+                ];
+            }
+        }
+
+        $testData = $orderData;
+        if (empty($testData) && $isTestMode) {
+            $testData = [
+                'buyer_name' => 'Gmina Bieżuń',
+                'buyer_address' => 'ul. Warszawska 5',
+                'buyer_postcode' => '09-320',
+                'buyer_city' => 'Bieżuń',
+                'buyer_nip' => '5110265245',
+                'recipient_name' => 'Szkoła Podstawowa im. Andrzeja Zamoyskiego',
+                'recipient_address' => 'ul. Andrzeja Zamoyskiego 28',
+                'recipient_postcode' => '09-320',
+                'recipient_city' => 'Bieżuń',
+                'contact_name' => 'Waldemar Grabowski',
+                'contact_phone' => '501 654 274',
+                'contact_email' => 'waldemar.grabowski@zdalna-lekcja.pl',
+                'participant_first_name' => 'Waldemar',
+                'participant_last_name' => 'Grabowski',
+                'participant_email' => 'waldemar.grabowski@hostnet.pl',
+                'invoice_notes' => 'Dane testowe - Waldek',
+                'payment_terms' => 14,
+            ];
+        }
+
+        $user = auth()->user();
+
+        return view('courses.order-form', compact('course', 'testData', 'isTestMode', 'isEditMode', 'user'));
+    }
+
+    /**
      * Sprawdzenie, czy w bazie participants jest już uczestnik z podanym e-mailem (dla autouzupełnienia w formularzu zamówienia).
      * GET ?email=...
      */
@@ -951,7 +1023,7 @@ class CourseController extends Controller
                 'recipient_city' => $validated['recipient_city'],
                 'recipient_nip' => $validated['recipient_nip'],
                 'invoice_notes' => $validated['invoice_notes'],
-                'invoice_payment_delay' => $validated['payment_terms'],
+                'invoice_payment_delay' => $validated['payment_terms'] ?? null,
                 'ip_address' => $request->ip(),
             ];
 
@@ -987,6 +1059,164 @@ class CourseController extends Controller
             Log::error('Error creating deferred order', [
                 'error' => $e->getMessage(),
                 'course_id' => $id,
+            ]);
+
+            return back()
+                ->withInput()
+                ->with('error', 'Wystąpił błąd podczas składania zamówienia. Spróbuj ponownie.');
+        }
+    }
+
+    /**
+     * Zapisz zamówienie z nowego formularza (na razie deleguje do istniejącej logiki odroczonej).
+     * Docelowo tu będzie rozgałęzienie: odroczone vs płatność online.
+     */
+    public function storeOrderForm(Request $request, $id)
+    {
+        $course = Course::with('priceVariants')->findOrFail($id);
+
+        $buyerType = $request->input('buyer_type', 'organisation');
+        if (!in_array($buyerType, ['organisation', 'person'], true)) {
+            $buyerType = 'organisation';
+        }
+
+        $rules = [
+            'buyer_type' => 'required|in:organisation,person',
+            'payment_type' => 'required|in:deferred,online',
+
+            'contact_name' => 'required|string|max:255',
+            'contact_phone' => 'required|string|max:50',
+            'contact_email' => 'required|email|max:255',
+
+            'buyer_address' => 'required|string|max:500',
+            'buyer_postcode' => 'required|string|max:50',
+            'buyer_city' => 'required|string|max:255',
+
+            'recipient_name' => 'nullable|string|max:500',
+            'recipient_address' => 'nullable|string|max:500',
+            'recipient_postcode' => 'nullable|string|max:50',
+            'recipient_city' => 'nullable|string|max:255',
+            'recipient_nip' => 'nullable|string|max:50',
+
+            'participant_first_name' => 'required|string|max:255',
+            'participant_last_name' => 'required|string|max:255',
+            'participant_email' => 'required|email|max:255',
+
+            'invoice_notes' => 'nullable|string',
+            'payment_terms' => 'nullable|integer|min:1',
+            'payment_gateway' => 'nullable|in:payu,paynow',
+        ];
+
+        if ($buyerType === 'organisation') {
+            $rules['buyer_name'] = 'required|string|max:500';
+        } else {
+            // osoba fizyczna: bez nazwy nabywcy
+            $rules['buyer_name'] = 'nullable|string|max:500';
+            $rules['buyer_person_first_name'] = 'required|string|max:255';
+            $rules['buyer_person_last_name'] = 'required|string|max:255';
+        }
+
+        $validated = $request->validate($rules, [
+            'buyer_type.required' => 'Wybierz, jako kto zamawiasz.',
+            'buyer_type.in' => 'Wybierz prawidłową opcję.',
+            'payment_type.required' => 'Wybierz sposób rozliczenia.',
+            'payment_type.in' => 'Wybierz prawidłowy sposób rozliczenia.',
+        ]);
+
+        // Dodatkowa walidacja: termin płatności wymagany tylko dla faktury z odroczonym terminem
+        if (($validated['payment_type'] ?? null) === 'deferred' && empty($validated['payment_terms'])) {
+            return back()
+                ->withErrors(['payment_terms' => 'Podaj termin płatności dla faktury z odroczonym terminem.'])
+                ->withInput();
+        }
+
+        if (($validated['payment_type'] ?? null) === 'online' && empty($validated['payment_gateway'])) {
+            return back()
+                ->withErrors(['payment_gateway' => 'Wybierz bramkę płatności.'])
+                ->withInput();
+        }
+
+        try {
+            // Określ publigo_product_id - dla kursów z Publigo użyj id_old
+            $publicoProductId = null;
+            if ($course->source_id_old === 'certgen_Publigo' && $course->id_old) {
+                $publicoProductId = $course->id_old;
+            } elseif ($course->publigo_product_id) {
+                $publicoProductId = $course->publigo_product_id;
+            }
+
+            // Pobierz aktualną cenę kursu (z uwzględnieniem promocji)
+            $currentPrice = null;
+            $priceInfo = $course->getCurrentPrice();
+            if ($priceInfo) {
+                $currentPrice = $priceInfo['price'];
+            }
+
+            // Sprawdź czy to edycja istniejącego zamówienia
+            $order = null;
+            if ($request->filled('order_ident')) {
+                $order = FormOrder::where('ident', $request->order_ident)
+                    ->where('product_id', $id)
+                    ->first();
+            }
+
+            $buyerName = $validated['buyer_name'] ?? null;
+            // na razie mapujemy NIP z pola buyer_nip8 (jeśli podany)
+            $buyerNip = $request->input('buyer_nip8') ?: null;
+            if ($buyerType === 'person') {
+                $buyerName = trim(($validated['buyer_person_first_name'] ?? '') . ' ' . ($validated['buyer_person_last_name'] ?? '')) ?: ($validated['contact_name'] ?? $buyerName);
+                $buyerNip = null;
+            }
+
+            $orderData = [
+                'ptw' => $validated['payment_terms'],
+                'product_id' => $course->id,
+                'product_name' => $course->title,
+                'product_price' => $currentPrice,
+                'product_description' => strip_tags($course->description ?? ''),
+                'publigo_product_id' => $publicoProductId,
+                'publigo_price_id' => $course->publigo_price_id,
+                'participant_name' => $validated['participant_first_name'] . ' ' . $validated['participant_last_name'],
+                'participant_email' => $validated['participant_email'],
+                'orderer_name' => $validated['contact_name'],
+                'orderer_address' => $validated['buyer_address'],
+                'orderer_postal_code' => $validated['buyer_postcode'],
+                'orderer_city' => $validated['buyer_city'],
+                'orderer_phone' => $validated['contact_phone'],
+                'orderer_email' => $validated['contact_email'],
+                'buyer_name' => $buyerName,
+                'buyer_address' => $validated['buyer_address'],
+                'buyer_postal_code' => $validated['buyer_postcode'],
+                'buyer_city' => $validated['buyer_city'],
+                'buyer_nip' => $buyerNip,
+                'recipient_name' => $validated['recipient_name'],
+                'recipient_address' => $validated['recipient_address'],
+                'recipient_postal_code' => $validated['recipient_postcode'],
+                'recipient_city' => $validated['recipient_city'],
+                'recipient_nip' => $request->input('recipient_nip8') ?: null,
+                'invoice_notes' => $validated['invoice_notes'],
+                'invoice_payment_delay' => $validated['payment_terms'] ?? null,
+                'ip_address' => $request->ip(),
+            ];
+
+            if ($order) {
+                $order->update($orderData);
+            } else {
+                $orderData['ident'] = FormOrder::generateIdent();
+                $orderData['order_date'] = now('UTC');
+                $orderData['publigo_sent'] = 0;
+                $orderData['status_completed'] = 0;
+                $order = FormOrder::create($orderData);
+            }
+
+            return redirect()
+                ->route('orders.summary', ['ident' => $order->ident])
+                ->with('success', 'Zamówienie zostało złożone pomyślnie!');
+        } catch (Exception $e) {
+            Log::error('Error creating order (order-form)', [
+                'error' => $e->getMessage(),
+                'course_id' => $id,
+                'buyer_type' => $buyerType,
             ]);
 
             return back()
