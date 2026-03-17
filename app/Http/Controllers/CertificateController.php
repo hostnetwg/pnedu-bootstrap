@@ -446,6 +446,9 @@ class CertificateController extends Controller
                 'cache' => false,
             ]);
 
+            // Oznacz pobranie w panelu admina (statystyki)
+            $apiClient->markDownloaded($token, (int) $courseId);
+
             $fileName = 'zaswiadczenie_' . str_replace('/', '-', $certificateNumber) . '.pdf';
             return response($pdfContent, 200)
                 ->header('Content-Type', 'application/pdf')

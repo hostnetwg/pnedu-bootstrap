@@ -236,5 +236,42 @@ class CertificateApiClient
             return false;
         }
     }
+
+    /**
+     * Oznacza pobranie certyfikatu w pneadm (token + kurs).
+     * Służy do statystyk i oznaczeń w panelu admina.
+     */
+    public function markDownloaded(string $token, int $courseId): void
+    {
+        $url = rtrim($this->apiUrl, '/') . '/api/certificates/mark-downloaded';
+
+        $payload = [
+            'token' => $token,
+            'course_id' => $courseId,
+        ];
+
+        try {
+            $response = Http::timeout($this->timeout)
+                ->withToken($this->apiToken)
+                ->post($url, $payload);
+
+            if ($response->successful()) {
+                return;
+            }
+
+            Log::warning('CertificateApiClient: markDownloaded failed', [
+                'url' => $url,
+                'course_id' => $courseId,
+                'status_code' => $response->status(),
+                'response' => $response->body(),
+            ]);
+        } catch (Exception $e) {
+            Log::warning('CertificateApiClient: markDownloaded exception', [
+                'url' => $url,
+                'course_id' => $courseId,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
 }
 
