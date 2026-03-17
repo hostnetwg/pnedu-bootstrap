@@ -432,7 +432,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 @endif
                 <div class="d-flex flex-column gap-2 mb-3 align-items-center">
                     @if($paymentOptions['show_pay_publigo'] ?? true)
-                        <a href="{{ $course->getPubligoPaymentUrl() ?? route('payment.online', $course->id) }}" target="_blank" class="btn btn-primary-custom btn-lg fw-bold shadow-sm w-100">Zapłać online PUBLIGO</a>
+                        <a href="{{ $course->getPubligoPaymentUrl() ?? route('payment.online', $course->id) }}" target="_blank" class="btn btn-primary-custom btn-lg fw-bold shadow-sm w-100">Zapłać online</a>
                     @endif
                     @if($paymentOptions['show_pay_online'] ?? true)
                         <a href="{{ route('payment.online', $course->id) }}" class="btn btn-lg fw-bold shadow-sm w-100 text-white" style="background-color: #6f42c1; border-color: #6f42c1;">Zapłać online</a>
@@ -620,7 +620,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         @endif
                         <div class="d-flex flex-column gap-2 mb-3 align-items-center">
                             @if($paymentOptions['show_pay_publigo'] ?? true)
-                                <a href="{{ $course->getPubligoPaymentUrl() ?? route('payment.online', $course->id) }}" target="_blank" class="btn btn-primary-custom btn-lg fw-bold shadow-sm w-100">Zapłać online PUBLIGO</a>
+                                <a href="{{ $course->getPubligoPaymentUrl() ?? route('payment.online', $course->id) }}" target="_blank" class="btn btn-primary-custom btn-lg fw-bold shadow-sm w-100">Zapłać online</a>
                             @endif
                             @if($paymentOptions['show_pay_online'] ?? true)
                                 <a href="{{ route('payment.online', $course->id) }}" class="btn btn-lg fw-bold shadow-sm w-100 text-white" style="background-color: #6f42c1; border-color: #6f42c1;">Zapłać online</a>
@@ -710,7 +710,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     @endif
                     <div class="d-flex flex-column gap-2 mb-3 align-items-center">
                         @if($paymentOptions['show_pay_publigo'] ?? true)
-                            <a href="{{ $course->getPubligoPaymentUrl() ?? route('payment.online', $course->id) }}" target="_blank" class="btn btn-primary-custom btn-lg fw-bold shadow-sm w-100">Zapłać online PUBLIGO</a>
+                            <a href="{{ $course->getPubligoPaymentUrl() ?? route('payment.online', $course->id) }}" target="_blank" class="btn btn-primary-custom btn-lg fw-bold shadow-sm w-100">Zapłać online</a>
                         @endif
                         @if($paymentOptions['show_pay_online'] ?? true)
                             <a href="{{ route('payment.online', $course->id) }}" class="btn btn-lg fw-bold shadow-sm w-100 text-white" style="background-color: #6f42c1; border-color: #6f42c1;">Zapłać online</a>
