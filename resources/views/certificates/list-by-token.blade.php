@@ -2,6 +2,14 @@
 
 @section('title', 'Twoje zaświadczenia – ' . config('app.name'))
 
+@push('styles')
+<style>
+    .certificates-pagination .small.text-muted {
+        display: none !important;
+    }
+</style>
+@endpush
+
 @section('content')
 <div class="container py-5">
     <div class="row justify-content-center">
@@ -57,7 +65,7 @@
                             <p class="text-muted small mb-2 text-center">
                                 Wyświetlanie {{ $items->firstItem() ?? 0 }}–{{ $items->lastItem() ?? 0 }} z {{ $items->total() }} wyników
                             </p>
-                            <div class="d-flex justify-content-center">
+                            <div class="d-flex justify-content-center certificates-pagination">
                                 {{ $items->links('pagination::bootstrap-5') }}
                             </div>
                         </div>
