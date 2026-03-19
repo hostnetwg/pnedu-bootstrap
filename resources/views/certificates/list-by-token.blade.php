@@ -58,7 +58,7 @@
                                 Wyświetlanie {{ $items->firstItem() ?? 0 }}–{{ $items->lastItem() ?? 0 }} z {{ $items->total() }} wyników
                             </p>
                             <div class="d-flex justify-content-center">
-                                {{ $items->links('vendor.pagination.bootstrap-5-no-summary') }}
+                                {{ $items->links('pagination::bootstrap-5') }}
                             </div>
                         </div>
                     @endif
