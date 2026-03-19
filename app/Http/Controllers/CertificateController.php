@@ -210,36 +210,36 @@ class CertificateController extends Controller
 
         $emailNormalized = $tokenRecord->email_normalized;
         $participants = Participant::whereRaw('LOWER(TRIM(email)) = ?', [$emailNormalized])
+            ->whereHas('course')
             ->with(['course.instructor', 'certificate'])
             ->orderByDesc('course_id')
-            ->get();
+            ->paginate(15);
 
         $statusMap = [
             'download_enabled' => 'pobierz',
             'in_preparation' => 'w_przygotowaniu',
             'no_certificate' => 'brak',
         ];
-        $items = [];
-        foreach ($participants as $participant) {
-            $course = $participant->course;
-            if (!$course) {
-                continue;
-            }
-            $certStatus = $course->certificate_download_status ?? 'in_preparation';
-            $canDownload = ($certStatus === 'download_enabled');
-            $items[] = [
-                'participant' => $participant,
-                'course' => $course,
-                'certificate' => $participant->certificate,
-                'status' => $statusMap[$certStatus] ?? 'w_przygotowaniu',
-                'status_key' => $certStatus,
-                'can_download' => $canDownload,
-            ];
-        }
+        $participants->setCollection(
+            $participants->getCollection()->map(function ($participant) use ($statusMap) {
+                $course = $participant->course;
+                $certStatus = $course->certificate_download_status ?? 'in_preparation';
+                $canDownload = ($certStatus === 'download_enabled');
+
+                return [
+                    'participant' => $participant,
+                    'course' => $course,
+                    'certificate' => $participant->certificate,
+                    'status' => $statusMap[$certStatus] ?? 'w_przygotowaniu',
+                    'status_key' => $certStatus,
+                    'can_download' => $canDownload,
+                ];
+            })
+        );
 
         return view('certificates.list-by-token', [
             'token' => $token,
-            'items' => $items,
+            'items' => $participants,
         ]);
     }
 

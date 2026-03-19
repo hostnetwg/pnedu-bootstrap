@@ -13,7 +13,7 @@
                         Poniżej lista szkoleń, w których brałeś/aś udział. Zaświadczenie można pobrać, gdy administrator udostępni je dla danego szkolenia.
                     </p>
 
-                    @if(empty($items))
+                    @if($items->isEmpty())
                         <p class="text-muted mb-0">Nie znaleziono żadnych szkoleń powiązanych z tym linkiem.</p>
                     @else
                         <ul class="list-group list-group-flush">
@@ -52,6 +52,15 @@
                                 </li>
                             @endforeach
                         </ul>
+
+                        <div class="mt-4">
+                            <p class="text-muted small mb-2 text-center">
+                                Wyświetlanie {{ $items->firstItem() ?? 0 }}–{{ $items->lastItem() ?? 0 }} z {{ $items->total() }} wyników
+                            </p>
+                            <div class="d-flex justify-content-center">
+                                {{ $items->links('vendor.pagination.bootstrap-5-no-summary') }}
+                            </div>
+                        </div>
                     @endif
                 </div>
             </div>
