@@ -3,18 +3,13 @@
 
 @section('title', 'Platforma Nowoczesnej Edukacji – Witamy')
 
+@section('banner')
+    @include('layouts.hero-banner')
+@endsection
+
 @section('content')
 
 @section('main-padding', '')
-
-@if(session('course_registration_message'))
-<div class="container mt-3 mb-3">
-    <div class="alert alert-{{ session('course_registration_success') ? 'success' : 'danger' }} alert-dismissible fade show mb-0" role="alert">
-        {{ session('course_registration_message') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Zamknij"></button>
-    </div>
-</div>
-@endif
 
 @if(session('certificate_registration_success'))
     <!-- Modal z podziękowaniem za udział w szkoleniu / rejestrację zaświadczenia -->
@@ -79,18 +74,6 @@
         </script>
     @endpush
 @endif
-
-<!-- ===== HERO BANNER ======================================= -->
-<div class="bg-primary bg-gradient text-white py-2 text-center">
-    <div class="container">
-        <p class="lead fw-semibold mb-0">
-            Niepubliczny Ośrodek Doskonalenia Nauczycieli "Platforma Nowoczesnej Edukacji"<br>
-            <span style="color: #ffd700; font-style: normal; font-weight: 600;">
-                AKREDYTACJA MAZOWIECKIEGO KURATORA OŚWIATY
-            </span>
-        </p>
-    </div>
-</div>
 
 <!-- ===== UPCOMING COURSES ======================================= -->
 <section id="courses" class="pt-3 pb-5">

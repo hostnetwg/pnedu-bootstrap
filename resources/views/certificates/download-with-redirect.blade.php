@@ -15,7 +15,7 @@
                     </div>
                     <h2 class="h5 mb-2">Trwa pobieranie zaświadczenia</h2>
                     <p class="text-muted mb-0">
-                        Za chwilę zostaniesz przekierowany na stronę główną.
+                        Za chwilę plik PDF z zaświadczeniem zostanie zapisany na Twoim komputerze. Następnie automatycznie przekierujemy Cię na stronę główną.
                     </p>
                 </div>
             </div>
@@ -28,13 +28,15 @@
     var downloadUrl = {!! json_encode($downloadUrl) !!};
     var homeUrl = {!! json_encode($homeUrl) !!};
     var redirected = false;
-    var redirectDelayMs = 400;
+    var redirectDelayMs = 800;
     var maxWaitMs = 90000;
 
     function goHome() {
         if (redirected) return;
         redirected = true;
-        window.location.href = homeUrl || '/';
+        var target = homeUrl || '/';
+        var sep = (target.indexOf('?') === -1) ? '?' : '&';
+        window.location.href = target + sep + 'certificate_downloaded=1';
     }
 
     if (!downloadUrl) {

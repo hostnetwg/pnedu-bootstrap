@@ -31,6 +31,8 @@
 <body class="d-flex flex-column min-vh-100">
     @include('layouts.navigation')
 
+    @yield('banner')
+
     @include('layouts.alerts')
 
     <main class="flex-grow-1">
