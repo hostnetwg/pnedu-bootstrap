@@ -913,6 +913,14 @@
     if (paymentTypeDeferred) paymentTypeDeferred.addEventListener('change', updatePaymentTypeVisibility);
     if (paymentTypeOnline) paymentTypeOnline.addEventListener('change', updatePaymentTypeVisibility);
 
+    // Przed wysłaniem formularza – zsynchronizuj contact_name z widocznych pól
+    var formEl = document.querySelector('form[action*="order-form"]');
+    if (formEl) {
+        formEl.addEventListener('submit', function() {
+            syncContactNameHidden();
+        });
+    }
+
     // Inicjalizacja po załadowaniu
     updateContactFieldsVisibility();
     copyContactToBuyerPersonIfAllowed();

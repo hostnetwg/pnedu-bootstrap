@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Course;
 use App\Models\FormOrder;
+use App\Models\FormOrderParticipant;
 use App\Models\Participant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -1050,6 +1051,14 @@ class CourseController extends Controller
                 ]);
             }
 
+            // Zapisz uczestnika w form_order_participants (dla przyszłej obsługi wielu uczestników)
+            FormOrderParticipant::syncFromFormOrder(
+                $order,
+                $validated['participant_first_name'],
+                $validated['participant_last_name'],
+                $validated['participant_email']
+            );
+
             // Przekierowanie do strony podsumowania z PDF
             return redirect()
                 ->route('orders.summary', ['ident' => $order->ident])
@@ -1136,6 +1145,11 @@ class CourseController extends Controller
                 ->withInput();
         }
 
+        // Płatność online – utwórz OnlinePaymentOrder i przekieruj do bramki
+        if (($validated['payment_type'] ?? null) === 'online') {
+            return $this->processOrderFormOnlinePayment($request, $course, $validated, $buyerType);
+        }
+
         try {
             // Określ publigo_product_id - dla kursów z Publigo użyj id_old
             $publicoProductId = null;
@@ -1209,6 +1223,14 @@ class CourseController extends Controller
                 $order = FormOrder::create($orderData);
             }
 
+            // Zapisz uczestnika w form_order_participants (dla przyszłej obsługi wielu uczestników)
+            FormOrderParticipant::syncFromFormOrder(
+                $order,
+                $validated['participant_first_name'],
+                $validated['participant_last_name'],
+                $validated['participant_email']
+            );
+
             return redirect()
                 ->route('orders.summary', ['ident' => $order->ident])
                 ->with('success', 'Zamówienie zostało złożone pomyślnie!');
@@ -1223,6 +1245,133 @@ class CourseController extends Controller
                 ->withInput()
                 ->with('error', 'Wystąpił błąd podczas składania zamówienia. Spróbuj ponownie.');
         }
+    }
+
+    /**
+     * Przetwórz płatność online z formularza order-form – utwórz OnlinePaymentOrder i przekieruj do bramki.
+     */
+    protected function processOrderFormOnlinePayment(Request $request, Course $course, array $validated, string $buyerType)
+    {
+        $priceInfo = $course->getCurrentPrice();
+        $totalAmount = $priceInfo['price'] ?? 0;
+
+        if ($totalAmount <= 0) {
+            return redirect()->route('payment.order-form', $course->id)
+                ->with('error', 'To szkolenie nie ma ustawionej ceny. Skontaktuj się z organizatorem lub wybierz formularz zamówienia z odroczonym terminem płatności.')
+                ->withInput();
+        }
+
+        // Uczestnik szkolenia – dane do rejestracji po płatności
+        $firstName = $validated['participant_first_name'];
+        $lastName = $validated['participant_last_name'];
+        $email = $validated['participant_email'];
+        $phone = $validated['contact_phone'];
+
+        // address_data – dane do faktury (zgodne ze strukturą pay-online)
+        $addressData = $this->collectOrderFormAddressData($request, $buyerType);
+
+        $formData = $request->except(['_token']);
+        $paymentGateway = $validated['payment_gateway'] ?? 'payu';
+
+        $order = \App\Models\OnlinePaymentOrder::create([
+            'ident' => \App\Models\OnlinePaymentOrder::generateIdent(),
+            'course_id' => $course->id,
+            'payment_gateway' => $paymentGateway,
+            'status' => \App\Models\OnlinePaymentOrder::STATUS_PENDING,
+            'total_amount' => $totalAmount,
+            'currency' => 'PLN',
+            'buyer_type' => $buyerType === 'organisation' ? 'organisation' : 'person',
+            'email' => $email,
+            'first_name' => $firstName,
+            'last_name' => $lastName,
+            'phone' => $phone,
+            'order_comment' => $validated['invoice_notes'] ?? null,
+            'address_data' => $addressData,
+            'form_data' => $formData,
+            'ip_address' => $request->ip(),
+        ]);
+
+        if ($paymentGateway === 'payu') {
+            $payuService = new \App\Services\PayUService();
+            $notifyUrl = route('payment.payu.notify');
+            $continueUrl = route('payment.payu.return');
+            $result = $payuService->createOrder($order, $notifyUrl, $continueUrl);
+
+            if (!$result['success']) {
+                $errorMsg = $result['error'] ?? 'Nie udało się połączyć z PayU. Spróbuj ponownie.';
+                return redirect()->route('payment.order-form', $course->id)
+                    ->with('error', $errorMsg)
+                    ->withInput();
+            }
+            session(['payu_order_ident' => $order->ident]);
+            session(['payu_order_email' => $order->email]);
+            return redirect()->away($result['redirect_uri']);
+        }
+
+        if ($paymentGateway === 'paynow') {
+            $paynowService = new \App\Services\PayNowService();
+            $notifyUrl = route('payment.paynow.notify');
+            $continueUrl = route('payment.paynow.return');
+            $result = $paynowService->createOrder($order, $notifyUrl, $continueUrl);
+
+            if (!$result['success']) {
+                $errorMsg = $result['error'] ?? 'Nie udało się połączyć z PayNow. Spróbuj ponownie.';
+                return redirect()->route('payment.order-form', $course->id)
+                    ->with('error', $errorMsg)
+                    ->withInput();
+            }
+            return redirect()->away($result['redirect_url']);
+        }
+
+        return redirect()->route('payment.order-form', $course->id)
+            ->with('error', 'Nieznana bramka płatności.')
+            ->withInput();
+    }
+
+    /**
+     * Zbierz dane adresowe z formularza order-form.
+     */
+    protected function collectOrderFormAddressData(Request $request, string $buyerType): array
+    {
+        if ($buyerType === 'organisation') {
+            return [
+                'buyer' => [
+                    'nip' => $request->input('buyer_nip8'),
+                    'country' => 'Polska',
+                    'name' => $request->input('buyer_name'),
+                    'street' => $request->input('buyer_address'),
+                    'building_no' => '',
+                    'flat_no' => '',
+                    'postcode' => $request->input('buyer_postcode'),
+                    'city' => $request->input('buyer_city'),
+                ],
+                'recipient' => [
+                    'nip' => $request->input('recipient_nip8'),
+                    'country' => 'Polska',
+                    'name' => $request->input('recipient_name'),
+                    'street' => $request->input('recipient_address'),
+                    'building_no' => '',
+                    'flat_no' => '',
+                    'postcode' => $request->input('recipient_postcode'),
+                    'city' => $request->input('recipient_city'),
+                ],
+            ];
+        }
+
+        // Osoba fizyczna
+        $buyerName = trim(($request->input('buyer_person_first_name') ?? '') . ' ' . ($request->input('buyer_person_last_name') ?? ''));
+        if (empty($buyerName)) {
+            $buyerName = $request->input('contact_name');
+        }
+        return [
+            'full_name' => $buyerName,
+            'street' => $request->input('buyer_address'),
+            'building_no' => '',
+            'flat_no' => '',
+            'postcode' => $request->input('buyer_postcode'),
+            'city' => $request->input('buyer_city'),
+            'country' => 'Polska',
+        ];
     }
 
     /**

@@ -77,9 +77,11 @@ services:
       PMA_USER: ${DB_PNEADM_USERNAME:-sail}
       PMA_PASSWORD: ${DB_PNEADM_PASSWORD:-password}
       PMA_ARBITRARY: 1
-      UPLOAD_LIMIT: 1024M
-      MAX_EXECUTION_TIME: 3600
+      UPLOAD_LIMIT: 1536M
+      MAX_EXECUTION_TIME: 0
       MEMORY_LIMIT: 1024M
+    volumes:
+      - ./phpmyadmin-config/zzz-upload-override.ini:/usr/local/etc/php/conf.d/zzz-upload-override.ini:ro
     ports:
       - '8082:80'
     networks:
