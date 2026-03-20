@@ -10,7 +10,16 @@
                 <div class="card-body p-4">
                     <h1 class="h4 mb-2">{{ $optional ?? false ? 'Data i miejsce urodzenia na zaświadczeniu (opcjonalnie)' : 'Uzupełnij dane do zaświadczenia' }}</h1>
                     <p class="text-muted mb-3">
-                        Szkolenie: <strong>{{ $course->title }}</strong>
+                        Szkolenie:
+                        <strong>
+                            {{
+                                str_replace(
+                                    '&nbsp;',
+                                    ' ',
+                                    html_entity_decode((string) $course->title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')
+                                )
+                            }}
+                        </strong>
                         @if(!empty($course->start_date))
                             <br>Data: {{ \Carbon\Carbon::parse($course->start_date)->locale('pl')->translatedFormat('d.m.Y H:i (l)') }}
                         @endif
