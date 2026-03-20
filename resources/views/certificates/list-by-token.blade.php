@@ -28,7 +28,15 @@
                             @foreach($items as $item)
                                 <li class="list-group-item d-flex align-items-center justify-content-between py-3 px-0 border-0 border-bottom">
                                     <div class="me-3">
-                                        <strong class="d-block">{{ $item['course']->title }}</strong>
+                                            <strong class="d-block">
+                                                {{
+                                                    str_replace(
+                                                        '&nbsp;',
+                                                        ' ',
+                                                        html_entity_decode((string) $item['course']->title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')
+                                                    )
+                                                }}
+                                            </strong>
                                         <small class="text-muted d-block">
                                             @if($item['course']->start_date)
                                                 {{ \Carbon\Carbon::parse($item['course']->start_date)->locale('pl')->translatedFormat('d.m.Y H:i (l)') }}
