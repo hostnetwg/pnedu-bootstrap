@@ -337,7 +337,7 @@
                                     class="form-control"
                                     id="contact_first_name"
                                     name="contact_first_name"
-                                    value="{{ old('contact_first_name') }}"
+                                    value="{{ $testData['contact_first_name'] ?? old('contact_first_name') }}"
                                     autocomplete="given-name"
                                 >
                             </div>
@@ -350,7 +350,7 @@
                                     class="form-control"
                                     id="contact_last_name"
                                     name="contact_last_name"
-                                    value="{{ old('contact_last_name') }}"
+                                    value="{{ $testData['contact_last_name'] ?? old('contact_last_name') }}"
                                     autocomplete="family-name"
                                 >
                             </div>
@@ -384,7 +384,7 @@
                                     class="form-control"
                                     id="buyer_person_first_name"
                                     name="buyer_person_first_name"
-                                    value="{{ old('buyer_person_first_name') }}"
+                                    value="{{ $testData['buyer_person_first_name'] ?? old('buyer_person_first_name') }}"
                                     autocomplete="given-name"
                                 >
                             </div>
@@ -395,7 +395,7 @@
                                     class="form-control"
                                     id="buyer_person_last_name"
                                     name="buyer_person_last_name"
-                                    value="{{ old('buyer_person_last_name') }}"
+                                    value="{{ $testData['buyer_person_last_name'] ?? old('buyer_person_last_name') }}"
                                     autocomplete="family-name"
                                 >
                             </div>
@@ -449,7 +449,7 @@
                     <div class="row g-3 mb-3" id="buyer_nip_gus_row">
                         <div class="col-12 col-md-4">
                             <label for="buyer_nip8" class="form-label">NIP <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="buyer_nip8" name="buyer_nip8" value="{{ old('buyer_nip8') }}">
+                            <input type="text" class="form-control" id="buyer_nip8" name="buyer_nip8" value="{{ $testData['buyer_nip8'] ?? old('buyer_nip8') }}">
                         </div>
                         <div class="col-12 col-md-8 d-flex align-items-end">
                             <button type="button" class="btn btn-primary w-100" id="buyer_gus_button">
@@ -499,7 +499,7 @@
                         <div class="row g-3 mb-3" id="recipient_nip_gus_row">
                             <div class="col-12 col-md-4">
                                 <label for="recipient_nip8" class="form-label">NIP</label>
-                                <input type="text" class="form-control" id="recipient_nip8" name="recipient_nip8" value="{{ old('recipient_nip8') }}">
+                                <input type="text" class="form-control" id="recipient_nip8" name="recipient_nip8" value="{{ $testData['recipient_nip8'] ?? old('recipient_nip8') }}">
                             </div>
                             <div class="col-12 col-md-8 d-flex align-items-end">
                                 <button type="button" class="btn btn-primary w-100" id="recipient_gus_button">
@@ -643,13 +643,20 @@
                             id="payment_terms"
                             name="payment_terms"
                             value="{{ $testData['payment_terms'] ?? old('payment_terms', 14) }}"
-                            min="1"
+                            min="0"
+                            max="31"
+                            style="width: 8ch; max-width: 80px;"
                         >
                         @error('payment_terms')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
-                    <div class="d-flex flex-column flex-md-row gap-3 mt-3">
+                    <div class="d-flex flex-column flex-md-row gap-3 mt-3 flex-wrap">
+                        @if($isTestMode)
+                            <button type="button" class="btn btn-outline-secondary" id="fill-test-data-btn" title="Wypełnij formularz danymi testowymi (tylko w środowisku deweloperskim)">
+                                Wypełnij dane testowe
+                            </button>
+                        @endif
                         <button type="submit" class="btn btn-primary flex-fill">Wyślij zamówienie</button>
                         <a href="{{ route('courses.show', $course->id) }}" class="btn btn-link flex-fill">Powrót do szczegółów szkolenia</a>
                     </div>
@@ -773,12 +780,9 @@
             }
         }
 
-        // Szkoła/Instytucja/Firma → czyść dane uczestnika; Osoba fizyczna → skopiuj z danych zamawiającego
-        if (!isPerson) {
-            if (participantFirst) participantFirst.value = '';
-            if (participantLast) participantLast.value = '';
-            if (participantEmail) participantEmail.value = '';
-        } else {
+        // Osoba fizyczna → skopiuj z danych zamawiającego (jeśli checkbox zaznaczony).
+        // Szkoła/Instytucja/Firma → nie czyść pól uczestnika (mogą być wypełnione danymi testowymi lub przez użytkownika).
+        if (isPerson) {
             copyContactToParticipantIfAllowed();
         }
 
@@ -982,6 +986,64 @@
         setTimeout(function() {
             if ((emailInput.value || '').trim().indexOf('@') !== -1) runLookup();
         }, 300);
+    }
+
+    // Przycisk "Wypełnij dane testowe" (tylko w trybie testowym/local)
+    var fillTestDataBtn = document.getElementById('fill-test-data-btn');
+    var testDataJson = {!! json_encode($isTestMode ? [
+        'buyer_type' => 'organisation',
+        'contact_name' => 'Waldemar Grabowski',
+        'contact_first_name' => 'Waldemar',
+        'contact_last_name' => 'Grabowski',
+        'contact_phone' => '501 654 274',
+        'contact_email' => 'waldemar.grabowski@zdalna-lekcja.pl',
+        'buyer_name' => 'Gmina Bieżuń',
+        'buyer_address' => 'ul. Warszawska 5',
+        'buyer_postcode' => '09-320',
+        'buyer_city' => 'Bieżuń',
+        'buyer_nip8' => '5110265245',
+        'recipient_name' => 'Szkoła Podstawowa im. Andrzeja Zamoyskiego',
+        'recipient_address' => 'ul. Andrzeja Zamoyskiego 28',
+        'recipient_postcode' => '09-320',
+        'recipient_city' => 'Bieżuń',
+        'recipient_nip8' => '5261040828',
+        'buyer_person_first_name' => 'Waldemar',
+        'buyer_person_last_name' => 'Grabowski',
+        'participant_first_name' => 'Waldemar',
+        'participant_last_name' => 'Grabowski',
+        'participant_email' => 'waldemar.grabowski@hostnet.pl',
+        'invoice_notes' => 'Dane testowe - Waldek',
+        'payment_type' => 'deferred',
+        'payment_terms' => '14',
+        'payment_gateway' => 'payu',
+    ] : []) !!};
+    if (fillTestDataBtn && Object.keys(testDataJson).length > 0) {
+        fillTestDataBtn.addEventListener('click', function() {
+            var form = document.querySelector('form[action*="order-form"]');
+            if (!form) return;
+            Object.keys(testDataJson).forEach(function(key) {
+                var val = testDataJson[key];
+                var els = form.querySelectorAll('[name="' + key + '"]');
+                els.forEach(function(el) {
+                    if (el.type === 'radio' || el.type === 'checkbox') {
+                        el.checked = (String(val) === el.value || (el.type === 'checkbox' && val));
+                    } else {
+                        el.value = val || '';
+                    }
+                });
+            });
+            if (inputHiddenName) inputHiddenName.value = testDataJson.contact_name || '';
+            if (inputNameDisplay) inputNameDisplay.value = testDataJson.contact_name || '';
+            if (buyerOrg && testDataJson.buyer_type === 'organisation') buyerOrg.dispatchEvent(new Event('change', { bubbles: true }));
+            if (buyerPerson && testDataJson.buyer_type === 'person') buyerPerson.dispatchEvent(new Event('change', { bubbles: true }));
+            if (paymentTypeDeferred && testDataJson.payment_type === 'deferred') paymentTypeDeferred.dispatchEvent(new Event('change', { bubbles: true }));
+            if (paymentTypeOnline && testDataJson.payment_type === 'online') paymentTypeOnline.dispatchEvent(new Event('change', { bubbles: true }));
+            updateContactFieldsVisibility();
+            copyContactToBuyerPersonIfAllowed();
+            copyContactToParticipantIfAllowed();
+            updatePaymentTypeVisibility();
+            if (testDataJson.buyer_type === 'organisation' && testDataJson.buyer_name && buyerNameInput) buyerNameInput.value = testDataJson.buyer_name;
+        });
     }
 })();
 </script>

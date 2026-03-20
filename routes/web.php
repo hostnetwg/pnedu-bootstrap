@@ -118,7 +118,8 @@ Route::get('/courses/{id}/deferred-order/edit/{ident}', [App\Http\Controllers\Co
 Route::get('/courses/{id}/deferred-order', [App\Http\Controllers\CourseController::class, 'deferredOrder'])->name('payment.deferred');
 Route::post('/courses/{id}/deferred-order', [App\Http\Controllers\CourseController::class, 'storeDeferredOrder'])->name('payment.deferred.store');
 
-// Nowy formularz zamówienia (kopiowany, do dalszych zmian)
+// Formularz zamówienia (główny)
+Route::get('/courses/{id}/order-form/edit/{ident}', [App\Http\Controllers\CourseController::class, 'orderForm'])->name('payment.order-form.edit');
 Route::get('/courses/{id}/order-form', [App\Http\Controllers\CourseController::class, 'orderForm'])->name('payment.order-form');
 Route::post('/courses/{id}/order-form', [App\Http\Controllers\CourseController::class, 'storeOrderForm'])->name('payment.order-form.store');
 

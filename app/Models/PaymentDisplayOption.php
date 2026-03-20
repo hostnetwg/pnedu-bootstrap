@@ -20,6 +20,7 @@ class PaymentDisplayOption extends Model
         'show_deferred_order' => 'boolean',
         'show_order_form' => 'boolean',
         'show_order_form_alt' => 'boolean',
+        'order_form_auto_fill_test_data' => 'boolean',
     ];
 
     /**
@@ -36,6 +37,7 @@ class PaymentDisplayOption extends Model
                     'show_deferred_order' => (bool) $row->show_deferred_order,
                     'show_order_form' => (bool) $row->show_order_form,
                     'show_order_form_alt' => (bool) $row->show_order_form_alt,
+                    'order_form_auto_fill_test_data' => (bool) ($row->order_form_auto_fill_test_data ?? false),
                 ];
             }
         } catch (\Throwable $e) {
@@ -48,6 +50,7 @@ class PaymentDisplayOption extends Model
             'show_deferred_order' => true,
             'show_order_form' => true,
             'show_order_form_alt' => true,
+            'order_form_auto_fill_test_data' => false,
         ];
     }
 }

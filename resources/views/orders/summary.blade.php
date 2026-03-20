@@ -127,6 +127,12 @@
                         <span class="info-label">E-mail kontaktowy:</span>
                         <span class="info-value">{{ $order->orderer_email }}</span>
                     </div>
+                    @if($order->ip_address)
+                    <div class="info-row">
+                        <span class="info-label">Adres IP:</span>
+                        <span class="info-value">{{ $order->ip_address }}</span>
+                    </div>
+                    @endif
                 </div>
 
                 <div class="course-details-box">
@@ -167,7 +173,7 @@
                 <div class="alert alert-warning border-warning mb-3" style="border-left-width: 4px;">
                     <h5 class="mb-2"><i class="bi bi-exclamation-triangle me-2"></i>Sprawdź dane na zamówieniu w poniżej wygenerowanym dokumencie PDF</h5>
                     <p class="mb-2">Jeżeli zauważysz błąd, kliknij w <strong>"EDYTUJ"</strong> i dokonaj poprawki.</p>
-                    <a href="{{ route('payment.deferred.edit', ['id' => $course->id, 'ident' => $order->ident]) }}" class="btn btn-warning">
+                    <a href="{{ route('payment.order-form.edit', ['id' => $course->id, 'ident' => $order->ident]) }}" class="btn btn-warning">
                         <i class="bi bi-pencil me-2"></i>EDYTUJ
                     </a>
                 </div>

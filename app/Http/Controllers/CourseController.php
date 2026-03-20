@@ -808,13 +808,19 @@ class CourseController extends Controller
                 'buyer_postcode' => '09-320',
                 'buyer_city' => 'Bieżuń',
                 'buyer_nip' => '5110265245',
+                'buyer_nip8' => '5110265245',
                 'recipient_name' => 'Szkoła Podstawowa im. Andrzeja Zamoyskiego',
                 'recipient_address' => 'ul. Andrzeja Zamoyskiego 28',
                 'recipient_postcode' => '09-320',
                 'recipient_city' => 'Bieżuń',
+                'recipient_nip8' => '5261040828',
                 'contact_name' => 'Waldemar Grabowski',
+                'contact_first_name' => 'Waldemar',
+                'contact_last_name' => 'Grabowski',
                 'contact_phone' => '501 654 274',
                 'contact_email' => 'waldemar.grabowski@zdalna-lekcja.pl',
+                'buyer_person_first_name' => 'Waldemar',
+                'buyer_person_last_name' => 'Grabowski',
                 'participant_first_name' => 'Waldemar',
                 'participant_last_name' => 'Grabowski',
                 'participant_email' => 'waldemar.grabowski@hostnet.pl',
@@ -836,8 +842,10 @@ class CourseController extends Controller
     {
         $course = \App\Models\Course::with('priceVariants')->findOrFail($id);
 
-        // Tryb testowy dla nowej ścieżki (opcjonalnie): /order-form?test=1
-        $isTestMode = (bool) request()->boolean('test');
+        // Tryb testowy: ?test=1 włącza, ?test=0 wyłącza. Bez parametru – ustawienie z panelu (Zakupy pnedu.pl).
+        $isTestMode = request()->has('test')
+            ? (bool) request()->boolean('test')
+            : (\App\Models\PaymentDisplayOption::getForCoursePage()['order_form_auto_fill_test_data'] ?? false);
 
         // Sprawdź czy to edycja istniejącego zamówienia (opcjonalnie, przez ident)
         $orderData = [];
@@ -853,11 +861,13 @@ class CourseController extends Controller
                     'buyer_postcode' => $existingOrder->buyer_postal_code,
                     'buyer_city' => $existingOrder->buyer_city,
                     'buyer_nip' => $existingOrder->buyer_nip,
+                    'buyer_nip8' => $existingOrder->buyer_nip,
                     'recipient_name' => $existingOrder->recipient_name,
                     'recipient_address' => $existingOrder->recipient_address,
                     'recipient_postcode' => $existingOrder->recipient_postal_code,
                     'recipient_city' => $existingOrder->recipient_city,
                     'recipient_nip' => $existingOrder->recipient_nip,
+                    'recipient_nip8' => $existingOrder->recipient_nip,
                     'contact_name' => $existingOrder->orderer_name,
                     'contact_phone' => $existingOrder->orderer_phone,
                     'contact_email' => $existingOrder->orderer_email,
@@ -880,13 +890,19 @@ class CourseController extends Controller
                 'buyer_postcode' => '09-320',
                 'buyer_city' => 'Bieżuń',
                 'buyer_nip' => '5110265245',
+                'buyer_nip8' => '5110265245',
                 'recipient_name' => 'Szkoła Podstawowa im. Andrzeja Zamoyskiego',
                 'recipient_address' => 'ul. Andrzeja Zamoyskiego 28',
                 'recipient_postcode' => '09-320',
                 'recipient_city' => 'Bieżuń',
+                'recipient_nip8' => '5261040828',
                 'contact_name' => 'Waldemar Grabowski',
+                'contact_first_name' => 'Waldemar',
+                'contact_last_name' => 'Grabowski',
                 'contact_phone' => '501 654 274',
                 'contact_email' => 'waldemar.grabowski@zdalna-lekcja.pl',
+                'buyer_person_first_name' => 'Waldemar',
+                'buyer_person_last_name' => 'Grabowski',
                 'participant_first_name' => 'Waldemar',
                 'participant_last_name' => 'Grabowski',
                 'participant_email' => 'waldemar.grabowski@hostnet.pl',
@@ -953,7 +969,7 @@ class CourseController extends Controller
             'participant_last_name' => 'required|string|max:255',
             'participant_email' => 'required|email|max:255',
             'invoice_notes' => 'nullable|string',
-            'payment_terms' => 'required|integer|min:1',
+            'payment_terms' => 'required|integer|min:0|max:31',
         ], [
             'buyer_name.required' => 'Nazwa nabywcy jest wymagana.',
             'buyer_address.required' => 'Adres jest wymagany.',
@@ -969,7 +985,8 @@ class CourseController extends Controller
             'participant_email.required' => 'E-mail uczestnika jest wymagany.',
             'participant_email.email' => 'Podaj prawidłowy adres e-mail uczestnika.',
             'payment_terms.required' => 'Termin płatności jest wymagany.',
-            'payment_terms.min' => 'Termin płatności musi być większy niż 0 dni.',
+            'payment_terms.min' => 'Termin płatności musi być od 0 do 31 dni.',
+            'payment_terms.max' => 'Termin płatności musi być od 0 do 31 dni.',
         ]);
 
         try {
@@ -1062,7 +1079,8 @@ class CourseController extends Controller
             // Przekierowanie do strony podsumowania z PDF
             return redirect()
                 ->route('orders.summary', ['ident' => $order->ident])
-                ->with('success', 'Zamówienie zostało złożone pomyślnie!');
+                ->with('success', 'Zamówienie zostało złożone pomyślnie!')
+                ->with('order_just_submitted', $order->ident);
 
         } catch (Exception $e) {
             Log::error('Error creating deferred order', [
@@ -1112,7 +1130,7 @@ class CourseController extends Controller
             'participant_email' => 'required|email|max:255',
 
             'invoice_notes' => 'nullable|string',
-            'payment_terms' => 'nullable|integer|min:1',
+            'payment_terms' => 'nullable|integer|min:0|max:31',
             'payment_gateway' => 'nullable|in:payu,paynow',
         ];
 
@@ -1133,9 +1151,9 @@ class CourseController extends Controller
         ]);
 
         // Dodatkowa walidacja: termin płatności wymagany tylko dla faktury z odroczonym terminem
-        if (($validated['payment_type'] ?? null) === 'deferred' && empty($validated['payment_terms'])) {
+        if (($validated['payment_type'] ?? null) === 'deferred' && (!isset($validated['payment_terms']) || $validated['payment_terms'] === '')) {
             return back()
-                ->withErrors(['payment_terms' => 'Podaj termin płatności dla faktury z odroczonym terminem.'])
+                ->withErrors(['payment_terms' => 'Podaj termin płatności dla faktury z odroczonym terminem (0–31 dni).'])
                 ->withInput();
         }
 
@@ -1203,11 +1221,11 @@ class CourseController extends Controller
                 'buyer_postal_code' => $validated['buyer_postcode'],
                 'buyer_city' => $validated['buyer_city'],
                 'buyer_nip' => $buyerNip,
-                'recipient_name' => $validated['recipient_name'],
-                'recipient_address' => $validated['recipient_address'],
-                'recipient_postal_code' => $validated['recipient_postcode'],
-                'recipient_city' => $validated['recipient_city'],
-                'recipient_nip' => $request->input('recipient_nip8') ?: null,
+                'recipient_name' => $buyerType === 'organisation' ? ($validated['recipient_name'] ?? null) : null,
+                'recipient_address' => $buyerType === 'organisation' ? ($validated['recipient_address'] ?? null) : null,
+                'recipient_postal_code' => $buyerType === 'organisation' ? ($validated['recipient_postcode'] ?? null) : null,
+                'recipient_city' => $buyerType === 'organisation' ? ($validated['recipient_city'] ?? null) : null,
+                'recipient_nip' => $buyerType === 'organisation' ? ($request->input('recipient_nip8') ?: null) : null,
                 'invoice_notes' => $validated['invoice_notes'],
                 'invoice_payment_delay' => $validated['payment_terms'] ?? null,
                 'ip_address' => $request->ip(),
@@ -1233,7 +1251,8 @@ class CourseController extends Controller
 
             return redirect()
                 ->route('orders.summary', ['ident' => $order->ident])
-                ->with('success', 'Zamówienie zostało złożone pomyślnie!');
+                ->with('success', 'Zamówienie zostało złożone pomyślnie!')
+                ->with('order_just_submitted', $order->ident);
         } catch (Exception $e) {
             Log::error('Error creating order (order-form)', [
                 'error' => $e->getMessage(),
@@ -1382,32 +1401,37 @@ class CourseController extends Controller
         $order = FormOrder::where('ident', $ident)->firstOrFail();
         $course = $order->course;
 
-        // Wyślij e-mail z załączonym PDF
+        // Wyślij e-mail z załączonym PDF tylko bezpośrednio po przesłaniu/edycji formularza (nie przy odświeżeniu strony)
+        $shouldSendEmail = session('order_just_submitted') === $ident;
+        if ($shouldSendEmail) {
+            session()->forget('order_just_submitted');
+        }
+
         try {
-            // Przygotuj listę adresów do wysłania
-            $emailsToSend = [];
-            
-            // Adres uczestnika
-            $participantEmail = $order->participant_email;
-            if ($participantEmail) {
-                $emailsToSend[] = strtolower(trim($participantEmail));
-            }
-            
-            // Adres do faktury (orderer_email)
-            $ordererEmail = $order->orderer_email;
-            if ($ordererEmail) {
-                $normalizedOrdererEmail = strtolower(trim($ordererEmail));
-                // Dodaj tylko jeśli różni się od adresu uczestnika
-                if (!in_array($normalizedOrdererEmail, $emailsToSend)) {
-                    $emailsToSend[] = $normalizedOrdererEmail;
+            if ($shouldSendEmail) {
+                // Przygotuj listę adresów – główny odbiorca: zamawiający (orderer_email)
+                $emailsToSend = [];
+
+                // 1. Zamawiający – główny odbiorca (e-mail do faktury, wymagany w formularzu)
+                $ordererEmail = $order->orderer_email;
+                if ($ordererEmail) {
+                    $emailsToSend[] = strtolower(trim($ordererEmail));
                 }
-            }
-            
-            // Zawsze dodaj adres waldemar.grabowski@hostnet.pl
-            $adminEmail = 'waldemar.grabowski@hostnet.pl';
-            if (!in_array(strtolower($adminEmail), $emailsToSend)) {
-                $emailsToSend[] = $adminEmail;
-            }
+
+                // 2. Uczestnik – jeśli inny niż zamawiający
+                $participantEmail = $order->participant_email;
+                if ($participantEmail) {
+                    $normalizedParticipant = strtolower(trim($participantEmail));
+                    if (!in_array($normalizedParticipant, $emailsToSend)) {
+                        $emailsToSend[] = $normalizedParticipant;
+                    }
+                }
+
+                // 3. Kopia dla admina
+                $adminEmail = 'waldemar.grabowski@hostnet.pl';
+                if (!in_array(strtolower($adminEmail), $emailsToSend)) {
+                    $emailsToSend[] = $adminEmail;
+                }
             
             Log::info('Próba wysyłki e-maila z zamówieniem', [
                 'order_id' => $order->id,
@@ -1435,6 +1459,7 @@ class CourseController extends Controller
                         'exception' => $emailException->getTraceAsString()
                     ]);
                 }
+            }
             }
             
         } catch (Exception $e) {

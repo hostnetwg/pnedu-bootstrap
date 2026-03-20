@@ -54,9 +54,12 @@ class OrderNotificationMail extends Mailable
 
         $fileName = 'zamowienie-' . $this->order->ident . '.pdf';
 
-        // Formatuj temat e-maila
+        // Formatuj temat e-maila: "Twoje zamówienie #6312 - SZKOLENIE: Nazwa... (2026-03-19)"
         $courseTitle = str_replace('&nbsp;', ' ', strip_tags($this->order->product_name));
-        $subject = 'Twoje zamówienie #' . $this->order->id . ' - SZKOLENIE: ' . $courseTitle;
+        $courseDate = $this->course && $this->course->start_date
+            ? \Carbon\Carbon::parse($this->course->start_date)->format('Y-m-d')
+            : '';
+        $subject = 'Twoje zamówienie #' . $this->order->id . ' - SZKOLENIE: ' . $courseTitle . ($courseDate ? ' (' . $courseDate . ')' : '');
 
         return $this
             ->subject($subject)
