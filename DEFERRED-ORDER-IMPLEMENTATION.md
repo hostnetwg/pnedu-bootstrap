@@ -68,8 +68,7 @@ Formularz zamówienia z odroczonym terminem płatności został zaimplementowany
 | `publigo_product_id` | `$course->id_old` (jeśli source_id_old='certgen_Publigo') lub `$course->publigo_product_id` | Nie | ID produktu w Publigo (logika dynamiczna) |
 | `publigo_price_id` | `$course->publigo_price_id` | Nie | ID ceny w Publigo |
 | `publigo_sent` | 0 | Tak | Czy wysłano do Publigo (domyślnie: nie) |
-| `participant_name` | `first_name + last_name` | Tak | Imię i nazwisko uczestnika |
-| `participant_email` | `participant_email` | Tak | E-mail uczestnika |
+| *(brak w `form_orders`)* | — | — | Imię, nazwisko i e-mail uczestnika są w **`form_order_participants`** (wiersz `is_primary = 1`), zapisywane przez `FormOrderParticipant::syncFromFormOrder` |
 | `orderer_name` | `contact_name` | Tak | Nazwa/imię nazwisko zamawiającego |
 | `orderer_address` | `buyer_address` | Tak | Adres zamawiającego |
 | `orderer_postal_code` | `buyer_postcode` | Tak | Kod pocztowy zamawiającego |

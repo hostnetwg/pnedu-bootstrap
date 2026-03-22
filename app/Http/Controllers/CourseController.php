@@ -2,19 +2,19 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\OrderNotificationMail;
 use App\Models\Course;
 use App\Models\FormOrder;
 use App\Models\FormOrderParticipant;
 use App\Models\Participant;
+use App\Services\SendyService;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use Exception;
-use Barryvdh\DomPDF\Facade\Pdf;
-use App\Mail\OrderNotificationMail;
-use App\Services\SendyService;
 
 class CourseController extends Controller
 {
@@ -56,10 +56,10 @@ class CourseController extends Controller
                     ->whereIn('id', $seriesCourseIds)
                     ->where('is_active', true);
 
-                if (!empty($searchQuery)) {
-                    $coursesQuery->where(function($q) use ($searchQuery) {
-                        $q->where('title', 'like', '%' . $searchQuery . '%')
-                          ->orWhere('description', 'like', '%' . $searchQuery . '%');
+                if (! empty($searchQuery)) {
+                    $coursesQuery->where(function ($q) use ($searchQuery) {
+                        $q->where('title', 'like', '%'.$searchQuery.'%')
+                            ->orWhere('description', 'like', '%'.$searchQuery.'%');
                     });
                 }
 
@@ -69,7 +69,7 @@ class CourseController extends Controller
                     ->paginate(20)
                     ->appends([
                         'sort' => $sort,
-                        'q' => $searchQuery
+                        'q' => $searchQuery,
                     ]);
             }
 
@@ -77,7 +77,7 @@ class CourseController extends Controller
             $userEmail = auth()->check() ? auth()->user()->email : null;
             $participantCourseIds = [];
             $participantIdsByCourse = []; // Mapowanie course_id => participant_id
-            
+
             if ($userEmail) {
                 try {
                     $participants = DB::connection('pneadm')
@@ -85,23 +85,24 @@ class CourseController extends Controller
                         ->whereRaw('LOWER(TRIM(email)) = ?', [strtolower(trim($userEmail))])
                         ->select('id', 'course_id')
                         ->get();
-                    
+
                     $participantCourseIds = $participants->pluck('course_id')->toArray();
                     $participantIdsByCourse = $participants->pluck('id', 'course_id')->toArray();
                 } catch (Exception $e) {
-                    Log::warning('Error checking participants: ' . $e->getMessage());
+                    Log::warning('Error checking participants: '.$e->getMessage());
                 }
             }
 
             $pageTitle = 'TIK w pracy NAUCZYCIELA';
+
             return view('courses.free', compact('courses', 'sort', 'searchQuery', 'participantCourseIds', 'participantIdsByCourse', 'pageTitle'));
         } catch (Exception $e) {
-            Log::error('Error accessing free courses: ' . $e->getMessage());
-            
+            Log::error('Error accessing free courses: '.$e->getMessage());
+
             return view('courses.free', [
                 'courses' => collect([]),
                 'databaseError' => true,
-                'pageTitle' => 'TIK w pracy NAUCZYCIELA'
+                'pageTitle' => 'TIK w pracy NAUCZYCIELA',
             ]);
         }
     }
@@ -134,10 +135,10 @@ class CourseController extends Controller
                     ->whereIn('id', $seriesCourseIds)
                     ->where('is_active', true);
 
-                if (!empty($searchQuery)) {
-                    $coursesQuery->where(function($q) use ($searchQuery) {
-                        $q->where('title', 'like', '%' . $searchQuery . '%')
-                          ->orWhere('description', 'like', '%' . $searchQuery . '%');
+                if (! empty($searchQuery)) {
+                    $coursesQuery->where(function ($q) use ($searchQuery) {
+                        $q->where('title', 'like', '%'.$searchQuery.'%')
+                            ->orWhere('description', 'like', '%'.$searchQuery.'%');
                     });
                 }
 
@@ -147,7 +148,7 @@ class CourseController extends Controller
                     ->paginate(20)
                     ->appends([
                         'sort' => $sort,
-                        'q' => $searchQuery
+                        'q' => $searchQuery,
                     ]);
             }
 
@@ -155,7 +156,7 @@ class CourseController extends Controller
             $userEmail = auth()->check() ? auth()->user()->email : null;
             $participantCourseIds = [];
             $participantIdsByCourse = []; // Mapowanie course_id => participant_id
-            
+
             if ($userEmail) {
                 try {
                     $participants = DB::connection('pneadm')
@@ -163,23 +164,24 @@ class CourseController extends Controller
                         ->whereRaw('LOWER(TRIM(email)) = ?', [strtolower(trim($userEmail))])
                         ->select('id', 'course_id')
                         ->get();
-                    
+
                     $participantCourseIds = $participants->pluck('course_id')->toArray();
                     $participantIdsByCourse = $participants->pluck('id', 'course_id')->toArray();
                 } catch (Exception $e) {
-                    Log::warning('Error checking participants: ' . $e->getMessage());
+                    Log::warning('Error checking participants: '.$e->getMessage());
                 }
             }
 
             $pageTitle = 'Szkolny ADMINISTRATOR Office 365';
+
             return view('courses.free', compact('courses', 'sort', 'searchQuery', 'participantCourseIds', 'participantIdsByCourse', 'pageTitle'));
         } catch (Exception $e) {
-            Log::error('Error accessing office365 courses: ' . $e->getMessage());
-            
+            Log::error('Error accessing office365 courses: '.$e->getMessage());
+
             return view('courses.free', [
                 'courses' => collect([]),
                 'databaseError' => true,
-                'pageTitle' => 'Szkolny ADMINISTRATOR Office 365'
+                'pageTitle' => 'Szkolny ADMINISTRATOR Office 365',
             ]);
         }
     }
@@ -212,10 +214,10 @@ class CourseController extends Controller
                     ->whereIn('id', $seriesCourseIds)
                     ->where('is_active', true);
 
-                if (!empty($searchQuery)) {
-                    $coursesQuery->where(function($q) use ($searchQuery) {
-                        $q->where('title', 'like', '%' . $searchQuery . '%')
-                          ->orWhere('description', 'like', '%' . $searchQuery . '%');
+                if (! empty($searchQuery)) {
+                    $coursesQuery->where(function ($q) use ($searchQuery) {
+                        $q->where('title', 'like', '%'.$searchQuery.'%')
+                            ->orWhere('description', 'like', '%'.$searchQuery.'%');
                     });
                 }
 
@@ -225,7 +227,7 @@ class CourseController extends Controller
                     ->paginate(20)
                     ->appends([
                         'sort' => $sort,
-                        'q' => $searchQuery
+                        'q' => $searchQuery,
                     ]);
             }
 
@@ -233,7 +235,7 @@ class CourseController extends Controller
             $userEmail = auth()->check() ? auth()->user()->email : null;
             $participantCourseIds = [];
             $participantIdsByCourse = []; // Mapowanie course_id => participant_id
-            
+
             if ($userEmail) {
                 try {
                     $participants = DB::connection('pneadm')
@@ -241,23 +243,24 @@ class CourseController extends Controller
                         ->whereRaw('LOWER(TRIM(email)) = ?', [strtolower(trim($userEmail))])
                         ->select('id', 'course_id')
                         ->get();
-                    
+
                     $participantCourseIds = $participants->pluck('course_id')->toArray();
                     $participantIdsByCourse = $participants->pluck('id', 'course_id')->toArray();
                 } catch (Exception $e) {
-                    Log::warning('Error checking participants: ' . $e->getMessage());
+                    Log::warning('Error checking participants: '.$e->getMessage());
                 }
             }
 
             $pageTitle = 'Akademia Rodzica';
+
             return view('courses.free', compact('courses', 'sort', 'searchQuery', 'participantCourseIds', 'participantIdsByCourse', 'pageTitle'));
         } catch (Exception $e) {
-            Log::error('Error accessing parent academy courses: ' . $e->getMessage());
-            
+            Log::error('Error accessing parent academy courses: '.$e->getMessage());
+
             return view('courses.free', [
                 'courses' => collect([]),
                 'databaseError' => true,
-                'pageTitle' => 'Akademia Rodzica'
+                'pageTitle' => 'Akademia Rodzica',
             ]);
         }
     }
@@ -290,10 +293,10 @@ class CourseController extends Controller
                     ->whereIn('id', $seriesCourseIds)
                     ->where('is_active', true);
 
-                if (!empty($searchQuery)) {
-                    $coursesQuery->where(function($q) use ($searchQuery) {
-                        $q->where('title', 'like', '%' . $searchQuery . '%')
-                          ->orWhere('description', 'like', '%' . $searchQuery . '%');
+                if (! empty($searchQuery)) {
+                    $coursesQuery->where(function ($q) use ($searchQuery) {
+                        $q->where('title', 'like', '%'.$searchQuery.'%')
+                            ->orWhere('description', 'like', '%'.$searchQuery.'%');
                     });
                 }
 
@@ -303,7 +306,7 @@ class CourseController extends Controller
                     ->paginate(20)
                     ->appends([
                         'sort' => $sort,
-                        'q' => $searchQuery
+                        'q' => $searchQuery,
                     ]);
             }
 
@@ -311,7 +314,7 @@ class CourseController extends Controller
             $userEmail = auth()->check() ? auth()->user()->email : null;
             $participantCourseIds = [];
             $participantIdsByCourse = []; // Mapowanie course_id => participant_id
-            
+
             if ($userEmail) {
                 try {
                     $participants = DB::connection('pneadm')
@@ -319,23 +322,24 @@ class CourseController extends Controller
                         ->whereRaw('LOWER(TRIM(email)) = ?', [strtolower(trim($userEmail))])
                         ->select('id', 'course_id')
                         ->get();
-                    
+
                     $participantCourseIds = $participants->pluck('course_id')->toArray();
                     $participantIdsByCourse = $participants->pluck('id', 'course_id')->toArray();
                 } catch (Exception $e) {
-                    Log::warning('Error checking participants: ' . $e->getMessage());
+                    Log::warning('Error checking participants: '.$e->getMessage());
                 }
             }
 
             $pageTitle = 'Akademia Dyrektora';
+
             return view('courses.free', compact('courses', 'sort', 'searchQuery', 'participantCourseIds', 'participantIdsByCourse', 'pageTitle'));
         } catch (Exception $e) {
-            Log::error('Error accessing director academy courses: ' . $e->getMessage());
-            
+            Log::error('Error accessing director academy courses: '.$e->getMessage());
+
             return view('courses.free', [
                 'courses' => collect([]),
                 'databaseError' => true,
-                'pageTitle' => 'Akademia Dyrektora'
+                'pageTitle' => 'Akademia Dyrektora',
             ]);
         }
     }
@@ -364,15 +368,15 @@ class CourseController extends Controller
             ->where('type', 'online')
             ->where('is_paid', 1)
             ->whereNull('deleted_at')
-            ->where(function($query) {
-                $query->where(function($q) {
+            ->where(function ($query) {
+                $query->where(function ($q) {
                     // Szkolenia z datą zakończenia w przeszłości
                     $q->whereNotNull('end_date')
-                      ->where('end_date', '<', now());
-                })->orWhere(function($q) {
+                        ->where('end_date', '<', now());
+                })->orWhere(function ($q) {
                     // Szkolenia bez daty zakończenia, ale z datą rozpoczęcia w przeszłości (starsze niż 30 dni)
                     $q->whereNull('end_date')
-                      ->where('start_date', '<', now()->subDays(30));
+                        ->where('start_date', '<', now()->subDays(30));
                 });
             })
             ->where('source_id_old', 'certgen_Publigo')
@@ -388,13 +392,13 @@ class CourseController extends Controller
     public function show($id)
     {
         $course = \App\Models\Course::with(['instructor', 'priceVariants', 'onlineDetail'])->findOrFail($id);
-        
+
         // Debug: sprawdź czy pole offer_description_html istnieje
         \Log::info('Course data:', [
             'id' => $course->id,
             'title' => $course->title,
             'offer_description_html' => $course->offer_description_html ?? 'NULL',
-            'has_offer_description' => !empty($course->offer_description_html),
+            'has_offer_description' => ! empty($course->offer_description_html),
             'trainer' => $course->trainer,
             'trainer_title' => $course->trainer_title,
             'instructor_id' => $course->instructor_id,
@@ -402,10 +406,11 @@ class CourseController extends Controller
             'instructor_full_name' => $course->instructor->full_name ?? 'NULL',
             'instructor_gender' => $course->instructor->gender ?? 'NULL',
             'instructor_bio_html' => $course->instructor->bio_html ?? 'NULL',
-            'has_instructor_bio' => !empty($course->instructor->bio_html)
+            'has_instructor_bio' => ! empty($course->instructor->bio_html),
         ]);
-        
+
         $paymentOptions = \App\Models\PaymentDisplayOption::getForCoursePage();
+
         return view('courses.show', compact('course', 'paymentOptions'));
     }
 
@@ -427,6 +432,7 @@ class CourseController extends Controller
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             $message = collect($e->errors())->flatten()->first() ?? 'Wystąpił błąd w formularzu.';
+
             return redirect()->route('home')
                 ->with('course_registration_success', false)
                 ->with('course_registration_message', $message);
@@ -440,6 +446,7 @@ class CourseController extends Controller
 
         if (empty($sendyUrl) || empty($sendyApiKey)) {
             Log::warning('Sendy not configured: missing SENDY_URL or SENDY_API_KEY');
+
             return redirect()->route('home')
                 ->with('course_registration_success', false)
                 ->with('course_registration_message', 'Zapis na szkolenie jest tymczasowo niedostępny. Spróbuj później.');
@@ -448,7 +455,7 @@ class CourseController extends Controller
         $sendy = new SendyService($sendyUrl, $sendyApiKey);
         $result = $sendy->subscribeCourseRegistration($email, $newsletterConsent);
 
-        if (!$result['tik']) {
+        if (! $result['tik']) {
             return redirect()->route('home')
                 ->with('course_registration_success', false)
                 ->with('course_registration_message', 'Nie udało się zapisać na listę. Sprawdź adres e-mail lub spróbuj później.');
@@ -465,6 +472,7 @@ class CourseController extends Controller
     public function payOnline($id)
     {
         $course = \App\Models\Course::findOrFail($id);
+
         return view('courses.pay-online', compact('course'));
     }
 
@@ -555,13 +563,13 @@ class CourseController extends Controller
 
         // Dodatkowa walidacja dla instytucji: jeśli podane dane odbiorcy, to recipient_nip jest wymagany
         if ($buyerType === 'organisation') {
-            $hasRecipientData = $request->filled('recipient_name') || 
-                                $request->filled('recipient_street') || 
-                                $request->filled('recipient_city') || 
+            $hasRecipientData = $request->filled('recipient_name') ||
+                                $request->filled('recipient_street') ||
+                                $request->filled('recipient_city') ||
                                 $request->filled('recipient_postcode') ||
                                 $request->filled('recipient_country');
-            
-            if ($hasRecipientData && !$request->filled('recipient_nip')) {
+
+            if ($hasRecipientData && ! $request->filled('recipient_nip')) {
                 return redirect()->back()
                     ->withErrors(['recipient_nip' => 'NIP odbiorcy jest wymagany, jeśli podano dane odbiorcy.'])
                     ->withInput();
@@ -617,17 +625,18 @@ class CourseController extends Controller
             'ip_address' => $request->ip(),
         ]);
 
-        $payuService = new \App\Services\PayUService();
+        $payuService = new \App\Services\PayUService;
         $notifyUrl = route('payment.payu.notify');
         $continueUrl = route('payment.payu.return');
 
         $result = $payuService->createOrder($order, $notifyUrl, $continueUrl);
 
-        if (!$result['success']) {
+        if (! $result['success']) {
             $errorMsg = $result['error'] ?? 'Nie udało się połączyć z PayU. Spróbuj ponownie.';
             if (str_contains($errorMsg, 'tokenu')) {
                 $errorMsg .= ' Sprawdź konfigurację w .env (PAYU_CLIENT_ID, PAYU_CLIENT_SECRET, PAYU_SANDBOX) oraz logi: storage/logs/laravel.log';
             }
+
             return redirect()->route('payment.online', $course->id)
                 ->with('error', $errorMsg)
                 ->withInput();
@@ -676,17 +685,18 @@ class CourseController extends Controller
             'ip_address' => $request->ip(),
         ]);
 
-        $paynowService = new \App\Services\PayNowService();
+        $paynowService = new \App\Services\PayNowService;
         $notifyUrl = route('payment.paynow.notify');
         $continueUrl = route('payment.paynow.return');
 
         $result = $paynowService->createOrder($order, $notifyUrl, $continueUrl);
 
-        if (!$result['success']) {
+        if (! $result['success']) {
             $errorMsg = $result['error'] ?? 'Nie udało się połączyć z PayNow. Spróbuj ponownie.';
             if (str_contains($errorMsg, 'konfiguracji')) {
                 $errorMsg .= ' Sprawdź konfigurację w .env (PAYNOW_API_KEY, PAYNOW_SIGNATURE_KEY, PAYNOW_SANDBOX) oraz logi: storage/logs/laravel.log';
             }
+
             return redirect()->route('payment.online', $course->id)
                 ->with('error', $errorMsg)
                 ->withInput();
@@ -761,18 +771,19 @@ class CourseController extends Controller
     public function deferredOrder($id, $ident = null)
     {
         $course = \App\Models\Course::with('priceVariants')->findOrFail($id);
-        
+
         // Sprawdź czy to tryb testowy (URL kończy się na /test)
         $isTestMode = Str::endsWith(request()->path(), '/deferred-order/test');
-        
+
         // Sprawdź czy to edycja istniejącego zamówienia
         $orderData = [];
         $isEditMode = false;
-        
+
         if ($ident) {
             $existingOrder = FormOrder::where('ident', $ident)->first();
             if ($existingOrder && $existingOrder->product_id == $id) {
                 $isEditMode = true;
+                $participantPrefill = $this->participantPrefillFromFormOrder($existingOrder);
                 // Wczytaj dane z zamówienia
                 $orderData = [
                     'buyer_name' => $existingOrder->buyer_name,
@@ -788,9 +799,9 @@ class CourseController extends Controller
                     'contact_name' => $existingOrder->orderer_name,
                     'contact_phone' => $existingOrder->orderer_phone,
                     'contact_email' => $existingOrder->orderer_email,
-                    'participant_first_name' => explode(' ', $existingOrder->participant_name)[0] ?? '',
-                    'participant_last_name' => implode(' ', array_slice(explode(' ', $existingOrder->participant_name), 1)),
-                    'participant_email' => $existingOrder->participant_email,
+                    'participant_first_name' => $participantPrefill['participant_first_name'],
+                    'participant_last_name' => $participantPrefill['participant_last_name'],
+                    'participant_email' => $participantPrefill['participant_email'],
                     'invoice_notes' => $existingOrder->invoice_notes,
                     'payment_terms' => $existingOrder->invoice_payment_delay ?? $existingOrder->ptw,
                     'order_id' => $existingOrder->id,
@@ -798,7 +809,7 @@ class CourseController extends Controller
                 ];
             }
         }
-        
+
         // Dane testowe (tylko jeśli nie ma danych z zamówienia)
         $testData = $orderData;
         if (empty($testData) && $isTestMode) {
@@ -828,10 +839,10 @@ class CourseController extends Controller
                 'payment_terms' => 14,
             ];
         }
-        
+
         // Pobierz dane zalogowanego użytkownika (jeśli jest zalogowany)
         $user = auth()->user();
-        
+
         return view('courses.deferred-order', compact('course', 'testData', 'isTestMode', 'isEditMode', 'user'));
     }
 
@@ -855,6 +866,7 @@ class CourseController extends Controller
             $existingOrder = FormOrder::where('ident', $ident)->first();
             if ($existingOrder && $existingOrder->product_id == $id) {
                 $isEditMode = true;
+                $participantPrefill = $this->participantPrefillFromFormOrder($existingOrder);
                 $orderData = [
                     'buyer_name' => $existingOrder->buyer_name,
                     'buyer_address' => $existingOrder->buyer_address,
@@ -871,9 +883,9 @@ class CourseController extends Controller
                     'contact_name' => $existingOrder->orderer_name,
                     'contact_phone' => $existingOrder->orderer_phone,
                     'contact_email' => $existingOrder->orderer_email,
-                    'participant_first_name' => explode(' ', $existingOrder->participant_name)[0] ?? '',
-                    'participant_last_name' => implode(' ', array_slice(explode(' ', $existingOrder->participant_name), 1)),
-                    'participant_email' => $existingOrder->participant_email,
+                    'participant_first_name' => $participantPrefill['participant_first_name'],
+                    'participant_last_name' => $participantPrefill['participant_last_name'],
+                    'participant_email' => $participantPrefill['participant_email'],
                     'invoice_notes' => $existingOrder->invoice_notes,
                     'payment_terms' => $existingOrder->invoice_payment_delay ?? $existingOrder->ptw,
                     'order_id' => $existingOrder->id,
@@ -931,9 +943,10 @@ class CourseController extends Controller
         $participant = Participant::whereRaw('LOWER(TRIM(email)) = ?', [$normalized])
             ->orderByDesc('id')
             ->first();
-        if (!$participant) {
+        if (! $participant) {
             return response()->json(['found' => false], 200, ['Content-Type' => 'application/json']);
         }
+
         return response()->json([
             'found' => true,
             'first_name' => (string) ($participant->first_name ?? ''),
@@ -941,6 +954,39 @@ class CourseController extends Controller
             'birth_date' => $participant->birth_date ? $participant->birth_date->format('d.m.Y') : null,
             'birth_place' => $participant->birth_place ? (string) $participant->birth_place : null,
         ], 200, ['Content-Type' => 'application/json']);
+    }
+
+    /**
+     * Dane uczestnika do ponownego wypełnienia formularza (edycja zamówienia) – z form_order_participants, z fallbackiem.
+     *
+     * @return array{participant_first_name: string, participant_last_name: string, participant_email: string}
+     */
+    protected function participantPrefillFromFormOrder(FormOrder $order): array
+    {
+        $order->loadMissing('primaryParticipant');
+        $p = $order->primaryParticipant;
+        if ($p) {
+            return [
+                'participant_first_name' => (string) ($p->participant_firstname ?? ''),
+                'participant_last_name' => (string) ($p->participant_lastname ?? ''),
+                'participant_email' => (string) ($p->participant_email ?? ''),
+            ];
+        }
+
+        $displayName = trim($order->display_participant_name);
+        $first = '';
+        $last = '';
+        if ($displayName !== '') {
+            $segments = preg_split('/\s+/', $displayName, 2);
+            $first = $segments[0] ?? '';
+            $last = $segments[1] ?? '';
+        }
+
+        return [
+            'participant_first_name' => $first,
+            'participant_last_name' => $last,
+            'participant_email' => (string) ($order->display_participant_email ?? ''),
+        ];
     }
 
     /**
@@ -1013,7 +1059,7 @@ class CourseController extends Controller
                     ->first();
             }
 
-            // Dane do zapisania
+            // Dane do zapisania (uczestnik wyłącznie w form_order_participants)
             $orderData = [
                 'ptw' => $validated['payment_terms'],
                 'product_id' => $course->id,
@@ -1022,8 +1068,6 @@ class CourseController extends Controller
                 'product_description' => strip_tags($course->description ?? ''),
                 'publigo_product_id' => $publicoProductId,
                 'publigo_price_id' => $course->publigo_price_id,
-                'participant_name' => $validated['participant_first_name'] . ' ' . $validated['participant_last_name'],
-                'participant_email' => $validated['participant_email'],
                 'orderer_name' => $validated['contact_name'],
                 'orderer_address' => $validated['buyer_address'],
                 'orderer_postal_code' => $validated['buyer_postcode'],
@@ -1052,7 +1096,7 @@ class CourseController extends Controller
                     'order_id' => $order->id,
                     'ident' => $order->ident,
                     'course_id' => $course->id,
-                    'participant_email' => $order->participant_email,
+                    'participant_email' => $validated['participant_email'],
                 ]);
             } else {
                 $orderData['ident'] = FormOrder::generateIdent();
@@ -1064,7 +1108,7 @@ class CourseController extends Controller
                     'order_id' => $order->id,
                     'ident' => $order->ident,
                     'course_id' => $course->id,
-                    'participant_email' => $order->participant_email,
+                    'participant_email' => $validated['participant_email'],
                 ]);
             }
 
@@ -1103,7 +1147,7 @@ class CourseController extends Controller
         $course = Course::with('priceVariants')->findOrFail($id);
 
         $buyerType = $request->input('buyer_type', 'organisation');
-        if (!in_array($buyerType, ['organisation', 'person'], true)) {
+        if (! in_array($buyerType, ['organisation', 'person'], true)) {
             $buyerType = 'organisation';
         }
 
@@ -1151,7 +1195,7 @@ class CourseController extends Controller
         ]);
 
         // Dodatkowa walidacja: termin płatności wymagany tylko dla faktury z odroczonym terminem
-        if (($validated['payment_type'] ?? null) === 'deferred' && (!isset($validated['payment_terms']) || $validated['payment_terms'] === '')) {
+        if (($validated['payment_type'] ?? null) === 'deferred' && (! isset($validated['payment_terms']) || $validated['payment_terms'] === '')) {
             return back()
                 ->withErrors(['payment_terms' => 'Podaj termin płatności dla faktury z odroczonym terminem (0–31 dni).'])
                 ->withInput();
@@ -1196,7 +1240,7 @@ class CourseController extends Controller
             // na razie mapujemy NIP z pola buyer_nip8 (jeśli podany)
             $buyerNip = $request->input('buyer_nip8') ?: null;
             if ($buyerType === 'person') {
-                $buyerName = trim(($validated['buyer_person_first_name'] ?? '') . ' ' . ($validated['buyer_person_last_name'] ?? '')) ?: ($validated['contact_name'] ?? $buyerName);
+                $buyerName = trim(($validated['buyer_person_first_name'] ?? '').' '.($validated['buyer_person_last_name'] ?? '')) ?: ($validated['contact_name'] ?? $buyerName);
                 $buyerNip = null;
             }
 
@@ -1208,8 +1252,6 @@ class CourseController extends Controller
                 'product_description' => strip_tags($course->description ?? ''),
                 'publigo_product_id' => $publicoProductId,
                 'publigo_price_id' => $course->publigo_price_id,
-                'participant_name' => $validated['participant_first_name'] . ' ' . $validated['participant_last_name'],
-                'participant_email' => $validated['participant_email'],
                 'orderer_name' => $validated['contact_name'],
                 'orderer_address' => $validated['buyer_address'],
                 'orderer_postal_code' => $validated['buyer_postcode'],
@@ -1311,34 +1353,38 @@ class CourseController extends Controller
         ]);
 
         if ($paymentGateway === 'payu') {
-            $payuService = new \App\Services\PayUService();
+            $payuService = new \App\Services\PayUService;
             $notifyUrl = route('payment.payu.notify');
             $continueUrl = route('payment.payu.return');
             $result = $payuService->createOrder($order, $notifyUrl, $continueUrl);
 
-            if (!$result['success']) {
+            if (! $result['success']) {
                 $errorMsg = $result['error'] ?? 'Nie udało się połączyć z PayU. Spróbuj ponownie.';
+
                 return redirect()->route('payment.order-form', $course->id)
                     ->with('error', $errorMsg)
                     ->withInput();
             }
             session(['payu_order_ident' => $order->ident]);
             session(['payu_order_email' => $order->email]);
+
             return redirect()->away($result['redirect_uri']);
         }
 
         if ($paymentGateway === 'paynow') {
-            $paynowService = new \App\Services\PayNowService();
+            $paynowService = new \App\Services\PayNowService;
             $notifyUrl = route('payment.paynow.notify');
             $continueUrl = route('payment.paynow.return');
             $result = $paynowService->createOrder($order, $notifyUrl, $continueUrl);
 
-            if (!$result['success']) {
+            if (! $result['success']) {
                 $errorMsg = $result['error'] ?? 'Nie udało się połączyć z PayNow. Spróbuj ponownie.';
+
                 return redirect()->route('payment.order-form', $course->id)
                     ->with('error', $errorMsg)
                     ->withInput();
             }
+
             return redirect()->away($result['redirect_url']);
         }
 
@@ -1378,10 +1424,11 @@ class CourseController extends Controller
         }
 
         // Osoba fizyczna
-        $buyerName = trim(($request->input('buyer_person_first_name') ?? '') . ' ' . ($request->input('buyer_person_last_name') ?? ''));
+        $buyerName = trim(($request->input('buyer_person_first_name') ?? '').' '.($request->input('buyer_person_last_name') ?? ''));
         if (empty($buyerName)) {
             $buyerName = $request->input('contact_name');
         }
+
         return [
             'full_name' => $buyerName,
             'street' => $request->input('buyer_address'),
@@ -1398,7 +1445,7 @@ class CourseController extends Controller
      */
     public function orderSummary($ident)
     {
-        $order = FormOrder::where('ident', $ident)->firstOrFail();
+        $order = FormOrder::with('primaryParticipant')->where('ident', $ident)->firstOrFail();
         $course = $order->course;
 
         // Wyślij e-mail z załączonym PDF tylko bezpośrednio po przesłaniu/edycji formularza (nie przy odświeżeniu strony)
@@ -1419,55 +1466,55 @@ class CourseController extends Controller
                 }
 
                 // 2. Uczestnik – jeśli inny niż zamawiający
-                $participantEmail = $order->participant_email;
+                $participantEmail = $order->display_participant_email;
                 if ($participantEmail) {
                     $normalizedParticipant = strtolower(trim($participantEmail));
-                    if (!in_array($normalizedParticipant, $emailsToSend)) {
+                    if (! in_array($normalizedParticipant, $emailsToSend)) {
                         $emailsToSend[] = $normalizedParticipant;
                     }
                 }
 
                 // 3. Kopia dla admina
                 $adminEmail = 'waldemar.grabowski@hostnet.pl';
-                if (!in_array(strtolower($adminEmail), $emailsToSend)) {
+                if (! in_array(strtolower($adminEmail), $emailsToSend)) {
                     $emailsToSend[] = $adminEmail;
                 }
-            
-            Log::info('Próba wysyłki e-maila z zamówieniem', [
-                'order_id' => $order->id,
-                'order_ident' => $order->ident,
-                'emails' => $emailsToSend
-            ]);
-            
-            // Wyślij e-mail na wszystkie adresy
-            foreach ($emailsToSend as $email) {
-                try {
-                    Mail::to($email)
-                        ->send(new OrderNotificationMail($order, $course));
-                    
-                    Log::info('E-mail z zamówieniem został wysłany', [
-                        'order_id' => $order->id,
-                        'order_ident' => $order->ident,
-                        'email' => $email
-                    ]);
-                } catch (Exception $emailException) {
-                    // Loguj błąd dla konkretnego adresu, ale kontynuuj wysyłkę na pozostałe
-                    Log::error('Błąd wysyłki e-maila z zamówieniem na konkretny adres: ' . $emailException->getMessage(), [
-                        'order_id' => $order->id,
-                        'order_ident' => $order->ident,
-                        'email' => $email,
-                        'exception' => $emailException->getTraceAsString()
-                    ]);
+
+                Log::info('Próba wysyłki e-maila z zamówieniem', [
+                    'order_id' => $order->id,
+                    'order_ident' => $order->ident,
+                    'emails' => $emailsToSend,
+                ]);
+
+                // Wyślij e-mail na wszystkie adresy
+                foreach ($emailsToSend as $email) {
+                    try {
+                        Mail::to($email)
+                            ->send(new OrderNotificationMail($order, $course));
+
+                        Log::info('E-mail z zamówieniem został wysłany', [
+                            'order_id' => $order->id,
+                            'order_ident' => $order->ident,
+                            'email' => $email,
+                        ]);
+                    } catch (Exception $emailException) {
+                        // Loguj błąd dla konkretnego adresu, ale kontynuuj wysyłkę na pozostałe
+                        Log::error('Błąd wysyłki e-maila z zamówieniem na konkretny adres: '.$emailException->getMessage(), [
+                            'order_id' => $order->id,
+                            'order_ident' => $order->ident,
+                            'email' => $email,
+                            'exception' => $emailException->getTraceAsString(),
+                        ]);
+                    }
                 }
             }
-            }
-            
+
         } catch (Exception $e) {
             // Loguj błąd, ale nie blokuj wyświetlania podsumowania
-            Log::error('Błąd wysyłki e-maila z zamówieniem: ' . $e->getMessage(), [
+            Log::error('Błąd wysyłki e-maila z zamówieniem: '.$e->getMessage(), [
                 'order_id' => $order->id,
                 'order_ident' => $order->ident,
-                'exception' => $e->getTraceAsString()
+                'exception' => $e->getTraceAsString(),
             ]);
         }
 
@@ -1479,11 +1526,11 @@ class CourseController extends Controller
      */
     public function orderPdf($ident)
     {
-        $order = FormOrder::where('ident', $ident)->firstOrFail();
+        $order = FormOrder::with('primaryParticipant')->where('ident', $ident)->firstOrFail();
         $course = $order->course;
 
         $pdf = Pdf::loadView('orders.pdf', compact('order', 'course'));
-        
-        return $pdf->stream('zamowienie-' . $order->ident . '.pdf');
+
+        return $pdf->stream('zamowienie-'.$order->ident.'.pdf');
     }
 }

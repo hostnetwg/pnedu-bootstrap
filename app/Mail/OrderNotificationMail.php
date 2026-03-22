@@ -3,10 +3,10 @@
 namespace App\Mail;
 
 use App\Models\FormOrder;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
-use Barryvdh\DomPDF\Facade\Pdf;
 
 class OrderNotificationMail extends Mailable
 {
@@ -29,13 +29,12 @@ class OrderNotificationMail extends Mailable
     /**
      * Create a new message instance.
      *
-     * @param  \App\Models\FormOrder  $order
      * @param  \App\Models\Course  $course
      * @return void
      */
     public function __construct(FormOrder $order, $course)
     {
-        $this->order = $order;
+        $this->order = $order->loadMissing('primaryParticipant');
         $this->course = $course;
     }
 
@@ -49,17 +48,17 @@ class OrderNotificationMail extends Mailable
         // Generuj PDF
         $pdf = Pdf::loadView('orders.pdf', [
             'order' => $this->order,
-            'course' => $this->course
+            'course' => $this->course,
         ]);
 
-        $fileName = 'zamowienie-' . $this->order->ident . '.pdf';
+        $fileName = 'zamowienie-'.$this->order->ident.'.pdf';
 
         // Formatuj temat e-maila: "Twoje zamówienie #6312 - SZKOLENIE: Nazwa... (2026-03-19)"
         $courseTitle = str_replace('&nbsp;', ' ', strip_tags($this->order->product_name));
         $courseDate = $this->course && $this->course->start_date
             ? \Carbon\Carbon::parse($this->course->start_date)->format('Y-m-d')
             : '';
-        $subject = 'Twoje zamówienie #' . $this->order->id . ' - SZKOLENIE: ' . $courseTitle . ($courseDate ? ' (' . $courseDate . ')' : '');
+        $subject = 'Twoje zamówienie #'.$this->order->id.' - SZKOLENIE: '.$courseTitle.($courseDate ? ' ('.$courseDate.')' : '');
 
         return $this
             ->subject($subject)
@@ -69,7 +68,7 @@ class OrderNotificationMail extends Mailable
             ])
             ->with([
                 'order' => $this->order,
-                'course' => $this->course
+                'course' => $this->course,
             ]);
     }
 }

@@ -83,26 +83,28 @@ http://localhost:8081/courses/402/deferred-order
 # Zobacz ostatnie zamówienie
 sail mysql pneadm -e "SELECT * FROM form_orders ORDER BY id DESC LIMIT 1\G"
 
-# Zobacz zamówienia dla konkretnego kursu
-sail mysql pneadm -e "SELECT id, ident, participant_name, participant_email, order_date FROM form_orders WHERE product_id = 402 ORDER BY id DESC LIMIT 5;"
+# Zobacz zamówienia dla konkretnego kursu (uczestnik w form_order_participants)
+sail mysql pneadm -e "SELECT fo.id, fo.ident, fop.participant_firstname, fop.participant_lastname, fop.participant_email, fo.order_date FROM form_orders fo LEFT JOIN form_order_participants fop ON fop.form_order_id = fo.id AND fop.is_primary = 1 AND fop.deleted_at IS NULL WHERE fo.product_id = 402 ORDER BY fo.id DESC LIMIT 5;"
 ```
 
 ## 📊 Przykładowe Zapytania SQL
 
 ### Wszystkie zamówienia z dziś
 ```sql
-SELECT id, ident, participant_name, product_name, order_date 
-FROM form_orders 
-WHERE DATE(order_date) = CURDATE() 
-ORDER BY id DESC;
+SELECT fo.id, fo.ident, CONCAT(fop.participant_firstname, ' ', fop.participant_lastname) AS participant_name, fo.product_name, fo.order_date
+FROM form_orders fo
+LEFT JOIN form_order_participants fop ON fop.form_order_id = fo.id AND fop.is_primary = 1 AND fop.deleted_at IS NULL
+WHERE DATE(fo.order_date) = CURDATE()
+ORDER BY fo.id DESC;
 ```
 
 ### Zamówienia oczekujące na wysłanie do Publigo
 ```sql
-SELECT id, ident, participant_name, publigo_product_id, publigo_sent 
-FROM form_orders 
-WHERE publigo_sent = 0 AND publigo_product_id IS NOT NULL
-ORDER BY order_date DESC;
+SELECT fo.id, fo.ident, CONCAT(fop.participant_firstname, ' ', fop.participant_lastname) AS participant_name, fo.publigo_product_id, fo.publigo_sent
+FROM form_orders fo
+LEFT JOIN form_order_participants fop ON fop.form_order_id = fo.id AND fop.is_primary = 1 AND fop.deleted_at IS NULL
+WHERE fo.publigo_sent = 0 AND fo.publigo_product_id IS NOT NULL
+ORDER BY fo.order_date DESC;
 ```
 
 ### Statystyki zamówień

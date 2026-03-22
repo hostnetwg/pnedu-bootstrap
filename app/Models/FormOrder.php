@@ -41,8 +41,6 @@ class FormOrder extends Model
         'publigo_price_id',
         'publigo_sent',
         'publigo_sent_at',
-        'participant_name',
-        'participant_email',
         'orderer_name',
         'orderer_address',
         'orderer_postal_code',
@@ -85,14 +83,12 @@ class FormOrder extends Model
 
     /**
      * Generate a unique order identifier.
-     *
-     * @return string
      */
     public static function generateIdent(): string
     {
         do {
             // Generate format: YYMMDD-XXXXXX (6 random chars)
-            $ident = date('ymd') . '-' . strtoupper(Str::random(6));
+            $ident = date('ymd').'-'.strtoupper(Str::random(6));
         } while (self::where('ident', $ident)->exists());
 
         return $ident;
@@ -104,5 +100,49 @@ class FormOrder extends Model
     public function course()
     {
         return $this->belongsTo(Course::class, 'product_id', 'id');
+    }
+
+    /**
+     * Uczestnicy zamówienia (źródło prawdy: form_order_participants).
+     */
+    public function participants()
+    {
+        return $this->hasMany(FormOrderParticipant::class, 'form_order_id');
+    }
+
+    /**
+     * Główny uczestnik (is_primary).
+     */
+    public function primaryParticipant()
+    {
+        return $this->hasOne(FormOrderParticipant::class, 'form_order_id')
+            ->where('is_primary', true)
+            ->whereNull('deleted_at');
+    }
+
+    /**
+     * Imię i nazwisko uczestnika (główny wiersz w form_order_participants).
+     */
+    public function getDisplayParticipantNameAttribute(): string
+    {
+        $p = $this->primaryParticipant;
+        if ($p && trim(($p->participant_firstname ?? '').' '.($p->participant_lastname ?? '')) !== '') {
+            return trim($p->participant_firstname.' '.$p->participant_lastname);
+        }
+
+        return '';
+    }
+
+    /**
+     * E-mail uczestnika (główny wiersz w form_order_participants).
+     */
+    public function getDisplayParticipantEmailAttribute(): ?string
+    {
+        $p = $this->primaryParticipant;
+        if ($p && ! empty(trim((string) ($p->participant_email ?? '')))) {
+            return trim((string) $p->participant_email);
+        }
+
+        return null;
     }
 }

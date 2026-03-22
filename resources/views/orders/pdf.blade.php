@@ -332,8 +332,8 @@
         </thead>
         <tbody>
             <tr>
-                <td>{{ $order->participant_name }}</td>
-                <td>{{ $order->participant_email }}</td>
+                <td>{{ $order->display_participant_name }}</td>
+                <td>{{ $order->display_participant_email }}</td>
             </tr>
         </tbody>
     </table>

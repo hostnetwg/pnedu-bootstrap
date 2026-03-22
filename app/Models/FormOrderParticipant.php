@@ -39,6 +39,7 @@ class FormOrderParticipant extends Model
     {
         $participant = self::where('form_order_id', $formOrder->id)
             ->where('is_primary', true)
+            ->whereNull('deleted_at')
             ->first();
 
         $data = [

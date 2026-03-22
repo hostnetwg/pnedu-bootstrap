@@ -64,8 +64,8 @@
         <p style="margin: 0 0 4px; font-weight: bold; font-size: 14px;">Uczestnik</p>
         <p style="margin: 0 0 4px; padding-left: 12px; font-size: 13px; color: #666;">(dane dostępowe do szkolenia, materiałów oraz zaświadczenia)</p>
         <p style="margin: 0; padding-left: 12px; color: #444;">
-            <strong style="font-size: 16px; color: #1a1a1a;">{{ $order->participant_name }}</strong><br>
-            {{ $order->participant_email }}
+            <strong style="font-size: 16px; color: #1a1a1a;">{{ $order->display_participant_name }}</strong><br>
+            {{ $order->display_participant_email }}
         </p>
     </td></tr>
     </table>
