@@ -1044,6 +1044,8 @@ class CourseController extends Controller
                 $publicoProductId = $course->publigo_product_id;
             }
 
+            $publigoPriceId = $this->resolvePubligoPriceIdForFormOrder($course, $publicoProductId);
+
             // Pobierz aktualną cenę kursu (z uwzględnieniem promocji)
             $currentPrice = null;
             $priceInfo = $course->getCurrentPrice();
@@ -1067,7 +1069,7 @@ class CourseController extends Controller
                 'product_price' => $currentPrice,
                 'product_description' => strip_tags($course->description ?? ''),
                 'publigo_product_id' => $publicoProductId,
-                'publigo_price_id' => $course->publigo_price_id,
+                'publigo_price_id' => $publigoPriceId,
                 'orderer_name' => $validated['contact_name'],
                 'orderer_address' => $validated['buyer_address'],
                 'orderer_postal_code' => $validated['buyer_postcode'],
@@ -1221,6 +1223,8 @@ class CourseController extends Controller
                 $publicoProductId = $course->publigo_product_id;
             }
 
+            $publigoPriceId = $this->resolvePubligoPriceIdForFormOrder($course, $publicoProductId);
+
             // Pobierz aktualną cenę kursu (z uwzględnieniem promocji)
             $currentPrice = null;
             $priceInfo = $course->getCurrentPrice();
@@ -1251,7 +1255,7 @@ class CourseController extends Controller
                 'product_price' => $currentPrice,
                 'product_description' => strip_tags($course->description ?? ''),
                 'publigo_product_id' => $publicoProductId,
-                'publigo_price_id' => $course->publigo_price_id,
+                'publigo_price_id' => $publigoPriceId,
                 'orderer_name' => $validated['contact_name'],
                 'orderer_address' => $validated['buyer_address'],
                 'orderer_postal_code' => $validated['buyer_postcode'],
@@ -1532,5 +1536,25 @@ class CourseController extends Controller
         $pdf = Pdf::loadView('orders.pdf', compact('order', 'course'));
 
         return $pdf->stream('zamowienie-'.$order->ident.'.pdf');
+    }
+
+    /**
+     * ID ceny Publigo zapisywane w form_orders.
+     *
+     * Formularz na pnedu bierze wartości z rekordu kursu. Często publigo_product_id jest (np. z id_old / certgen),
+     * a publigo_price_id w tabeli courses pozostaje puste — wtedy w adm nie pojawia się „Dodaj zamówienie PUBLIGO”.
+     * Stary formularz (zdalna-lekcja) zwykle zakładał domyślną cenę. Używamy 1 jak w {@see Course::getPubligoPaymentUrl()}.
+     */
+    protected function resolvePubligoPriceIdForFormOrder(Course $course, ?int $publigoProductId): ?int
+    {
+        if ($publigoProductId === null || $publigoProductId === 0) {
+            return filled($course->publigo_price_id) ? (int) $course->publigo_price_id : null;
+        }
+
+        if (filled($course->publigo_price_id)) {
+            return (int) $course->publigo_price_id;
+        }
+
+        return 1;
     }
 }
