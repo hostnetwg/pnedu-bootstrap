@@ -60,9 +60,9 @@ Route::get('/blog/wykorzystanie-aplikacji-canva', function () {
     return view('blog.wykorzystanie-aplikacji-canva');
 })->name('blog.wykorzystanie-aplikacji-canva');
 
-Route::get('/dashboard', function () {
-    return view('dashboard.index');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/dashboard', [App\Http\Controllers\DashboardController::class, 'index'])
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard');
 
 Route::get('/dashboard/szkolenia', [App\Http\Controllers\DashboardController::class, 'szkolenia'])
     ->middleware(['auth', 'verified'])

@@ -32,8 +32,11 @@
         <div class="col-lg-9">
             <div class="card border-0 shadow-sm rounded-4">
                 <div class="card-body py-4">
-                    <h2 class="h4 mb-4">Panel użytkownika</h2>
-                    <p>Witaj w swoim panelu! Tutaj znajdziesz podsumowanie swojego konta oraz szybki dostęp do najważniejszych funkcji.</p>
+                    <h2 class="h4 mb-3">Panel użytkownika</h2>
+                    <p class="mb-4">Witaj w swoim panelu! Tutaj znajdziesz podsumowanie swojego konta oraz szybki dostęp do najważniejszych funkcji.</p>
+
+                    <h3 class="h5 mb-2">Moje szkolenia</h3>
+                    @include('dashboard.partials.szkolenia-list-inner', ['szkoleniaFilterRoute' => 'dashboard'])
                 </div>
             </div>
         </div>
@@ -89,5 +92,6 @@
         font-size: 1rem;
     }
 }
+@include('dashboard.partials.szkolenia-training-styles')
 </style>
 @endpush

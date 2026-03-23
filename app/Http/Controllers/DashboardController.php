@@ -3,10 +3,20 @@
 namespace App\Http\Controllers;
 
 use App\Models\Participant;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
 {
+    /**
+     * Panel główny konta (lista szkoleń z filtrem typ=all|paid|free).
+     */
+    public function index(Request $request)
+    {
+        return view('dashboard.index', $this->participantsListingForDashboard($request));
+    }
+
     /**
      * Wyświetl widok z osadzonym wideo szkolenia
      */
@@ -42,22 +52,45 @@ class DashboardController extends Controller
 
     /**
      * Wyświetl listę szkoleń użytkownika
+     *
+     * @param  Request  $request  Query: typ=all|paid|free (wg courses.is_paid w pneadm)
      */
-    public function szkolenia()
+    public function szkolenia(Request $request)
+    {
+        return view('dashboard.szkolenia', $this->participantsListingForDashboard($request));
+    }
+
+    /**
+     * @return array{participants: LengthAwarePaginator, szkoleniaTyp: string}
+     */
+    private function participantsListingForDashboard(Request $request): array
     {
         $userEmail = Auth::user()->email;
 
+        $typ = $request->query('typ', 'all');
+        if (! in_array($typ, ['all', 'paid', 'free'], true)) {
+            $typ = 'all';
+        }
+
         // Wszyscy uczestnicy (wiersze w pneadm.participants) — także gdy kurs został usunięty (LEFT JOIN).
         // access_expires_at w participants decyduje o dostępie do nagrań/materiałów na pnedu.pl.
-        $participants = Participant::query()
+        $query = Participant::query()
             ->whereRaw('LOWER(TRIM(participants.email)) = ?', [strtolower(trim($userEmail))])
             ->leftJoin('courses', 'participants.course_id', '=', 'courses.id')
             ->select('participants.*')
             ->with(['course.instructor', 'course.videos'])
             ->orderByRaw('COALESCE(courses.start_date, participants.created_at) DESC')
-            ->orderByDesc('participants.id')
-            ->paginate(15);
+            ->orderByDesc('participants.id');
 
-        return view('dashboard.szkolenia', compact('participants'));
+        if ($typ === 'paid') {
+            $query->whereNotNull('courses.id')->where('courses.is_paid', 1);
+        } elseif ($typ === 'free') {
+            $query->whereNotNull('courses.id')->where('courses.is_paid', 0);
+        }
+
+        return [
+            'participants' => $query->paginate(15)->withQueryString(),
+            'szkoleniaTyp' => $typ,
+        ];
     }
 }
