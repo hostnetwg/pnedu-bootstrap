@@ -1,5 +1,9 @@
 @extends('layouts.app')
 
+@php
+    $isDashboard = $isDashboardContext ?? false;
+@endphp
+
 @section('title', 'Dane do zaświadczenia – ' . config('app.name'))
 
 @section('content')
@@ -59,7 +63,7 @@
                         </div>
                     @endif
 
-                    <form method="post" action="{{ route('certificates.submit-birth-data', ['token' => $token, 'course' => $course->id]) }}">
+                    <form method="post" action="{{ $isDashboard ? route('dashboard.zaswiadczenia.course.birth', ['course' => $course->id]) : route('certificates.submit-birth-data', ['token' => $token, 'course' => $course->id]) }}">
                         @csrf
                         @if($optional ?? false)
                             <input type="hidden" name="optional" value="1">
@@ -87,16 +91,20 @@
                         <div class="d-flex gap-2">
                             <button type="submit" class="btn btn-primary">{{ ($optional ?? false) ? 'Zapisz' : 'Zapisz i przejdź dalej' }}</button>
                             @if($optional ?? false)
-                                <a href="{{ route('certificates.show-by-token', ['token' => $token, 'course' => $course->id]) }}" class="btn btn-outline-secondary">Wróć do podglądu</a>
+                                <a href="{{ $isDashboard ? route('dashboard.zaswiadczenia.course', ['course' => $course->id]) : route('certificates.show-by-token', ['token' => $token, 'course' => $course->id]) }}" class="btn btn-outline-secondary">Wróć do podglądu</a>
                             @else
-                                <a href="{{ route('certificates.list-by-token', ['token' => $token]) }}" class="btn btn-outline-secondary">Anuluj</a>
+                                <a href="{{ $isDashboard ? route('dashboard.zaswiadczenia') : route('certificates.list-by-token', ['token' => $token]) }}" class="btn btn-outline-secondary">Anuluj</a>
                             @endif
                         </div>
                     </form>
                 </div>
             </div>
             <p class="text-center text-muted mt-3 small">
-                <a href="{{ route('home') }}" class="text-decoration-none">← Powrót na stronę główną</a>
+                @if($isDashboard)
+                    <a href="{{ route('dashboard') }}" class="text-decoration-none">← Powrót do panelu</a>
+                @else
+                    <a href="{{ route('home') }}" class="text-decoration-none">← Powrót na stronę główną</a>
+                @endif
             </p>
         </div>
     </div>

@@ -17,7 +17,7 @@
                         </a>
                     </li>
                     <li>
-                        <a href="{{ route('dashboard.zaswiadczenia') }}" class="d-flex align-items-center gap-2 @if(request()->routeIs('dashboard.zaswiadczenia')) active @endif">
+                        <a href="{{ route('dashboard.zaswiadczenia') }}" class="d-flex align-items-center gap-2 @if(request()->routeIs('dashboard.zaswiadczenia*')) active @endif">
                             <i class="bi bi-award"></i> Zaświadczenia
                         </a>
                     </li>
@@ -30,12 +30,13 @@
             </nav>
         </div>
         <div class="col-lg-9">
-            <div class="card border-0 shadow-sm rounded-4">
-                <div class="card-body py-4">
-                    <h2 class="h4 mb-4">Zaświadczenia</h2>
-                    <p>W tym miejscu możesz pobrać zaświadczenia ze zrealizowanych szkoleń oraz sprawdzić ich status. Wszystkie dokumenty są dostępne w formie elektronicznej.</p>
-                </div>
-            </div>
+            @include('certificates.partials.list-body', [
+                'token' => null,
+                'items' => $items,
+                'isDashboardContext' => true,
+                'highlightCourseId' => $highlightCourseId ?? null,
+                'fromLink' => $fromLink ?? false,
+            ])
         </div>
     </div>
 </div>
@@ -89,5 +90,19 @@
         font-size: 1rem;
     }
 }
+.certificates-pagination .small.text-muted {
+    display: none !important;
+}
 </style>
 @endpush
+
+@if(!empty($highlightCourseId))
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var el = document.getElementById('cert-row-{{ (int) $highlightCourseId }}');
+    if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+});
+</script>
+@endpush
+@endif

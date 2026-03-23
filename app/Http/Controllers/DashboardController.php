@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Participant;
 use Illuminate\Support\Facades\Auth;
 
@@ -22,7 +21,7 @@ class DashboardController extends Controller
         $participant->load(['course.instructor', 'course.videos']);
         $course = $participant->course;
 
-        if (!$course || $course->videos->isEmpty()) {
+        if (! $course || $course->videos->isEmpty()) {
             abort(404, 'Brak nagrania dla tego szkolenia.');
         }
 
@@ -40,23 +39,25 @@ class DashboardController extends Controller
             'selectedVideo' => $selectedVideo,
         ]);
     }
+
     /**
      * Wyświetl listę szkoleń użytkownika
      */
     public function szkolenia()
     {
         $userEmail = Auth::user()->email;
-        
-        // Pobierz uczestników dla zalogowanego użytkownika (case-insensitive) z paginacją
-        // Sortuj po dacie szkolenia (start_date) od najnowszych
-        $participants = Participant::whereRaw('LOWER(TRIM(email)) = ?', [strtolower(trim($userEmail))])
-            ->with(['course.instructor', 'course.videos'])
-            ->join('courses', 'participants.course_id', '=', 'courses.id')
+
+        // Wszyscy uczestnicy (wiersze w pneadm.participants) — także gdy kurs został usunięty (LEFT JOIN).
+        // access_expires_at w participants decyduje o dostępie do nagrań/materiałów na pnedu.pl.
+        $participants = Participant::query()
+            ->whereRaw('LOWER(TRIM(participants.email)) = ?', [strtolower(trim($userEmail))])
+            ->leftJoin('courses', 'participants.course_id', '=', 'courses.id')
             ->select('participants.*')
-            ->orderBy('courses.start_date', 'desc')
-            ->orderBy('participants.created_at', 'desc') // Dodatkowe sortowanie dla szkoleń bez daty
+            ->with(['course.instructor', 'course.videos'])
+            ->orderByRaw('COALESCE(courses.start_date, participants.created_at) DESC')
+            ->orderByDesc('participants.id')
             ->paginate(15);
-        
+
         return view('dashboard.szkolenia', compact('participants'));
     }
 }

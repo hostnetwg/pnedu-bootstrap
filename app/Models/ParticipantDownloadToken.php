@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 /**
  * Mapowanie znormalizowany e-mail → unikalny token do linków pobierania zaświadczeń.
@@ -25,7 +26,26 @@ class ParticipantDownloadToken extends Model
         if ($email === null || $email === '') {
             return '';
         }
+
         return strtolower(trim($email));
+    }
+
+    /**
+     * Pobierz lub utwórz token dla e-maila (jak w pneadm-bootstrap).
+     */
+    public static function getOrCreateTokenForEmail(?string $email): string
+    {
+        $normalized = self::normalizeEmail($email);
+        if ($normalized === '') {
+            return '';
+        }
+
+        $record = self::firstOrCreate(
+            ['email_normalized' => $normalized],
+            ['token' => Str::random(64)]
+        );
+
+        return $record->token;
     }
 
     /**
@@ -33,6 +53,11 @@ class ParticipantDownloadToken extends Model
      */
     public static function findByToken(string $token): ?self
     {
+        $token = trim($token);
+        if ($token === '') {
+            return null;
+        }
+
         return self::where('token', $token)->first();
     }
 }

@@ -17,7 +17,7 @@
                         </a>
                     </li>
                     <li>
-                        <a href="{{ route('dashboard.zaswiadczenia') }}" class="d-flex align-items-center gap-2 @if(request()->routeIs('dashboard.zaswiadczenia')) active @endif">
+                        <a href="{{ route('dashboard.zaswiadczenia') }}" class="d-flex align-items-center gap-2 @if(request()->routeIs('dashboard.zaswiadczenia*')) active @endif">
                             <i class="bi bi-award"></i> Zaświadczenia
                         </a>
                     </li>

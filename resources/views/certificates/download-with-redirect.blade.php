@@ -2,6 +2,10 @@
 
 @section('title', 'Pobieranie zaświadczenia – ' . config('app.name'))
 
+@php
+    $isDashboard = $isDashboardContext ?? false;
+@endphp
+
 @section('content')
 <div class="container py-5">
     <div class="row justify-content-center">
@@ -15,7 +19,12 @@
                     </div>
                     <h2 class="h5 mb-2">Trwa pobieranie zaświadczenia</h2>
                     <p class="text-muted mb-0">
-                        Za chwilę plik PDF z zaświadczeniem zostanie zapisany na Twoim komputerze. Następnie automatycznie przekierujemy Cię na stronę główną.
+                        Za chwilę plik PDF z zaświadczeniem zostanie zapisany na Twoim komputerze. Następnie automatycznie przekierujemy Cię
+                        @if($isDashboard)
+                            do panelu konta.
+                        @else
+                            na stronę główną.
+                        @endif
                     </p>
                 </div>
             </div>

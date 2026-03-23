@@ -19,7 +19,7 @@
                         </a>
                     </li>
                     <li>
-                        <a href="{{ route('dashboard.zaswiadczenia') }}" class="d-flex align-items-center gap-2 @if(request()->routeIs('dashboard.zaswiadczenia')) active @endif">
+                        <a href="{{ route('dashboard.zaswiadczenia') }}" class="d-flex align-items-center gap-2 @if(request()->routeIs('dashboard.zaswiadczenia*')) active @endif">
                             <i class="bi bi-award"></i> Zaświadczenia
                         </a>
                     </li>
@@ -42,7 +42,7 @@
                     <h2 class="h4 mb-2">{{ $course->title }}</h2>
                     @if($course->instructor)
                         <p class="text-muted mb-4">
-                            <small>Prowadzący: {{ $course->instructor->full_name }}@if($course->instructor->title) <span class="text-muted">({{ $course->instructor->title }})</span>@endif</small>
+                            <small>{{ $course->trainer_title }}: {{ $course->instructor->full_name }}@if($course->instructor->title) <span class="text-muted">({{ $course->instructor->title }})</span>@endif</small>
                         </p>
                     @endif
 

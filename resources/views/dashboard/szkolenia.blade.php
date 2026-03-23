@@ -17,7 +17,7 @@
                         </a>
                     </li>
                     <li>
-                        <a href="{{ route('dashboard.zaswiadczenia') }}" class="d-flex align-items-center gap-2 @if(request()->routeIs('dashboard.zaswiadczenia')) active @endif">
+                        <a href="{{ route('dashboard.zaswiadczenia') }}" class="d-flex align-items-center gap-2 @if(request()->routeIs('dashboard.zaswiadczenia*')) active @endif">
                             <i class="bi bi-award"></i> Zaświadczenia
                         </a>
                     </li>
@@ -42,75 +42,115 @@
                     @else
                         <div class="training-list">
                             @foreach($participants as $participant)
-                                @if($participant->course)
-                                    <div class="training-item">
-                                        <div class="training-content">
-                                            <h3 class="training-title">
-                                                @php
-                                                    $firstVideo = $participant->course->videos->first();
-                                                    $videoAccessActive = $firstVideo && $participant->hasActiveAccess();
-                                                @endphp
-                                                @if($firstVideo && $videoAccessActive)
-                                                    <a href="{{ route('dashboard.szkolenia.wideo', $participant) }}" class="training-title-link" title="Otwórz nagranie szkolenia">
-                                                        {{ $participant->course->title }}
-                                                        <i class="bi bi-camera-video ms-1" style="font-size: 0.9em; opacity: 0.7;"></i>
-                                                    </a>
-                                                @elseif($firstVideo && !$videoAccessActive)
-                                                    <span class="training-title-link training-title-link--disabled" title="Dostęp do nagrania wygasł">
-                                                        {{ $participant->course->title }}
-                                                        <i class="bi bi-camera-video-off ms-1 text-muted" style="font-size: 0.9em;"></i>
-                                                    </span>
-                                                @else
-                                                    {{ $participant->course->title }}
-                                                @endif
-                                            </h3>
-                                            @if($firstVideo)
-                                                <p class="training-access-term mb-2">
-                                                    @if($participant->access_expires_at)
-                                                        @if($participant->hasActiveAccess())
-                                                            <span class="text-success"><i class="bi bi-clock me-1"></i>Data wygaśnięcia dostępu do nagrania: {{ $participant->access_expires_at->format('d.m.Y H:i') }}</span>
-                                                        @else
-                                                            <span class="text-danger"><i class="bi bi-clock-history me-1"></i>Data wygaśnięcia dostępu do nagrania: {{ $participant->access_expires_at->format('d.m.Y H:i') }} (wygasło)</span>
-                                                        @endif
-                                                    @else
-                                                        <span class="text-muted"><i class="bi bi-infinity me-1"></i>Bezterminowy dostęp do nagrania</span>
-                                                    @endif
-                                                </p>
+                                @php
+                                    $course = $participant->course;
+                                    $firstVideo = $course?->videos->first();
+                                    $accessActive = $participant->hasActiveAccess();
+                                    $accessExpiresFormatted = $participant->access_expires_at
+                                        ? $participant->access_expires_at->timezone(config('app.timezone'))->format('Y-m-d H:i')
+                                        : null;
+                                @endphp
+                                <div class="training-item">
+                                    <div class="training-content">
+                                        <h3 class="training-title mb-2">
+                                            @if($firstVideo && $accessActive)
+                                                <a href="{{ route('dashboard.szkolenia.wideo', $participant) }}" class="training-title-link" title="Otwórz nagranie">
+                                                    {{ $course?->title ?? 'Szkolenie niedostępne w katalogu' }}
+                                                    <i class="bi bi-camera-video ms-1" style="font-size: 0.9em; opacity: 0.7;"></i>
+                                                </a>
+                                            @elseif($firstVideo && !$accessActive)
+                                                <span class="training-title-link training-title-link--disabled" title="Dostęp wygasł">
+                                                    {{ $course?->title ?? 'Szkolenie niedostępne w katalogu' }}
+                                                    <i class="bi bi-camera-video-off ms-1 text-muted" style="font-size: 0.9em;"></i>
+                                                </span>
+                                            @else
+                                                <span class="training-title-text">{{ $course?->title ?? 'Szkolenie niedostępne w katalogu' }}</span>
                                             @endif
-                                            <div class="training-meta">
+                                        </h3>
+                                        @if($course)
+                                            <div class="training-meta mb-2">
                                                 <span class="training-date">
-                                                    Data: 
-                                                    @if($participant->course->start_date)
-                                                        {{ \Carbon\Carbon::parse($participant->course->start_date)->format('d.m.Y') }}
+                                                    Data:
+                                                    @if($course->start_date)
+                                                        {{ \Carbon\Carbon::parse($course->start_date)->format('d.m.Y') }}
                                                     @else
                                                         <span class="text-muted">Brak daty</span>
                                                     @endif
                                                 </span>
                                                 <span class="training-separator">|</span>
                                                 <span class="training-instructor">
-                                                    Prowadzący: 
-                                                    @if($participant->course->instructor)
-                                                        {{ $participant->course->instructor->full_name }}
-                                                        @if($participant->course->instructor->title)
-                                                            <span class="text-muted">({{ $participant->course->instructor->title }})</span>
+                                                    {{ $course->trainer_title }}:
+                                                    @if($course->instructor)
+                                                        {{ $course->instructor->full_name }}
+                                                        @if($course->instructor->title)
+                                                            <span class="text-muted">({{ $course->instructor->title }})</span>
                                                         @endif
                                                     @else
                                                         <span class="text-muted">Brak prowadzącego</span>
                                                     @endif
                                                 </span>
                                             </div>
-                                        </div>
-                                        <div class="training-certificate">
-                                            <a href="{{ route('certificates.generate.by-participant', $participant->id) }}" 
-                                               class="certificate-download-link" 
-                                               title="Pobierz zaświadczenie">
-                                                <img src="{{ asset('images/certificate.png') }}" 
-                                                     alt="Zaświadczenie" 
-                                                     class="certificate-icon">
-                                            </a>
-                                        </div>
+                                        @endif
+                                        <p class="training-access-term text-muted small mb-0">
+                                            @if($participant->access_expires_at)
+                                                @if($accessActive)
+                                                    Dostęp wygaśnie {{ $accessExpiresFormatted }}
+                                                @else
+                                                    Dostęp wygasł {{ $accessExpiresFormatted }}
+                                                @endif
+                                            @else
+                                                Dostęp bezterminowy
+                                            @endif
+                                        </p>
                                     </div>
+                                    @if($course)
+                                        @php
+                                            $courseForCert = $course;
+                                            $certStatusKey = $courseForCert->certificate_download_status ?? 'in_preparation';
+                                            $certCanDownload = $certStatusKey === 'download_enabled';
+                                            $certCourseEnded = $courseForCert->end_date && \Carbon\Carbon::parse($courseForCert->end_date)->isPast();
+                                            $zaswiadczenieUrl = route('dashboard.zaswiadczenia.course', $courseForCert->id).'?from=szkolenia';
+                                        @endphp
+                                        <div class="training-certificate">
+                                            @if(!$certCourseEnded)
+                                                <span class="certificate-download-link certificate-download-link--disabled"
+                                                      title="Zaświadczenie zostanie udostępnione po zakończeniu szkolenia">
+                                                    <img src="{{ asset('images/certificate.png') }}"
+                                                         alt=""
+                                                         class="certificate-icon certificate-icon--muted"
+                                                         aria-hidden="true">
+                                                    <span class="visually-hidden">Po zakończeniu szkolenia</span>
+                                                </span>
+                                            @elseif($certCanDownload)
+                                                <a href="{{ $zaswiadczenieUrl }}"
+                                                   class="certificate-download-link"
+                                                   title="Zaświadczenie — szczegóły i pobranie (jak w zakładce Zaświadczenia)">
+                                                    <img src="{{ asset('images/certificate.png') }}"
+                                                         alt="Zaświadczenie"
+                                                         class="certificate-icon">
+                                                </a>
+                                            @elseif($certStatusKey === 'no_certificate')
+                                                <span class="certificate-download-link certificate-download-link--disabled"
+                                                      title="Brak zaświadczenia dla tego szkolenia">
+                                                    <img src="{{ asset('images/certificate.png') }}"
+                                                         alt=""
+                                                         class="certificate-icon certificate-icon--muted"
+                                                         aria-hidden="true">
+                                                    <span class="visually-hidden">Brak zaświadczenia</span>
+                                                </span>
+                                            @else
+                                                <span class="certificate-download-link certificate-download-link--disabled"
+                                                      title="Zaświadczenie w przygotowaniu — gdy będzie gotowe, pojawi się tutaj i w zakładce Zaświadczenia">
+                                                    <img src="{{ asset('images/certificate.png') }}"
+                                                         alt=""
+                                                         class="certificate-icon certificate-icon--muted"
+                                                         aria-hidden="true">
+                                                    <span class="visually-hidden">W przygotowaniu</span>
+                                                </span>
+                                            @endif
+                                        </div>
                                     @endif
+                                </div>
                             @endforeach
                         </div>
                         
@@ -242,6 +282,12 @@
     text-decoration: none;
     transition: all 0.3s ease;
 }
+.certificate-download-link--disabled {
+    cursor: help;
+}
+.certificate-download-link--disabled:hover .certificate-icon {
+    transform: none;
+}
 .certificate-icon {
     width: 250px;
     height: auto;
@@ -252,6 +298,13 @@
 .certificate-download-link:hover .certificate-icon {
     transform: scale(1.1);
     filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3));
+}
+.certificate-icon--muted {
+    opacity: 0.5;
+    filter: grayscale(0.4) drop-shadow(0 2px 6px rgba(0, 0, 0, 0.12));
+}
+.certificate-download-link--disabled:hover .certificate-icon--muted {
+    filter: grayscale(0.4) drop-shadow(0 2px 6px rgba(0, 0, 0, 0.12));
 }
 .pagination {
     margin-bottom: 0;

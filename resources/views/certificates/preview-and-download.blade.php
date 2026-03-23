@@ -1,5 +1,9 @@
 @extends('layouts.app')
 
+@php
+    $isDashboard = $isDashboardContext ?? false;
+@endphp
+
 @section('title', 'Zaświadczenie – ' . config('app.name'))
 
 @section('content')
@@ -52,29 +56,54 @@
                     </dl>
 
                     <div class="d-flex flex-wrap gap-2">
-                        <a href="{{ route('certificates.download-with-redirect', ['token' => $token, 'course' => $course->id]) }}"
-                           class="btn btn-primary">
-                            <i class="bi bi-download me-1"></i> Pobierz zaświadczenie (PDF)
-                        </a>
-                        @if($course->is_paid)
-                            <a href="{{ route('certificates.show-by-token', ['token' => $token, 'course' => $course->id]) }}?edit=1"
-                               class="btn btn-outline-secondary">
-                                Popraw dane
+                        @if($isDashboard)
+                            <a href="{{ route('dashboard.zaswiadczenia.course.download-redirect', ['course' => $course->id]) }}"
+                               class="btn btn-primary">
+                                <i class="bi bi-download me-1"></i> Pobierz zaświadczenie (PDF)
+                            </a>
+                            @if($course->is_paid)
+                                <a href="{{ route('dashboard.zaswiadczenia.course', ['course' => $course->id]) }}?edit=1"
+                                   class="btn btn-outline-secondary">
+                                    Popraw dane
+                                </a>
+                            @else
+                                <a href="{{ route('dashboard.zaswiadczenia.course', ['course' => $course->id]) }}?edit=1"
+                                   class="btn btn-outline-secondary">
+                                    Uzupełnij data i miejsce urodzenia (opcjonalnie)
+                                </a>
+                            @endif
+                            <a href="{{ route('dashboard.zaswiadczenia') }}" class="btn btn-link text-muted">
+                                ← Lista zaświadczeń
                             </a>
                         @else
-                            <a href="{{ route('certificates.show-by-token', ['token' => $token, 'course' => $course->id]) }}?edit=1"
-                               class="btn btn-outline-secondary">
-                                Uzupełnij data i miejsce urodzenia (opcjonalnie)
+                            <a href="{{ route('certificates.download-with-redirect', ['token' => $token, 'course' => $course->id]) }}"
+                               class="btn btn-primary">
+                                <i class="bi bi-download me-1"></i> Pobierz zaświadczenie (PDF)
+                            </a>
+                            @if($course->is_paid)
+                                <a href="{{ route('certificates.show-by-token', ['token' => $token, 'course' => $course->id]) }}?edit=1"
+                                   class="btn btn-outline-secondary">
+                                    Popraw dane
+                                </a>
+                            @else
+                                <a href="{{ route('certificates.show-by-token', ['token' => $token, 'course' => $course->id]) }}?edit=1"
+                                   class="btn btn-outline-secondary">
+                                    Uzupełnij data i miejsce urodzenia (opcjonalnie)
+                                </a>
+                            @endif
+                            <a href="{{ route('certificates.list-by-token', ['token' => $token]) }}" class="btn btn-link text-muted">
+                                ← Lista zaświadczeń
                             </a>
                         @endif
-                        <a href="{{ route('certificates.list-by-token', ['token' => $token]) }}" class="btn btn-link text-muted">
-                            ← Lista zaświadczeń
-                        </a>
                     </div>
                 </div>
             </div>
             <p class="text-center text-muted mt-3 small">
-                <a href="{{ route('home') }}" class="text-decoration-none">← Powrót na stronę główną</a>
+                @if($isDashboard)
+                    <a href="{{ route('dashboard') }}" class="text-decoration-none">← Powrót do panelu</a>
+                @else
+                    <a href="{{ route('home') }}" class="text-decoration-none">← Powrót na stronę główną</a>
+                @endif
             </p>
         </div>
     </div>

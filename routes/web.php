@@ -1,8 +1,8 @@
 <?php
 
-use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -60,7 +60,6 @@ Route::get('/blog/wykorzystanie-aplikacji-canva', function () {
     return view('blog.wykorzystanie-aplikacji-canva');
 })->name('blog.wykorzystanie-aplikacji-canva');
 
-
 Route::get('/dashboard', function () {
     return view('dashboard.index');
 })->middleware(['auth', 'verified'])->name('dashboard');
@@ -73,9 +72,22 @@ Route::get('/dashboard/szkolenia/{participant}/wideo', [App\Http\Controllers\Das
     ->middleware(['auth', 'verified'])
     ->name('dashboard.szkolenia.wideo');
 
-Route::get('/dashboard/zaswiadczenia', function () {
-    return view('dashboard.zaswiadczenia');
-})->middleware(['auth', 'verified'])->name('dashboard.zaswiadczenia');
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/dashboard/zaswiadczenia', [App\Http\Controllers\CertificateController::class, 'dashboardCertificatesIndex'])
+        ->name('dashboard.zaswiadczenia');
+    Route::get('/dashboard/zaswiadczenia/{course}/download-with-redirect', [App\Http\Controllers\CertificateController::class, 'dashboardCertificateDownloadWithRedirectPage'])
+        ->whereNumber('course')
+        ->name('dashboard.zaswiadczenia.course.download-redirect');
+    Route::get('/dashboard/zaswiadczenia/{course}/download', [App\Http\Controllers\CertificateController::class, 'dashboardCertificateDownload'])
+        ->whereNumber('course')
+        ->name('dashboard.zaswiadczenia.course.download');
+    Route::post('/dashboard/zaswiadczenia/{course}', [App\Http\Controllers\CertificateController::class, 'dashboardSubmitBirth'])
+        ->whereNumber('course')
+        ->name('dashboard.zaswiadczenia.course.birth');
+    Route::get('/dashboard/zaswiadczenia/{course}', [App\Http\Controllers\CertificateController::class, 'dashboardCertificateShow'])
+        ->whereNumber('course')
+        ->name('dashboard.zaswiadczenia.course');
+});
 
 Route::get('/dashboard/moje-dane', function () {
     return view('dashboard.moje-dane');
