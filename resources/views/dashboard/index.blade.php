@@ -21,11 +21,6 @@
                             <i class="bi bi-award"></i> Zaświadczenia
                         </a>
                     </li>
-                    <li>
-                        <a href="{{ route('dashboard.moje-dane') }}" class="d-flex align-items-center gap-2 @if(request()->routeIs('dashboard.moje-dane')) active @endif">
-                            <i class="bi bi-person-circle"></i> Moje dane
-                        </a>
-                    </li>
                 </ul>
             </nav>
         </div>
@@ -33,10 +28,17 @@
             <div class="card border-0 shadow-sm rounded-4">
                 <div class="card-body py-4">
                     <h2 class="h4 mb-3">Panel użytkownika</h2>
-                    <p class="mb-4">Witaj w swoim panelu! Tutaj znajdziesz podsumowanie swojego konta oraz szybki dostęp do najważniejszych funkcji.</p>
-
-                    <h3 class="h5 mb-2">Moje szkolenia</h3>
-                    @include('dashboard.partials.szkolenia-list-inner', ['szkoleniaFilterRoute' => 'dashboard'])
+                    <p class="mb-3">
+                        Witaj w swoim panelu. Z tego miejsca możesz przejść do listy zapisanych szkoleń i zaświadczeń — wybierz pozycję w menu po lewej (lub użyj linków poniżej).
+                    </p>
+                    <p class="text-muted mb-4">
+                        Pełna lista Twoich szkoleń (z filtrem płatne / bezpłatne) znajduje się w zakładce
+                        <a href="{{ route('dashboard.szkolenia') }}" class="fw-semibold text-decoration-none">Moje szkolenia</a>.
+                    </p>
+                    <div class="d-flex flex-wrap gap-2">
+                        <a href="{{ route('dashboard.szkolenia') }}" class="btn btn-primary btn-sm">Moje szkolenia</a>
+                        <a href="{{ route('dashboard.zaswiadczenia') }}" class="btn btn-outline-primary btn-sm">Zaświadczenia</a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -92,6 +94,5 @@
         font-size: 1rem;
     }
 }
-@include('dashboard.partials.szkolenia-training-styles')
 </style>
 @endpush

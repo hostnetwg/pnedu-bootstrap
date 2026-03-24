@@ -104,7 +104,7 @@
                                             @endif
                                         </a>
                                     </div>
-                                    @if($isParticipant)
+                                    @if($isParticipant && ($showCertificateLinksOnFreeList ?? true))
                                         <div class="col d-flex align-items-center justify-content-center">
                                             @php
                                                 // Użyj participant_id jeśli dostępne (bardziej precyzyjne), w przeciwnym razie course_id

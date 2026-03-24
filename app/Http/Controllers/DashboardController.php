@@ -10,11 +10,11 @@ use Illuminate\Support\Facades\Auth;
 class DashboardController extends Controller
 {
     /**
-     * Panel główny konta (lista szkoleń z filtrem typ=all|paid|free).
+     * Panel główny konta — strona powitalna (lista szkoleń jest na /dashboard/szkolenia).
      */
-    public function index(Request $request)
+    public function index()
     {
-        return view('dashboard.index', $this->participantsListingForDashboard($request));
+        return view('dashboard.index');
     }
 
     /**

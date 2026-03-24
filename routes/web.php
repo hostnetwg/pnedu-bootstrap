@@ -89,10 +89,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('dashboard.zaswiadczenia.course');
 });
 
-Route::get('/dashboard/moje-dane', function () {
-    return view('dashboard.moje-dane');
-})->middleware(['auth', 'verified'])->name('dashboard.moje-dane');
-
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

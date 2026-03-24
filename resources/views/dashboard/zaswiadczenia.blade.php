@@ -21,11 +21,6 @@
                             <i class="bi bi-award"></i> Zaświadczenia
                         </a>
                     </li>
-                    <li>
-                        <a href="{{ route('dashboard.moje-dane') }}" class="d-flex align-items-center gap-2 @if(request()->routeIs('dashboard.moje-dane')) active @endif">
-                            <i class="bi bi-person-circle"></i> Moje dane
-                        </a>
-                    </li>
                 </ul>
             </nav>
         </div>

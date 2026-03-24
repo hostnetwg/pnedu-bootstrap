@@ -94,8 +94,9 @@ class CourseController extends Controller
             }
 
             $pageTitle = 'TIK w pracy NAUCZYCIELA';
+            $showCertificateLinksOnFreeList = false;
 
-            return view('courses.free', compact('courses', 'sort', 'searchQuery', 'participantCourseIds', 'participantIdsByCourse', 'pageTitle'));
+            return view('courses.free', compact('courses', 'sort', 'searchQuery', 'participantCourseIds', 'participantIdsByCourse', 'pageTitle', 'showCertificateLinksOnFreeList'));
         } catch (Exception $e) {
             Log::error('Error accessing free courses: '.$e->getMessage());
 
@@ -103,6 +104,7 @@ class CourseController extends Controller
                 'courses' => collect([]),
                 'databaseError' => true,
                 'pageTitle' => 'TIK w pracy NAUCZYCIELA',
+                'showCertificateLinksOnFreeList' => false,
             ]);
         }
     }
