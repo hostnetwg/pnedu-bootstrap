@@ -1,20 +1,23 @@
 {{--
   Wymaga: $participants, $szkoleniaTyp
-  Opcjonalnie: $szkoleniaFilterRoute — nazwa trasy dla linków filtra (domyślnie dashboard.szkolenia)
+  Opcjonalnie: $szkoleniaFilterRoute, $szkoleniaCounts — nazwa trasy i liczniki filtrów
 --}}
 @php
     $szkoleniaTyp = $szkoleniaTyp ?? 'all';
     $szkoleniaFilterRoute = $szkoleniaFilterRoute ?? 'dashboard.szkolenia';
+    $cAll = $szkoleniaCounts['all'] ?? null;
+    $cPaid = $szkoleniaCounts['paid'] ?? null;
+    $cFree = $szkoleniaCounts['free'] ?? null;
 @endphp
 <div class="d-flex flex-wrap align-items-center gap-2 mb-3" role="group" aria-label="Filtr rodzaju szkolenia">
     <span class="text-muted small me-1">Pokaż:</span>
     <div class="btn-group btn-group-sm" role="group">
         <a href="{{ route($szkoleniaFilterRoute, ['typ' => 'all']) }}"
-           class="btn btn-outline-primary @if($szkoleniaTyp === 'all') active @endif">Wszystkie</a>
+           class="btn btn-outline-primary @if($szkoleniaTyp === 'all') active @endif">Wszystkie @if($cAll !== null) ({{ $cAll }}) @endif</a>
         <a href="{{ route($szkoleniaFilterRoute, ['typ' => 'paid']) }}"
-           class="btn btn-outline-primary @if($szkoleniaTyp === 'paid') active @endif">Płatne</a>
+           class="btn btn-outline-primary @if($szkoleniaTyp === 'paid') active @endif">Płatne @if($cPaid !== null) ({{ $cPaid }}) @endif</a>
         <a href="{{ route($szkoleniaFilterRoute, ['typ' => 'free']) }}"
-           class="btn btn-outline-primary @if($szkoleniaTyp === 'free') active @endif">Bezpłatne</a>
+           class="btn btn-outline-primary @if($szkoleniaTyp === 'free') active @endif">Bezpłatne @if($cFree !== null) ({{ $cFree }}) @endif</a>
     </div>
 </div>
 <p class="text-muted mb-4">

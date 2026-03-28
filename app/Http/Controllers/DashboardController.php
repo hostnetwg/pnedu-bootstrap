@@ -65,21 +65,24 @@ class DashboardController extends Controller
     }
 
     /**
-     * @return array{participants: LengthAwarePaginator, szkoleniaTyp: string}
+     * @return array{participants: LengthAwarePaginator, szkoleniaTyp: string, szkoleniaCounts: array{all: int, paid: int, free: int}}
      */
     private function participantsListingForDashboard(Request $request): array
     {
         $userEmail = Auth::user()->email;
+        $emailNormalized = strtolower(trim($userEmail));
 
         $typ = $request->query('typ', 'all');
         if (! in_array($typ, ['all', 'paid', 'free'], true)) {
             $typ = 'all';
         }
 
+        $szkoleniaCounts = $this->participantFilterCountsForDashboard($emailNormalized);
+
         // Wszyscy uczestnicy (wiersze w pneadm.participants) — także gdy kurs został usunięty (LEFT JOIN).
         // access_expires_at w participants decyduje o dostępie do nagrań/materiałów na pnedu.pl.
         $query = Participant::query()
-            ->whereRaw('LOWER(TRIM(participants.email)) = ?', [strtolower(trim($userEmail))])
+            ->whereRaw('LOWER(TRIM(participants.email)) = ?', [$emailNormalized])
             ->leftJoin('courses', 'participants.course_id', '=', 'courses.id')
             ->select('participants.*')
             ->with(['course.instructor', 'course.videos', 'course.fileLinks'])
@@ -95,6 +98,23 @@ class DashboardController extends Controller
         return [
             'participants' => $query->paginate(15)->withQueryString(),
             'szkoleniaTyp' => $typ,
+            'szkoleniaCounts' => $szkoleniaCounts,
+        ];
+    }
+
+    /**
+     * Liczby szkoleń w filtrach (zgodnie z tym samym kryterium co lista: all / płatne / bezpłatne).
+     *
+     * @return array{all: int, paid: int, free: int}
+     */
+    private function participantFilterCountsForDashboard(string $emailNormalized): array
+    {
+        $base = fn () => Participant::query()->whereRaw('LOWER(TRIM(participants.email)) = ?', [$emailNormalized]);
+
+        return [
+            'all' => $base()->count(),
+            'paid' => $base()->whereHas('course', fn ($q) => $q->where('is_paid', 1))->count(),
+            'free' => $base()->whereHas('course', fn ($q) => $q->where('is_paid', 0))->count(),
         ];
     }
 }
