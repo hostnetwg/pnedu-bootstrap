@@ -40,6 +40,32 @@
 .training-title-link--disabled:hover {
     color: #6c757d !important;
 }
+/* Wyraźny „PLAY” przy tytule, gdy jest nagranie wideo */
+.training-title-play-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.65rem;
+    height: 1.65rem;
+    border-radius: 50%;
+    background: #0d6efd;
+    color: #fff;
+    flex-shrink: 0;
+    box-shadow: 0 1px 4px rgba(13, 110, 253, 0.35);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.training-title-link:not(.training-title-link--disabled):hover .training-title-play-badge {
+    transform: scale(1.07);
+    box-shadow: 0 2px 8px rgba(13, 110, 253, 0.45);
+}
+.training-title-play-badge .bi-play-fill {
+    font-size: 1rem;
+    margin-left: 2px;
+}
+.training-title-play-badge--disabled {
+    background: #adb5bd;
+    box-shadow: none;
+}
 .training-access-term {
     font-size: 0.9rem;
     margin-bottom: 0.5rem;
@@ -54,6 +80,20 @@
 }
 .training-separator {
     color: #adb5bd;
+}
+.training-materials {
+    border-color: #e9ecef !important;
+}
+.training-material-link {
+    color: #0d6efd;
+    word-break: break-word;
+}
+.training-material-link:hover {
+    color: #0a58ca;
+    text-decoration: underline !important;
+}
+.training-material-link__label {
+    vertical-align: middle;
 }
 .training-certificate {
     margin-left: 1.5rem;

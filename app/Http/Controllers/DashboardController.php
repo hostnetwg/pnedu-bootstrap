@@ -28,25 +28,29 @@ class DashboardController extends Controller
             abort(403, 'Brak dostępu do tego nagrania.');
         }
 
-        $participant->load(['course.instructor', 'course.videos']);
+        $participant->load(['course.instructor', 'course.videos', 'course.fileLinks']);
         $course = $participant->course;
 
-        if (! $course || $course->videos->isEmpty()) {
-            abort(404, 'Brak nagrania dla tego szkolenia.');
+        if (! $course || ($course->videos->isEmpty() && $course->fileLinks->isEmpty())) {
+            abort(404, 'Brak materiałów dla tego szkolenia.');
         }
 
         if ($participant->hasExpiredAccess()) {
-            abort(403, 'Dostęp do nagrania wygasł.');
+            abort(403, 'Dostęp do materiałów wygasł.');
         }
 
-        $selectedVideoId = (int) request()->query('video', $course->videos->first()->id);
-        $selectedVideo = $course->videos->firstWhere('id', $selectedVideoId) ?? $course->videos->first();
+        $selectedVideo = null;
+        if ($course->videos->isNotEmpty()) {
+            $selectedVideoId = (int) request()->query('video', $course->videos->first()->id);
+            $selectedVideo = $course->videos->firstWhere('id', $selectedVideoId) ?? $course->videos->first();
+        }
 
         return view('dashboard.szkolenia-wideo', [
             'participant' => $participant,
             'course' => $course,
             'videos' => $course->videos,
             'selectedVideo' => $selectedVideo,
+            'fileLinks' => $course->fileLinks,
         ]);
     }
 
@@ -78,7 +82,7 @@ class DashboardController extends Controller
             ->whereRaw('LOWER(TRIM(participants.email)) = ?', [strtolower(trim($userEmail))])
             ->leftJoin('courses', 'participants.course_id', '=', 'courses.id')
             ->select('participants.*')
-            ->with(['course.instructor', 'course.videos'])
+            ->with(['course.instructor', 'course.videos', 'course.fileLinks'])
             ->orderByRaw('COALESCE(courses.start_date, participants.created_at) DESC')
             ->orderByDesc('participants.id');
 

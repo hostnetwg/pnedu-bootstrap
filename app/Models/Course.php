@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use App\Models\Instructor;
 use App\Models\CoursePriceVariant;
 use App\Models\CourseOnlineDetail;
+use App\Models\CourseFileLink;
 use App\Models\CourseVideo;
 use App\Models\Certificate;
 
@@ -169,6 +170,16 @@ class Course extends Model
     public function videos()
     {
         return $this->hasMany(CourseVideo::class)->orderBy('order');
+    }
+
+    /**
+     * Linki do materiałów (np. Dysk Google).
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function fileLinks()
+    {
+        return $this->hasMany(CourseFileLink::class)->orderBy('order');
     }
 
     /**

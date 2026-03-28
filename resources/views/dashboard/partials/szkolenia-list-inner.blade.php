@@ -35,6 +35,8 @@
             @php
                 $course = $participant->course;
                 $firstVideo = $course?->videos->first();
+                $hasFileLinks = $course?->fileLinks && $course->fileLinks->isNotEmpty();
+                $hasOnlineMaterials = $firstVideo || $hasFileLinks;
                 $accessActive = $participant->hasActiveAccess();
                 $accessExpiresFormatted = $participant->access_expires_at
                     ? $participant->access_expires_at->timezone(config('app.timezone'))->format('Y-m-d H:i')
@@ -43,15 +45,25 @@
             <div class="training-item">
                 <div class="training-content">
                     <h3 class="training-title mb-2">
-                        @if($firstVideo && $accessActive)
-                            <a href="{{ route('dashboard.szkolenia.wideo', $participant) }}" class="training-title-link" title="Otwórz nagranie">
-                                {{ $course?->title ?? 'Szkolenie niedostępne w katalogu' }}
-                                <i class="bi bi-camera-video ms-1" style="font-size: 0.9em; opacity: 0.7;"></i>
+                        @if($hasOnlineMaterials && $accessActive)
+                            <a href="{{ route('dashboard.szkolenia.wideo', $participant) }}" class="training-title-link d-inline-flex align-items-center flex-wrap gap-2" title="{{ $firstVideo ? 'Odtwórz nagranie wideo' : 'Materiały do pobrania' }}">
+                                @if($firstVideo)
+                                    <span class="training-title-play-badge" aria-hidden="true"><i class="bi bi-play-fill"></i></span>
+                                @endif
+                                <span>{{ $course?->title ?? 'Szkolenie niedostępne w katalogu' }}</span>
+                                @unless($firstVideo)
+                                    <i class="bi bi-folder2-open flex-shrink-0" style="font-size: 0.95em; opacity: 0.7;" aria-hidden="true"></i>
+                                @endunless
                             </a>
-                        @elseif($firstVideo && !$accessActive)
-                            <span class="training-title-link training-title-link--disabled" title="Dostęp wygasł">
-                                {{ $course?->title ?? 'Szkolenie niedostępne w katalogu' }}
-                                <i class="bi bi-camera-video-off ms-1 text-muted" style="font-size: 0.9em;"></i>
+                        @elseif($hasOnlineMaterials && !$accessActive)
+                            <span class="training-title-link training-title-link--disabled d-inline-flex align-items-center flex-wrap gap-2" title="Dostęp wygasł">
+                                @if($firstVideo)
+                                    <span class="training-title-play-badge training-title-play-badge--disabled" aria-hidden="true"><i class="bi bi-play-fill"></i></span>
+                                @endif
+                                <span>{{ $course?->title ?? 'Szkolenie niedostępne w katalogu' }}</span>
+                                @unless($firstVideo)
+                                    <i class="bi bi-folder-x flex-shrink-0 text-muted" style="font-size: 0.95em;" aria-hidden="true"></i>
+                                @endunless
                             </span>
                         @else
                             <span class="training-title-text">{{ $course?->title ?? 'Szkolenie niedostępne w katalogu' }}</span>
@@ -92,6 +104,31 @@
                             Dostęp bezterminowy
                         @endif
                     </p>
+                    @if($course && $hasFileLinks && $accessActive)
+                        <div class="training-materials mt-2 pt-2 border-top">
+                            <div class="text-muted small fw-semibold mb-2">
+                                <i class="bi bi-folder2-open me-1" aria-hidden="true"></i>Materiały do pobrania
+                            </div>
+                            <ul class="list-unstyled mb-0 small training-materials-list">
+                                @foreach($course->fileLinks as $link)
+                                    <li class="mb-1">
+                                        <a href="{{ $link->url }}"
+                                           class="training-material-link text-decoration-none"
+                                           target="_blank"
+                                           rel="noopener noreferrer">
+                                            @if($link->isGoogleHostedUrl())
+                                                <i class="bi bi-google me-1 text-secondary" aria-hidden="true"></i>
+                                            @else
+                                                <i class="bi bi-link-45deg me-1 text-secondary" aria-hidden="true"></i>
+                                            @endif
+                                            <span class="training-material-link__label">{{ $link->title ?: $link->url }}</span>
+                                            <i class="bi bi-box-arrow-up-right ms-1 align-middle" style="font-size: 0.75em; opacity: 0.65;" aria-hidden="true"></i>
+                                        </a>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
                 </div>
                 @if($course)
                     @php
