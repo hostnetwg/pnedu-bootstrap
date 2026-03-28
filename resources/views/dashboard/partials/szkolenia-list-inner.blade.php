@@ -91,7 +91,7 @@
                             </span>
                         </div>
                     @endif
-                    <p class="training-access-term text-muted small mb-0">
+                    <p class="training-access-term small mb-0 @if($participant->access_expires_at && ! $accessActive) text-danger @elseif($accessActive) text-success @else text-muted @endif">
                         @if($participant->access_expires_at)
                             @if($accessActive)
                                 Dostęp wygaśnie {{ $accessExpiresFormatted }}

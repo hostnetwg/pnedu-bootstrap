@@ -37,7 +37,7 @@
                     <h2 class="h4 mb-2">{{ $course->title }}</h2>
                     @if($course->instructor)
                         <p class="text-muted mb-4">
-                            <small>{{ $course->trainer_title }}: {{ $course->instructor->full_name }}@if($course->instructor->title) <span class="text-muted">({{ $course->instructor->title }})</span>@endif</small>
+                            <small>{{ $course->trainer_title }}: {{ $course->instructor->full_name_with_title }}</small>
                         </p>
                     @endif
 
@@ -92,7 +92,6 @@
                                     <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i>
                                     Przejdź do zaświadczenia
                                 </a>
-                                <p class="small text-muted mt-2 mb-0">Szczegóły i pobranie — tak jak w zakładce Zaświadczenia.</p>
                             @elseif($certStatusKey === 'no_certificate')
                                 <p class="small text-muted mb-0">Brak zaświadczenia dla tego szkolenia.</p>
                             @else
@@ -100,8 +99,7 @@
                             @endif
 
                             @if($fileLinks->isNotEmpty())
-                                <h5 class="h5 mb-2 mt-4 pt-3 border-top"><i class="bi bi-folder2-open me-2"></i>Materiały do pobrania (pliki)</h5>
-                                <p class="small text-muted mb-3 mb-md-4">Otwórz link w nowej karcie (np. folder lub plik w chmurze albo u innego dostawcy).</p>
+                                <h5 class="h5 mb-3 mt-4 pt-3 border-top"><i class="bi bi-folder2-open me-2"></i>Materiały do pobrania (pliki)</h5>
                                 <div class="d-grid gap-2">
                                     @foreach($fileLinks as $link)
                                         <a href="{{ $link->url }}"
