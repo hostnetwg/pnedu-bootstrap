@@ -49,9 +49,26 @@
                                 title="{{ $selectedVideo->title ?: 'Nagranie szkolenia' }}"
                                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                                 allowfullscreen
+                                referrerpolicy="strict-origin-when-cross-origin"
                             ></iframe>
                         </div>
                     </div>
+
+                    @if($selectedVideo->platform === 'youtube')
+                        <div class="youtube-external-hint border-top pt-3 mt-2 mb-4">
+                            <p class="small text-muted mb-2">
+                                Na YouTube nagranie otwiera się w widoku z <strong>zapisem czatu</strong> obok wideo — wygodniej śledzisz pytania i odpowiedzi z transmisji.
+                                Jeśli materiał jest dla Ciebie wartościowy, możesz <strong>zasubskrybować kanał</strong> i zostawić <strong>polubienie</strong>; to realnie wspiera powstawanie kolejnych treści.
+                            </p>
+                            <a href="{{ $selectedVideo->getWatchUrl() }}"
+                               class="btn btn-sm btn-outline-danger d-inline-flex align-items-center gap-2"
+                               target="_blank"
+                               rel="noopener noreferrer">
+                                <i class="bi bi-youtube"></i>
+                                Otwórz na YouTube
+                            </a>
+                        </div>
+                    @endif
 
                     {{-- Lista nagrań (gdy jest więcej niż jedno) --}}
                     @if($videos->count() > 1)
