@@ -170,12 +170,26 @@
                 <h4 class="mt-4 mb-3"><i class="bi bi-file-pdf me-2"></i>Potwierdzenie zamówienia (PDF)</h4>
                 
                 @if($course)
-                <div class="alert alert-warning border-warning mb-3" style="border-left-width: 4px;">
-                    <h5 class="mb-2"><i class="bi bi-exclamation-triangle me-2"></i>Sprawdź dane na zamówieniu w poniżej wygenerowanym dokumencie PDF</h5>
-                    <p class="mb-2">Jeżeli zauważysz błąd, kliknij w <strong>"EDYTUJ"</strong> i dokonaj poprawki.</p>
-                    <a href="{{ route('payment.order-form.edit', ['id' => $course->id, 'ident' => $order->ident]) }}" class="btn btn-warning">
-                        <i class="bi bi-pencil me-2"></i>EDYTUJ
-                    </a>
+                <div class="alert {{ ($orderEditLocked ?? false) ? 'alert-secondary border-secondary' : 'alert-warning border-warning' }} mb-3" style="border-left-width: 4px;">
+                    @if($orderEditLocked ?? false)
+                        <h5 class="mb-2"><i class="bi bi-lock-fill me-2"></i>Edycja zamówienia jest wyłączona</h5>
+                        <p class="mb-2">
+                            @if(trim((string) ($order->invoice_number ?? '')) !== '')
+                                Do tego zamówienia wystawiono fakturę nr <strong>{{ $order->invoice_number }}</strong>. Zmiany danych możliwe są wyłącznie po kontakcie z biurem.
+                            @else
+                                Zamówienie zostało zamknięte. Zmiany danych możliwe są wyłącznie po kontakcie z biurem.
+                            @endif
+                        </p>
+                        <a href="{{ route('payment.order-form.edit', ['id' => $course->id, 'ident' => $order->ident]) }}" class="btn btn-outline-primary">
+                            <i class="bi bi-eye me-2"></i>Zobacz pełne dane zamówienia
+                        </a>
+                    @else
+                        <h5 class="mb-2"><i class="bi bi-exclamation-triangle me-2"></i>Sprawdź dane na zamówieniu w poniżej wygenerowanym dokumencie PDF</h5>
+                        <p class="mb-2">Jeżeli zauważysz błąd, kliknij w <strong>„EDYTUJ”</strong> i dokonaj poprawki.</p>
+                        <a href="{{ route('payment.order-form.edit', ['id' => $course->id, 'ident' => $order->ident]) }}" class="btn btn-warning">
+                            <i class="bi bi-pencil me-2"></i>EDYTUJ
+                        </a>
+                    @endif
                 </div>
                 @endif
                 <div class="pdf-container">

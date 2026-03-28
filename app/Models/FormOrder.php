@@ -4,11 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 
 class FormOrder extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     /**
      * The connection name for the model.
@@ -89,7 +90,7 @@ class FormOrder extends Model
         do {
             // Generate format: YYMMDD-XXXXXX (6 random chars)
             $ident = date('ymd').'-'.strtoupper(Str::random(6));
-        } while (self::where('ident', $ident)->exists());
+        } while (self::withTrashed()->where('ident', $ident)->exists());
 
         return $ident;
     }
@@ -118,6 +119,18 @@ class FormOrder extends Model
         return $this->hasOne(FormOrderParticipant::class, 'form_order_id')
             ->where('is_primary', true)
             ->whereNull('deleted_at');
+    }
+
+    /**
+     * Zamówienie zablokowane do edycji przez klienta (zakończone lub z numerem faktury).
+     */
+    public function isEditLocked(): bool
+    {
+        if ($this->status_completed) {
+            return true;
+        }
+
+        return trim((string) ($this->invoice_number ?? '')) !== '';
     }
 
     /**

@@ -782,34 +782,45 @@ class CourseController extends Controller
         $isEditMode = false;
 
         if ($ident) {
-            $existingOrder = FormOrder::where('ident', $ident)->first();
-            if ($existingOrder && $existingOrder->product_id == $id) {
-                $isEditMode = true;
-                $participantPrefill = $this->participantPrefillFromFormOrder($existingOrder);
-                // Wczytaj dane z zamówienia
-                $orderData = [
-                    'buyer_name' => $existingOrder->buyer_name,
-                    'buyer_address' => $existingOrder->buyer_address,
-                    'buyer_postcode' => $existingOrder->buyer_postal_code,
-                    'buyer_city' => $existingOrder->buyer_city,
-                    'buyer_nip' => $existingOrder->buyer_nip,
-                    'recipient_name' => $existingOrder->recipient_name,
-                    'recipient_address' => $existingOrder->recipient_address,
-                    'recipient_postcode' => $existingOrder->recipient_postal_code,
-                    'recipient_city' => $existingOrder->recipient_city,
-                    'recipient_nip' => $existingOrder->recipient_nip,
-                    'contact_name' => $existingOrder->orderer_name,
-                    'contact_phone' => $existingOrder->orderer_phone,
-                    'contact_email' => $existingOrder->orderer_email,
-                    'participant_first_name' => $participantPrefill['participant_first_name'],
-                    'participant_last_name' => $participantPrefill['participant_last_name'],
-                    'participant_email' => $participantPrefill['participant_email'],
-                    'invoice_notes' => $existingOrder->invoice_notes,
-                    'payment_terms' => $existingOrder->invoice_payment_delay ?? $existingOrder->ptw,
-                    'order_id' => $existingOrder->id,
-                    'order_ident' => $existingOrder->ident,
-                ];
+            $existingOrder = FormOrder::withTrashed()
+                ->where('ident', $ident)
+                ->where('product_id', $id)
+                ->first();
+            if (! $existingOrder) {
+                return redirect()
+                    ->route('payment.order-form', $id)
+                    ->with('info', $this->messageWhenOrderEditLinkNotFound());
             }
+
+            if ($existingOrder->isEditLocked()) {
+                return $this->renderOrderEditLockedView($course, $existingOrder);
+            }
+
+            $isEditMode = true;
+            $participantPrefill = $this->participantPrefillFromFormOrder($existingOrder);
+            // Wczytaj dane z zamówienia
+            $orderData = [
+                'buyer_name' => $existingOrder->buyer_name,
+                'buyer_address' => $existingOrder->buyer_address,
+                'buyer_postcode' => $existingOrder->buyer_postal_code,
+                'buyer_city' => $existingOrder->buyer_city,
+                'buyer_nip' => $existingOrder->buyer_nip,
+                'recipient_name' => $existingOrder->recipient_name,
+                'recipient_address' => $existingOrder->recipient_address,
+                'recipient_postcode' => $existingOrder->recipient_postal_code,
+                'recipient_city' => $existingOrder->recipient_city,
+                'recipient_nip' => $existingOrder->recipient_nip,
+                'contact_name' => $existingOrder->orderer_name,
+                'contact_phone' => $existingOrder->orderer_phone,
+                'contact_email' => $existingOrder->orderer_email,
+                'participant_first_name' => $participantPrefill['participant_first_name'],
+                'participant_last_name' => $participantPrefill['participant_last_name'],
+                'participant_email' => $participantPrefill['participant_email'],
+                'invoice_notes' => $existingOrder->invoice_notes,
+                'payment_terms' => $existingOrder->invoice_payment_delay ?? $existingOrder->ptw,
+                'order_id' => $existingOrder->id,
+                'order_ident' => $existingOrder->ident,
+            ];
         }
 
         // Dane testowe (tylko jeśli nie ma danych z zamówienia)
@@ -821,12 +832,11 @@ class CourseController extends Controller
                 'buyer_postcode' => '09-320',
                 'buyer_city' => 'Bieżuń',
                 'buyer_nip' => '5110265245',
-                'buyer_nip8' => '5110265245',
                 'recipient_name' => 'Szkoła Podstawowa im. Andrzeja Zamoyskiego',
                 'recipient_address' => 'ul. Andrzeja Zamoyskiego 28',
                 'recipient_postcode' => '09-320',
                 'recipient_city' => 'Bieżuń',
-                'recipient_nip8' => '5261040828',
+                'recipient_nip' => '5261040828',
                 'contact_name' => 'Waldemar Grabowski',
                 'contact_first_name' => 'Waldemar',
                 'contact_last_name' => 'Grabowski',
@@ -865,35 +875,22 @@ class CourseController extends Controller
         $isEditMode = false;
 
         if ($ident) {
-            $existingOrder = FormOrder::where('ident', $ident)->first();
-            if ($existingOrder && $existingOrder->product_id == $id) {
-                $isEditMode = true;
-                $participantPrefill = $this->participantPrefillFromFormOrder($existingOrder);
-                $orderData = [
-                    'buyer_name' => $existingOrder->buyer_name,
-                    'buyer_address' => $existingOrder->buyer_address,
-                    'buyer_postcode' => $existingOrder->buyer_postal_code,
-                    'buyer_city' => $existingOrder->buyer_city,
-                    'buyer_nip' => $existingOrder->buyer_nip,
-                    'buyer_nip8' => $existingOrder->buyer_nip,
-                    'recipient_name' => $existingOrder->recipient_name,
-                    'recipient_address' => $existingOrder->recipient_address,
-                    'recipient_postcode' => $existingOrder->recipient_postal_code,
-                    'recipient_city' => $existingOrder->recipient_city,
-                    'recipient_nip' => $existingOrder->recipient_nip,
-                    'recipient_nip8' => $existingOrder->recipient_nip,
-                    'contact_name' => $existingOrder->orderer_name,
-                    'contact_phone' => $existingOrder->orderer_phone,
-                    'contact_email' => $existingOrder->orderer_email,
-                    'participant_first_name' => $participantPrefill['participant_first_name'],
-                    'participant_last_name' => $participantPrefill['participant_last_name'],
-                    'participant_email' => $participantPrefill['participant_email'],
-                    'invoice_notes' => $existingOrder->invoice_notes,
-                    'payment_terms' => $existingOrder->invoice_payment_delay ?? $existingOrder->ptw,
-                    'order_id' => $existingOrder->id,
-                    'order_ident' => $existingOrder->ident,
-                ];
+            $existingOrder = FormOrder::withTrashed()
+                ->where('ident', $ident)
+                ->where('product_id', $id)
+                ->first();
+            if (! $existingOrder) {
+                return redirect()
+                    ->route('payment.order-form', $id)
+                    ->with('info', $this->messageWhenOrderEditLinkNotFound());
             }
+
+            if ($existingOrder->isEditLocked()) {
+                return $this->renderOrderEditLockedView($course, $existingOrder);
+            }
+
+            $isEditMode = true;
+            $orderData = $this->orderFormPrefillFromFormOrder($existingOrder);
         }
 
         $testData = $orderData;
@@ -904,12 +901,11 @@ class CourseController extends Controller
                 'buyer_postcode' => '09-320',
                 'buyer_city' => 'Bieżuń',
                 'buyer_nip' => '5110265245',
-                'buyer_nip8' => '5110265245',
                 'recipient_name' => 'Szkoła Podstawowa im. Andrzeja Zamoyskiego',
                 'recipient_address' => 'ul. Andrzeja Zamoyskiego 28',
                 'recipient_postcode' => '09-320',
                 'recipient_city' => 'Bieżuń',
-                'recipient_nip8' => '5261040828',
+                'recipient_nip' => '5261040828',
                 'contact_name' => 'Waldemar Grabowski',
                 'contact_first_name' => 'Waldemar',
                 'contact_last_name' => 'Grabowski',
@@ -992,6 +988,133 @@ class CourseController extends Controller
     }
 
     /**
+     * Komunikat przy wejściu na link „edycji”, gdy zamówienia nie ma już w bazie (np. trwałe usunięcie w panelu adm).
+     */
+    protected function messageWhenOrderEditLinkNotFound(): string
+    {
+        return 'Zamówienia powiązanego z tym linkiem nie ma już w systemie — mogło zostać trwale usunięte przez administratora. Możesz wypełnić poniższy formularz i przesłać zamówienie ponownie; zostanie ono zarejestrowane jako nowe.';
+    }
+
+    /**
+     * Typ zamawiającego z zapisanego zamówienia: brak NIP nabywcy → osoba fizyczna (zapis z order-form).
+     */
+    protected function inferBuyerTypeFromFormOrder(FormOrder $order): string
+    {
+        $nip = trim((string) ($order->buyer_nip ?? ''));
+
+        return $nip !== '' ? 'organisation' : 'person';
+    }
+
+    /**
+     * Znajdź zamówienie po ident (również soft delete). Przy ponownym zapisie z formularza przywróć rekord w bazie.
+     */
+    protected function resolveFormOrderForUpdate(?string $orderIdent, int $courseId): ?FormOrder
+    {
+        if ($orderIdent === null || $orderIdent === '') {
+            return null;
+        }
+
+        $order = FormOrder::withTrashed()
+            ->where('ident', $orderIdent)
+            ->where('product_id', $courseId)
+            ->first();
+
+        if ($order && $order->trashed()) {
+            if ($order->isEditLocked()) {
+                return $order;
+            }
+            $order->restore();
+            Log::info('FormOrder restored after customer resubmitted order form', [
+                'ident' => $order->ident,
+                'form_order_id' => $order->id,
+            ]);
+        }
+
+        return $order;
+    }
+
+    /**
+     * Widok tylko do odczytu dla zamówienia zablokowanego (faktura lub zamknięte).
+     */
+    protected function renderOrderEditLockedView(Course $course, FormOrder $order): \Illuminate\Contracts\View\View
+    {
+        $order->load(['participants' => fn ($q) => $q->orderBy('id')]);
+
+        return view('orders.order-edit-locked', compact('course', 'order'));
+    }
+
+    /**
+     * Dzieli "Imię Nazwisko" na dwa pola (pierwszy token + reszta).
+     *
+     * @return array{first: string, last: string}
+     */
+    protected function splitFullNameIntoFirstAndLast(string $full): array
+    {
+        $full = trim($full);
+        if ($full === '') {
+            return ['first' => '', 'last' => ''];
+        }
+        if (! preg_match('/^(\S+)\s+(.+)$/u', $full, $m)) {
+            return ['first' => $full, 'last' => ''];
+        }
+
+        return ['first' => $m[1], 'last' => trim($m[2])];
+    }
+
+    /**
+     * Prefill order-form przy edycji zamówienia (np. z podsumowania PDF).
+     *
+     * @return array<string, mixed>
+     */
+    protected function orderFormPrefillFromFormOrder(FormOrder $existingOrder): array
+    {
+        $participantPrefill = $this->participantPrefillFromFormOrder($existingOrder);
+        $buyerType = $this->inferBuyerTypeFromFormOrder($existingOrder);
+
+        $orderData = [
+            'buyer_type' => $buyerType,
+            'payment_type' => 'deferred',
+            'buyer_name' => $existingOrder->buyer_name,
+            'buyer_address' => $existingOrder->buyer_address,
+            'buyer_postcode' => $existingOrder->buyer_postal_code,
+            'buyer_city' => $existingOrder->buyer_city,
+            'buyer_nip' => $existingOrder->buyer_nip,
+            'recipient_name' => $existingOrder->recipient_name,
+            'recipient_address' => $existingOrder->recipient_address,
+            'recipient_postcode' => $existingOrder->recipient_postal_code,
+            'recipient_city' => $existingOrder->recipient_city,
+            'recipient_nip' => $existingOrder->recipient_nip,
+            'contact_phone' => $existingOrder->orderer_phone,
+            'contact_email' => $existingOrder->orderer_email,
+            'participant_first_name' => $participantPrefill['participant_first_name'],
+            'participant_last_name' => $participantPrefill['participant_last_name'],
+            'participant_email' => $participantPrefill['participant_email'],
+            'invoice_notes' => $existingOrder->invoice_notes,
+            'payment_terms' => $existingOrder->invoice_payment_delay ?? $existingOrder->ptw,
+            'order_id' => $existingOrder->id,
+            'order_ident' => $existingOrder->ident,
+        ];
+
+        $ordererName = trim((string) $existingOrder->orderer_name);
+        $buyerName = trim((string) ($existingOrder->buyer_name ?? ''));
+
+        if ($buyerType === 'person') {
+            $ordererParts = $this->splitFullNameIntoFirstAndLast($ordererName);
+            $orderData['contact_first_name'] = $ordererParts['first'];
+            $orderData['contact_last_name'] = $ordererParts['last'];
+            $orderData['contact_name'] = $ordererName;
+
+            $buyerParts = $this->splitFullNameIntoFirstAndLast($buyerName);
+            $orderData['buyer_person_first_name'] = $buyerParts['first'];
+            $orderData['buyer_person_last_name'] = $buyerParts['last'];
+        } else {
+            $orderData['contact_name'] = $ordererName;
+        }
+
+        return $orderData;
+    }
+
+    /**
      * Zapisz zamówienie z odroczonym terminem płatności.
      */
     public function storeDeferredOrder(Request $request, $id)
@@ -1055,12 +1178,13 @@ class CourseController extends Controller
                 $currentPrice = $priceInfo['price'];
             }
 
-            // Sprawdź czy to edycja istniejącego zamówienia
-            $order = null;
-            if ($request->has('order_ident') && $request->order_ident) {
-                $order = FormOrder::where('ident', $request->order_ident)
-                    ->where('product_id', $id)
-                    ->first();
+            // Sprawdź czy to edycja istniejącego zamówienia (w tym soft delete → restore przy zapisie)
+            $order = $this->resolveFormOrderForUpdate($request->order_ident, (int) $id);
+
+            if ($order && $order->isEditLocked()) {
+                return redirect()
+                    ->route('payment.deferred.edit', ['id' => $course->id, 'ident' => $order->ident])
+                    ->with('error', 'To zamówienie zostało już zakończone lub zafakturowane. Zmiany nie zostały zapisane.');
             }
 
             // Dane do zapisania (uczestnik wyłącznie w form_order_participants)
@@ -1184,9 +1308,11 @@ class CourseController extends Controller
 
         if ($buyerType === 'organisation') {
             $rules['buyer_name'] = 'required|string|max:500';
+            $rules['buyer_nip'] = 'required|string|max:50';
         } else {
             // osoba fizyczna: bez nazwy nabywcy
             $rules['buyer_name'] = 'nullable|string|max:500';
+            $rules['buyer_nip'] = 'nullable|string|max:50';
             $rules['buyer_person_first_name'] = 'required|string|max:255';
             $rules['buyer_person_last_name'] = 'required|string|max:255';
         }
@@ -1234,17 +1360,17 @@ class CourseController extends Controller
                 $currentPrice = $priceInfo['price'];
             }
 
-            // Sprawdź czy to edycja istniejącego zamówienia
-            $order = null;
-            if ($request->filled('order_ident')) {
-                $order = FormOrder::where('ident', $request->order_ident)
-                    ->where('product_id', $id)
-                    ->first();
+            // Sprawdź czy to edycja istniejącego zamówienia (w tym soft delete → restore przy zapisie)
+            $order = $this->resolveFormOrderForUpdate($request->order_ident, (int) $id);
+
+            if ($order && $order->isEditLocked()) {
+                return redirect()
+                    ->route('payment.order-form.edit', ['id' => $course->id, 'ident' => $order->ident])
+                    ->with('error', 'To zamówienie zostało już zakończone lub zafakturowane. Zmiany nie zostały zapisane.');
             }
 
             $buyerName = $validated['buyer_name'] ?? null;
-            // na razie mapujemy NIP z pola buyer_nip8 (jeśli podany)
-            $buyerNip = $request->input('buyer_nip8') ?: null;
+            $buyerNip = $buyerType === 'organisation' ? ($validated['buyer_nip'] ?? null) : null;
             if ($buyerType === 'person') {
                 $buyerName = trim(($validated['buyer_person_first_name'] ?? '').' '.($validated['buyer_person_last_name'] ?? '')) ?: ($validated['contact_name'] ?? $buyerName);
                 $buyerNip = null;
@@ -1273,7 +1399,7 @@ class CourseController extends Controller
                 'recipient_address' => $buyerType === 'organisation' ? ($validated['recipient_address'] ?? null) : null,
                 'recipient_postal_code' => $buyerType === 'organisation' ? ($validated['recipient_postcode'] ?? null) : null,
                 'recipient_city' => $buyerType === 'organisation' ? ($validated['recipient_city'] ?? null) : null,
-                'recipient_nip' => $buyerType === 'organisation' ? ($request->input('recipient_nip8') ?: null) : null,
+                'recipient_nip' => $buyerType === 'organisation' ? ($validated['recipient_nip'] ?? null) : null,
                 'invoice_notes' => $validated['invoice_notes'],
                 'invoice_payment_delay' => $validated['payment_terms'] ?? null,
                 'ip_address' => $request->ip(),
@@ -1407,7 +1533,7 @@ class CourseController extends Controller
         if ($buyerType === 'organisation') {
             return [
                 'buyer' => [
-                    'nip' => $request->input('buyer_nip8'),
+                    'nip' => $request->input('buyer_nip'),
                     'country' => 'Polska',
                     'name' => $request->input('buyer_name'),
                     'street' => $request->input('buyer_address'),
@@ -1417,7 +1543,7 @@ class CourseController extends Controller
                     'city' => $request->input('buyer_city'),
                 ],
                 'recipient' => [
-                    'nip' => $request->input('recipient_nip8'),
+                    'nip' => $request->input('recipient_nip'),
                     'country' => 'Polska',
                     'name' => $request->input('recipient_name'),
                     'street' => $request->input('recipient_address'),
@@ -1524,7 +1650,9 @@ class CourseController extends Controller
             ]);
         }
 
-        return view('orders.summary', compact('order', 'course'));
+        $orderEditLocked = $order->isEditLocked();
+
+        return view('orders.summary', compact('order', 'course', 'orderEditLocked'));
     }
 
     /**

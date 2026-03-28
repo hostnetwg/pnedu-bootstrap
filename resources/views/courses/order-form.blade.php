@@ -265,6 +265,10 @@
 
             <form method="POST" action="{{ route('payment.order-form.store', $course->id) }}">
                 @csrf
+                @php
+                    $prefillBuyerType = old('buyer_type', $testData['buyer_type'] ?? 'organisation');
+                    $prefillPaymentType = old('payment_type', $testData['payment_type'] ?? ($prefillBuyerType === 'person' ? 'online' : 'deferred'));
+                @endphp
                 <!-- Hidden fields for publigo integration -->
                 {{-- Dla kursów z certgen_Publigo użyj id_old, w przeciwnym razie użyj publigo_product_id --}}
                 <input type="hidden" name="publigo_product_id" value="{{ ($course->source_id_old === 'certgen_Publigo' && $course->id_old) ? $course->id_old : $course->publigo_product_id }}">
@@ -286,7 +290,7 @@
                                     name="buyer_type"
                                     id="buyer_type_organisation"
                                     value="organisation"
-                                    {{ old('buyer_type', 'organisation') === 'organisation' ? 'checked' : '' }}
+                                    {{ $prefillBuyerType === 'organisation' ? 'checked' : '' }}
                                     required
                                 >
                                 <label class="form-check-label" for="buyer_type_organisation">
@@ -300,7 +304,7 @@
                                     name="buyer_type"
                                     id="buyer_type_person"
                                     value="person"
-                                    {{ old('buyer_type', 'organisation') === 'person' ? 'checked' : '' }}
+                                    {{ $prefillBuyerType === 'person' ? 'checked' : '' }}
                                     required
                                 >
                                 <label class="form-check-label" for="buyer_type_person">
@@ -448,8 +452,11 @@
                     </div>
                     <div class="row g-3 mb-3" id="buyer_nip_gus_row">
                         <div class="col-12 col-md-4">
-                            <label for="buyer_nip8" class="form-label">NIP <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="buyer_nip8" name="buyer_nip8" value="{{ $testData['buyer_nip8'] ?? old('buyer_nip8') }}">
+                            <label for="buyer_nip" class="form-label">NIP <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control @error('buyer_nip') is-invalid @enderror" id="buyer_nip" name="buyer_nip" value="{{ $testData['buyer_nip'] ?? old('buyer_nip') }}">
+                            @error('buyer_nip')
+                                <div class="invalid-feedback d-block">{{ $message }}</div>
+                            @enderror
                         </div>
                         <div class="col-12 col-md-8 d-flex align-items-end">
                             <button type="button" class="btn btn-primary w-100" id="buyer_gus_button">
@@ -498,8 +505,11 @@
                         </div>
                         <div class="row g-3 mb-3" id="recipient_nip_gus_row">
                             <div class="col-12 col-md-4">
-                                <label for="recipient_nip8" class="form-label">NIP</label>
-                                <input type="text" class="form-control" id="recipient_nip8" name="recipient_nip8" value="{{ $testData['recipient_nip8'] ?? old('recipient_nip8') }}">
+                                <label for="recipient_nip" class="form-label">NIP</label>
+                                <input type="text" class="form-control @error('recipient_nip') is-invalid @enderror" id="recipient_nip" name="recipient_nip" value="{{ $testData['recipient_nip'] ?? old('recipient_nip') }}">
+                                @error('recipient_nip')
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
                             </div>
                             <div class="col-12 col-md-8 d-flex align-items-end">
                                 <button type="button" class="btn btn-primary w-100" id="recipient_gus_button">
@@ -577,7 +587,7 @@
                                     name="payment_type"
                                     id="payment_type_deferred"
                                     value="deferred"
-                                    {{ old('payment_type', old('buyer_type','organisation') === 'person' ? 'online' : 'deferred') === 'deferred' ? 'checked' : '' }}
+                                    {{ $prefillPaymentType === 'deferred' ? 'checked' : '' }}
                                 >
                                 <label class="form-check-label" for="payment_type_deferred">
                                     Faktura z odroczonym terminem płatności
@@ -590,7 +600,7 @@
                                     name="payment_type"
                                     id="payment_type_online"
                                     value="online"
-                                    {{ old('payment_type', old('buyer_type','organisation') === 'person' ? 'online' : 'deferred') === 'online' ? 'checked' : '' }}
+                                    {{ $prefillPaymentType === 'online' ? 'checked' : '' }}
                                 >
                                 <label class="form-check-label" for="payment_type_online">
                                     Natychmiastowa płatność online
@@ -684,7 +694,8 @@
     var contactColC = document.getElementById('contact_col_c');
     var contactColD = document.getElementById('contact_col_d');
     var buyerNameGroup = document.getElementById('buyer_name_group');
-    var buyerNipGroup = document.getElementById('buyer_nip_group');
+    var buyerNipGusRow = document.getElementById('buyer_nip_gus_row');
+    var buyerNipGroup = buyerNipGusRow;
     var buyerNameInput = document.getElementById('buyer_name');
     var buyerNipInput = document.getElementById('buyer_nip');
     var buyerAddressGroup = document.getElementById('buyer_address_group');
@@ -692,7 +703,6 @@
     var buyerPersonFirst = document.getElementById('buyer_person_first_name');
     var buyerPersonLast = document.getElementById('buyer_person_last_name');
     var buyerPersonIndependent = document.getElementById('buyer_person_name_independent');
-    var buyerNipGusRow = document.getElementById('buyer_nip_gus_row');
     var recipientWrapper = document.querySelector('.recipient-wrapper');
     var paymentTypeDeferred = document.getElementById('payment_type_deferred');
     var paymentTypeOnline = document.getElementById('payment_type_online');
@@ -794,7 +804,15 @@
 
         syncContactNameHidden();
 
-        // Ustaw domyślny sposób rozliczenia po zmianie typu zamawiającego
+        updatePaymentTypeVisibility();
+    }
+
+    /**
+     * Domyślny sposób rozliczenia tylko przy przełączeniu „Zamawiam jako” (nie przy pierwszym renderze / edycji).
+     * Dzięki temu prefill z serwera (np. odroczona płatność + osoba fizyczna) nie jest nadpisywany.
+     */
+    function setDefaultPaymentTypeForCurrentBuyerType() {
+        var isPerson = !!(buyerPerson && buyerPerson.checked);
         if (isPerson) {
             if (paymentTypeOnline) paymentTypeOnline.checked = true;
         } else {
@@ -848,6 +866,7 @@
 
     if (buyerOrg) buyerOrg.addEventListener('change', function () {
         updateContactFieldsVisibility();
+        setDefaultPaymentTypeForCurrentBuyerType();
         copyContactToBuyerPersonIfAllowed();
         copyContactToParticipantIfAllowed();
 
@@ -861,6 +880,7 @@
     });
     if (buyerPerson) buyerPerson.addEventListener('change', function () {
         updateContactFieldsVisibility();
+        setDefaultPaymentTypeForCurrentBuyerType();
         copyContactToBuyerPersonIfAllowed();
         copyContactToParticipantIfAllowed();
     });
@@ -1001,12 +1021,12 @@
         'buyer_address' => 'ul. Warszawska 5',
         'buyer_postcode' => '09-320',
         'buyer_city' => 'Bieżuń',
-        'buyer_nip8' => '5110265245',
+        'buyer_nip' => '5110265245',
         'recipient_name' => 'Szkoła Podstawowa im. Andrzeja Zamoyskiego',
         'recipient_address' => 'ul. Andrzeja Zamoyskiego 28',
         'recipient_postcode' => '09-320',
         'recipient_city' => 'Bieżuń',
-        'recipient_nip8' => '5261040828',
+        'recipient_nip' => '5261040828',
         'buyer_person_first_name' => 'Waldemar',
         'buyer_person_last_name' => 'Grabowski',
         'participant_first_name' => 'Waldemar',

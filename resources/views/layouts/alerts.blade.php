@@ -33,9 +33,15 @@
             </div>
         @endif
         @if(session('info'))
-            <div class="alert alert-info alert-dismissible fade show" role="alert">
-                {{ session('info') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            {{-- Bez klasy alert-dismissible: domyślne position:absolute na .btn-close psuje flex i tekst wchodzi pod X --}}
+            <div class="alert alert-primary fade show d-flex align-items-start gap-3 gap-md-4 py-3 ps-3 ps-md-4 pe-3 mb-0 shadow border-0 border-start border-primary border-5 rounded-0 rounded-end" role="alert" style="font-size: 1.0625rem; line-height: 1.55;">
+                <span class="flex-shrink-0 text-primary" aria-hidden="true">
+                    <i class="bi bi-info-circle-fill" style="font-size: 1.85rem; line-height: 1;"></i>
+                </span>
+                <div class="flex-grow-1 min-w-0 fw-medium">
+                    {{ session('info') }}
+                </div>
+                <button type="button" class="btn-close flex-shrink-0 ms-1 ms-md-2" style="margin-top: 0.15rem;" data-bs-dismiss="alert" aria-label="Zamknij"></button>
             </div>
         @endif
         @if(session('error'))
