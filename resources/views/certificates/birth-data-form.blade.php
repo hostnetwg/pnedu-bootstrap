@@ -63,7 +63,8 @@
                         </div>
                     @endif
 
-                    <form method="post" action="{{ $isDashboard ? route('dashboard.zaswiadczenia.course.birth', ['course' => $course->id]) : route('certificates.submit-birth-data', ['token' => $token, 'course' => $course->id]) }}">
+                    {{-- action: request()->url() na dashboardzie — ten sam host/port co w pasku adresu (unika 419 przy localhost vs 127.0.0.1 lub złym APP_URL w route()) --}}
+                    <form method="post" action="{{ $isDashboard ? request()->url() : route('certificates.submit-birth-data', ['token' => $token, 'course' => $course->id]) }}">
                         @csrf
                         @if($optional ?? false)
                             <input type="hidden" name="optional" value="1">
