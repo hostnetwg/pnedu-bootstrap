@@ -46,24 +46,22 @@
                 <div class="training-content">
                     <h3 class="training-title mb-2">
                         @if($hasOnlineMaterials && $accessActive)
-                            <a href="{{ route('dashboard.szkolenia.wideo', $participant) }}" class="training-title-link d-inline-flex align-items-center flex-wrap gap-2" title="{{ $firstVideo ? 'Odtwórz nagranie wideo' : 'Materiały do pobrania' }}">
+                            <a href="{{ route('dashboard.szkolenia.wideo', $participant) }}" class="training-title-link training-title-link--has-access" title="{{ $firstVideo ? 'Odtwórz nagranie wideo' : 'Materiały do pobrania' }}">
                                 @if($firstVideo)
-                                    <span class="training-title-play-badge" aria-hidden="true"><i class="bi bi-play-fill"></i></span>
+                                    <span class="training-title-play-badge training-title-play-badge--leading" aria-hidden="true"><i class="bi bi-play-fill"></i></span>
+                                @else
+                                    <i class="bi bi-folder2-open training-title-folder-icon--leading" aria-hidden="true"></i>
                                 @endif
                                 <span>{{ $course?->title ?? 'Szkolenie niedostępne w katalogu' }}</span>
-                                @unless($firstVideo)
-                                    <i class="bi bi-folder2-open flex-shrink-0" style="font-size: 0.95em; opacity: 0.7;" aria-hidden="true"></i>
-                                @endunless
                             </a>
                         @elseif($hasOnlineMaterials && !$accessActive)
-                            <span class="training-title-link training-title-link--disabled d-inline-flex align-items-center flex-wrap gap-2" title="Dostęp wygasł">
+                            <span class="training-title-link training-title-link--disabled training-title-link--expired" title="Dostęp wygasł">
                                 @if($firstVideo)
-                                    <span class="training-title-play-badge training-title-play-badge--disabled" aria-hidden="true"><i class="bi bi-play-fill"></i></span>
+                                    <span class="training-title-play-badge training-title-play-badge--disabled training-title-play-badge--leading" aria-hidden="true"><i class="bi bi-play-fill"></i></span>
+                                @else
+                                    <i class="bi bi-folder-x training-title-folder-icon--leading" aria-hidden="true"></i>
                                 @endif
                                 <span>{{ $course?->title ?? 'Szkolenie niedostępne w katalogu' }}</span>
-                                @unless($firstVideo)
-                                    <i class="bi bi-folder-x flex-shrink-0 text-muted" style="font-size: 0.95em;" aria-hidden="true"></i>
-                                @endunless
                             </span>
                         @else
                             <span class="training-title-text">{{ $course?->title ?? 'Szkolenie niedostępne w katalogu' }}</span>

@@ -26,12 +26,19 @@
     color: #212529;
 }
 .training-title-link {
-    color: inherit;
     text-decoration: none;
     transition: color 0.2s ease;
 }
-.training-title-link:hover {
+/* Aktywny dostęp: tytuł + ikona PLAY / folder w niebieskim */
+.training-title-link--has-access {
     color: #0d6efd;
+}
+.training-title-link--has-access:hover {
+    color: #0a58ca;
+}
+.training-title-link--has-access .training-title-folder-icon--leading {
+    color: #0d6efd;
+    opacity: 1;
 }
 .training-title-link--disabled {
     cursor: not-allowed;
@@ -39,6 +46,10 @@
 }
 .training-title-link--disabled:hover {
     color: #6c757d !important;
+}
+.training-title-link--expired .training-title-folder-icon--leading {
+    color: #6c757d;
+    opacity: 1;
 }
 /* Wyraźny „PLAY” przy tytule, gdy jest nagranie wideo */
 .training-title-play-badge {
@@ -54,13 +65,26 @@
     box-shadow: 0 1px 4px rgba(13, 110, 253, 0.35);
     transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
-.training-title-link:not(.training-title-link--disabled):hover .training-title-play-badge {
+.training-title-link--has-access:hover .training-title-play-badge {
     transform: scale(1.07);
     box-shadow: 0 2px 8px rgba(13, 110, 253, 0.45);
 }
 .training-title-play-badge .bi-play-fill {
     font-size: 1rem;
     margin-left: 2px;
+}
+/* PLAY / folder przed tytułem — odstęp jak spacja po ikonie */
+.training-title-play-badge--leading {
+    margin-right: 0.4rem;
+    margin-left: 0;
+    vertical-align: middle;
+    position: relative;
+    top: -0.05em;
+}
+.training-title-folder-icon--leading {
+    margin-right: 0.4rem;
+    font-size: 0.95em;
+    vertical-align: middle;
 }
 .training-title-play-badge--disabled {
     background: #adb5bd;
