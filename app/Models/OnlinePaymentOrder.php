@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 
 class OnlinePaymentOrder extends Model
 {
@@ -61,28 +60,46 @@ class OnlinePaymentOrder extends Model
     }
 
     /**
-     * Generuj identyfikator zamówienia w formacie PNEDU_{numer_kolejny}
-     * Numer kolejny jest oparty na maksymalnym ID + 1, aby zapewnić sekwencyjność.
+     * Generuj identyfikator zamówienia (extOrderId). Numer z max(id)+1 w transakcji.
+     *
+     * ONLINE_PAYMENT_ORDER_IDENT_PREFIX (np. PNEdu#) → PNEdu#1, PNEdu#2
+     * Bez prefiksu: PNEDU_1; z ONLINE_PAYMENT_ORDER_IDENT_SEGMENT=local → PNEDU_local_1
      */
     public static function generateIdent(): string
     {
-        return DB::connection('pneadm')->transaction(function () {
+        $segment = config('services.online_payment_order.ident_segment');
+        $segment = is_string($segment) && $segment !== ''
+            ? preg_replace('/[^A-Za-z0-9_-]/', '', $segment)
+            : '';
+
+        $customPrefix = config('services.online_payment_order.ident_prefix');
+        $customPrefix = is_string($customPrefix) && $customPrefix !== ''
+            ? preg_replace('/[^A-Za-z0-9#_-]/', '', $customPrefix)
+            : '';
+
+        if ($customPrefix !== '') {
+            $prefix = $customPrefix . ($segment !== '' ? $segment . '_' : '');
+        } else {
+            $prefix = 'PNEDU_' . ($segment !== '' ? $segment . '_' : '');
+        }
+
+        return DB::connection('pneadm')->transaction(function () use ($prefix) {
             // Użyj lockForUpdate aby uniknąć kolizji przy równoczesnych zapytaniach
             $maxId = DB::connection('pneadm')
                 ->table('online_payment_orders')
                 ->lockForUpdate()
                 ->max('id') ?? 0;
-            
+
             $nextNumber = $maxId + 1;
-            $ident = 'PNEDU_' . $nextNumber;
-            
+            $ident = $prefix . $nextNumber;
+
             // Sprawdź czy przypadkiem nie istnieje (na wypadek ręcznej edycji lub innych przypadków)
             // Jeśli istnieje, zwiększ numer aż znajdziemy wolny
             while (self::where('ident', $ident)->exists()) {
                 $nextNumber++;
-                $ident = 'PNEDU_' . $nextNumber;
+                $ident = $prefix . $nextNumber;
             }
-            
+
             return $ident;
         });
     }

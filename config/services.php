@@ -58,6 +58,16 @@ return [
         'base_url' => filter_var(env('PAYNOW_SANDBOX', true), FILTER_VALIDATE_BOOLEAN) ? 'https://api.sandbox.paynow.pl' : 'https://api.paynow.pl',
     ],
 
+    /*
+    | Ident zamówień online (PayU/PayNow extOrderId):
+    | - ident_prefix pusty: PNEDU_{nr}; z ident_segment=local → PNEDU_local_{nr}
+    | - ident_prefix=PNEdu# → PNEdu#{nr}; z segmentem → PNEdu#{segment}_{nr}
+    */
+    'online_payment_order' => [
+        'ident_prefix' => env('ONLINE_PAYMENT_ORDER_IDENT_PREFIX'),
+        'ident_segment' => env('ONLINE_PAYMENT_ORDER_IDENT_SEGMENT'),
+    ],
+
     // Sendy – te same zmienne i wartości domyślne co w pneadm-bootstrap (config/sendy.php)
     'sendy' => [
         'url' => env('SENDY_URL', env('SENDY_BASE_URL', 'https://sendyhost.net')),
