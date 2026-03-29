@@ -53,37 +53,34 @@
     .order-form-section .form-label {
         font-weight: 500;
     }
-    .order-form-section input:not([type="checkbox"]),
+    .order-form-section input:not([type="checkbox"]):not([type="radio"]),
     .order-form-section textarea {
         border-radius: 7px;
         border: 1.5px solid #b0bec5;
         background: #fafdff;
         font-size: 1.07rem;
     }
-    .order-form-section input:not([type="checkbox"]):focus,
+    .order-form-section input:not([type="checkbox"]):not([type="radio"]):focus,
     .order-form-section textarea:focus {
         border-color: #1976d2;
         box-shadow: 0 0 0 2px #bbdefb;
         background: #fff;
     }
-    .order-form-section .form-check-input {
-        width: 1.25em;
-        height: 1.25em;
-        margin-top: 0.25em;
-        border: 2px solid #b0bec5;
-        cursor: pointer;
-    }
-    .order-form-section .form-check-input:checked {
+    /* Radio: Bootstrap domyślnie rysuje białą kropkę na niebieskim pierścieniu — tu całe kółko wypełnione. */
+    .order-form-section .form-check-input[type="radio"]:checked {
         background-color: #1976d2;
-        border-color: #1976d2;
+        border-color: #0d47a1;
+        background-image: none;
     }
-    .order-form-section .form-check-input:focus {
-        border-color: #1976d2;
-        outline: 0;
-        box-shadow: 0 0 0 0.25rem rgba(25, 118, 210, 0.25);
+    /* Checkbox: jednolite niebieskie tło + biały ptaszek (domyślny SVG Bootstrapa) */
+    .order-form-section .form-check-input[type="checkbox"]:checked {
+        background-color: #1976d2;
+        border-color: #0d47a1;
     }
-    .order-form-section .form-check-input:active {
-        filter: brightness(0.9);
+    .order-form-section .form-check-input[type="checkbox"]:not(:checked),
+    .order-form-section .form-check-input[type="radio"]:not(:checked) {
+        border: 2.5px solid #455a64;
+        background-color: #fff;
     }
     .order-form-section .form-info-text {
         font-size: 0.9rem;

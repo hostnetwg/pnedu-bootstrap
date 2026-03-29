@@ -33,45 +33,32 @@
     .order-form-section .form-label {
         font-weight: 500;
     }
-    .order-form-section input:not([type="checkbox"]),
+    .order-form-section input:not([type="checkbox"]):not([type="radio"]),
     .order-form-section textarea {
         border-radius: 7px;
         border: 1.5px solid #b0bec5;
         background: #fafdff;
         font-size: 1.07rem;
     }
-    .order-form-section input:not([type="checkbox"]):focus,
+    .order-form-section input:not([type="checkbox"]):not([type="radio"]):focus,
     .order-form-section textarea:focus {
         border-color: #1976d2;
         box-shadow: 0 0 0 2px #bbdefb;
         background: #fff;
     }
-    .order-form-section .form-check-input {
-        width: 1.25em;
-        height: 1.25em;
-        margin-top: 0.25em;
-        vertical-align: top;
-        background-color: #fff;
-        border: 2px solid #b0bec5;
-        border-radius: 0.25em;
-        cursor: pointer;
-        transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-    }
-    .order-form-section .form-check-input:checked {
+    .order-form-section .form-check-input[type="radio"]:checked {
         background-color: #1976d2;
-        border-color: #1976d2;
-        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M6 10l3 3l6-6'/%3e%3c/svg%3e");
-        background-repeat: no-repeat;
-        background-position: center;
-        background-size: 100% 100%;
+        border-color: #0d47a1;
+        background-image: none;
     }
-    .order-form-section .form-check-input:focus {
-        border-color: #1976d2;
-        outline: 0;
-        box-shadow: 0 0 0 0.25rem rgba(25, 118, 210, 0.25);
+    .order-form-section .form-check-input[type="checkbox"]:checked {
+        background-color: #1976d2;
+        border-color: #0d47a1;
     }
-    .order-form-section .form-check-input:active {
-        filter: brightness(0.9);
+    .order-form-section .form-check-input[type="checkbox"]:not(:checked),
+    .order-form-section .form-check-input[type="radio"]:not(:checked) {
+        border: 2.5px solid #455a64;
+        background-color: #fff;
     }
     .order-form-section .form-info-text {
         font-size: 0.9rem;
