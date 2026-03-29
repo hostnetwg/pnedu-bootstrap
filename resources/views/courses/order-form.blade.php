@@ -598,8 +598,8 @@
                     </div>
                 </fieldset>
                 <fieldset class="order-form-section">
-                    <legend class="visually-hidden">DANE UCZESTNIKA SZKOLENIA</legend>
-                    <div class="section-heading">DANE UCZESTNIKA SZKOLENIA</div>
+                    <legend class="visually-hidden">DANE UCZESTNIKÓW SZKOLENIA</legend>
+                    <div class="section-heading">DANE UCZESTNIKÓW SZKOLENIA</div>
                     <div class="form-info-text mt-2">
                         Na poniższe dane zostaną przesłane dane dostępowe do szkolenia oraz wystawione i przesłane zaświadczenie.
                     </div>
@@ -874,7 +874,7 @@
         if (buyerPersonLast) buyerPersonLast.required = isPerson;
         if (recipientWrapper) recipientWrapper.style.display = isPerson ? 'none' : '';
 
-        // checkbox "kopiuj z danych zamawiającego" w DANE UCZESTNIKA SZKOLENIA tylko dla osoby fizycznej
+        // checkbox "kopiuj z danych zamawiającego" w DANE UCZESTNIKÓW SZKOLENIA tylko dla osoby fizycznej
         if (participantCopyWrapper) {
             if (isPerson) {
                 participantCopyWrapper.classList.remove('d-none');
