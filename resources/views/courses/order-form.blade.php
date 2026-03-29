@@ -543,56 +543,57 @@
                         </div>
                     </div>
                     <div class="recipient-wrapper">
-                    <hr class="my-3">
-                    <h6 class="mb-3 mt-2" style="font-weight: 700; font-size: 1.05rem; color: #1976d2;">
-                        ODBIORCA
-                        <span style="font-weight: 400; font-size: 0.9rem; color: #555;">
-                            (uzupełnij jeżeli wymagane w Twojej organizacji)
-                        </span>
-                    </h6>
-                    <div class="recipient-block">
-                        <div class="mb-3">
-                            <label for="recipient_name" class="form-label">Nazwa odbiorcy</label>
-                            <input type="text" class="form-control @error('recipient_name') is-invalid @enderror" id="recipient_name" name="recipient_name" value="{{ $testData['recipient_name'] ?? old('recipient_name') }}">
-                            @error('recipient_name')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                        <div class="row g-3 mb-3">
-                            <div class="col-12 col-md-2">
-                                <label for="recipient_postcode" class="form-label">Kod pocztowy</label>
-                                <input type="text" class="form-control @error('recipient_postcode') is-invalid @enderror" id="recipient_postcode" name="recipient_postcode" value="{{ $testData['recipient_postcode'] ?? old('recipient_postcode') }}">
-                                @error('recipient_postcode')
+                        <hr class="my-3">
+                        <h6 class="mb-3 mt-2" style="font-weight: 700; font-size: 1.05rem; color: #1976d2;">
+                            ODBIORCA
+                            <span class="text-danger" style="font-weight: 400; font-size: 0.9rem;">
+                                (uzupełnij jeżeli wymagane w Twojej organizacji)
+                            </span>
+                        </h6>
+                        <div class="recipient-block">
+                            <div class="mb-3">
+                                <label for="recipient_name" class="form-label">Nazwa odbiorcy</label>
+                                <input type="text" class="form-control @error('recipient_name') is-invalid @enderror" id="recipient_name" name="recipient_name" value="{{ $testData['recipient_name'] ?? old('recipient_name') }}">
+                                @error('recipient_name')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
-                            <div class="col-12 col-md-4">
-                                <label for="recipient_city" class="form-label">Poczta / Miasto</label>
-                                <input type="text" class="form-control @error('recipient_city') is-invalid @enderror" id="recipient_city" name="recipient_city" value="{{ $testData['recipient_city'] ?? old('recipient_city') }}">
-                                @error('recipient_city')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
+                            <div class="row g-3 mb-3">
+                                <div class="col-12 col-md-2">
+                                    <label for="recipient_postcode" class="form-label">Kod pocztowy</label>
+                                    <input type="text" class="form-control @error('recipient_postcode') is-invalid @enderror" id="recipient_postcode" name="recipient_postcode" value="{{ $testData['recipient_postcode'] ?? old('recipient_postcode') }}">
+                                    @error('recipient_postcode')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                                <div class="col-12 col-md-4">
+                                    <label for="recipient_city" class="form-label">Poczta / Miasto</label>
+                                    <input type="text" class="form-control @error('recipient_city') is-invalid @enderror" id="recipient_city" name="recipient_city" value="{{ $testData['recipient_city'] ?? old('recipient_city') }}">
+                                    @error('recipient_city')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <label for="recipient_address" class="form-label">Adres</label>
+                                    <input type="text" class="form-control @error('recipient_address') is-invalid @enderror" id="recipient_address" name="recipient_address" value="{{ $testData['recipient_address'] ?? old('recipient_address') }}">
+                                    @error('recipient_address')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
                             </div>
-                            <div class="col-12 col-md-6">
-                                <label for="recipient_address" class="form-label">Adres</label>
-                                <input type="text" class="form-control @error('recipient_address') is-invalid @enderror" id="recipient_address" name="recipient_address" value="{{ $testData['recipient_address'] ?? old('recipient_address') }}">
-                                @error('recipient_address')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-                        </div>
-                        <div class="row g-3 mb-3" id="recipient_nip_gus_row">
-                            <div class="col-12 col-md-4">
-                                <label for="recipient_nip" class="form-label">NIP</label>
-                                <input type="text" class="form-control @error('recipient_nip') is-invalid @enderror" id="recipient_nip" name="recipient_nip" value="{{ $testData['recipient_nip'] ?? old('recipient_nip') }}">
-                                @error('recipient_nip')
-                                    <div class="invalid-feedback d-block">{{ $message }}</div>
-                                @enderror
-                            </div>
-                            <div class="col-12 col-md-8 d-flex align-items-end">
-                                <button type="button" class="btn btn-primary w-100" id="recipient_gus_button">
-                                    Wpisz NIP i pobierz dane z GUS
-                                </button>
+                            <div class="row g-3 mb-3" id="recipient_nip_gus_row">
+                                <div class="col-12 col-md-4">
+                                    <label for="recipient_nip" class="form-label">NIP</label>
+                                    <input type="text" class="form-control @error('recipient_nip') is-invalid @enderror" id="recipient_nip" name="recipient_nip" value="{{ $testData['recipient_nip'] ?? old('recipient_nip') }}">
+                                    @error('recipient_nip')
+                                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                                <div class="col-12 col-md-8 d-flex align-items-end">
+                                    <button type="button" class="btn btn-primary w-100" id="recipient_gus_button">
+                                        Wpisz NIP i pobierz dane z GUS
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>

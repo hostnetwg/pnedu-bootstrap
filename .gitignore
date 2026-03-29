@@ -31,6 +31,12 @@ docker-compose.override.yml
 .DS_Store
 thumbs.db
 
+# Windows / WSL: znaczniki strefy (NTFS ADS) przy kopiowaniu z Internetu — nie commitować
+*Zone.Identifier
+*:Zone.Identifier
+**/*Zone.Identifier
+**/*:Zone.Identifier
+
 storage/app/publicpublic/robots.txt
 .env
 public/storage
