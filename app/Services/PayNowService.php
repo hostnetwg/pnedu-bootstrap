@@ -4,14 +4,16 @@ namespace App\Services;
 
 use App\Models\Course;
 use App\Models\OnlinePaymentOrder;
+use Exception;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Exception;
 
 class PayNowService
 {
     protected string $baseUrl;
+
     protected string $apiKey;
+
     protected string $signatureKey;
 
     public function __construct()
@@ -24,8 +26,8 @@ class PayNowService
             Log::warning('PayNow: brak konfiguracji API Key lub Signature Key. Sprawdź .env: PAYNOW_API_KEY, PAYNOW_SIGNATURE_KEY');
         } else {
             // Logowanie diagnostyczne (tylko pierwsze i ostatnie znaki dla bezpieczeństwa)
-            $apiKeyPreview = substr($this->apiKey, 0, 8) . '...' . substr($this->apiKey, -4);
-            $sigKeyPreview = substr($this->signatureKey, 0, 8) . '...' . substr($this->signatureKey, -4);
+            $apiKeyPreview = substr($this->apiKey, 0, 8).'...'.substr($this->apiKey, -4);
+            $sigKeyPreview = substr($this->signatureKey, 0, 8).'...'.substr($this->signatureKey, -4);
             Log::debug('PayNow: konfiguracja załadowana', [
                 'base_url' => $this->baseUrl,
                 'api_key_preview' => $apiKeyPreview,
@@ -38,10 +40,7 @@ class PayNowService
      * Oblicz podpis HMAC-SHA256 dla żądania PayNow.
      * Implementacja zgodna z oficjalnym SDK PayNow.
      *
-     * @param string $idempotencyKey
-     * @param string|array $body Body jako JSON string lub tablica (będzie skonwertowana)
-     * @param array $parameters
-     * @return string
+     * @param  string|array  $body  Body jako JSON string lub tablica (będzie skonwertowana)
      */
     public function calculateSignature(string $idempotencyKey, $body = '', array $parameters = []): string
     {
@@ -51,23 +50,23 @@ class PayNowService
             'Api-Key' => $this->apiKey,
             'Idempotency-Key' => $idempotencyKey,
         ];
-        
+
         // Body jako string JSON - jeśli przekazano tablicę, skonwertuj na JSON string
         // WAŻNE: musi być dokładnie taki sam JSON jak ten wysyłany w żądaniu HTTP
         if (is_array($body)) {
-            $bodyString = !empty($body) ? json_encode($body, JSON_UNESCAPED_SLASHES) : '';
+            $bodyString = ! empty($body) ? json_encode($body, JSON_UNESCAPED_SLASHES) : '';
         } else {
             $bodyString = (string) $body;
         }
-        
+
         // Parameters - WAŻNE: jeśli puste, musi być pusty obiekt stdClass(), nie pusta tablica []
         // Zgodnie z oficjalnym SDK PayNow: $parsedParameters ?: new \stdClass()
         $parsedParameters = [];
         foreach ($parameters as $key => $value) {
             $parsedParameters[$key] = is_array($value) ? $value : [$value];
         }
-        $parametersObject = !empty($parsedParameters) ? $parsedParameters : new \stdClass();
-        
+        $parametersObject = ! empty($parsedParameters) ? $parsedParameters : new \stdClass;
+
         // Konstruuj paczkę danych - ważna kolejność: headers, parameters, body
         $signatureBody = [
             'headers' => $headers,
@@ -96,9 +95,8 @@ class PayNowService
     /**
      * Weryfikuj podpis webhooka PayNow.
      *
-     * @param string $signature Podpis z nagłówka Signature
-     * @param array $payload Dane webhooka
-     * @return bool
+     * @param  string  $signature  Podpis z nagłówka Signature
+     * @param  array  $payload  Dane webhooka
      */
     public function verifyWebhookSignature(string $signature, array $payload): bool
     {
@@ -122,7 +120,7 @@ class PayNowService
         }
 
         $course = $order->course;
-        if (!$course instanceof Course) {
+        if (! $course instanceof Course) {
             $course = Course::on('pneadm')->find($order->course_id);
         }
 
@@ -132,27 +130,29 @@ class PayNowService
 
         if ($amountGrosze < 100) {
             Log::error('PayNow: zamówienie z kwotą poniżej minimum', ['course_id' => $order->course_id, 'amount' => $amountGross]);
+
             return ['success' => false, 'error' => 'PayNow nie akceptuje zamówień poniżej 1.00 PLN.'];
         }
 
         if ($amountGrosze > 100000000) {
             Log::error('PayNow: zamówienie z kwotą powyżej maksimum', ['course_id' => $order->course_id, 'amount' => $amountGross]);
+
             return ['success' => false, 'error' => 'PayNow nie akceptuje zamówień powyżej 1,000,000.00 PLN.'];
         }
 
         // Generuj unikalny Idempotency-Key
-        $idempotencyKey = $order->ident . '-' . time();
+        $idempotencyKey = $order->ident.'-'.time();
 
         // Przygotuj dane kupującego
         $phone = $order->phone ?? '';
         // Usuń wszystkie znaki niebędące cyframi
         $phoneDigits = preg_replace('/\D/', '', $phone);
-        
+
         // Jeśli numer zaczyna się od 48 (Polska), usuń to
         if (strpos($phoneDigits, '48') === 0 && strlen($phoneDigits) > 9) {
             $phoneDigits = substr($phoneDigits, 2);
         }
-        
+
         // Jeśli numer ma 9 cyfr, dodaj prefix +48
         if (strlen($phoneDigits) === 9) {
             $phonePrefix = '+48';
@@ -176,7 +176,7 @@ class PayNowService
 
         // Dodaj adres jeśli dostępny
         $addressData = $order->address_data ?? [];
-        if (!empty($addressData)) {
+        if (! empty($addressData)) {
             $billingAddress = [];
             $shippingAddress = [];
 
@@ -199,7 +199,7 @@ class PayNowService
                 $billingAddress['country'] = $this->getCountryCode($addressData['country']);
             }
 
-            if (!empty($billingAddress)) {
+            if (! empty($billingAddress)) {
                 $buyer['address'] = [
                     'billing' => $billingAddress,
                     'shipping' => $billingAddress, // Domyślnie taki sam jak billing
@@ -222,7 +222,7 @@ class PayNowService
             'amount' => $amountGrosze,
             'currency' => 'PLN',
             'externalId' => $order->ident,
-            'description' => 'Szkolenie: ' . ($course?->title ?? 'Online'),
+            'description' => 'Szkolenie: '.($course?->title ?? 'Online'),
             'continueUrl' => $continueUrl,
             'buyer' => $buyer,
             'orderItems' => $orderItems,
@@ -236,7 +236,7 @@ class PayNowService
         $signature = $this->calculateSignature($idempotencyKey, $bodyJsonString);
 
         // Logowanie diagnostyczne (tylko pierwsze i ostatnie znaki klucza dla bezpieczeństwa)
-        $apiKeyPreview = !empty($this->apiKey) ? substr($this->apiKey, 0, 8) . '...' . substr($this->apiKey, -4) : 'BRAK';
+        $apiKeyPreview = ! empty($this->apiKey) ? substr($this->apiKey, 0, 8).'...'.substr($this->apiKey, -4) : 'BRAK';
         Log::info('PayNow: próba utworzenia płatności', [
             'base_url' => $this->baseUrl,
             'api_key_preview' => $apiKeyPreview,
@@ -257,7 +257,7 @@ class PayNowService
                     'Signature' => $signature,
                     'Accept' => '*/*',
                     'Content-Type' => 'application/json',
-                    'User-Agent' => 'Laravel/' . app()->version(),
+                    'User-Agent' => 'Laravel/'.app()->version(),
                 ])
                 ->withBody($bodyJsonString, 'application/json')
                 ->post("{$this->baseUrl}/v3/payments");
@@ -266,32 +266,33 @@ class PayNowService
                 'message' => $e->getMessage(),
                 'extOrderId' => $order->ident,
             ]);
-            return ['success' => false, 'error' => 'Błąd połączenia z PayNow: ' . $e->getMessage()];
+
+            return ['success' => false, 'error' => 'Błąd połączenia z PayNow: '.$e->getMessage()];
         }
 
         if ($response->status() !== 201) {
             $responseBody = $response->body();
             $responseJson = $response->json();
-            
+
             Log::error('PayNow create order error', [
                 'status' => $response->status(),
                 'body' => $responseBody,
                 'extOrderId' => $order->ident,
-                'api_key_preview' => !empty($this->apiKey) ? substr($this->apiKey, 0, 8) . '...' . substr($this->apiKey, -4) : 'BRAK',
+                'api_key_preview' => ! empty($this->apiKey) ? substr($this->apiKey, 0, 8).'...'.substr($this->apiKey, -4) : 'BRAK',
                 'base_url' => $this->baseUrl,
             ]);
 
             $errorMessage = 'PayNow odmówił utworzenia zamówienia';
             $errors = $responseJson['errors'] ?? [];
-            if (!empty($errors) && isset($errors[0]['message'])) {
-                $errorMessage .= ': ' . $errors[0]['message'];
-            } elseif (!empty($errors) && isset($errors[0]['errorType'])) {
-                $errorMessage .= ': ' . $errors[0]['errorType'];
+            if (! empty($errors) && isset($errors[0]['message'])) {
+                $errorMessage .= ': '.$errors[0]['message'];
+            } elseif (! empty($errors) && isset($errors[0]['errorType'])) {
+                $errorMessage .= ': '.$errors[0]['errorType'];
                 if (isset($errors[0]['message'])) {
-                    $errorMessage .= ' - ' . $errors[0]['message'];
+                    $errorMessage .= ' - '.$errors[0]['message'];
                 }
             } else {
-                $errorMessage .= ' (status: ' . $response->status() . ')';
+                $errorMessage .= ' (status: '.$response->status().')';
             }
 
             return ['success' => false, 'error' => $errorMessage];
@@ -307,6 +308,7 @@ class PayNowService
                 'body' => $response->body(),
                 'extOrderId' => $order->ident,
             ]);
+
             return ['success' => false, 'error' => 'Brak redirectUrl w odpowiedzi PayNow'];
         }
 
@@ -324,7 +326,9 @@ class PayNowService
     }
 
     /**
-     * Pobierz status płatności z PayNow.
+     * Pobierz status płatności z PayNow (GET /v3/payments/:paymentId/status).
+     *
+     * @see https://docs.paynow.pl/docs/reference/v3/get-payment-status
      */
     public function getPaymentStatus(string $paymentId): ?array
     {
@@ -332,7 +336,7 @@ class PayNowService
             return null;
         }
 
-        $idempotencyKey = 'status-' . $paymentId . '-' . time();
+        $idempotencyKey = 'status-'.$paymentId.'-'.time();
         $signature = $this->calculateSignature($idempotencyKey, [], []);
 
         try {
@@ -343,16 +347,17 @@ class PayNowService
                     'Signature' => $signature,
                     'Accept' => '*/*',
                 ])
-                ->get("{$this->baseUrl}/v3/payments/{$paymentId}");
+                ->get("{$this->baseUrl}/v3/payments/{$paymentId}/status");
         } catch (Exception $e) {
             Log::error('PayNow get payment status exception', [
                 'message' => $e->getMessage(),
                 'paymentId' => $paymentId,
             ]);
+
             return null;
         }
 
-        if (!$response->successful()) {
+        if (! $response->successful()) {
             return null;
         }
 
@@ -371,7 +376,7 @@ class PayNowService
         ];
 
         $countryNameNormalized = ucfirst(strtolower(trim($countryName)));
-        
+
         return $countryMap[$countryNameNormalized] ?? 'PL';
     }
 }

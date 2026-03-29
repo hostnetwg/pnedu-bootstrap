@@ -94,7 +94,8 @@ return [
         'users' => [
             'provider' => 'users',
             'table' => env('AUTH_PASSWORD_RESET_TOKEN_TABLE', 'password_reset_tokens'),
-            'expire' => 60,
+            // Zgodnie z panelem adm.: długa ważność linku „ustaw hasło” (minuty; domyślnie 1 rok)
+            'expire' => (int) env('PASSWORD_RESET_EXPIRE_MINUTES', 525_600),
             'throttle' => 60,
         ],
     ],

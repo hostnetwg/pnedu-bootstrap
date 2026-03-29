@@ -2,17 +2,17 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\OnlinePaymentOrder;
-use App\Models\WebhookLog;
-use App\Models\Participant;
-use App\Models\CoursePriceVariant;
-use App\Services\PayUService;
-use App\Services\PayNowService;
 use App\Mail\PaymentNotificationMail;
+use App\Models\CoursePriceVariant;
+use App\Models\OnlinePaymentOrder;
+use App\Models\Participant;
+use App\Models\WebhookLog;
+use App\Services\PayNowService;
+use App\Services\PayUService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
-use Carbon\Carbon;
 
 class PaymentController extends Controller
 {
@@ -43,13 +43,15 @@ class PaymentController extends Controller
         if (empty($extOrderId)) {
             Log::warning('PayU notify: brak extOrderId');
             $webhookLog->update(['error_message' => 'Brak extOrderId']);
+
             return response('', 200); // PayU oczekuje 200
         }
 
         $order = OnlinePaymentOrder::where('ident', $extOrderId)->first();
-        if (!$order) {
+        if (! $order) {
             Log::warning('PayU notify: nie znaleziono zamówienia', ['extOrderId' => $extOrderId]);
             $webhookLog->update(['error_message' => 'Nie znaleziono zamówienia']);
+
             return response('', 200);
         }
 
@@ -59,14 +61,14 @@ class PaymentController extends Controller
         // Statusy PayU: PENDING, NEW, COMPLETED, CANCELED, REJECTED itd.
         $payuStatus = strtoupper($status ?? '');
         $mappedStatus = WebhookLog::mapStatus('payu', $payuStatus);
-        
+
         if ($mappedStatus) {
             $order->update(['status' => $mappedStatus]);
             $webhookLog->update([
                 'status_mapped' => $mappedStatus,
                 'signature_valid' => true, // PayU nie wymaga weryfikacji podpisu w REST API
             ]);
-            
+
             if ($payuStatus === 'COMPLETED') {
                 Log::info('PayU: płatność potwierdzona - rozpoczynam przetwarzanie', [
                     'ident' => $extOrderId,
@@ -91,10 +93,54 @@ class PaymentController extends Controller
                 ]);
             }
         } else {
-            $webhookLog->update(['error_message' => 'Nieznany status: ' . $payuStatus]);
+            $webhookLog->update(['error_message' => 'Nieznany status: '.$payuStatus]);
         }
 
         return response('', 200);
+    }
+
+    /**
+     * Gdy webhook PayU nie dochodzi (np. 307 z tunelu / bramki), dopytaj API o status
+     * i zsynchronizuj zamówienie — ta sama logika skutków co przy payuNotify dla COMPLETED.
+     */
+    protected function syncPayuOrderFromApi(OnlinePaymentOrder $order): void
+    {
+        if ($order->payment_gateway !== 'payu' || empty($order->payu_order_id)) {
+            return;
+        }
+
+        $wasPaid = $order->isPaid();
+
+        try {
+            $payuService = new PayUService;
+            $data = $payuService->getOrderStatus($order->payu_order_id);
+            if (! is_array($data) || empty($data['orders'][0])) {
+                return;
+            }
+
+            $payuStatus = strtoupper((string) ($data['orders'][0]['status'] ?? ''));
+            $mappedStatus = WebhookLog::mapStatus('payu', $payuStatus);
+            if (! $mappedStatus) {
+                return;
+            }
+
+            $order->update(['status' => $mappedStatus]);
+            $order->refresh();
+
+            if ($payuStatus === 'COMPLETED' && ! $wasPaid) {
+                Log::info('PayU return: zsynchronizowano COMPLETED z API (notify niedostępny lub błąd)', [
+                    'order_id' => $order->id,
+                    'ident' => $order->ident,
+                ]);
+                $this->registerParticipant($order);
+                $this->sendPaymentNotificationEmail($order);
+            }
+        } catch (\Throwable $e) {
+            Log::error('PayU return: synchronizacja statusu z API nie powiodła się', [
+                'order_id' => $order->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     /**
@@ -122,22 +168,22 @@ class PaymentController extends Controller
             ?? $request->json('extOrderId');
 
         // Jeśli mamy orderId (PayU order ID), spróbuj znaleźć zamówienie po payu_order_id
-        $payuOrderId = $request->query('orderId') 
+        $payuOrderId = $request->query('orderId')
             ?? $request->input('orderId')
             ?? $request->json('order.orderId')
             ?? $request->json('orderId');
-        
+
         $order = null;
-        
+
         // 1. Spróbuj znaleźć po extOrderId z URL/body
-        if (!empty($extOrderId)) {
+        if (! empty($extOrderId)) {
             $order = OnlinePaymentOrder::where('ident', $extOrderId)->with('course')->first();
         }
-        
+
         // 2. Jeśli nie znaleziono, spróbuj po payu_order_id
-        if (!$order && !empty($payuOrderId)) {
+        if (! $order && ! empty($payuOrderId)) {
             $order = OnlinePaymentOrder::where('payu_order_id', $payuOrderId)->with('course')->first();
-            
+
             if ($order) {
                 Log::info('PayU return: znaleziono zamówienie po payu_order_id', [
                     'payu_order_id' => $payuOrderId,
@@ -147,11 +193,11 @@ class PaymentController extends Controller
         }
 
         // 3. Fallback: sprawdź sesję (zapisaliśmy ident przed przekierowaniem)
-        if (!$order) {
+        if (! $order) {
             $sessionOrderIdent = session('payu_order_ident');
             if ($sessionOrderIdent) {
                 $order = OnlinePaymentOrder::where('ident', $sessionOrderIdent)->with('course')->first();
-                
+
                 if ($order) {
                     Log::info('PayU return: znaleziono zamówienie z sesji', [
                         'order_ident' => $order->ident,
@@ -164,7 +210,7 @@ class PaymentController extends Controller
         }
 
         // 4. Fallback: spróbuj znaleźć ostatnie zamówienie użytkownika po email z sesji
-        if (!$order) {
+        if (! $order) {
             $sessionEmail = session('payu_order_email');
             if ($sessionEmail) {
                 $order = OnlinePaymentOrder::where('email', $sessionEmail)
@@ -172,7 +218,7 @@ class PaymentController extends Controller
                     ->orderBy('created_at', 'desc')
                     ->with('course')
                     ->first();
-                
+
                 if ($order) {
                     Log::info('PayU return: znaleziono ostatnie zamówienie po email z sesji', [
                         'email' => $sessionEmail,
@@ -184,7 +230,7 @@ class PaymentController extends Controller
         }
 
         // 5. Fallback: spróbuj znaleźć ostatnie zamówienie PayU z tego IP (ostatnie 5 minut)
-        if (!$order) {
+        if (! $order) {
             $userIp = $request->ip();
             $order = OnlinePaymentOrder::where('payment_gateway', 'payu')
                 ->where('ip_address', $userIp)
@@ -192,7 +238,7 @@ class PaymentController extends Controller
                 ->orderBy('created_at', 'desc')
                 ->with('course')
                 ->first();
-            
+
             if ($order) {
                 Log::info('PayU return: znaleziono ostatnie zamówienie po IP', [
                     'ip' => $userIp,
@@ -202,15 +248,15 @@ class PaymentController extends Controller
         }
 
         // Jeśli nadal nie znaleziono zamówienia, ale mamy payuOrderId, spróbuj użyć API PayU
-        if (!$order && !empty($payuOrderId)) {
+        if (! $order && ! empty($payuOrderId)) {
             try {
-                $payuService = new PayUService();
+                $payuService = new PayUService;
                 $orderStatus = $payuService->getOrderStatus($payuOrderId);
-                
+
                 if ($orderStatus && isset($orderStatus['orders'][0]['extOrderId'])) {
                     $extOrderIdFromApi = $orderStatus['orders'][0]['extOrderId'];
                     $order = OnlinePaymentOrder::where('ident', $extOrderIdFromApi)->with('course')->first();
-                    
+
                     if ($order) {
                         Log::info('PayU return: znaleziono zamówienie przez API PayU', [
                             'payu_order_id' => $payuOrderId,
@@ -227,33 +273,7 @@ class PaymentController extends Controller
             }
         }
 
-        // Jeśli nadal nie znaleziono, ale mamy payuOrderId, spróbuj użyć API PayU
-        if (!$order && !empty($payuOrderId)) {
-            try {
-                $payuService = new PayUService();
-                $orderStatus = $payuService->getOrderStatus($payuOrderId);
-                
-                if ($orderStatus && isset($orderStatus['orders'][0]['extOrderId'])) {
-                    $extOrderIdFromApi = $orderStatus['orders'][0]['extOrderId'];
-                    $order = OnlinePaymentOrder::where('ident', $extOrderIdFromApi)->with('course')->first();
-                    
-                    if ($order) {
-                        Log::info('PayU return: znaleziono zamówienie przez API PayU', [
-                            'payu_order_id' => $payuOrderId,
-                            'extOrderId_from_api' => $extOrderIdFromApi,
-                            'order_ident' => $order->ident,
-                        ]);
-                    }
-                }
-            } catch (\Exception $e) {
-                Log::error('PayU return: błąd podczas pobierania statusu z API', [
-                    'payu_order_id' => $payuOrderId,
-                    'error' => $e->getMessage(),
-                ]);
-            }
-        }
-
-        if (!$order) {
+        if (! $order) {
             Log::warning('PayU return: nie znaleziono zamówienia', [
                 'extOrderId' => $extOrderId,
                 'payuOrderId' => $payuOrderId,
@@ -263,9 +283,13 @@ class PaymentController extends Controller
                 'query_params' => $request->query(),
                 'post_data' => $request->all(),
             ]);
+
             return redirect()->route('home')
                 ->with('error', 'Nie znaleziono zamówienia. Sprawdź e-mail z potwierdzeniem płatności lub skontaktuj się z obsługą.');
         }
+
+        $this->syncPayuOrderFromApi($order);
+        $order->refresh();
 
         if ($order->isPaid()) {
             return redirect()->route('payment.success', $order->ident)
@@ -282,6 +306,7 @@ class PaymentController extends Controller
     public function success(string $ident)
     {
         $order = OnlinePaymentOrder::where('ident', $ident)->with('course')->firstOrFail();
+
         return view('payment.success', compact('order'));
     }
 
@@ -291,6 +316,7 @@ class PaymentController extends Controller
     public function pending(string $ident)
     {
         $order = OnlinePaymentOrder::where('ident', $ident)->with('course')->firstOrFail();
+
         return view('payment.pending', compact('order'));
     }
 
@@ -323,31 +349,34 @@ class PaymentController extends Controller
         if (empty($externalId)) {
             Log::warning('PayNow notify: brak externalId');
             $webhookLog->update(['error_message' => 'Brak externalId']);
+
             return response('', 200); // PayNow oczekuje 200
         }
 
         // Weryfikuj podpis webhooka
-        $paynowService = new PayNowService();
+        $paynowService = new PayNowService;
         $signatureValid = false;
-        
+
         if ($signature) {
             $signatureValid = $paynowService->verifyWebhookSignature($signature, $payload);
             $webhookLog->update(['signature_valid' => $signatureValid]);
-            
-            if (!$signatureValid) {
+
+            if (! $signatureValid) {
                 Log::warning('PayNow notify: nieprawidłowy podpis', [
                     'externalId' => $externalId,
                     'paymentId' => $paymentId,
                 ]);
                 $webhookLog->update(['error_message' => 'Nieprawidłowy podpis webhooka']);
+
                 return response('', 200); // Zwróć 200, ale nie przetwarzaj
             }
         }
 
         $order = OnlinePaymentOrder::where('ident', $externalId)->first();
-        if (!$order) {
+        if (! $order) {
             Log::warning('PayNow notify: nie znaleziono zamówienia', ['externalId' => $externalId]);
             $webhookLog->update(['error_message' => 'Nie znaleziono zamówienia']);
+
             return response('', 200);
         }
 
@@ -357,11 +386,11 @@ class PaymentController extends Controller
         // Statusy PayNow: NEW, PENDING, CONFIRMED, ERROR, REJECTED, EXPIRED, CANCELLED
         $paynowStatus = strtoupper($status ?? '');
         $mappedStatus = WebhookLog::mapStatus('paynow', $paynowStatus);
-        
+
         if ($mappedStatus) {
             $order->update(['status' => $mappedStatus]);
             $webhookLog->update(['status_mapped' => $mappedStatus]);
-            
+
             if ($paynowStatus === 'CONFIRMED') {
                 Log::info('PayNow: płatność potwierdzona - rozpoczynam przetwarzanie', [
                     'ident' => $externalId,
@@ -383,10 +412,56 @@ class PaymentController extends Controller
                 Log::info('PayNow: płatność anulowana', ['ident' => $externalId, 'status' => $paynowStatus]);
             }
         } else {
-            $webhookLog->update(['error_message' => 'Nieznany status: ' . $paynowStatus]);
+            $webhookLog->update(['error_message' => 'Nieznany status: '.$paynowStatus]);
         }
 
         return response('', 200);
+    }
+
+    /**
+     * Gdy webhook PayNow nie dochodzi (np. localhost), dopytaj API o status płatności
+     * i zsynchronizuj zamówienie — zgodnie z GET /v3/payments/:id/status w dokumentacji PayNow.
+     *
+     * @see https://docs.paynow.pl/docs/reference/v3/get-payment-status
+     */
+    protected function syncPaynowOrderFromApi(OnlinePaymentOrder $order): void
+    {
+        if ($order->payment_gateway !== 'paynow' || empty($order->payu_order_id)) {
+            return;
+        }
+
+        $wasPaid = $order->isPaid();
+
+        try {
+            $paynowService = new PayNowService;
+            $data = $paynowService->getPaymentStatus($order->payu_order_id);
+            if (! is_array($data) || empty($data['status'])) {
+                return;
+            }
+
+            $paynowStatus = strtoupper((string) $data['status']);
+            $mappedStatus = WebhookLog::mapStatus('paynow', $paynowStatus);
+            if (! $mappedStatus) {
+                return;
+            }
+
+            $order->update(['status' => $mappedStatus]);
+            $order->refresh();
+
+            if ($paynowStatus === 'CONFIRMED' && ! $wasPaid) {
+                Log::info('PayNow return: zsynchronizowano CONFIRMED z API (notify niedostępny lub błąd)', [
+                    'order_id' => $order->id,
+                    'ident' => $order->ident,
+                ]);
+                $this->registerParticipant($order);
+                $this->sendPaymentNotificationEmail($order);
+            }
+        } catch (\Throwable $e) {
+            Log::error('PayNow return: synchronizacja statusu z API nie powiodła się', [
+                'order_id' => $order->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     /**
@@ -405,15 +480,18 @@ class PaymentController extends Controller
         }
 
         $order = OnlinePaymentOrder::where('ident', $externalId)->with('course')->first();
-        if (!$order) {
+        if (! $order) {
             // Może być paymentId zamiast externalId - spróbuj znaleźć po payu_order_id (gdzie przechowujemy paymentId)
             $order = OnlinePaymentOrder::where('payu_order_id', $externalId)->with('course')->first();
         }
 
-        if (!$order) {
+        if (! $order) {
             return redirect()->route('home')
                 ->with('error', 'Nie znaleziono zamówienia.');
         }
+
+        $this->syncPaynowOrderFromApi($order);
+        $order->refresh();
 
         if ($order->isPaid()) {
             return redirect()->route('payment.success', $order->ident)
@@ -426,21 +504,19 @@ class PaymentController extends Controller
 
     /**
      * Zarejestruj uczestnika w tabeli participants po potwierdzeniu płatności.
-     * 
-     * @param OnlinePaymentOrder $order
-     * @return Participant|null
      */
     protected function registerParticipant(OnlinePaymentOrder $order): ?Participant
     {
         try {
             // Załaduj kurs z relacją
             $order->load('course');
-            
-            if (!$order->course) {
+
+            if (! $order->course) {
                 Log::error('PaymentController: brak kursu dla zamówienia', [
                     'order_id' => $order->id,
                     'course_id' => $order->course_id,
                 ]);
+
                 return null;
             }
 
@@ -455,6 +531,7 @@ class PaymentController extends Controller
                     'course_id' => $order->course_id,
                     'email' => $order->email,
                 ]);
+
                 return $existingParticipant;
             }
 
@@ -497,22 +574,20 @@ class PaymentController extends Controller
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
+
             return null;
         }
     }
 
     /**
      * Oblicz datę wygaśnięcia dostępu na podstawie wariantu cenowego kursu.
-     * 
-     * @param OnlinePaymentOrder $order
-     * @return \Carbon\Carbon|null
      */
     protected function calculateAccessExpirationDate(OnlinePaymentOrder $order): ?Carbon
     {
         try {
             // Załaduj kurs z wariantami cenowymi
             $course = $order->course;
-            if (!$course) {
+            if (! $course) {
                 return null;
             }
 
@@ -532,7 +607,7 @@ class PaymentController extends Controller
             }
 
             // Jeśli nie znaleziono wariantu z form_data, użyj najtańszego aktywnego wariantu
-            if (!$priceVariant) {
+            if (! $priceVariant) {
                 $priceVariant = CoursePriceVariant::where('course_id', $course->id)
                     ->where('is_active', true)
                     ->orderBy('price', 'asc')
@@ -540,11 +615,12 @@ class PaymentController extends Controller
             }
 
             // Jeśli nie ma wariantu cenowego, zwróć null
-            if (!$priceVariant) {
+            if (! $priceVariant) {
                 Log::warning('PaymentController: brak wariantu cenowego dla kursu', [
                     'course_id' => $course->id,
                     'order_id' => $order->id,
                 ]);
+
                 return null;
             }
 
@@ -577,21 +653,24 @@ class PaymentController extends Controller
                                 $expiresAt->addYears($priceVariant->access_duration_value);
                                 break;
                         }
+
                         return $expiresAt;
                     }
+
                     return null;
 
                 case '4': // Od określonej daty, z ustaloną datą końca
                     if ($priceVariant->access_end_datetime) {
                         return Carbon::parse($priceVariant->access_end_datetime);
                     }
+
                     return null;
 
                 case '5': // Przez określony czas, od określonej daty
-                    $startDate = $priceVariant->access_start_datetime 
+                    $startDate = $priceVariant->access_start_datetime
                         ? Carbon::parse($priceVariant->access_start_datetime)
                         : $now;
-                    
+
                     if ($priceVariant->access_duration_value && $priceVariant->access_duration_unit) {
                         $expiresAt = $startDate->copy();
                         switch ($priceVariant->access_duration_unit) {
@@ -608,8 +687,10 @@ class PaymentController extends Controller
                                 $expiresAt->addYears($priceVariant->access_duration_value);
                                 break;
                         }
+
                         return $expiresAt;
                     }
+
                     return null;
 
                 default:
@@ -618,6 +699,7 @@ class PaymentController extends Controller
                         'variant_id' => $priceVariant->id,
                         'course_id' => $course->id,
                     ]);
+
                     return null;
             }
 
@@ -628,35 +710,34 @@ class PaymentController extends Controller
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
+
             return null;
         }
     }
 
     /**
      * Wyślij e-mail do super administratora o nowej płatności online.
-     * 
-     * @param OnlinePaymentOrder $order
-     * @return void
      */
     protected function sendPaymentNotificationEmail(OnlinePaymentOrder $order): void
     {
         try {
             // Załaduj kurs z relacją
             $order->load('course');
-            
+
             // Sprawdź czy zamówienie jest opłacone
-            if (!$order->isPaid()) {
+            if (! $order->isPaid()) {
                 Log::warning('PaymentController: próba wysłania e-maila dla nieopłaconego zamówienia', [
                     'order_id' => $order->id,
                     'order_ident' => $order->ident,
                     'status' => $order->status,
                 ]);
+
                 return;
             }
-            
+
             // Adres e-mail super administratora
             $adminEmail = 'waldemar.grabowski@hostnet.pl';
-            
+
             Log::info('PaymentController: rozpoczynam wysyłkę e-maila o płatności', [
                 'order_id' => $order->id,
                 'order_ident' => $order->ident,
@@ -666,10 +747,10 @@ class PaymentController extends Controller
                 'mail_port' => config('mail.mailers.smtp.port'),
                 'note' => config('mail.mailers.smtp.host') === 'mailpit' ? 'E-mail trafi do Mailpit (http://localhost:8025)' : 'E-mail będzie wysłany przez SMTP',
             ]);
-            
+
             // Wyślij e-mail
             Mail::to($adminEmail)->send(new PaymentNotificationMail($order));
-            
+
             Log::info('PaymentController: e-mail o płatności wysłany do administratora', [
                 'order_id' => $order->id,
                 'order_ident' => $order->ident,
@@ -677,7 +758,7 @@ class PaymentController extends Controller
                 'mail_driver' => config('mail.default'),
                 'mail_host' => config('mail.mailers.smtp.host'),
             ]);
-            
+
         } catch (\Exception $e) {
             Log::error('PaymentController: błąd podczas wysyłki e-maila o płatności', [
                 'order_id' => $order->id,

@@ -160,13 +160,19 @@
     .course-pay-box .text-muted {
         font-size: 0.98rem;
     }
-    .pay-or-text {
-        margin: 0.5rem 0 0.5rem 0;
-        color: #1976d2;
-        font-weight: 600;
-        font-size: 1.08rem;
-        letter-spacing: 0.2px;
-        opacity: 0.95;
+    /* Główny CTA formularza zamówienia — spójny niebieski z przyciskiem Publigo */
+    .btn-purchase-cta {
+        background: #1976d2;
+        color: #fff !important;
+        border: none;
+        box-shadow: 0 4px 14px rgba(25, 118, 210, 0.35);
+        transition: background 0.18s, color 0.18s, box-shadow 0.18s, transform 0.18s;
+    }
+    .btn-purchase-cta:hover, .btn-purchase-cta:focus {
+        background: #0d47a1;
+        color: #fff !important;
+        transform: translateY(-2px) scale(1.02);
+        box-shadow: 0 6px 20px rgba(25, 118, 210, 0.4);
     }
     .pay-mobile {
         display: none;
@@ -437,14 +443,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     @if($paymentOptions['show_pay_online'] ?? true)
                         <a href="{{ route('payment.online', $course->id) }}" class="btn btn-lg fw-bold shadow-sm w-100 text-white" style="background-color: #6f42c1; border-color: #6f42c1;">Zapłać online</a>
                     @endif
-                    @if(($paymentOptions['show_deferred_order'] ?? true) || ($paymentOptions['show_order_form'] ?? true) || ($paymentOptions['show_order_form_alt'] ?? true))
-                        <div class="pay-or-text">lub wypełnij</div>
-                    @endif
                     @if($paymentOptions['show_deferred_order'] ?? true)
                         <a href="{{ route('payment.deferred', $course->id) }}" class="btn btn-orange btn-lg fw-bold shadow-sm w-100">Formularz zamówienia z&nbsp;odroczonym terminem płatności</a>
                     @endif
                     @if($paymentOptions['show_order_form'] ?? true)
-                        <a href="{{ route('payment.order-form', $course->id) }}" class="btn btn-outline-primary btn-lg fw-bold shadow-sm w-100">Formularz zamówienia</a>
+                        <a href="{{ route('payment.order-form', $course->id) }}" class="btn btn-purchase-cta btn-lg fw-bold w-100">Zamawiam szkolenie</a>
                     @endif
                     @if((($paymentOptions['show_order_form_alt'] ?? true) && !empty($course->id_old)))
                         <a href="https://zdalna-lekcja.pl/zamowienia/formularz/?idP={{ $course->id_old }}" target="_blank" class="btn btn-lg fw-bold shadow-sm w-100 text-white" style="background-color: #0d6b0d; border-color: #0d6b0d;">Formularz zamówienia z&nbsp;odroczonym terminem płatności</a>
@@ -625,14 +628,11 @@ document.addEventListener('DOMContentLoaded', function() {
                             @if($paymentOptions['show_pay_online'] ?? true)
                                 <a href="{{ route('payment.online', $course->id) }}" class="btn btn-lg fw-bold shadow-sm w-100 text-white" style="background-color: #6f42c1; border-color: #6f42c1;">Zapłać online</a>
                             @endif
-                            @if(($paymentOptions['show_deferred_order'] ?? true) || ($paymentOptions['show_order_form'] ?? true) || ($paymentOptions['show_order_form_alt'] ?? true))
-                                <div class="pay-or-text">lub wypełnij</div>
-                            @endif
                             @if($paymentOptions['show_deferred_order'] ?? true)
                                 <a href="{{ route('payment.deferred', $course->id) }}" class="btn btn-orange btn-lg fw-bold shadow-sm w-100">Formularz zamówienia z&nbsp;odroczonym terminem płatności</a>
                             @endif
                             @if($paymentOptions['show_order_form'] ?? true)
-                                <a href="{{ route('payment.order-form', $course->id) }}" class="btn btn-outline-primary btn-lg fw-bold shadow-sm w-100">Formularz zamówienia</a>
+                                <a href="{{ route('payment.order-form', $course->id) }}" class="btn btn-purchase-cta btn-lg fw-bold w-100">Zamawiam szkolenie</a>
                             @endif
                             @if((($paymentOptions['show_order_form_alt'] ?? true) && !empty($course->id_old)))
                                 <a href="https://zdalna-lekcja.pl/zamowienia/formularz/?idP={{ $course->id_old }}" target="_blank" class="btn btn-lg fw-bold shadow-sm w-100 text-white" style="background-color: #0d6b0d; border-color: #0d6b0d;">Formularz zamówienia z&nbsp;odroczonym terminem płatności</a>
@@ -715,14 +715,11 @@ document.addEventListener('DOMContentLoaded', function() {
                         @if($paymentOptions['show_pay_online'] ?? true)
                             <a href="{{ route('payment.online', $course->id) }}" class="btn btn-lg fw-bold shadow-sm w-100 text-white" style="background-color: #6f42c1; border-color: #6f42c1;">Zapłać online</a>
                         @endif
-                        @if(($paymentOptions['show_deferred_order'] ?? true) || ($paymentOptions['show_order_form'] ?? true) || ($paymentOptions['show_order_form_alt'] ?? true))
-                            <div class="pay-or-text">lub wypełnij</div>
-                        @endif
                         @if($paymentOptions['show_deferred_order'] ?? true)
                             <a href="{{ route('payment.deferred', $course->id) }}" class="btn btn-orange btn-lg fw-bold shadow-sm w-100">Formularz zamówienia z&nbsp;odroczonym terminem płatności</a>
                         @endif
                         @if($paymentOptions['show_order_form'] ?? true)
-                            <a href="{{ route('payment.order-form', $course->id) }}" class="btn btn-outline-primary btn-lg fw-bold shadow-sm w-100">Formularz zamówienia</a>
+                            <a href="{{ route('payment.order-form', $course->id) }}" class="btn btn-purchase-cta btn-lg fw-bold w-100">Zamawiam szkolenie</a>
                         @endif
                         @if((($paymentOptions['show_order_form_alt'] ?? true) && !empty($course->id_old)))
                             <a href="https://zdalna-lekcja.pl/zamowienia/formularz/?idP={{ $course->id_old }}" target="_blank" class="btn btn-lg fw-bold shadow-sm w-100 text-white" style="background-color: #0d6b0d; border-color: #0d6b0d;">Formularz zamówienia z&nbsp;odroczonym terminem płatności</a>

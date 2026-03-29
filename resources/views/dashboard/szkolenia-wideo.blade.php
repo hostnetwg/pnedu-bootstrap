@@ -70,6 +70,14 @@
                             </a>
                         </div>
                     @endif
+                        @if($course->fileLinks->isNotEmpty() && ! $courseEnded)
+                            <div class="alert alert-light border mb-0" role="status">
+                                <p class="small mb-0 text-body-secondary">
+                                    <i class="bi bi-info-circle me-1 text-primary" aria-hidden="true"></i>
+                                    Materiały do pobrania będą dostępne po zakończeniu szkolenia (wg daty zakończenia w kursie).
+                                </p>
+                            </div>
+                        @endif
                     @elseif($fileLinks->isNotEmpty())
                         <p class="text-muted mb-4">To szkolenie udostępnia materiały do pobrania (linki poniżej).</p>
                     @endif
@@ -77,14 +85,13 @@
                     @php
                         $certStatusKey = $course->certificate_download_status ?? 'in_preparation';
                         $certCanDownload = $certStatusKey === 'download_enabled';
-                        $certCourseEnded = $course->end_date && \Carbon\Carbon::parse($course->end_date)->isPast();
                         $zaswiadczenieUrl = route('dashboard.zaswiadczenia.course', $course->id).'?from=szkolenia-wideo';
                     @endphp
 
                     {{-- Zaświadczenie; materiały do plików opcjonalnie pod spodem --}}
                     <div class="border-top pt-4 mt-4 mb-4">
                             <h6 class="h6 mb-3"><i class="bi bi-award me-2 text-primary"></i>Zaświadczenie</h6>
-                            @if(!$certCourseEnded)
+                            @if(! $courseEnded)
                                 <p class="small text-muted mb-0">Zaświadczenie zostanie udostępnione po zakończeniu szkolenia.</p>
                             @elseif($certCanDownload)
                                 <a href="{{ $zaswiadczenieUrl }}"

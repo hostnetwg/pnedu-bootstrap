@@ -7,6 +7,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 
+/**
+ * Zamówienia z formularza (baza pneadm, tabela form_orders).
+ *
+ * @property \Carbon\Carbon|null $pnedu_provisioned_at Zobacz komentarz kolumny w DB: data przyznania dostępu PNEDU.
+ * @property bool|null $pnedu_user_existed_before Zobacz komentarz kolumny w DB: czy konto pnedu.users istniało wcześniej.
+ */
 class FormOrder extends Model
 {
     use HasFactory, SoftDeletes;
@@ -42,6 +48,8 @@ class FormOrder extends Model
         'publigo_price_id',
         'publigo_sent',
         'publigo_sent_at',
+        'pnedu_provisioned_at',
+        'pnedu_user_existed_before',
         'orderer_name',
         'orderer_address',
         'orderer_postal_code',
@@ -76,6 +84,8 @@ class FormOrder extends Model
     protected $casts = [
         'order_date' => 'datetime',
         'publigo_sent_at' => 'datetime',
+        'pnedu_provisioned_at' => 'datetime',
+        'pnedu_user_existed_before' => 'boolean',
         'updated_manually_at' => 'datetime',
         'product_price' => 'decimal:2',
         'publigo_sent' => 'boolean',

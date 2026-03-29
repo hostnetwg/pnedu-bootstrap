@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Participant;
+use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -39,6 +40,17 @@ class DashboardController extends Controller
             abort(403, 'Dostęp do materiałów wygasł.');
         }
 
+        $tz = config('app.timezone');
+        $courseEnded = $course->end_date
+            && Carbon::parse($course->end_date)->timezone($tz)->isPast();
+
+        $hasVideos = $course->videos->isNotEmpty();
+        $hasFileLinks = $course->fileLinks->isNotEmpty();
+
+        if (! $hasVideos && $hasFileLinks && ! $courseEnded) {
+            abort(403, 'Materiały do pobrania będą dostępne po zakończeniu szkolenia.');
+        }
+
         $selectedVideo = null;
         if ($course->videos->isNotEmpty()) {
             $selectedVideoId = (int) request()->query('video', $course->videos->first()->id);
@@ -50,7 +62,8 @@ class DashboardController extends Controller
             'course' => $course,
             'videos' => $course->videos,
             'selectedVideo' => $selectedVideo,
-            'fileLinks' => $course->fileLinks,
+            'fileLinks' => $courseEnded ? $course->fileLinks : collect(),
+            'courseEnded' => $courseEnded,
         ]);
     }
 

@@ -39,7 +39,9 @@
                 $course = $participant->course;
                 $firstVideo = $course?->videos->first();
                 $hasFileLinks = $course?->fileLinks && $course->fileLinks->isNotEmpty();
-                $hasOnlineMaterials = $firstVideo || $hasFileLinks;
+                $certCourseEnded = $course && $course->end_date && \Carbon\Carbon::parse($course->end_date)->isPast();
+                $fileLinksUnlocked = $hasFileLinks && $certCourseEnded;
+                $hasOnlineMaterials = $firstVideo || $fileLinksUnlocked;
                 $accessActive = $participant->hasActiveAccess();
                 $accessExpiresFormatted = $participant->access_expires_at
                     ? $participant->access_expires_at->timezone(config('app.timezone'))->format('Y-m-d H:i')
@@ -75,7 +77,7 @@
                             <span class="training-date">
                                 Data:
                                 @if($course->start_date)
-                                    {{ \Carbon\Carbon::parse($course->start_date)->format('d.m.Y') }}
+                                    {{ \Carbon\Carbon::parse($course->start_date)->timezone(config('app.timezone'))->format('d.m.Y G:i') }}
                                 @else
                                     <span class="text-muted">Brak daty</span>
                                 @endif
@@ -84,10 +86,7 @@
                             <span class="training-instructor">
                                 {{ $course->trainer_title }}:
                                 @if($course->instructor)
-                                    {{ $course->instructor->full_name }}
-                                    @if($course->instructor->title)
-                                        <span class="text-muted">({{ $course->instructor->title }})</span>
-                                    @endif
+                                    {{ $course->instructor->full_name_with_title }}
                                 @else
                                     <span class="text-muted">Brak prowadzącego</span>
                                 @endif
@@ -105,7 +104,17 @@
                             Dostęp bezterminowy
                         @endif
                     </p>
-                    @if($course && $hasFileLinks && $accessActive)
+                    @if($course && ! $certCourseEnded)
+                        <div class="training-pending-end-notice alert alert-light border mb-0 mt-2 py-2 px-3" role="status">
+                            <div class="d-flex gap-2 align-items-start">
+                                <i class="bi bi-info-circle flex-shrink-0 text-primary" aria-hidden="true"></i>
+                                <p class="small mb-0 lh-base text-body-secondary">
+                                    Dostęp do nagrania, materiałów do pobrania oraz możliwość pobrania zaświadczenia pojawią się dopiero po zakończeniu szkolenia (wg daty zakończenia w kursie).
+                                </p>
+                            </div>
+                        </div>
+                    @endif
+                    @if($course && $fileLinksUnlocked && $accessActive)
                         <div class="training-materials mt-2 pt-2 border-top">
                             <div class="text-muted small fw-semibold mb-2">
                                 <i class="bi bi-folder2-open me-1" aria-hidden="true"></i>Materiały do pobrania
@@ -136,7 +145,6 @@
                         $courseForCert = $course;
                         $certStatusKey = $courseForCert->certificate_download_status ?? 'in_preparation';
                         $certCanDownload = $certStatusKey === 'download_enabled';
-                        $certCourseEnded = $courseForCert->end_date && \Carbon\Carbon::parse($courseForCert->end_date)->isPast();
                         $zaswiadczenieUrl = route('dashboard.zaswiadczenia.course', $courseForCert->id).'?from=szkolenia';
                     @endphp
                     <div class="training-certificate">
