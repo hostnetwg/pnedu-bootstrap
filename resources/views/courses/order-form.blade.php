@@ -5,12 +5,12 @@
 @push('styles')
 <style>
     .order-form-section {
-        background: linear-gradient(135deg, #f4f7fa 60%, #e3e9f3 100%);
+        background: linear-gradient(135deg, #e4e9ef 58%, #d5dde8 100%);
         border-radius: 14px;
-        box-shadow: 0 4px 18px rgba(25, 118, 210, 0.07), 0 1.5px 8px 0 rgba(0,0,0,0.04);
+        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.07), 0 1.5px 8px 0 rgba(0,0,0,0.05);
         padding: 2.2rem 1.5rem 1.5rem 1.5rem;
         margin-bottom: 2.7rem;
-        border: 2px solid #b0bec5;
+        border: 2px solid #90a4ae;
         transition: box-shadow 0.2s, border-color 0.2s;
     }
     .order-form-section legend {
@@ -18,15 +18,15 @@
         float: none;
         font-size: 1.18rem;
         font-weight: 700;
-        color: #1976d2;
+        color: #0d47a1;
         margin-bottom: 1.2rem;
         padding: 0 0.7rem;
         width: 100%;
         max-width: 100%;
         border-bottom: none;
-        background: #fff;
+        background: #dce3ec;
         border-radius: 8px;
-        box-shadow: 0 1px 4px rgba(25, 118, 210, 0.04);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.07);
     }
     .order-form-section legend + * {
         clear: both;
@@ -34,13 +34,13 @@
     .order-form-section .section-heading {
         font-size: 1.18rem;
         font-weight: 700;
-        color: #1976d2;
+        color: #0d47a1;
         margin-bottom: 1.2rem;
-        padding: 0 0.7rem;
+        padding: 0.35rem 0.85rem;
         display: inline-block;
-        background: #fff;
+        background: #dce3ec;
         border-radius: 8px;
-        box-shadow: 0 1px 4px rgba(25, 118, 210, 0.04);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.07);
     }
     .order-form-section .recipient-block .form-label {
         font-weight: 400;
