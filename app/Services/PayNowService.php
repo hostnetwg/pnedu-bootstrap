@@ -7,6 +7,7 @@ use App\Models\OnlinePaymentOrder;
 use Exception;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class PayNowService
 {
@@ -207,22 +208,26 @@ class PayNowService
             }
         }
 
-        // Przygotuj pozycje zamówienia
+        // Przygotuj pozycje zamówienia (PayNow: orderItems[].name max 120 znaków)
+        $itemName = Str::limit($course?->title ?? 'Szkolenie online', 120, '');
         $orderItems = [
             [
-                'name' => $course?->title ?? 'Szkolenie online',
+                'name' => $itemName,
                 'category' => 'Szkolenia i kursy',
                 'quantity' => 1,
                 'price' => $amountGrosze,
             ],
         ];
 
+        $description = 'Szkolenie: '.($course?->title ?? 'Online');
+        $description = Str::limit($description, 255, '');
+
         // Przygotuj body żądania jako tablicę
         $bodyArray = [
             'amount' => $amountGrosze,
             'currency' => 'PLN',
             'externalId' => $order->ident,
-            'description' => 'Szkolenie: '.($course?->title ?? 'Online'),
+            'description' => $description,
             'continueUrl' => $continueUrl,
             'buyer' => $buyer,
             'orderItems' => $orderItems,

@@ -101,6 +101,87 @@
     .order-form-section .form-check {
         margin-top: 1.2rem;
     }
+    /* Tylko wiersz z bramkami / pole liczby dni — przesunięcie w prawo; etykiety bez zmiany */
+    #payment_gateway_group .payment-gateway-visual-row {
+        margin-top: 10px;
+        margin-left: 40px;
+    }
+    #payment_terms_group #payment_terms {
+        margin-top: 10px;
+        margin-left: 40px;
+    }
+    .order-form-section .payment-gateway-logo {
+        height: 32px;
+        width: auto;
+        max-width: 150px;
+        object-fit: contain;
+        flex-shrink: 0;
+    }
+    .order-form-section .payment-gateway-logo--payu {
+        height: 40px;
+        max-width: 190px;
+    }
+    .order-form-section .payment-gateway-fallback {
+        line-height: 1.2;
+    }
+    /* Wybór bramki: tylko grafiki (ukryte radio zachowują wysyłkę jak wcześniej) */
+    #payment_gateway_group .payment-gateway-card {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0;
+        cursor: pointer;
+        border: 2px solid #b0bec5;
+        border-radius: 0;
+        padding: 0.5rem 0.85rem;
+        background: transparent;
+        transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+        min-height: 3.25rem;
+    }
+    #payment_gateway_group .payment-gateway-card--payu {
+        background: #fff;
+    }
+    #payment_gateway_group .payment-gateway-card--paynow {
+        background: #000;
+    }
+    #payment_gateway_group .payment-gateway-card--paynow:hover {
+        border-color: #9e9e9e;
+    }
+    #payment_gateway_group .payment-gateway-card--paynow .payment-gateway-fallback {
+        color: #fff;
+    }
+    #payment_gateway_group .payment-gateway-card:hover:not(.payment-gateway-card--paynow) {
+        border-color: #90a4ae;
+    }
+    #payment_gateway_group .payment-gateway-card:has(input:checked) {
+        border-color: #1976d2;
+        box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.22);
+    }
+    #payment_gateway_group .payment-gateway-card:focus-within {
+        outline: 2px solid rgba(25, 118, 210, 0.55);
+        outline-offset: 2px;
+    }
+    #payment_gateway_group .payment-gateway-card-inner {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        pointer-events: none;
+    }
+    .order-form-section .payment-gateway-section-title {
+        font-size: 1.05rem;
+        font-weight: 500;
+        margin-bottom: 0.35rem !important;
+    }
+    .order-form-section .payment-gateway-label-lock {
+        color: #1976d2;
+        font-size: 1.1em;
+        vertical-align: -0.08em;
+    }
+    .order-form-section .payment-terms-label-icon {
+        color: #1976d2;
+        font-size: 1.05rem;
+        vertical-align: -0.08em;
+    }
     .order-form-section .btn-primary {
         font-size: 1.13rem;
         padding: 0.7rem 2.2rem;
@@ -609,41 +690,59 @@
                         @enderror
                     </div>
                     <div class="mb-3" id="payment_gateway_group" style="display:none;">
-                        <label class="form-label d-block">Bramka płatności <span class="text-danger">*</span></label>
-                        <div class="d-flex flex-column flex-md-row gap-2">
-                            <div class="form-check">
+                        <label class="form-label payment-gateway-section-title d-block mb-0"><i class="bi bi-lock-fill payment-gateway-label-lock me-2" aria-hidden="true"></i>Bramka płatności <span class="text-danger">*</span></label>
+                        <div class="payment-gateway-visual-row d-flex flex-column flex-sm-row flex-wrap align-items-stretch gap-3 @error('payment_gateway') is-invalid @enderror">
+                            <label class="payment-gateway-card payment-gateway-card--payu" for="payment_gateway_payu">
                                 <input
-                                    class="form-check-input @error('payment_gateway') is-invalid @enderror"
                                     type="radio"
                                     name="payment_gateway"
                                     id="payment_gateway_payu"
                                     value="payu"
+                                    class="visually-hidden"
                                     {{ old('payment_gateway', 'payu') === 'payu' ? 'checked' : '' }}
                                 >
-                                <label class="form-check-label" for="payment_gateway_payu">
-                                    PayU
-                                </label>
-                            </div>
-                            <div class="form-check">
+                                <span class="payment-gateway-card-inner">
+                                    <img
+                                        src="{{ asset('payu.png') }}"
+                                        alt="PayU"
+                                        class="payment-gateway-logo payment-gateway-logo--payu"
+                                        width="190"
+                                        height="40"
+                                        decoding="async"
+                                        onerror="this.classList.add('d-none'); var n=this.nextElementSibling; if(n) n.classList.remove('d-none');"
+                                    >
+                                    <span class="payment-gateway-fallback d-none fw-medium">PayU</span>
+                                </span>
+                            </label>
+                            <label class="payment-gateway-card payment-gateway-card--paynow" for="payment_gateway_paynow">
                                 <input
-                                    class="form-check-input @error('payment_gateway') is-invalid @enderror"
                                     type="radio"
                                     name="payment_gateway"
                                     id="payment_gateway_paynow"
                                     value="paynow"
+                                    class="visually-hidden"
                                     {{ old('payment_gateway') === 'paynow' ? 'checked' : '' }}
                                 >
-                                <label class="form-check-label" for="payment_gateway_paynow">
-                                    Paynow
-                                </label>
-                            </div>
+                                <span class="payment-gateway-card-inner">
+                                    <img
+                                        src="{{ asset('paynow.png') }}"
+                                        alt="Paynow"
+                                        class="payment-gateway-logo"
+                                        width="150"
+                                        height="32"
+                                        decoding="async"
+                                        onerror="this.classList.add('d-none'); var n=this.nextElementSibling; if(n) n.classList.remove('d-none');"
+                                    >
+                                    <span class="payment-gateway-fallback d-none fw-medium">Paynow</span>
+                                </span>
+                            </label>
                         </div>
                         @error('payment_gateway')
                             <div class="invalid-feedback d-block">{{ $message }}</div>
                         @enderror
                     </div>
                     <div class="mb-3" id="payment_terms_group">
-                        <label for="payment_terms" class="form-label">Termin płatności (dni) <span class="text-danger">*</span></label>
+                        <label for="payment_terms" class="form-label"><i class="bi bi-calendar3 payment-terms-label-icon me-2" aria-hidden="true"></i>Termin płatności (dni) <span class="text-danger">*</span></label>
                         <input
                             type="number"
                             class="form-control @error('payment_terms') is-invalid @enderror"
@@ -664,7 +763,7 @@
                                 Wypełnij dane testowe
                             </button>
                         @endif
-                        <button type="submit" class="btn btn-primary flex-fill">Wyślij zamówienie</button>
+                        <button type="submit" class="btn btn-primary flex-fill" id="order-form-submit-btn">{{ ($prefillPaymentType ?? 'deferred') === 'online' ? 'Przejdź do płatności online' : 'Wyślij zamówienie' }}</button>
                         <a href="{{ route('courses.show', $course->id) }}" class="btn btn-link flex-fill">Powrót do szczegółów szkolenia</a>
                     </div>
                 </div>
@@ -708,6 +807,7 @@
     var paymentGatewayGroup = document.getElementById('payment_gateway_group');
     var paymentGatewayPayu = document.getElementById('payment_gateway_payu');
     var paymentGatewayPaynow = document.getElementById('payment_gateway_paynow');
+    var orderFormSubmitBtn = document.getElementById('order-form-submit-btn');
     var participantCopyWrapper = document.getElementById('participant_copy_wrapper');
     var participantCopyCheckbox = document.getElementById('participant_copy_from_contact');
     var participantEmail = document.getElementById('participant_email');
@@ -859,6 +959,10 @@
         if (paymentGatewayGroup) paymentGatewayGroup.style.display = isOnline ? '' : 'none';
         if (paymentGatewayPayu) paymentGatewayPayu.required = isOnline;
         if (paymentGatewayPaynow) paymentGatewayPaynow.required = isOnline;
+
+        if (orderFormSubmitBtn) {
+            orderFormSubmitBtn.textContent = isOnline ? 'Przejdź do płatności online' : 'Wyślij zamówienie';
+        }
     }
 
     if (buyerOrg) buyerOrg.addEventListener('change', function () {
