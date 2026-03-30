@@ -1326,6 +1326,24 @@ class CourseController extends Controller
             'payment_type.in' => 'Wybierz prawidłowy sposób rozliczenia.',
         ]);
 
+        // ODBIORCA: jeśli podano jakiekolwiek dane odbiorcy, NIP odbiorcy jest wymagany (tylko dla instytucji/firmy)
+        if ($buyerType === 'organisation') {
+            $hasRecipientData = $request->filled('recipient_name')
+                || $request->filled('recipient_address')
+                || $request->filled('recipient_postcode')
+                || $request->filled('recipient_city')
+                || $request->filled('recipient_nip');
+
+            if ($hasRecipientData) {
+                $recipientNip = preg_replace('/[^0-9]/', '', (string) $request->input('recipient_nip', ''));
+                if ($recipientNip === '' || strlen($recipientNip) !== 10) {
+                    return back()
+                        ->withErrors(['recipient_nip' => 'NIP odbiorcy jest wymagany (10 cyfr), jeśli podano dane odbiorcy.'])
+                        ->withInput();
+                }
+            }
+        }
+
         // Dodatkowa walidacja: termin płatności wymagany tylko dla faktury z odroczonym terminem
         if (($validated['payment_type'] ?? null) === 'deferred' && (! isset($validated['payment_terms']) || $validated['payment_terms'] === '')) {
             return back()

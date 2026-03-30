@@ -815,6 +815,12 @@
     var participantFirst = document.getElementById('participant_first_name');
     var participantLast = document.getElementById('participant_last_name');
     var contactEmail = document.getElementById('contact_email');
+    var recipientName = document.getElementById('recipient_name');
+    var recipientPostcode = document.getElementById('recipient_postcode');
+    var recipientCity = document.getElementById('recipient_city');
+    var recipientAddress = document.getElementById('recipient_address');
+    var recipientNip = document.getElementById('recipient_nip');
+    var recipientNipLabel = document.querySelector('label[for="recipient_nip"]');
 
     function normalizeSpaces(s) {
         return (s || '').replace(/\s+/g, ' ').trim();
@@ -966,11 +972,32 @@
         }
     }
 
+    function isRecipientBlockFilled() {
+        var fields = [recipientName, recipientPostcode, recipientCity, recipientAddress, recipientNip];
+        return fields.some(function (el) {
+            return el && String(el.value || '').trim() !== '';
+        });
+    }
+
+    function updateRecipientNipRequired() {
+        if (!recipientNip) return;
+
+        var isOrg = !!(buyerOrg && buyerOrg.checked);
+        var shouldRequire = isOrg && isRecipientBlockFilled();
+        recipientNip.required = shouldRequire;
+
+        if (recipientNipLabel) {
+            var base = 'NIP';
+            recipientNipLabel.innerHTML = shouldRequire ? (base + ' <span class="text-danger">*</span>') : base;
+        }
+    }
+
     if (buyerOrg) buyerOrg.addEventListener('change', function () {
         updateContactFieldsVisibility();
         setDefaultPaymentTypeForCurrentBuyerType();
         copyContactToBuyerPersonIfAllowed();
         copyContactToParticipantIfAllowed();
+        updateRecipientNipRequired();
 
         // Dla "Szkoła / Instytucja / Firma" ukryj checkbox i wyłącz kopiowanie danych uczestnika
         if (participantCopyWrapper) {
@@ -985,6 +1012,13 @@
         setDefaultPaymentTypeForCurrentBuyerType();
         copyContactToBuyerPersonIfAllowed();
         copyContactToParticipantIfAllowed();
+        updateRecipientNipRequired();
+    });
+
+    [recipientName, recipientPostcode, recipientCity, recipientAddress, recipientNip].forEach(function (el) {
+        if (!el) return;
+        el.addEventListener('input', updateRecipientNipRequired);
+        el.addEventListener('blur', updateRecipientNipRequired);
     });
     if (inputNameDisplay) inputNameDisplay.addEventListener('input', syncContactNameHidden);
     if (inputFirst) inputFirst.addEventListener('input', function() {
