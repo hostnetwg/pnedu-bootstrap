@@ -3,6 +3,30 @@
 
 @section('title', 'Platforma Nowoczesnej Edukacji – Witamy')
 
+@section('meta_description', 'Szkolenia online dla nauczycieli i szkół: TIK, sztuczna inteligencja w edukacji, Office 365, Canva, certyfikaty. Zapisz się na szkolenie z Platformą Nowoczesnej Edukacji.')
+
+@push('structured-data')
+<script type="application/ld+json">
+{!! json_encode([
+    '@context' => 'https://schema.org',
+    '@graph' => [
+        [
+            '@type' => 'WebSite',
+            'name' => config('app.name'),
+            'url' => rtrim(config('app.url'), '/').'/',
+            'inLanguage' => 'pl-PL',
+            'description' => config('seo.default_description'),
+        ],
+        [
+            '@type' => 'Organization',
+            'name' => config('app.name'),
+            'url' => rtrim(config('app.url'), '/').'/',
+        ],
+    ],
+], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!}
+</script>
+@endpush
+
 @section('banner')
     @include('layouts.hero-banner')
 @endsection

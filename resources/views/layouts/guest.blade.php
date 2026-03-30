@@ -4,6 +4,13 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
+    @if(config('seo.block_search_indexing'))
+        <meta name="robots" content="noindex, nofollow">
+    @else
+        <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+    @endif
+    <meta name="description" content="{{ config('seo.default_description') }}">
+
     <!-- CSRF Token -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
