@@ -19,6 +19,7 @@ class OnlinePaymentOrder extends Model
     protected $table = 'online_payment_orders';
 
     protected $fillable = [
+        'form_order_id',
         'ident',
         'course_id',
         'payment_gateway',
@@ -44,10 +45,19 @@ class OnlinePaymentOrder extends Model
     ];
 
     public const STATUS_PENDING = 'pending';
+
     public const STATUS_CREATED = 'created';
+
     public const STATUS_PAID = 'paid';
+
     public const STATUS_CANCELLED = 'cancelled';
+
     public const STATUS_FAILED = 'failed';
+
+    public function formOrder(): BelongsTo
+    {
+        return $this->belongsTo(FormOrder::class, 'form_order_id');
+    }
 
     public function course(): BelongsTo
     {
@@ -78,9 +88,9 @@ class OnlinePaymentOrder extends Model
             : '';
 
         if ($customPrefix !== '') {
-            $prefix = $customPrefix . ($segment !== '' ? $segment . '_' : '');
+            $prefix = $customPrefix.($segment !== '' ? $segment.'_' : '');
         } else {
-            $prefix = 'PNEDU_' . ($segment !== '' ? $segment . '_' : '');
+            $prefix = 'PNEDU_'.($segment !== '' ? $segment.'_' : '');
         }
 
         return DB::connection('pneadm')->transaction(function () use ($prefix) {
@@ -91,13 +101,13 @@ class OnlinePaymentOrder extends Model
                 ->max('id') ?? 0;
 
             $nextNumber = $maxId + 1;
-            $ident = $prefix . $nextNumber;
+            $ident = $prefix.$nextNumber;
 
             // Sprawdź czy przypadkiem nie istnieje (na wypadek ręcznej edycji lub innych przypadków)
             // Jeśli istnieje, zwiększ numer aż znajdziemy wolny
             while (self::where('ident', $ident)->exists()) {
                 $nextNumber++;
-                $ident = $prefix . $nextNumber;
+                $ident = $prefix.$nextNumber;
             }
 
             return $ident;

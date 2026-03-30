@@ -17,6 +17,24 @@ class FormOrder extends Model
 {
     use HasFactory, SoftDeletes;
 
+    /** Faktura z odroczonym terminem (formularz „Wyślij zamówienie”). */
+    public const PAYMENT_MODE_DEFERRED_INVOICE = 'deferred_invoice';
+
+    /** Natychmiastowa płatność przez bramkę (formularz „Przejdź do płatności online”). */
+    public const PAYMENT_MODE_ONLINE_GATEWAY = 'online_gateway';
+
+    /** Zamówienie złożone (tryb odroczony). */
+    public const PAYMENT_STATUS_SUBMITTED = 'submitted';
+
+    /** Oczekiwanie na zaksięgowanie wpłaty w bramce. */
+    public const PAYMENT_STATUS_AWAITING_PAYMENT = 'awaiting_payment';
+
+    public const PAYMENT_STATUS_PAID = 'paid';
+
+    public const PAYMENT_STATUS_CANCELLED = 'cancelled';
+
+    public const PAYMENT_STATUS_FAILED = 'failed';
+
     /**
      * The connection name for the model.
      *
@@ -69,6 +87,8 @@ class FormOrder extends Model
         'invoice_number',
         'invoice_notes',
         'invoice_payment_delay',
+        'payment_mode',
+        'payment_status',
         'status_completed',
         'notes',
         'updated_manually_at',
@@ -167,5 +187,30 @@ class FormOrder extends Model
         }
 
         return null;
+    }
+
+    public static function paymentModeLabel(?string $mode, ?string $onlinePaymentGateway = null): string
+    {
+        return match ($mode) {
+            self::PAYMENT_MODE_ONLINE_GATEWAY => match (strtolower((string) $onlinePaymentGateway)) {
+                'payu' => 'Płatność online (bramka: PayU)',
+                'paynow' => 'Płatność online (bramka: Paynow)',
+                default => 'Płatność online (bramka)',
+            },
+            self::PAYMENT_MODE_DEFERRED_INVOICE => 'Faktura z odroczonym terminem',
+            default => $mode ? (string) $mode : '—',
+        };
+    }
+
+    public static function paymentStatusLabel(?string $status): string
+    {
+        return match ($status) {
+            self::PAYMENT_STATUS_SUBMITTED => 'Złożone (odroczona)',
+            self::PAYMENT_STATUS_AWAITING_PAYMENT => 'Oczekuje na płatność',
+            self::PAYMENT_STATUS_PAID => 'Opłacone',
+            self::PAYMENT_STATUS_CANCELLED => 'Anulowane',
+            self::PAYMENT_STATUS_FAILED => 'Błąd płatności',
+            default => $status ? (string) $status : '—',
+        };
     }
 }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Mail\PaymentNotificationMail;
 use App\Models\CoursePriceVariant;
+use App\Models\FormOrder;
 use App\Models\OnlinePaymentOrder;
 use App\Models\Participant;
 use App\Models\WebhookLog;
@@ -64,6 +65,8 @@ class PaymentController extends Controller
 
         if ($mappedStatus) {
             $order->update(['status' => $mappedStatus]);
+            $order->refresh();
+            $this->syncLinkedFormOrderPaymentStatus($order);
             $webhookLog->update([
                 'status_mapped' => $mappedStatus,
                 'signature_valid' => true, // PayU nie wymaga weryfikacji podpisu w REST API
@@ -126,6 +129,7 @@ class PaymentController extends Controller
 
             $order->update(['status' => $mappedStatus]);
             $order->refresh();
+            $this->syncLinkedFormOrderPaymentStatus($order);
 
             if ($payuStatus === 'COMPLETED' && ! $wasPaid) {
                 Log::info('PayU return: zsynchronizowano COMPLETED z API (notify niedostępny lub błąd)', [
@@ -389,6 +393,8 @@ class PaymentController extends Controller
 
         if ($mappedStatus) {
             $order->update(['status' => $mappedStatus]);
+            $order->refresh();
+            $this->syncLinkedFormOrderPaymentStatus($order);
             $webhookLog->update(['status_mapped' => $mappedStatus]);
 
             if ($paynowStatus === 'CONFIRMED') {
@@ -447,6 +453,7 @@ class PaymentController extends Controller
 
             $order->update(['status' => $mappedStatus]);
             $order->refresh();
+            $this->syncLinkedFormOrderPaymentStatus($order);
 
             if ($paynowStatus === 'CONFIRMED' && ! $wasPaid) {
                 Log::info('PayNow return: zsynchronizowano CONFIRMED z API (notify niedostępny lub błąd)', [
@@ -503,10 +510,45 @@ class PaymentController extends Controller
     }
 
     /**
+     * Aktualizuje payment_status w form_orders dla zamówień z formularza (powiązanych przez form_order_id).
+     */
+    protected function syncLinkedFormOrderPaymentStatus(OnlinePaymentOrder $order): void
+    {
+        if (! $order->form_order_id) {
+            return;
+        }
+
+        $formOrder = FormOrder::find($order->form_order_id);
+        if (! $formOrder || $formOrder->payment_mode !== FormOrder::PAYMENT_MODE_ONLINE_GATEWAY) {
+            return;
+        }
+
+        $map = [
+            OnlinePaymentOrder::STATUS_PAID => FormOrder::PAYMENT_STATUS_PAID,
+            OnlinePaymentOrder::STATUS_CANCELLED => FormOrder::PAYMENT_STATUS_CANCELLED,
+            OnlinePaymentOrder::STATUS_FAILED => FormOrder::PAYMENT_STATUS_FAILED,
+            OnlinePaymentOrder::STATUS_PENDING => FormOrder::PAYMENT_STATUS_AWAITING_PAYMENT,
+            OnlinePaymentOrder::STATUS_CREATED => FormOrder::PAYMENT_STATUS_AWAITING_PAYMENT,
+        ];
+
+        $paymentStatus = $map[$order->status] ?? FormOrder::PAYMENT_STATUS_AWAITING_PAYMENT;
+        $formOrder->update(['payment_status' => $paymentStatus]);
+    }
+
+    /**
      * Zarejestruj uczestnika w tabeli participants po potwierdzeniu płatności.
      */
     protected function registerParticipant(OnlinePaymentOrder $order): ?Participant
     {
+        if ($order->form_order_id) {
+            Log::info('PaymentController: pominięto automatyczną rejestrację uczestnika — zamówienie z formularza www (obsługa ręczna w PNEADM)', [
+                'online_payment_order_id' => $order->id,
+                'form_order_id' => $order->form_order_id,
+            ]);
+
+            return null;
+        }
+
         try {
             // Załaduj kurs z relacją
             $order->load('course');
