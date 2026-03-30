@@ -536,7 +536,7 @@
                                 <div class="invalid-feedback d-block">{{ $message }}</div>
                             @enderror
                         </div>
-                        <div class="col-12 col-md-8 d-flex align-items-end">
+                        <div class="col-12 col-md-8 d-flex align-items-end d-none">
                             <button type="button" class="btn btn-primary w-100" id="buyer_gus_button">
                                 Wpisz NIP i pobierz dane z GUS
                             </button>
@@ -589,7 +589,7 @@
                                         <div class="invalid-feedback d-block">{{ $message }}</div>
                                     @enderror
                                 </div>
-                                <div class="col-12 col-md-8 d-flex align-items-end">
+                                <div class="col-12 col-md-8 d-flex align-items-end d-none">
                                     <button type="button" class="btn btn-primary w-100" id="recipient_gus_button">
                                         Wpisz NIP i pobierz dane z GUS
                                     </button>
