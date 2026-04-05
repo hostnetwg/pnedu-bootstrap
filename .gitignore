@@ -8,6 +8,10 @@ node_modules/
 public/hot                 # plik Hot Module Reload
 # public/build               # artefakty Vite (prod generujesz w CI)
 
+# --- SEO: mapa i robots generowane przez app/Http/Controllers/SeoController.php (nie trzymaj kopii statycznych) ---
+/public/robots.txt
+/public/sitemap.xml
+
 # --- Laravel ---
 storage/*
 !storage/.gitignore        # zachowaj puste foldery

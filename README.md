@@ -25,6 +25,10 @@ Laravel application with Bootstrap 5 frontend framework, running in a Dockerized
 - **Container Management**: Laravel Sail + Docker
 - **Development Environment**: Windows WSL2 + Docker
 
+### 📈 SEO (pnedu.pl)
+
+**Każda nowa treść publiczna i zmiany na froncie powinny mocno wspierać SEO** (tytuły, meta description, mapa witryny, indeksowanie, dane strukturalne). Szczegółowe wytyczne techniczne i contentowe: **[SEO.md](./SEO.md)**.
+
 ### 🌐 Services & Ports
 
 | Service | Port | URL | Description |

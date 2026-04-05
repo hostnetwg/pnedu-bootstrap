@@ -203,6 +203,10 @@ sail artisan make:seeder TableNameSeeder
 4. **NEVER** run `php`, `composer`, or `artisan` directly without `sail`
 5. **NEVER** commit sensitive data or `.env` file
 
+## 🔍 SEO (pnedu.pl) — treści publiczne
+
+**Wszystkie nowe treści i zmiany na froncie** (strony, podstrony, artykuły, layouty, landingi) **mocno wspierają SEO**: unikalne `@section('title')` i `@section('meta_description')`, sensowna hierarchia nagłówków, `alt` przy obrazach, linki wewnętrzne. Nie twórz statycznych `public/robots.txt` ani `public/sitemap.xml` — używaj `App\Http\Controllers\SeoController` (dynamiczny sitemap z kursami). Nowe ważne publiczne trasy: rozważ dopisanie do `SeoController::staticUrls()`. Pełna lista: **[SEO.md](./SEO.md)**.
+
 ## 🗄️ Database Migrations - CRITICAL RULE
 
 ### ⚠️ MIGRATION LOCATION RULE - ALWAYS FOLLOW THIS:

@@ -18,6 +18,7 @@ class SeoController extends Controller
 
         return response($body, 200, [
             'Content-Type' => 'text/plain; charset=UTF-8',
+            'Cache-Control' => 'public, max-age=86400',
         ]);
     }
 
@@ -31,7 +32,8 @@ class SeoController extends Controller
 
         return response()
             ->view('seo.sitemap', ['urls' => $urls])
-            ->header('Content-Type', 'application/xml; charset=UTF-8');
+            ->header('Content-Type', 'application/xml; charset=UTF-8')
+            ->header('Cache-Control', 'public, max-age=3600');
     }
 
     /**
