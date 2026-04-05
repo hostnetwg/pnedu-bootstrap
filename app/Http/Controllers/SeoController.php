@@ -50,6 +50,7 @@ class SeoController extends Controller
             ['route' => 'blog.sztuczna-inteligencja-w-edukacji', 'changefreq' => 'monthly', 'priority' => '0.6'],
             ['route' => 'blog.wykorzystanie-aplikacji-canva', 'changefreq' => 'monthly', 'priority' => '0.6'],
             ['route' => 'about.team', 'changefreq' => 'monthly', 'priority' => '0.6'],
+            ['route' => 'about.accreditation', 'changefreq' => 'yearly', 'priority' => '0.5'],
             ['route' => 'courses.online-live', 'changefreq' => 'daily', 'priority' => '0.9'],
             ['route' => 'courses.individual', 'changefreq' => 'weekly', 'priority' => '0.8'],
             ['route' => 'courses.free', 'changefreq' => 'weekly', 'priority' => '0.8'],

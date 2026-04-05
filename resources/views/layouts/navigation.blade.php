@@ -65,9 +65,8 @@
                         O nas
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="aboutDropdown">
-                        <li><a class="dropdown-item" href="#">Nasza misja</a></li>
                         <li><a class="dropdown-item" href="{{ route('about.team') }}">Nasz zespół</a></li>
-                        <li><a class="dropdown-item" href="#">Akredytacja MKO</a></li>
+                        <li><a class="dropdown-item" href="{{ route('about.accreditation') }}">Akredytacja MKO</a></li>
                     </ul>
                 </li>
 

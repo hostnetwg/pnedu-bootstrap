@@ -31,6 +31,10 @@ Route::get('/blog', function () {
 // O nas - Zespół
 Route::get('/o-nas/zespol', [App\Http\Controllers\AboutController::class, 'team'])->name('about.team');
 
+// O nas - Akredytacja MKO
+Route::get('/o-nas/akredytacja-mko', [App\Http\Controllers\AboutController::class, 'accreditation'])
+    ->name('about.accreditation');
+
 // Szkolenia online LIVE
 Route::get('/szkolenia-online-live', [App\Http\Controllers\CourseController::class, 'onlineLive'])
     ->name('courses.online-live');

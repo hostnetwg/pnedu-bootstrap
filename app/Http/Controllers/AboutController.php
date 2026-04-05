@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Instructor;
-use Illuminate\Http\Request;
 
 class AboutController extends Controller
 {
@@ -24,6 +23,19 @@ class AboutController extends Controller
             ->get();
         
         return view('about.team', compact('director', 'instructors'));
+    }
+
+    /**
+     * Strona „Akredytacja MKO” z treścią informacyjną i podglądem decyzji o akredytacji.
+     */
+    public function accreditation()
+    {
+        $pdfRelativePath = 'documents/decyzja-mko-akredytacja-2025-2030.pdf';
+
+        return view('about.akredytacja-mko', [
+            'pdfUrl' => asset($pdfRelativePath),
+            'pdfAvailable' => is_file(public_path($pdfRelativePath)),
+        ]);
     }
 }
 
