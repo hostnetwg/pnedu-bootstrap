@@ -4,6 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#0d6efd">
     <title>@yield('title', 'Platforma Nowoczesnej Edukacji')</title>
 
     @if(config('seo.block_search_indexing'))

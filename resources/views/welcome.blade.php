@@ -6,21 +6,46 @@
 @section('meta_description', 'Szkolenia online dla nauczycieli i szkół: TIK, sztuczna inteligencja w edukacji, Office 365, Canva, certyfikaty. Zapisz się na szkolenie z Platformą Nowoczesnej Edukacji.')
 
 @push('structured-data')
+@php
+    $baseUrl = rtrim(config('app.url'), '/');
+    $orgId = $baseUrl.'/#organization';
+@endphp
 <script type="application/ld+json">
 {!! json_encode([
     '@context' => 'https://schema.org',
     '@graph' => [
         [
             '@type' => 'WebSite',
+            '@id' => $baseUrl.'/#website',
             'name' => config('app.name'),
-            'url' => rtrim(config('app.url'), '/').'/',
+            'url' => $baseUrl.'/',
             'inLanguage' => 'pl-PL',
             'description' => config('seo.default_description'),
+            'publisher' => ['@id' => $orgId],
         ],
         [
-            '@type' => 'Organization',
+            '@type' => 'EducationalOrganization',
+            '@id' => $orgId,
             'name' => config('app.name'),
-            'url' => rtrim(config('app.url'), '/').'/',
+            'legalName' => 'Niepubliczny Ośrodek Doskonalenia Nauczycieli „Platforma Nowoczesnej Edukacji”',
+            'url' => $baseUrl.'/',
+            'logo' => $baseUrl.'/logo-pne.png',
+            'image' => $baseUrl.'/logo-pne.png',
+            'email' => 'kontakt@nowoczesna-edukacja.pl',
+            'telephone' => '+48-501-654-274',
+            'address' => [
+                '@type' => 'PostalAddress',
+                'streetAddress' => 'ul. A. Zamoyskiego 30/14',
+                'addressLocality' => 'Bieżuń',
+                'postalCode' => '09-320',
+                'addressCountry' => 'PL',
+            ],
+            'sameAs' => [
+                'https://www.facebook.com/WaldemarGrabowskiEdukacja/',
+                'https://www.instagram.com/platforma.nowoczesnej.edukacji/',
+                'https://www.youtube.com/c/WaldemarGrabowskiEdukacja',
+                'https://www.linkedin.com/in/waldemar-grabowski/',
+            ],
         ],
     ],
 ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!}

@@ -2,6 +2,8 @@
 
 @section('title', 'Zespół - O nas - Platforma Nowoczesnej Edukacji')
 
+@section('meta_description', 'Poznaj zespół Platformy Nowoczesnej Edukacji – dyrekcję i edukatorów prowadzących szkolenia dla nauczycieli i szkół. Akredytowany ośrodek doskonalenia nauczycieli.')
+
 @section('content')
 
 <!-- ===== HERO BANNER ======================================= -->

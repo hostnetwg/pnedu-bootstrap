@@ -4,22 +4,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Blokada indeksowania (środowiska dev / staging)
+    | Blokada indeksowania (np. staging, lokalne testy bez indeksu)
     |--------------------------------------------------------------------------
     |
     | true  → meta robots noindex,nofollow oraz robots.txt Disallow: /
-    | false → strona dostępna dla wyszukiwarek (sitemap + Allow: /)
+    | false → indeksowanie dozwolone (sitemap + Allow: /)
     |
-    | Domyślnie: blokada poza production. Na produkcji ustaw APP_ENV=production
-    | lub jawnie SEO_BLOCK_INDEXING=false.
+    | Domyślnie: false (indeksowanie włączone). Aby wyłączyć na dev/staging:
+    | w .env ustaw SEO_BLOCK_INDEXING=true
     |
     */
 
     'block_search_indexing' => filter_var(
-        env('SEO_BLOCK_INDEXING'),
-        FILTER_VALIDATE_BOOLEAN,
-        FILTER_NULL_ON_FAILURE
-    ) ?? (env('APP_ENV', 'production') !== 'production'),
+        env('SEO_BLOCK_INDEXING', '0'),
+        FILTER_VALIDATE_BOOLEAN
+    ),
 
     /*
     |--------------------------------------------------------------------------
@@ -29,7 +28,7 @@ return [
 
     'default_description' => env(
         'SEO_DEFAULT_DESCRIPTION',
-        'Szkolenia online dla nauczycieli, dyrektorów i szkół: kompetencje cyfrowe, AI w edukacji, Office 365, TIK i certyfikaty. Platforma Nowoczesnej Edukacji.'
+        'Szkolenia online dla nauczycieli, dyrektorów i szkół: kompetencje cyfrowe, AI w edukacji, Office 365, TIK, webinary i zaświadczenia. Akredytowany ośrodek doskonalenia – Platforma Nowoczesnej Edukacji (pnedu.pl).'
     ),
 
     /*
@@ -38,6 +37,6 @@ return [
     |--------------------------------------------------------------------------
     */
 
-    'default_og_image' => env('SEO_OG_IMAGE'),
+    'default_og_image' => env('SEO_OG_IMAGE') ?: (rtrim((string) env('APP_URL', 'http://localhost'), '/').'/logo-pne.png'),
 
 ];

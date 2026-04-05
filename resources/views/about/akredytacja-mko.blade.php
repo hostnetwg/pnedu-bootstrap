@@ -2,6 +2,8 @@
 
 @section('title', 'Akredytacja Mazowieckiego Kuratora Oświaty – O nas – ' . config('app.name'))
 
+@section('meta_description', 'Akredytacja Mazowieckiego Kuratora Oświaty dla Niepublicznego Ośrodka Doskonalenia Nauczycieli Platforma Nowoczesnej Edukacji. Decyzja MKO, szkolenia dla szkół i nauczycieli.')
+
 @section('content')
 
 <div class="bg-primary bg-gradient text-white py-3 text-center">
