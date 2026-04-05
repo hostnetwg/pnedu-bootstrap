@@ -42,11 +42,13 @@
                                     @if(!empty($director->photo))
                                         <img src="{{ 'https://adm.pnedu.pl/storage/' . ltrim($director->photo, '/') }}" 
                                              alt="{{ $director->full_name }}" 
-                                             class="img-fluid rounded shadow-sm"
-                                             style="max-width: 200px;">
+                                             class="rounded shadow-sm"
+                                             width="160"
+                                             height="160"
+                                             style="width: 160px; height: 160px; object-fit: cover;">
                                     @else
-                                        <div class="bg-secondary rounded d-flex align-items-center justify-content-center" style="width: 200px; height: 200px; margin: 0 auto;">
-                                            <i class="bi bi-person-circle text-white" style="font-size: 5rem;"></i>
+                                        <div class="bg-secondary rounded d-flex align-items-center justify-content-center" style="width: 160px; height: 160px; margin: 0 auto;">
+                                            <i class="bi bi-person-circle text-white" style="font-size: 4rem;"></i>
                                         </div>
                                     @endif
                                 </div>
@@ -91,11 +93,13 @@
                                         @if(!empty($instructor->photo))
                                             <img src="{{ 'https://adm.pnedu.pl/storage/' . ltrim($instructor->photo, '/') }}" 
                                                  alt="{{ $instructor->full_name }}" 
-                                                 class="img-fluid rounded shadow-sm"
-                                                 style="max-width: 200px;">
+                                                 class="rounded shadow-sm"
+                                                 width="160"
+                                                 height="160"
+                                                 style="width: 160px; height: 160px; object-fit: cover;">
                                         @else
-                                            <div class="bg-secondary rounded d-flex align-items-center justify-content-center mx-auto" style="width: 200px; height: 200px;">
-                                                <i class="bi bi-person-circle text-white" style="font-size: 5rem;"></i>
+                                            <div class="bg-secondary rounded d-flex align-items-center justify-content-center mx-auto" style="width: 160px; height: 160px;">
+                                                <i class="bi bi-person-circle text-white" style="font-size: 4rem;"></i>
                                             </div>
                                         @endif
                                     </div>
