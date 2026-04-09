@@ -19,13 +19,10 @@ class HomeController extends Controller
     {
         $courses = Course::with('priceVariants')
             ->where('is_active', true)
+            ->where('show_on_pnedu', true)
             ->where('type', 'online')
             ->where('start_date', '>', now())
             ->whereNull('deleted_at')
-            ->where(function($query) {
-                $query->where('source_id_old', 'certgen_Publigo')
-                      ->orWhere('source_id_old', 'BD:Certgen-education');
-            })
             ->orderBy('start_date', 'asc')
             ->take(6)
             ->get();

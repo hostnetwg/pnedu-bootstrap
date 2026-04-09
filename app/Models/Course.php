@@ -51,6 +51,7 @@ class Course extends Model
         'certificate_format',
         'id_old',
         'source_id_old',
+        'show_on_pnedu',
         'publigo_product_id',
         'publigo_price_id',
     ];
