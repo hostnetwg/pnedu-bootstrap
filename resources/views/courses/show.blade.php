@@ -370,6 +370,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
 @section('content')
 <div class="container py-5">
+    @if(session('error'))
+        <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+            {{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Zamknij"></button>
+        </div>
+    @endif
     <!-- MOBILE: Płatności pod grafiką, tytułem i datą -->
     <div class="pay-mobile">
         @if(!$course->is_paid)
@@ -410,50 +416,12 @@ document.addEventListener('DOMContentLoaded', function() {
         @else
             <!-- Płatne szkolenie - standardowe okienko -->
             <div class="course-pay-box mb-4">
-                <h3>Wybierz formę płatności i&nbsp;zarezerwuj miejsce!</h3>
-                @php
-                    $priceInfo = $course->getCurrentPrice();
-                @endphp
-                @if($priceInfo)
-                    <div class="text-center mb-3">
-                        @if($priceInfo['is_promotion'] && $priceInfo['original_price'])
-                            <div class="d-flex flex-column align-items-center gap-1">
-                                <div class="d-flex align-items-center justify-content-center gap-2">
-                                    <span class="text-muted text-decoration-line-through" style="font-size: 0.9rem;">{{ number_format($priceInfo['original_price'], 2, ',', ' ') }} PLN</span>
-                                    <span class="fw-bold text-danger" style="font-size: 1.2rem;">{{ number_format($priceInfo['price'], 2, ',', ' ') }} PLN</span> <span class="text-danger" style="font-size: 1.2rem;">(brutto)</span>
-                                </div>
-                                @if($priceInfo['promotion_end'] && $priceInfo['promotion_type'] === 'time_limited')
-                                    <small style="font-size: 0.85rem; color: #000;">
-                                        Promocja trwa do: {{ \Carbon\Carbon::parse($priceInfo['promotion_end'])->format('d.m.Y H:i') }}
-                                    </small>
-                                @endif
-                                <small style="font-size: 0.75rem; color: #aaa;">
-                                    Najniższa cena z ostatnich 30 dni przed obniżką wynosiła: <strong style="color: #aaa;">{{ number_format($priceInfo['original_price'], 2, ',', ' ') }} PLN</strong>
-                                </small>
-                            </div>
-                        @else
-                            <span class="fw-bold" style="font-size: 1.2rem; color: #1976d2;">{{ number_format($priceInfo['price'], 2, ',', ' ') }} PLN</span> <span style="font-size: 1.2rem; color: #1976d2;">(brutto)</span>
-                        @endif
-                    </div>
-                @endif
-                <div class="d-flex flex-column gap-2 mb-3 align-items-center">
-                    @if($paymentOptions['show_pay_publigo'] ?? true)
-                        <a href="{{ $course->getPubligoPaymentUrl() ?? route('payment.online', $course->id) }}" target="_blank" class="btn btn-primary-custom btn-lg fw-bold shadow-sm w-100">Zapłać online</a>
-                    @endif
-                    @if($paymentOptions['show_pay_online'] ?? true)
-                        <a href="{{ route('payment.online', $course->id) }}" class="btn btn-lg fw-bold shadow-sm w-100 text-white" style="background-color: #6f42c1; border-color: #6f42c1;">Zapłać online</a>
-                    @endif
-                    @if($paymentOptions['show_deferred_order'] ?? true)
-                        <a href="{{ route('payment.deferred', $course->id) }}" class="btn btn-orange btn-lg fw-bold shadow-sm w-100">Formularz zamówienia z&nbsp;odroczonym terminem płatności</a>
-                    @endif
-                    @if($paymentOptions['show_order_form'] ?? true)
-                        <a href="{{ route('payment.order-form', $course->id) }}" class="btn btn-purchase-cta btn-lg fw-bold w-100">Zamawiam szkolenie</a>
-                    @endif
-                    @if((($paymentOptions['show_order_form_alt'] ?? true) && !empty($course->id_old)))
-                        <a href="https://zdalna-lekcja.pl/zamowienia/formularz/?idP={{ $course->id_old }}" target="_blank" class="btn btn-lg fw-bold shadow-sm w-100 text-white" style="background-color: #0d6b0d; border-color: #0d6b0d;">Formularz zamówienia z&nbsp;odroczonym terminem płatności</a>
-                    @endif
-                </div>
-                <div class="mt-2 text-muted">Liczba miejsc ograniczona –<br>nie zwlekaj z&nbsp;rejestracją!</div>
+                @include('courses.partials.course-paid-actions-box', [
+                    'course' => $course,
+                    'paymentOptions' => $paymentOptions,
+                    'activeCoursePriceVariants' => $activeCoursePriceVariants,
+                    'suffix' => 'payMobileTop',
+                ])
             </div>
         @endif
     </div>
@@ -595,50 +563,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 @else
                     <!-- Płatne szkolenie - standardowe okienko -->
                     <div class="course-pay-box mb-4">
-                        <h3>Wybierz formę płatności i&nbsp;zarezerwuj miejsce!</h3>
-                        @php
-                            $priceInfo = $course->getCurrentPrice();
-                        @endphp
-                        @if($priceInfo)
-                            <div class="text-center mb-3">
-                                @if($priceInfo['is_promotion'] && $priceInfo['original_price'])
-                                    <div class="d-flex flex-column align-items-center gap-1">
-                                        <div class="d-flex align-items-center justify-content-center gap-2">
-                                            <span class="text-muted text-decoration-line-through" style="font-size: 0.9rem;">{{ number_format($priceInfo['original_price'], 2, ',', ' ') }} PLN</span>
-                                            <span class="fw-bold text-danger" style="font-size: 1.2rem;">{{ number_format($priceInfo['price'], 2, ',', ' ') }} PLN</span> <span class="text-danger" style="font-size: 1.2rem;">(brutto)</span>
-                                        </div>
-                                        @if($priceInfo['promotion_end'] && $priceInfo['promotion_type'] === 'time_limited')
-                                            <small style="font-size: 0.85rem; color: #000;">
-                                                Promocja trwa do: {{ \Carbon\Carbon::parse($priceInfo['promotion_end'])->format('d.m.Y H:i') }}
-                                            </small>
-                                        @endif
-                                        <small style="font-size: 0.75rem; color: #aaa;">
-                                            Najniższa cena z ostatnich 30 dni przed obniżką wynosiła: <strong style="color: #aaa;">{{ number_format($priceInfo['original_price'], 2, ',', ' ') }} PLN</strong>
-                                        </small>
-                                    </div>
-                                @else
-                                    <span class="fw-bold" style="font-size: 1.2rem; color: #1976d2;">{{ number_format($priceInfo['price'], 2, ',', ' ') }} PLN</span> <span style="font-size: 1.2rem; color: #1976d2;">(brutto)</span>
-                                @endif
-                            </div>
-                        @endif
-                        <div class="d-flex flex-column gap-2 mb-3 align-items-center">
-                            @if($paymentOptions['show_pay_publigo'] ?? true)
-                                <a href="{{ $course->getPubligoPaymentUrl() ?? route('payment.online', $course->id) }}" target="_blank" class="btn btn-primary-custom btn-lg fw-bold shadow-sm w-100">Zapłać online</a>
-                            @endif
-                            @if($paymentOptions['show_pay_online'] ?? true)
-                                <a href="{{ route('payment.online', $course->id) }}" class="btn btn-lg fw-bold shadow-sm w-100 text-white" style="background-color: #6f42c1; border-color: #6f42c1;">Zapłać online</a>
-                            @endif
-                            @if($paymentOptions['show_deferred_order'] ?? true)
-                                <a href="{{ route('payment.deferred', $course->id) }}" class="btn btn-orange btn-lg fw-bold shadow-sm w-100">Formularz zamówienia z&nbsp;odroczonym terminem płatności</a>
-                            @endif
-                            @if($paymentOptions['show_order_form'] ?? true)
-                                <a href="{{ route('payment.order-form', $course->id) }}" class="btn btn-purchase-cta btn-lg fw-bold w-100">Zamawiam szkolenie</a>
-                            @endif
-                            @if((($paymentOptions['show_order_form_alt'] ?? true) && !empty($course->id_old)))
-                                <a href="https://zdalna-lekcja.pl/zamowienia/formularz/?idP={{ $course->id_old }}" target="_blank" class="btn btn-lg fw-bold shadow-sm w-100 text-white" style="background-color: #0d6b0d; border-color: #0d6b0d;">Formularz zamówienia z&nbsp;odroczonym terminem płatności</a>
-                            @endif
-                        </div>
-                        <div class="mt-2 text-muted">Liczba miejsc ograniczona –<br>nie zwlekaj z&nbsp;rejestracją!</div>
+                        @include('courses.partials.course-paid-actions-box', [
+                            'course' => $course,
+                            'paymentOptions' => $paymentOptions,
+                            'activeCoursePriceVariants' => $activeCoursePriceVariants,
+                            'suffix' => 'payMobileBottom',
+                        ])
                     </div>
                 @endif
             </div>
@@ -682,50 +612,12 @@ document.addEventListener('DOMContentLoaded', function() {
             @else
                 <!-- Płatne szkolenie - standardowe okienko -->
                 <div class="course-pay-box">
-                    <h3>Wybierz formę płatności i&nbsp;zarezerwuj miejsce!</h3>
-                    @php
-                        $priceInfo = $course->getCurrentPrice();
-                    @endphp
-                    @if($priceInfo)
-                        <div class="text-center mb-3">
-                            @if($priceInfo['is_promotion'] && $priceInfo['original_price'])
-                                <div class="d-flex flex-column align-items-center gap-1">
-                                    <div class="d-flex align-items-center justify-content-center gap-2">
-                                        <span class="text-muted text-decoration-line-through" style="font-size: 0.9rem;">{{ number_format($priceInfo['original_price'], 2, ',', ' ') }} PLN</span>
-                                        <span class="fw-bold text-danger" style="font-size: 1.2rem;">{{ number_format($priceInfo['price'], 2, ',', ' ') }} PLN</span> <span class="text-danger" style="font-size: 1.2rem;">(brutto)</span>
-                                    </div>
-                                    @if($priceInfo['promotion_end'] && $priceInfo['promotion_type'] === 'time_limited')
-                                        <small style="font-size: 0.85rem; color: #000;">
-                                            Promocja trwa do: {{ \Carbon\Carbon::parse($priceInfo['promotion_end'])->format('d.m.Y H:i') }}
-                                        </small>
-                                    @endif
-                                    <small style="font-size: 0.75rem; color: #aaa;">
-                                        Najniższa cena z ostatnich 30 dni przed obniżką wynosiła: <strong style="color: #aaa;">{{ number_format($priceInfo['original_price'], 2, ',', ' ') }} PLN</strong>
-                                    </small>
-                                </div>
-                            @else
-                                <span class="fw-bold" style="font-size: 1.2rem; color: #1976d2;">{{ number_format($priceInfo['price'], 2, ',', ' ') }} PLN</span> <span style="font-size: 1.2rem; color: #1976d2;">(brutto)</span>
-                            @endif
-                        </div>
-                    @endif
-                    <div class="d-flex flex-column gap-2 mb-3 align-items-center">
-                        @if($paymentOptions['show_pay_publigo'] ?? true)
-                            <a href="{{ $course->getPubligoPaymentUrl() ?? route('payment.online', $course->id) }}" target="_blank" class="btn btn-primary-custom btn-lg fw-bold shadow-sm w-100">Zapłać online</a>
-                        @endif
-                        @if($paymentOptions['show_pay_online'] ?? true)
-                            <a href="{{ route('payment.online', $course->id) }}" class="btn btn-lg fw-bold shadow-sm w-100 text-white" style="background-color: #6f42c1; border-color: #6f42c1;">Zapłać online</a>
-                        @endif
-                        @if($paymentOptions['show_deferred_order'] ?? true)
-                            <a href="{{ route('payment.deferred', $course->id) }}" class="btn btn-orange btn-lg fw-bold shadow-sm w-100">Formularz zamówienia z&nbsp;odroczonym terminem płatności</a>
-                        @endif
-                        @if($paymentOptions['show_order_form'] ?? true)
-                            <a href="{{ route('payment.order-form', $course->id) }}" class="btn btn-purchase-cta btn-lg fw-bold w-100">Zamawiam szkolenie</a>
-                        @endif
-                        @if((($paymentOptions['show_order_form_alt'] ?? true) && !empty($course->id_old)))
-                            <a href="https://zdalna-lekcja.pl/zamowienia/formularz/?idP={{ $course->id_old }}" target="_blank" class="btn btn-lg fw-bold shadow-sm w-100 text-white" style="background-color: #0d6b0d; border-color: #0d6b0d;">Formularz zamówienia z&nbsp;odroczonym terminem płatności</a>
-                        @endif
-                    </div>
-                    <div class="mt-2 text-muted">Liczba miejsc ograniczona –<br>nie zwlekaj z&nbsp;rejestracją!</div>
+                    @include('courses.partials.course-paid-actions-box', [
+                        'course' => $course,
+                        'paymentOptions' => $paymentOptions,
+                        'activeCoursePriceVariants' => $activeCoursePriceVariants,
+                        'suffix' => 'paySidebar',
+                    ])
                 </div>
             @endif
         </div>

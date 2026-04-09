@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Mail\OrderNotificationMail;
 use App\Models\Course;
+use App\Models\CoursePriceVariant;
 use App\Models\FormOrder;
 use App\Models\FormOrderParticipant;
 use App\Models\Participant;
@@ -395,25 +396,11 @@ class CourseController extends Controller
     {
         $course = \App\Models\Course::with(['instructor', 'priceVariants', 'onlineDetail'])->findOrFail($id);
 
-        // Debug: sprawdź czy pole offer_description_html istnieje
-        \Log::info('Course data:', [
-            'id' => $course->id,
-            'title' => $course->title,
-            'offer_description_html' => $course->offer_description_html ?? 'NULL',
-            'has_offer_description' => ! empty($course->offer_description_html),
-            'trainer' => $course->trainer,
-            'trainer_title' => $course->trainer_title,
-            'instructor_id' => $course->instructor_id,
-            'instructor_title' => $course->instructor->title ?? 'NULL',
-            'instructor_full_name' => $course->instructor->full_name ?? 'NULL',
-            'instructor_gender' => $course->instructor->gender ?? 'NULL',
-            'instructor_bio_html' => $course->instructor->bio_html ?? 'NULL',
-            'has_instructor_bio' => ! empty($course->instructor->bio_html),
-        ]);
-
         $paymentOptions = \App\Models\PaymentDisplayOption::getForCoursePage();
 
-        return view('courses.show', compact('course', 'paymentOptions'));
+        $activeCoursePriceVariants = $this->activePriceVariantsOrdered($course);
+
+        return view('courses.show', compact('course', 'paymentOptions', 'activeCoursePriceVariants'));
     }
 
     /**
@@ -820,8 +807,16 @@ class CourseController extends Controller
                 'payment_terms' => $existingOrder->invoice_payment_delay ?? $existingOrder->ptw,
                 'order_id' => $existingOrder->id,
                 'order_ident' => $existingOrder->ident,
+                'price_variant_id' => $existingOrder->course_price_variant_id,
             ];
         }
+
+        $redirect = $this->enforcePriceVariantFromQueryOrRedirect($course, $ident);
+        if ($redirect) {
+            return $redirect;
+        }
+
+        $prefillPriceVariantId = $this->prefillPriceVariantIdForPublicOrderForm($course, $ident, $orderData);
 
         // Dane testowe (tylko jeśli nie ma danych z zamówienia)
         $testData = $orderData;
@@ -855,7 +850,7 @@ class CourseController extends Controller
         // Pobierz dane zalogowanego użytkownika (jeśli jest zalogowany)
         $user = auth()->user();
 
-        return view('courses.deferred-order', compact('course', 'testData', 'isTestMode', 'isEditMode', 'user'));
+        return view('courses.deferred-order', compact('course', 'testData', 'isTestMode', 'isEditMode', 'user', 'prefillPriceVariantId'));
     }
 
     /**
@@ -893,6 +888,13 @@ class CourseController extends Controller
             $orderData = $this->orderFormPrefillFromFormOrder($existingOrder);
         }
 
+        $redirect = $this->enforcePriceVariantFromQueryOrRedirect($course, $ident);
+        if ($redirect) {
+            return $redirect;
+        }
+
+        $prefillPriceVariantId = $this->prefillPriceVariantIdForPublicOrderForm($course, $ident, $orderData);
+
         $testData = $orderData;
         if (empty($testData) && $isTestMode) {
             $testData = [
@@ -923,7 +925,7 @@ class CourseController extends Controller
 
         $user = auth()->user();
 
-        return view('courses.order-form', compact('course', 'testData', 'isTestMode', 'isEditMode', 'user'));
+        return view('courses.order-form', compact('course', 'testData', 'isTestMode', 'isEditMode', 'user', 'prefillPriceVariantId'));
     }
 
     /**
@@ -1093,6 +1095,7 @@ class CourseController extends Controller
             'payment_terms' => $existingOrder->invoice_payment_delay ?? $existingOrder->ptw,
             'order_id' => $existingOrder->id,
             'order_ident' => $existingOrder->ident,
+            'price_variant_id' => $existingOrder->course_price_variant_id,
         ];
 
         $ordererName = trim((string) $existingOrder->orderer_name);
@@ -1121,8 +1124,7 @@ class CourseController extends Controller
     {
         $course = Course::with('priceVariants')->findOrFail($id);
 
-        // Walidacja danych
-        $validated = $request->validate([
+        $rules = [
             'buyer_name' => 'required|string|max:500',
             'buyer_address' => 'required|string|max:500',
             'buyer_postcode' => 'required|string|max:50',
@@ -1141,7 +1143,11 @@ class CourseController extends Controller
             'participant_email' => 'required|email|max:255',
             'invoice_notes' => 'nullable|string',
             'payment_terms' => 'required|integer|min:0|max:31',
-        ], [
+        ];
+        $this->addPriceVariantValidationRules($course, $rules);
+
+        // Walidacja danych
+        $validated = $request->validate($rules, [
             'buyer_name.required' => 'Nazwa nabywcy jest wymagana.',
             'buyer_address.required' => 'Adres jest wymagany.',
             'buyer_postcode.required' => 'Kod pocztowy jest wymagany.',
@@ -1171,12 +1177,8 @@ class CourseController extends Controller
 
             $publigoPriceId = $this->resolvePubligoPriceIdForFormOrder($course, $publicoProductId);
 
-            // Pobierz aktualną cenę kursu (z uwzględnieniem promocji)
-            $currentPrice = null;
-            $priceInfo = $course->getCurrentPrice();
-            if ($priceInfo) {
-                $currentPrice = $priceInfo['price'];
-            }
+            $coursePriceVariantId = $this->resolvedCoursePriceVariantId($course, $validated);
+            $currentPrice = $this->productPriceForFormOrder($course, $coursePriceVariantId);
 
             // Sprawdź czy to edycja istniejącego zamówienia (w tym soft delete → restore przy zapisie)
             $order = $this->resolveFormOrderForUpdate($request->order_ident, (int) $id);
@@ -1196,6 +1198,7 @@ class CourseController extends Controller
                 'product_description' => strip_tags($course->description ?? ''),
                 'publigo_product_id' => $publicoProductId,
                 'publigo_price_id' => $publigoPriceId,
+                'course_price_variant_id' => $coursePriceVariantId,
                 'orderer_name' => $validated['contact_name'],
                 'orderer_address' => $validated['buyer_address'],
                 'orderer_postal_code' => $validated['buyer_postcode'],
@@ -1319,6 +1322,8 @@ class CourseController extends Controller
             $rules['buyer_person_last_name'] = 'required|string|max:255';
         }
 
+        $this->addPriceVariantValidationRules($course, $rules);
+
         $validated = $request->validate($rules, [
             'buyer_type.required' => 'Wybierz, jako kto zamawiasz.',
             'buyer_type.in' => 'Wybierz prawidłową opcję.',
@@ -1357,9 +1362,11 @@ class CourseController extends Controller
                 ->withInput();
         }
 
+        $coursePriceVariantId = $this->resolvedCoursePriceVariantId($course, $validated);
+
         // Płatność online – utwórz OnlinePaymentOrder i przekieruj do bramki
         if (($validated['payment_type'] ?? null) === 'online') {
-            return $this->processOrderFormOnlinePayment($request, $course, $validated, $buyerType);
+            return $this->processOrderFormOnlinePayment($request, $course, $validated, $buyerType, $coursePriceVariantId);
         }
 
         try {
@@ -1373,12 +1380,7 @@ class CourseController extends Controller
 
             $publigoPriceId = $this->resolvePubligoPriceIdForFormOrder($course, $publicoProductId);
 
-            // Pobierz aktualną cenę kursu (z uwzględnieniem promocji)
-            $currentPrice = null;
-            $priceInfo = $course->getCurrentPrice();
-            if ($priceInfo) {
-                $currentPrice = $priceInfo['price'];
-            }
+            $currentPrice = $this->productPriceForFormOrder($course, $coursePriceVariantId);
 
             // Sprawdź czy to edycja istniejącego zamówienia (w tym soft delete → restore przy zapisie)
             $order = $this->resolveFormOrderForUpdate($request->order_ident, (int) $id);
@@ -1404,6 +1406,7 @@ class CourseController extends Controller
                 'product_description' => strip_tags($course->description ?? ''),
                 'publigo_product_id' => $publicoProductId,
                 'publigo_price_id' => $publigoPriceId,
+                'course_price_variant_id' => $coursePriceVariantId,
                 'orderer_name' => $validated['contact_name'],
                 'orderer_address' => $validated['buyer_address'],
                 'orderer_postal_code' => $validated['buyer_postcode'],
@@ -1466,10 +1469,9 @@ class CourseController extends Controller
      * Przetwórz płatność online z formularza order-form – zapis FormOrder + uczestnicy,
      * OnlinePaymentOrder (powiązanie) i przekierowanie do bramki.
      */
-    protected function processOrderFormOnlinePayment(Request $request, Course $course, array $validated, string $buyerType)
+    protected function processOrderFormOnlinePayment(Request $request, Course $course, array $validated, string $buyerType, ?int $coursePriceVariantId)
     {
-        $priceInfo = $course->getCurrentPrice();
-        $totalAmount = $priceInfo['price'] ?? 0;
+        $totalAmount = $this->productPriceForFormOrder($course, $coursePriceVariantId) ?? 0;
 
         if ($totalAmount <= 0) {
             return redirect()->route('payment.order-form', $course->id)
@@ -1520,6 +1522,7 @@ class CourseController extends Controller
                 'product_description' => strip_tags($course->description ?? ''),
                 'publigo_product_id' => $publicoProductId,
                 'publigo_price_id' => $publigoPriceId,
+                'course_price_variant_id' => $coursePriceVariantId,
                 'orderer_name' => $validated['contact_name'],
                 'orderer_address' => $validated['buyer_address'],
                 'orderer_postal_code' => $validated['buyer_postcode'],
@@ -1772,6 +1775,166 @@ class CourseController extends Controller
         $pdf = Pdf::loadView('orders.pdf', compact('order', 'course'));
 
         return $pdf->stream('zamowienie-'.$order->ident.'.pdf');
+    }
+
+    /**
+     * Aktywne warianty cenowe posortowane po ID (rosnąco) — domyślny wybór na stronie kursu to pierwszy z listy (najniższe ID).
+     *
+     * @return \Illuminate\Support\Collection<int, CoursePriceVariant>
+     */
+    protected function activePriceVariantsOrdered(Course $course): \Illuminate\Support\Collection
+    {
+        return $course->priceVariants
+            ->filter(fn ($v) => (bool) $v->is_active)
+            ->sortBy(fn ($v) => (int) $v->id)
+            ->values();
+    }
+
+    /**
+     * Reguły walidacji pola price_variant_id (wiele wariantów — wybór obowiązkowy).
+     */
+    protected function addPriceVariantValidationRules(Course $course, array &$rules): void
+    {
+        $count = $this->activePriceVariantsOrdered($course)->count();
+        $variantExistsOnPneadm = function (mixed $value) use ($course): bool {
+            if ($value === null || $value === '' || ! is_numeric($value)) {
+                return false;
+            }
+
+            return $this->priceVariantExistsActiveForCourse($course, (int) $value);
+        };
+
+        if ($count > 1) {
+            $rules['price_variant_id'] = [
+                'required',
+                'integer',
+                function (string $attribute, mixed $value, \Closure $fail) use ($variantExistsOnPneadm): void {
+                    if (! $variantExistsOnPneadm($value)) {
+                        $fail('Wybierz prawidłowy wariant cenowy dla tego szkolenia.');
+                    }
+                },
+            ];
+        } elseif ($count === 1) {
+            $rules['price_variant_id'] = [
+                'nullable',
+                'integer',
+                function (string $attribute, mixed $value, \Closure $fail) use ($variantExistsOnPneadm): void {
+                    if ($value === null || $value === '') {
+                        return;
+                    }
+                    if (! $variantExistsOnPneadm($value)) {
+                        $fail('Wybierz prawidłowy wariant cenowy dla tego szkolenia.');
+                    }
+                },
+            ];
+        }
+    }
+
+    /**
+     * ID wariantu cenowego do zapisu na zamówieniu (null gdy brak aktywnych wariantów).
+     */
+    protected function resolvedCoursePriceVariantId(Course $course, array $validated): ?int
+    {
+        $variants = $this->activePriceVariantsOrdered($course);
+        if ($variants->isEmpty()) {
+            return null;
+        }
+        $raw = $validated['price_variant_id'] ?? null;
+        if ($raw !== null && $raw !== '') {
+            return (int) $raw;
+        }
+        if ($variants->count() === 1) {
+            return (int) $variants->first()->id;
+        }
+
+        return null;
+    }
+
+    /**
+     * Kwota produktu na zamówieniu wg wybranego wariantu lub najtańszego aktywnego ({@see Course::getCurrentPrice()}).
+     *
+     * @return float|null
+     */
+    protected function productPriceForFormOrder(Course $course, ?int $coursePriceVariantId)
+    {
+        if ($coursePriceVariantId === null) {
+            $info = $course->getCurrentPrice();
+
+            return $info['price'] ?? null;
+        }
+        $variant = CoursePriceVariant::query()
+            ->where('id', $coursePriceVariantId)
+            ->where('course_id', $course->id)
+            ->first();
+        if (! $variant) {
+            $info = $course->getCurrentPrice();
+
+            return $info['price'] ?? null;
+        }
+
+        return round($variant->getCurrentPrice(), 2);
+    }
+
+    /**
+     * Czy wariant jest aktywny i należy do kursu (baza pneadm).
+     */
+    protected function priceVariantExistsActiveForCourse(Course $course, int $variantId): bool
+    {
+        return DB::connection('pneadm')
+            ->table('course_price_variants')
+            ->where('id', $variantId)
+            ->where('course_id', $course->id)
+            ->where('is_active', 1)
+            ->exists();
+    }
+
+    /**
+     * Przy wielu wariantach: wymaga ?price_variant_id= z wyboru na stronie kursu.
+     */
+    protected function enforcePriceVariantFromQueryOrRedirect(Course $course, ?string $ident): ?\Illuminate\Http\RedirectResponse
+    {
+        if ($ident) {
+            return null;
+        }
+        $variants = $this->activePriceVariantsOrdered($course);
+        if ($variants->count() <= 1) {
+            return null;
+        }
+        $qv = request()->query('price_variant_id');
+        if ($qv === null || $qv === '' || ! is_numeric($qv)) {
+            return redirect()->route('courses.show', $course->id)
+                ->with('error', 'Wybierz wariant cenowy na stronie szkolenia, a następnie otwórz formularz zamówienia.');
+        }
+        if (! $this->priceVariantExistsActiveForCourse($course, (int) $qv)) {
+            return redirect()->route('courses.show', $course->id)
+                ->with('error', 'Nieprawidłowy wariant cenowy. Wybierz wariant ponownie na stronie szkolenia.');
+        }
+
+        return null;
+    }
+
+    /**
+     * ID wariantu do ukrytego pola formularza (nowe zamówienie lub null przy edycji — wtedy testData).
+     */
+    protected function prefillPriceVariantIdForPublicOrderForm(Course $course, ?string $ident, array $orderData): ?int
+    {
+        if ($ident) {
+            $v = $orderData['price_variant_id'] ?? null;
+            if ($v === null || $v === '') {
+                return null;
+            }
+
+            return (int) $v;
+        }
+        $variants = $this->activePriceVariantsOrdered($course);
+        if ($variants->isEmpty()) {
+            return null;
+        }
+        if ($variants->count() === 1) {
+            return (int) $variants->first()->id;
+        }
+
+        return (int) request()->query('price_variant_id');
     }
 
     /**
