@@ -1275,6 +1275,7 @@ class CourseController extends Controller
                 'invoice_payment_delay' => $validated['payment_terms'] ?? null,
                 'payment_mode' => FormOrder::PAYMENT_MODE_DEFERRED_INVOICE,
                 'payment_status' => FormOrder::PAYMENT_STATUS_SUBMITTED,
+                'submission_source' => FormOrder::SUBMISSION_SOURCE_PNEDU_ORDER_FORM,
                 'ip_address' => $request->ip(),
             ];
 
@@ -1483,6 +1484,7 @@ class CourseController extends Controller
                 'invoice_payment_delay' => $validated['payment_terms'] ?? null,
                 'payment_mode' => FormOrder::PAYMENT_MODE_DEFERRED_INVOICE,
                 'payment_status' => FormOrder::PAYMENT_STATUS_SUBMITTED,
+                'submission_source' => FormOrder::SUBMISSION_SOURCE_PNEDU_ORDER_FORM,
                 'ip_address' => $request->ip(),
             ];
 
@@ -1600,6 +1602,7 @@ class CourseController extends Controller
                 'invoice_payment_delay' => null,
                 'payment_mode' => FormOrder::PAYMENT_MODE_ONLINE_GATEWAY,
                 'payment_status' => FormOrder::PAYMENT_STATUS_AWAITING_PAYMENT,
+                'submission_source' => FormOrder::SUBMISSION_SOURCE_PNEDU_ORDER_FORM,
                 'ip_address' => $request->ip(),
             ];
 
