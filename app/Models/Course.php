@@ -6,12 +6,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
-use App\Models\Instructor;
-use App\Models\CoursePriceVariant;
-use App\Models\CourseOnlineDetail;
-use App\Models\CourseFileLink;
-use App\Models\CourseVideo;
-use App\Models\Certificate;
 
 class Course extends Model
 {
@@ -51,6 +45,7 @@ class Course extends Model
         'certificate_format',
         'id_old',
         'source_id_old',
+        'show_on_pnedu',
         'publigo_product_id',
         'publigo_price_id',
     ];
@@ -68,26 +63,25 @@ class Course extends Model
         } elseif (isset($this->attributes['created_at'])) {
             return date('d.m.Y H:i', strtotime($this->created_at));
         }
-        
+
         return 'Data niedostępna';
     }
 
     /**
      * Get the trainer name, trainer attribute or instructor ID.
-     *
-     * @return string
      */
     public function getTrainerAttribute(): string
     {
-        if (!empty($this->attributes['trainer'])) {
+        if (! empty($this->attributes['trainer'])) {
             return $this->attributes['trainer'];
         }
 
         if ($this->instructor) {
             $name = $this->instructor->full_name;
-            if (!empty($this->instructor->title)) {
-                $name = $this->instructor->title . ' ' . $name;
+            if (! empty($this->instructor->title)) {
+                $name = $this->instructor->title.' '.$name;
             }
+
             return $name;
         }
 
@@ -100,32 +94,29 @@ class Course extends Model
 
     /**
      * Get the appropriate trainer title based on gender.
-     *
-     * @return string
      */
     public function getTrainerTitleAttribute(): string
     {
         if ($this->instructor) {
             return $this->instructor->gender_title;
         }
-        
+
         // Fallback: try to determine gender from trainer name if it's a direct string
-        if (!empty($this->attributes['trainer'])) {
+        if (! empty($this->attributes['trainer'])) {
             $trainerName = $this->attributes['trainer'];
             // Simple heuristic: if name ends with 'a' it might be female
             if (preg_match('/\b\w*a\b$/', $trainerName)) {
                 return 'Prowadząca';
             }
+
             return 'Prowadzący';
         }
-        
+
         return 'Trener';
     }
 
     /**
      * Course belongs to an instructor.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
     public function instructor(): BelongsTo
     {
@@ -144,8 +135,6 @@ class Course extends Model
 
     /**
      * Course has one online detail.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\HasOne
      */
     public function onlineDetail(): HasOne
     {
@@ -185,7 +174,7 @@ class Course extends Model
     /**
      * Get the current price for the course, considering promotions.
      *
-     * @return array|null Returns ['price' => float, 'original_price' => float|null, 'is_promotion' => bool, 'promotion_end' => string|null, 'promotion_type' => string|null] or null if no price found
+     * @return array|null Returns ['price' => float, 'original_price' => float|null, 'is_promotion' => bool, 'promotion_end' => string|null, 'promotion_type' => string|null, 'price_variant_id' => int, 'variant_name' => string|null] or null if no price found
      */
     public function getCurrentPrice(): ?array
     {
@@ -196,25 +185,57 @@ class Course extends Model
             ->first();
 
         // If not found and we have publigo_price_id, try to find by it
-        if (!$priceVariant && $this->publigo_price_id) {
+        if (! $priceVariant && $this->publigo_price_id) {
             $priceVariant = CoursePriceVariant::where('id', $this->publigo_price_id)
                 ->where('is_active', 1)
                 ->first();
         }
 
-        if (!$priceVariant) {
+        if (! $priceVariant) {
             return null;
         }
 
+        return $this->priceInfoFromVariant($priceVariant);
+    }
+
+    /**
+     * Cena i promocja do nagłówka formularza zamówienia — dla konkretnego wariantu (np. z ?price_variant_id= lub ukrytego pola).
+     * Przy braku wariantu lub nieznanym ID: zachowanie jak {@see getCurrentPrice()}.
+     *
+     * @return array|null Ten sam kształt co {@see getCurrentPrice()}
+     */
+    public function getPriceInfoForOrderFormHeader(?int $priceVariantId): ?array
+    {
+        if ($priceVariantId === null || $priceVariantId === 0) {
+            return $this->getCurrentPrice();
+        }
+
+        $priceVariant = CoursePriceVariant::where('course_id', $this->id)
+            ->where('id', $priceVariantId)
+            ->first();
+
+        if (! $priceVariant) {
+            return $this->getCurrentPrice();
+        }
+
+        return $this->priceInfoFromVariant($priceVariant);
+    }
+
+    /**
+     * @return array{price: float, original_price: float|null, is_promotion: bool, promotion_end: mixed, promotion_type: mixed, price_variant_id: int, variant_name: string|null}
+     */
+    protected function priceInfoFromVariant(CoursePriceVariant $priceVariant): array
+    {
         $isPromotionActive = $priceVariant->isPromotionActive();
         $currentPrice = $priceVariant->getCurrentPrice();
         $originalPrice = $isPromotionActive ? (float) $priceVariant->price : null;
-        
-        // Get promotion end date only for time_limited promotions
+
         $promotionEndDate = null;
         if ($isPromotionActive && $priceVariant->promotion_type === 'time_limited' && $priceVariant->promotion_end) {
             $promotionEndDate = $priceVariant->promotion_end;
         }
+
+        $name = $priceVariant->name;
 
         return [
             'price' => round($currentPrice, 2),
@@ -222,6 +243,8 @@ class Course extends Model
             'is_promotion' => $isPromotionActive,
             'promotion_end' => $promotionEndDate,
             'promotion_type' => $priceVariant->promotion_type,
+            'price_variant_id' => (int) $priceVariant->id,
+            'variant_name' => (is_string($name) && $name !== '') ? $name : null,
         ];
     }
 
@@ -229,13 +252,12 @@ class Course extends Model
      * Get the Publigo payment URL for this course.
      * Returns URL to Publigo cart if course is from Publigo, null otherwise.
      *
-     * @param int|null $priceId The price variant ID from Publigo (default: 1)
-     * @return string|null
+     * @param  int|null  $priceId  The price variant ID from Publigo (default: 1)
      */
     public function getPubligoPaymentUrl(?int $priceId = 1): ?string
     {
         // Check if course is from Publigo and has id_old
-        if ($this->source_id_old === 'certgen_Publigo' && !empty($this->id_old)) {
+        if ($this->source_id_old === 'certgen_Publigo' && ! empty($this->id_old)) {
             return sprintf(
                 'https://nowoczesna-edukacja.pl/zamowienie/?add-to-cart=%d&price-id=%d',
                 $this->id_old,

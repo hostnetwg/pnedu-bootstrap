@@ -12,10 +12,17 @@ use Illuminate\Support\Str;
  *
  * @property \Carbon\Carbon|null $pnedu_provisioned_at Zobacz komentarz kolumny w DB: data przyznania dostępu PNEDU.
  * @property bool|null $pnedu_user_existed_before Zobacz komentarz kolumny w DB: czy konto pnedu.users istniało wcześniej.
+ * @property string|null $submission_source Kanał zapisu (pnedu_order_form, pneadm_manual); null = historia / inny kanał.
  */
 class FormOrder extends Model
 {
     use HasFactory, SoftDeletes;
+
+    /** Zamówienie z publicznego formularza na PNEDU (odroczona faktura lub płatność online). */
+    public const SUBMISSION_SOURCE_PNEDU_ORDER_FORM = 'pnedu_order_form';
+
+    /** Zamówienie utworzone ręcznie w panelu pneadm-bootstrap. */
+    public const SUBMISSION_SOURCE_PNEADM_MANUAL = 'pneadm_manual';
 
     /** Faktura z odroczonym terminem (formularz „Wyślij zamówienie”). */
     public const PAYMENT_MODE_DEFERRED_INVOICE = 'deferred_invoice';
@@ -64,6 +71,7 @@ class FormOrder extends Model
         'product_description',
         'publigo_product_id',
         'publigo_price_id',
+        'course_price_variant_id',
         'publigo_sent',
         'publigo_sent_at',
         'pnedu_provisioned_at',
@@ -89,6 +97,7 @@ class FormOrder extends Model
         'invoice_payment_delay',
         'payment_mode',
         'payment_status',
+        'submission_source',
         'status_completed',
         'notes',
         'updated_manually_at',
@@ -108,6 +117,7 @@ class FormOrder extends Model
         'pnedu_user_existed_before' => 'boolean',
         'updated_manually_at' => 'datetime',
         'product_price' => 'decimal:2',
+        'course_price_variant_id' => 'integer',
         'publigo_sent' => 'boolean',
         'status_completed' => 'boolean',
     ];

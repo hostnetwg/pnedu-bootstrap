@@ -286,8 +286,20 @@
                     <div class="course-trainer">{{ $course->trainer_title }}: {{ $course->trainer }}</div>
                 @endif
                 @php
-                    $priceInfo = $course->getCurrentPrice();
+                    $rawHeaderVid = old('price_variant_id', $prefillPriceVariantId ?? $testData['price_variant_id'] ?? null);
+                    $headerVariantId = ($rawHeaderVid !== null && $rawHeaderVid !== '') ? (int) $rawHeaderVid : null;
+                    $priceInfo = $course->getPriceInfoForOrderFormHeader($headerVariantId);
                 @endphp
+                @if($priceInfo && $headerVariantId !== null)
+                    <div class="mt-2 small text-muted">
+                        Wybrany wariant:
+                        @if(! empty($priceInfo['variant_name']))
+                            <strong class="text-dark">{{ $priceInfo['variant_name'] }}</strong>
+                        @else
+                            <strong class="text-dark">#{{ $priceInfo['price_variant_id'] }}</strong>
+                        @endif
+                    </div>
+                @endif
                 @if($priceInfo)
                     <div class="mt-3">
                         @if($priceInfo['is_promotion'] && $priceInfo['original_price'])
@@ -351,9 +363,14 @@
                 {{-- Dla kursów z certgen_Publigo użyj id_old, w przeciwnym razie użyj publigo_product_id --}}
                 <input type="hidden" name="publigo_product_id" value="{{ ($course->source_id_old === 'certgen_Publigo' && $course->id_old) ? $course->id_old : $course->publigo_product_id }}">
                 <input type="hidden" name="publigo_price_id" value="{{ $course->publigo_price_id }}">
-                @if(isset($testData['order_ident']))
-                    <input type="hidden" name="order_ident" value="{{ $testData['order_ident'] }}">
+                @php
+                    $orderIdentForForm = old('order_ident', $testData['order_ident'] ?? '');
+                @endphp
+                @if($orderIdentForForm !== '')
+                    <input type="hidden" name="order_ident" value="{{ $orderIdentForForm }}">
                 @endif
+                {{-- Wariant wybrany na stronie kursu (?price_variant_id=) lub jedyny aktywny; przy edycji zamówienia z testData --}}
+                <input type="hidden" name="price_variant_id" value="{{ old('price_variant_id', $prefillPriceVariantId ?? $testData['price_variant_id'] ?? '') }}">
                 {{-- Źródło marketingowe (jak stary ?fb=1134) – przekazywane w fb_source do form_orders --}}
                 <input type="hidden" name="fb_source" value="{{ old('fb_source', $testData['fb_source'] ?? ($fbSourceDefault ?? '')) }}">
                 <div class="form-sections-grid">

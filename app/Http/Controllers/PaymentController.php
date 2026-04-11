@@ -18,6 +18,11 @@ use Illuminate\Support\Facades\Mail;
 class PaymentController extends Controller
 {
     /**
+     * @see \App\Http\Controllers\CourseController::SESSION_ONLINE_CHECKOUT_FORM_ORDER_RESUME
+     */
+    private const SESSION_ONLINE_CHECKOUT_FORM_ORDER_RESUME = 'form_order_online_checkout_resume';
+
+    /**
      * PayU notify – webhook wywoływany przez PayU przy zmianie statusu płatności.
      */
     public function payuNotify(Request $request): \Illuminate\Http\Response
@@ -533,6 +538,17 @@ class PaymentController extends Controller
 
         $paymentStatus = $map[$order->status] ?? FormOrder::PAYMENT_STATUS_AWAITING_PAYMENT;
         $formOrder->update(['payment_status' => $paymentStatus]);
+
+        if ($paymentStatus === FormOrder::PAYMENT_STATUS_PAID) {
+            $resume = session(self::SESSION_ONLINE_CHECKOUT_FORM_ORDER_RESUME);
+            if (
+                is_array($resume)
+                && ($resume['ident'] ?? '') === $formOrder->ident
+                && (int) ($resume['course_id'] ?? 0) === (int) $formOrder->product_id
+            ) {
+                session()->forget(self::SESSION_ONLINE_CHECKOUT_FORM_ORDER_RESUME);
+            }
+        }
     }
 
     /**
