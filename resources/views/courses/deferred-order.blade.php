@@ -258,6 +258,7 @@
                 @if(isset($testData['order_ident']))
                     <input type="hidden" name="order_ident" value="{{ $testData['order_ident'] }}">
                 @endif
+                <input type="hidden" name="fb_source" value="{{ old('fb_source', $testData['fb_source'] ?? ($fbSourceDefault ?? '')) }}">
                 <div class="form-sections-grid">
                 <fieldset class="order-form-section">
                     <legend>DANE KONTAKTOWE ZAMAWIAJĄCEGO</legend>

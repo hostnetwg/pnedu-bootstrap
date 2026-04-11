@@ -820,6 +820,7 @@ class CourseController extends Controller
                 'payment_terms' => $existingOrder->invoice_payment_delay ?? $existingOrder->ptw,
                 'order_id' => $existingOrder->id,
                 'order_ident' => $existingOrder->ident,
+                'fb_source' => $existingOrder->fb_source,
             ];
         }
 
@@ -855,7 +856,9 @@ class CourseController extends Controller
         // Pobierz dane zalogowanego użytkownika (jeśli jest zalogowany)
         $user = auth()->user();
 
-        return view('courses.deferred-order', compact('course', 'testData', 'isTestMode', 'isEditMode', 'user'));
+        $fbSourceDefault = request('fb', request('fb_source'));
+
+        return view('courses.deferred-order', compact('course', 'testData', 'isTestMode', 'isEditMode', 'user', 'fbSourceDefault'));
     }
 
     /**
@@ -923,7 +926,10 @@ class CourseController extends Controller
 
         $user = auth()->user();
 
-        return view('courses.order-form', compact('course', 'testData', 'isTestMode', 'isEditMode', 'user'));
+        // Źródło marketingowe (jak stary URL ?fb=1134) – domyślnie z query, potem z edycji zamówienia
+        $fbSourceDefault = request('fb', request('fb_source'));
+
+        return view('courses.order-form', compact('course', 'testData', 'isTestMode', 'isEditMode', 'user', 'fbSourceDefault'));
     }
 
     /**
@@ -1093,6 +1099,7 @@ class CourseController extends Controller
             'payment_terms' => $existingOrder->invoice_payment_delay ?? $existingOrder->ptw,
             'order_id' => $existingOrder->id,
             'order_ident' => $existingOrder->ident,
+            'fb_source' => $existingOrder->fb_source,
         ];
 
         $ordererName = trim((string) $existingOrder->orderer_name);
@@ -1112,6 +1119,26 @@ class CourseController extends Controller
         }
 
         return $orderData;
+    }
+
+    /**
+     * Źródło marketingowe (fb / kampania) – z ukrytego pola lub ?fb= w URL.
+     * Przy edycji zamówienia zachowaj istniejące fb_source, jeśli pole jest puste.
+     */
+    protected function resolveFbSourceForFormOrder(array $validated, ?FormOrder $existingOrder = null): ?string
+    {
+        $raw = $validated['fb_source'] ?? null;
+        if (is_string($raw)) {
+            $raw = trim($raw);
+        }
+        if ($raw !== null && $raw !== '') {
+            return Str::limit($raw, 255, '');
+        }
+        if ($existingOrder && $existingOrder->fb_source) {
+            return $existingOrder->fb_source;
+        }
+
+        return null;
     }
 
     /**
@@ -1141,6 +1168,7 @@ class CourseController extends Controller
             'participant_email' => 'required|email|max:255',
             'invoice_notes' => 'nullable|string',
             'payment_terms' => 'required|integer|min:0|max:31',
+            'fb_source' => 'nullable|string|max:255',
         ], [
             'buyer_name.required' => 'Nazwa nabywcy jest wymagana.',
             'buyer_address.required' => 'Adres jest wymagany.',
@@ -1217,6 +1245,7 @@ class CourseController extends Controller
                 'payment_mode' => FormOrder::PAYMENT_MODE_DEFERRED_INVOICE,
                 'payment_status' => FormOrder::PAYMENT_STATUS_SUBMITTED,
                 'ip_address' => $request->ip(),
+                'fb_source' => $this->resolveFbSourceForFormOrder($validated, $order),
             ];
 
             // Aktualizuj istniejące zamówienie lub utwórz nowe
@@ -1306,6 +1335,7 @@ class CourseController extends Controller
             'invoice_notes' => 'nullable|string',
             'payment_terms' => 'nullable|integer|min:0|max:31',
             'payment_gateway' => 'nullable|in:payu,paynow',
+            'fb_source' => 'nullable|string|max:255',
         ];
 
         if ($buyerType === 'organisation') {
@@ -1425,6 +1455,7 @@ class CourseController extends Controller
                 'payment_mode' => FormOrder::PAYMENT_MODE_DEFERRED_INVOICE,
                 'payment_status' => FormOrder::PAYMENT_STATUS_SUBMITTED,
                 'ip_address' => $request->ip(),
+                'fb_source' => $this->resolveFbSourceForFormOrder($validated, $order),
             ];
 
             if ($order) {
@@ -1541,6 +1572,7 @@ class CourseController extends Controller
                 'payment_mode' => FormOrder::PAYMENT_MODE_ONLINE_GATEWAY,
                 'payment_status' => FormOrder::PAYMENT_STATUS_AWAITING_PAYMENT,
                 'ip_address' => $request->ip(),
+                'fb_source' => $this->resolveFbSourceForFormOrder($validated, $formOrder),
             ];
 
             if ($formOrder) {
