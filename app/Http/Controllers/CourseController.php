@@ -20,6 +20,12 @@ use Illuminate\Support\Str;
 class CourseController extends Controller
 {
     /**
+     * Sesja: ostatnie zamówienie z formularza (online) dla kursu — wznowienie bez drugiego rekordu form_orders.
+     * Ta sama wartość co w PaymentController::SESSION_ONLINE_CHECKOUT_FORM_ORDER_RESUME.
+     */
+    private const SESSION_ONLINE_CHECKOUT_FORM_ORDER_RESUME = 'form_order_online_checkout_resume';
+
+    /**
      * Display a listing of online live courses.
      *
      * @return \Illuminate\View\View
@@ -895,7 +901,7 @@ class CourseController extends Controller
 
         $prefillPriceVariantId = $this->prefillPriceVariantIdForPublicOrderForm($course, $ident, $orderData);
 
-        $testData = $orderData;
+        $testData = $this->mergePendingOnlineCheckoutIdentIntoTestData((int) $id, $orderData);
         if (empty($testData) && $isTestMode) {
             $testData = [
                 'buyer_name' => 'Platforma Nowoczesnej Edukacji Waldemar Grabowski',
@@ -921,6 +927,7 @@ class CourseController extends Controller
                 'invoice_notes' => 'Dane testowe - Waldek',
                 'payment_terms' => 14,
             ];
+            $testData = $this->mergePendingOnlineCheckoutIdentIntoTestData((int) $id, $testData);
         }
 
         $user = auth()->user();
@@ -1033,6 +1040,55 @@ class CourseController extends Controller
         }
 
         return $order;
+    }
+
+    /**
+     * Dołącza order_ident z sesji (ostatnie zamówienie online dla tego kursu), żeby ponowny POST nie tworzył drugiego form_orders.
+     *
+     * @param  array<string, mixed>  $testData
+     * @return array<string, mixed>
+     */
+    protected function mergePendingOnlineCheckoutIdentIntoTestData(int $courseId, array $testData): array
+    {
+        if (! empty($testData['order_ident'])) {
+            return $testData;
+        }
+
+        $resume = session(self::SESSION_ONLINE_CHECKOUT_FORM_ORDER_RESUME);
+        if (! is_array($resume)) {
+            return $testData;
+        }
+
+        if ((int) ($resume['course_id'] ?? 0) !== $courseId) {
+            return $testData;
+        }
+
+        $ident = trim((string) ($resume['ident'] ?? ''));
+        if ($ident === '') {
+            session()->forget(self::SESSION_ONLINE_CHECKOUT_FORM_ORDER_RESUME);
+
+            return $testData;
+        }
+
+        $formOrder = FormOrder::query()
+            ->where('ident', $ident)
+            ->where('product_id', $courseId)
+            ->first();
+
+        if (
+            ! $formOrder
+            || $formOrder->isEditLocked()
+            || $formOrder->payment_mode !== FormOrder::PAYMENT_MODE_ONLINE_GATEWAY
+            || $formOrder->payment_status !== FormOrder::PAYMENT_STATUS_AWAITING_PAYMENT
+        ) {
+            session()->forget(self::SESSION_ONLINE_CHECKOUT_FORM_ORDER_RESUME);
+
+            return $testData;
+        }
+
+        $testData['order_ident'] = $ident;
+
+        return $testData;
     }
 
     /**
@@ -1487,6 +1543,7 @@ class CourseController extends Controller
         $addressData = $this->collectOrderFormAddressData($request, $buyerType);
         $formData = $request->except(['_token']);
         $paymentGateway = $validated['payment_gateway'] ?? 'payu';
+        $formOrder = null;
 
         try {
             $publicoProductId = null;
@@ -1581,6 +1638,13 @@ class CourseController extends Controller
                 'form_data' => $formData,
                 'ip_address' => $request->ip(),
             ]);
+
+            session([
+                self::SESSION_ONLINE_CHECKOUT_FORM_ORDER_RESUME => [
+                    'course_id' => (int) $course->id,
+                    'ident' => $formOrder->ident,
+                ],
+            ]);
         } catch (Exception $e) {
             Log::error('Error creating FormOrder/OnlinePaymentOrder (order-form online)', [
                 'error' => $e->getMessage(),
@@ -1588,8 +1652,13 @@ class CourseController extends Controller
                 'buyer_type' => $buyerType,
             ]);
 
+            $input = $request->except('_token');
+            if ($formOrder !== null) {
+                $input['order_ident'] = $formOrder->ident;
+            }
+
             return back()
-                ->withInput()
+                ->withInput($input)
                 ->with('error', 'Wystąpił błąd podczas przygotowania płatności. Spróbuj ponownie.');
         }
 
@@ -1604,7 +1673,7 @@ class CourseController extends Controller
 
                 return redirect()->route('payment.order-form', $course->id)
                     ->with('error', $errorMsg)
-                    ->withInput();
+                    ->withInput(array_merge($request->except('_token'), ['order_ident' => $formOrder->ident]));
             }
             session(['payu_order_ident' => $onlineOrder->ident]);
             session(['payu_order_email' => $onlineOrder->email]);
@@ -1623,7 +1692,7 @@ class CourseController extends Controller
 
                 return redirect()->route('payment.order-form', $course->id)
                     ->with('error', $errorMsg)
-                    ->withInput();
+                    ->withInput(array_merge($request->except('_token'), ['order_ident' => $formOrder->ident]));
             }
 
             return redirect()->away($result['redirect_url']);
@@ -1631,7 +1700,7 @@ class CourseController extends Controller
 
         return redirect()->route('payment.order-form', $course->id)
             ->with('error', 'Nieznana bramka płatności.')
-            ->withInput();
+            ->withInput(array_merge($request->except('_token'), ['order_ident' => $formOrder->ident]));
     }
 
     /**

@@ -363,8 +363,11 @@
                 {{-- Dla kursów z certgen_Publigo użyj id_old, w przeciwnym razie użyj publigo_product_id --}}
                 <input type="hidden" name="publigo_product_id" value="{{ ($course->source_id_old === 'certgen_Publigo' && $course->id_old) ? $course->id_old : $course->publigo_product_id }}">
                 <input type="hidden" name="publigo_price_id" value="{{ $course->publigo_price_id }}">
-                @if(isset($testData['order_ident']))
-                    <input type="hidden" name="order_ident" value="{{ $testData['order_ident'] }}">
+                @php
+                    $orderIdentForForm = old('order_ident', $testData['order_ident'] ?? '');
+                @endphp
+                @if($orderIdentForForm !== '')
+                    <input type="hidden" name="order_ident" value="{{ $orderIdentForForm }}">
                 @endif
                 {{-- Wariant wybrany na stronie kursu (?price_variant_id=) lub jedyny aktywny; przy edycji zamówienia z testData --}}
                 <input type="hidden" name="price_variant_id" value="{{ old('price_variant_id', $prefillPriceVariantId ?? $testData['price_variant_id'] ?? '') }}">
