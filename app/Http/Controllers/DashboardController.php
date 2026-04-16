@@ -7,6 +7,7 @@ use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
@@ -51,6 +52,8 @@ class DashboardController extends Controller
             abort(403, 'Materiały do pobrania będą dostępne po zakończeniu szkolenia.');
         }
 
+        $this->markTrainingPageOpened($participant);
+
         $selectedVideo = null;
         if ($course->videos->isNotEmpty()) {
             $selectedVideoId = (int) request()->query('video', $course->videos->first()->id);
@@ -65,6 +68,28 @@ class DashboardController extends Controller
             'fileLinks' => $courseEnded ? $course->fileLinks : collect(),
             'courseEnded' => $courseEnded,
         ]);
+    }
+
+    private function markTrainingPageOpened(Participant $participant): void
+    {
+        try {
+            $now = now();
+            $participantId = (int) $participant->id;
+            $courseId = (int) $participant->course_id;
+
+            DB::connection('pneadm')->statement(
+                "INSERT INTO participant_training_page_views (participant_id, course_id, open_count, first_opened_at, last_opened_at, created_at, updated_at)
+                 VALUES (?, ?, 1, ?, ?, ?, ?)
+                 ON DUPLICATE KEY UPDATE
+                    open_count = open_count + 1,
+                    last_opened_at = VALUES(last_opened_at),
+                    first_opened_at = COALESCE(first_opened_at, VALUES(first_opened_at)),
+                    updated_at = VALUES(updated_at)",
+                [$participantId, $courseId, $now, $now, $now, $now]
+            );
+        } catch (\Throwable $e) {
+            // Best-effort tracking – nie blokuj użytkownika.
+        }
     }
 
     /**
