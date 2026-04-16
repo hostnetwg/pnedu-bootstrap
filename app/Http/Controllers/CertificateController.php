@@ -378,6 +378,7 @@ class CertificateController extends Controller
         return view('certificates.download-with-redirect', [
             'downloadUrl' => $downloadUrl,
             'homeUrl' => $homeUrl,
+            'redirectLabel' => 'na stronę główną',
             'isDashboardContext' => false,
         ]);
     }
@@ -387,11 +388,12 @@ class CertificateController extends Controller
         $user = $request->user();
         $courseId = (int) $courseId;
         $downloadUrl = route('dashboard.zaswiadczenia.course.download', ['course' => $courseId]);
-        $homeUrl = route('dashboard');
+        $homeUrl = route('home');
 
         return view('certificates.download-with-redirect', [
             'downloadUrl' => $downloadUrl,
             'homeUrl' => $homeUrl,
+            'redirectLabel' => 'na stronę główną',
             'isDashboardContext' => true,
         ]);
     }

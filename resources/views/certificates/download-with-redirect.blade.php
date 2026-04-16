@@ -4,6 +4,7 @@
 
 @php
     $isDashboard = $isDashboardContext ?? false;
+    $redirectLabel = $redirectLabel ?? ($isDashboard ? 'do panelu konta' : 'na stronę główną');
 @endphp
 
 @section('content')
@@ -20,11 +21,7 @@
                     <h2 class="h5 mb-2">Trwa pobieranie zaświadczenia</h2>
                     <p class="text-muted mb-0">
                         Za chwilę plik PDF z zaświadczeniem zostanie zapisany na Twoim komputerze. Następnie automatycznie przekierujemy Cię
-                        @if($isDashboard)
-                            do panelu konta.
-                        @else
-                            na stronę główną.
-                        @endif
+                        {{ $redirectLabel }}.
                     </p>
                 </div>
             </div>
