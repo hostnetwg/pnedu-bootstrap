@@ -71,7 +71,7 @@
                 </li>
 
                 {{-- Kontakt --}}
-                <li class="nav-item"><a class="nav-link" href="#">Kontakt</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ route('home') }}#kontakt">Kontakt</a></li>
             </ul>
 
             {{-- Prawa strona paska – tylko autoryzacja --}}
