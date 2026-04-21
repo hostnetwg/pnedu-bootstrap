@@ -360,23 +360,30 @@ class CourseController extends Controller
      */
     public function individualCourses(Request $request)
     {
-        // Nadchodzące szkolenia
+        // Nadchodzące szkolenia - zgodne z tym, co ma być widoczne na stronie głównej.
         $upcomingCourses = Course::with('priceVariants')
             ->where('is_active', true)
+            ->where('show_on_pnedu', true)
             ->where('type', 'online')
-            ->where('is_paid', 1)
             ->where('start_date', '>', now())
             ->whereNull('deleted_at')
-            ->where('source_id_old', 'certgen_Publigo')
             ->orderBy('start_date', 'asc')
             ->get();
 
-        // Archiwalne szkolenia (zakończone)
+        // Archiwalne szkolenia (zakończone):
+        // - nowe: kursy oznaczone "Pokaż na stronie głównej pnedu.pl"
+        // - legacy (wsteczna zgodność): certgen_Publigo + id_old
         $archivedCourses = Course::with('priceVariants')
             ->where('is_active', true)
             ->where('type', 'online')
-            ->where('is_paid', 1)
             ->whereNull('deleted_at')
+            ->where(function ($query) {
+                $query->where('show_on_pnedu', true)
+                    ->orWhere(function ($legacyQuery) {
+                        $legacyQuery->where('source_id_old', 'certgen_Publigo')
+                            ->whereNotNull('id_old');
+                    });
+            })
             ->where(function ($query) {
                 $query->where(function ($q) {
                     // Szkolenia z datą zakończenia w przeszłości
@@ -388,7 +395,6 @@ class CourseController extends Controller
                         ->where('start_date', '<', now()->subDays(30));
                 });
             })
-            ->where('source_id_old', 'certgen_Publigo')
             ->orderBy('start_date', 'desc')
             ->get();
 
