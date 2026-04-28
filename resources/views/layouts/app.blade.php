@@ -8,7 +8,9 @@
     <title>@yield('title', 'Platforma Nowoczesnej Edukacji')</title>
 
     @production
-        @php($gaId = config('services.google_analytics.id'))
+        @php
+            $gaId = config('services.google_analytics.id');
+        @endphp
         @if(!empty($gaId))
             <!-- Google tag (gtag.js) -->
             <script async src="https://www.googletagmanager.com/gtag/js?id={{ $gaId }}"></script>

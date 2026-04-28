@@ -5,7 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     @production
-        @php($gaId = config('services.google_analytics.id'))
+        @php
+            $gaId = config('services.google_analytics.id');
+        @endphp
         @if(!empty($gaId))
             <!-- Google tag (gtag.js) -->
             <script async src="https://www.googletagmanager.com/gtag/js?id={{ $gaId }}"></script>
