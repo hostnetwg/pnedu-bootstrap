@@ -5,15 +5,35 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     @production
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-5WJ5EP1W9N"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
+        @php($gaId = config('services.google_analytics.id'))
+        @if(!empty($gaId))
+            <!-- Google tag (gtag.js) -->
+            <script async src="https://www.googletagmanager.com/gtag/js?id={{ $gaId }}"></script>
+            <script>
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                gtag('js', new Date());
 
-        gtag('config', 'G-5WJ5EP1W9N');
-    </script>
+                // Consent Mode v2 (advanced): default deny, update after user choice
+                gtag('consent', 'default', {
+                    analytics_storage: 'denied',
+                    functionality_storage: 'granted',
+                    security_storage: 'granted',
+                    wait_for_update: 500
+                });
+
+                (function () {
+                    try {
+                        var consent = localStorage.getItem('cookie_consent');
+                        if (consent === 'accepted') {
+                            gtag('consent', 'update', { analytics_storage: 'granted' });
+                        }
+                    } catch (e) {}
+                })();
+
+                gtag('config', @json($gaId), { anonymize_ip: true });
+            </script>
+        @endif
     @endproduction
 
     @if(config('seo.block_search_indexing'))
@@ -74,7 +94,10 @@
         </main>
     </div>
 
+    @include('layouts.cookie-consent')
+
     <!-- Bootstrap JS (CDN - niezależne od Vite) -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    @stack('scripts')
 </body>
 </html>

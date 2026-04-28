@@ -77,4 +77,8 @@ return [
         'api_key' => env('SENDY_API_KEY', 'QWVN3gYyibFsPWh39Til'),
     ],
 
+    'google_analytics' => [
+        'id' => env('GOOGLE_ANALYTICS_ID', 'G-5WJ5EP1W9N'),
+    ],
+
 ];

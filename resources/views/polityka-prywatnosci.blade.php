@@ -68,6 +68,7 @@
     </ul>
     <h3>9.2. Zarządzanie cookies</h3>
     <p>Użytkownik może samodzielnie zmieniać ustawienia przeglądarki, aby blokować lub usuwać cookies. Ograniczenie stosowania cookies może jednak wpłynąć na niektóre funkcje Serwisu.</p>
+    <p class="small text-muted">Serwis korzysta z Google Analytics 4 w trybie uzyskiwania zgody (Google Consent Mode v2). Przed wyrażeniem zgody dane analityczne nie są zapisywane w postaci plików cookies; mogą być przesyłane jedynie sygnały pomiarowe bez identyfikacji użytkownika. Po akceptacji zgody możliwy jest pełny pomiar statystyk.</p>
 
     <h2>10. Logi serwera</h2>
     <p>Korzystanie z&nbsp;Serwisu wiąże się z&nbsp;przesyłaniem zapytań do serwera, które zapisywane są w&nbsp;logach (adres&nbsp;IP, data, nagłówek HTTP itp.). Dane te są wykorzystywane wyłącznie w&nbsp;celu administrowania Serwisem oraz w&nbsp;celach statystycznych.</p>
