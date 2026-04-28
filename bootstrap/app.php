@@ -11,6 +11,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->web(append: [
+            \App\Http\Middleware\CaptureMarketingSource::class,
+        ]);
+
         // Za tunelami (ngrok, Cloudflare Tunnel) Laravel musi ufać nagłówkom X-Forwarded-*,
         // inaczej generuje URL-e jako http:// mimo HTTPS — Chrome blokuje wysyłkę formularzy.
         $middleware->trustProxies(at: '*');

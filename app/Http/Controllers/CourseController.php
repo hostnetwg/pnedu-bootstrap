@@ -772,6 +772,7 @@ class CourseController extends Controller
     public function deferredOrder($id, $ident = null)
     {
         $course = \App\Models\Course::with('priceVariants')->findOrFail($id);
+        $existingOrder = null;
 
         // Sprawdź czy to tryb testowy (URL kończy się na /test)
         $isTestMode = Str::endsWith(request()->path(), '/deferred-order/test');
@@ -863,7 +864,7 @@ class CourseController extends Controller
         // Pobierz dane zalogowanego użytkownika (jeśli jest zalogowany)
         $user = auth()->user();
 
-        $fbSourceDefault = request('fb', request('fb_source'));
+        $fbSourceDefault = $this->resolveFbSourceDefaultForForm($existingOrder);
 
         return view('courses.deferred-order', compact('course', 'testData', 'isTestMode', 'isEditMode', 'user', 'prefillPriceVariantId', 'fbSourceDefault'));
     }
@@ -874,6 +875,7 @@ class CourseController extends Controller
     public function orderForm($id, $ident = null)
     {
         $course = \App\Models\Course::with('priceVariants')->findOrFail($id);
+        $existingOrder = null;
 
         // Tryb testowy: ?test=1 włącza, ?test=0 wyłącza. Bez parametru – ustawienie z panelu (Zakupy pnedu.pl).
         $isTestMode = request()->has('test')
@@ -942,7 +944,7 @@ class CourseController extends Controller
         $user = auth()->user();
 
         // Źródło marketingowe (jak stary URL ?fb=1134) – domyślnie z query, potem z edycji zamówienia
-        $fbSourceDefault = request('fb', request('fb_source'));
+        $fbSourceDefault = $this->resolveFbSourceDefaultForForm($existingOrder);
 
         return view('courses.order-form', compact('course', 'testData', 'isTestMode', 'isEditMode', 'user', 'prefillPriceVariantId', 'fbSourceDefault'));
     }
@@ -1196,9 +1198,48 @@ class CourseController extends Controller
         if (is_string($raw)) {
             $raw = trim($raw);
         }
+
+        if (($raw === null || $raw === '') && request()->hasSession()) {
+            $sessionRaw = session('marketing.fb_source');
+            if (is_string($sessionRaw)) {
+                $sessionRaw = trim($sessionRaw);
+            }
+            $raw = $sessionRaw;
+        }
+
         if ($raw !== null && $raw !== '') {
             return Str::limit($raw, 255, '');
         }
+        if ($existingOrder && $existingOrder->fb_source) {
+            return $existingOrder->fb_source;
+        }
+
+        return null;
+    }
+
+    /**
+     * Domyślne źródło marketingowe do prefill formularza:
+     * query (?fb / ?fb_source) -> sesja -> istniejące zamówienie (edycja).
+     */
+    protected function resolveFbSourceDefaultForForm(?FormOrder $existingOrder = null): ?string
+    {
+        $raw = request()->query('fb', request()->query('fb_source'));
+        if (is_string($raw)) {
+            $raw = trim($raw);
+        }
+
+        if (($raw === null || $raw === '') && request()->hasSession()) {
+            $sessionRaw = session('marketing.fb_source');
+            if (is_string($sessionRaw)) {
+                $sessionRaw = trim($sessionRaw);
+            }
+            $raw = $sessionRaw;
+        }
+
+        if ($raw !== null && $raw !== '') {
+            return Str::limit($raw, 255, '');
+        }
+
         if ($existingOrder && $existingOrder->fb_source) {
             return $existingOrder->fb_source;
         }

@@ -5,10 +5,12 @@
     $variantCount = $activeCoursePriceVariants->count();
     $priceInfo = $course->getCurrentPrice();
     $onlyVariant = $variantCount === 1 ? $activeCoursePriceVariants->first() : null;
+    $fbParam = trim((string) request()->query('fb', request()->query('fb_source', session('marketing.fb_source', ''))));
+    $fbSuffix = $fbParam !== '' ? '&fb='.urlencode($fbParam) : '';
     $orderFormBase = route('payment.order-form', $course->id);
     $deferredBase = route('payment.deferred', $course->id);
-    $orderFormHref = $onlyVariant ? ($orderFormBase.'?price_variant_id='.$onlyVariant->id) : $orderFormBase;
-    $deferredHref = $onlyVariant ? ($deferredBase.'?price_variant_id='.$onlyVariant->id) : $deferredBase;
+    $orderFormHref = $onlyVariant ? ($orderFormBase.'?price_variant_id='.$onlyVariant->id.$fbSuffix) : $orderFormBase.($fbParam !== '' ? '?fb='.urlencode($fbParam) : '');
+    $deferredHref = $onlyVariant ? ($deferredBase.'?price_variant_id='.$onlyVariant->id.$fbSuffix) : $deferredBase.($fbParam !== '' ? '?fb='.urlencode($fbParam) : '');
 @endphp
 <h3>Wybierz formę płatności i&nbsp;zarezerwuj miejsce!</h3>
 @if($variantCount > 1)
@@ -65,6 +67,7 @@
             <a href="#"
                class="btn btn-orange btn-lg fw-bold shadow-sm w-100 js-cta-needs-variant disabled pe-none"
                data-href-base="{{ $deferredBase }}"
+               data-fb-source="{{ $fbParam }}"
                aria-disabled="true"
                title="Najpierw wybierz wariant cenowy powyżej"
             >Formularz zamówienia z&nbsp;odroczonym terminem płatności</a>
@@ -77,6 +80,7 @@
             <a href="#"
                class="btn btn-purchase-cta btn-lg fw-bold w-100 js-cta-needs-variant disabled pe-none"
                data-href-base="{{ $orderFormBase }}"
+               data-fb-source="{{ $fbParam }}"
                aria-disabled="true"
                title="Najpierw wybierz wariant cenowy powyżej"
             >Zamawiam szkolenie</a>
@@ -118,7 +122,12 @@
                             a.setAttribute('aria-disabled', 'true');
                         } else {
                             var sep = base.indexOf('?') >= 0 ? '&' : '?';
-                            a.setAttribute('href', base + sep + 'price_variant_id=' + encodeURIComponent(vid));
+                            var href = base + sep + 'price_variant_id=' + encodeURIComponent(vid);
+                            var fb = (a.getAttribute('data-fb-source') || '').trim();
+                            if (fb) {
+                                href += '&fb=' + encodeURIComponent(fb);
+                            }
+                            a.setAttribute('href', href);
                             a.classList.remove('disabled', 'pe-none');
                             a.removeAttribute('aria-disabled');
                         }
