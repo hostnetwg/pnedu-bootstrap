@@ -89,7 +89,7 @@
                                     <div class="col-auto">
                                         <a href="{{ $imageLink }}" class="text-decoration-none course-image-link @if($isYouTube) course-image-youtube @endif" @if($isYouTube) target="_blank" @endif>
                                             @if(!empty($course->image))
-                                                <img src="{{ 'https://adm.pnedu.pl/storage/' . ltrim($course->image, '/') }}" 
+                                                <img src="{{ rtrim(config('services.pneadm.public_url'), '/') . '/storage/' . ltrim($course->image, '/') }}" 
                                                      alt="{{ strip_tags($course->title) }}" 
                                                      class="course-thumbnail">
                                             @else

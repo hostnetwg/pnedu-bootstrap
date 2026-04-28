@@ -39,6 +39,9 @@ return [
         'api_url' => env('PNEADM_API_URL'),
         'api_token' => env('PNEADM_API_TOKEN'),
         'timeout' => env('PNEADM_API_TIMEOUT', 30),
+        // Publiczny adres panelu pneadm widoczny dla przeglądarki
+        // (do <img src="..."> z pliku w storage). Lokalnie ustaw http://adm.localhost:8083
+        'public_url' => rtrim(env('PNEADM_PUBLIC_URL', 'https://adm.pnedu.pl'), '/'),
     ],
 
     'payu' => [

@@ -15,7 +15,7 @@
                     @if(!empty($instructorName))
                         <p class="text-muted mb-4 d-flex align-items-center justify-content-center">
                             @if(!empty($instructorPhoto))
-                                <img src="{{ 'https://adm.pnedu.pl/storage/' . $instructorPhoto }}" alt="{{ $instructorName }}" class="rounded me-2" style="max-width: 48px; height: auto;">
+                                <img src="{{ rtrim(config('services.pneadm.public_url'), '/') . '/storage/' . ltrim($instructorPhoto, '/') }}" alt="{{ $instructorName }}" class="rounded me-2" style="max-width: 48px; height: auto;">
                             @endif
                             <span><strong>Prowadzący:</strong> {{ $instructorName }}</span>
                         </p>

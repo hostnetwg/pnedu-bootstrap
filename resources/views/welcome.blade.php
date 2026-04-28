@@ -142,7 +142,7 @@
                         <div class="position-relative">
                             <a href="{{ route('courses.show', $course->id) }}" style="text-decoration: none; display: block;">
                                 @if(!empty($course->image))
-                                    <img src="{{ 'https://adm.pnedu.pl/storage/' . ltrim($course->image, '/') }}" class="card-img-top" alt="{{ $course->title }}">
+                                    <img src="{{ rtrim(config('services.pneadm.public_url'), '/') . '/storage/' . ltrim($course->image, '/') }}" class="card-img-top" alt="{{ $course->title }}">
                                 @else
                                     <div class="card-img-top d-flex align-items-center justify-content-center mb-2" style="width:100%; aspect-ratio:1/1; background:#e9ecef; border: 2px solid #dee2e6; border-radius: .5rem; border-style:dashed;">
                                         <i class="bi bi-mortarboard" style="font-size: 4rem; color: #f8f9fa;"></i>
