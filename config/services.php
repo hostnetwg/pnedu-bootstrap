@@ -81,4 +81,8 @@ return [
         'id' => env('GOOGLE_ANALYTICS_ID', 'G-5WJ5EP1W9N'),
     ],
 
+    'facebook_pixel' => [
+        'id' => env('FACEBOOK_PIXEL_ID', '378657018971423'),
+    ],
+
 ];

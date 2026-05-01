@@ -38,6 +38,8 @@
         @endif
     @endproduction
 
+    @include('layouts.facebook-pixel')
+
     @if(config('seo.block_search_indexing'))
         <meta name="robots" content="noindex, nofollow">
     @else

@@ -38,8 +38,12 @@
 
     function updateAnalyticsConsent(value) {
         if (!IS_PROD) return;
-        if (typeof window.gtag !== 'function') return;
-        window.gtag('consent', 'update', { analytics_storage: value });
+        if (typeof window.gtag === 'function') {
+            window.gtag('consent', 'update', { analytics_storage: value });
+        }
+        if (typeof window.fbq === 'function') {
+            window.fbq('consent', value === 'granted' ? 'grant' : 'revoke');
+        }
     }
 
     var consent = null;
