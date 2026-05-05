@@ -48,6 +48,7 @@ class Course extends Model
         'show_on_pnedu',
         'publigo_product_id',
         'publigo_price_id',
+        'sendy_suppression_list_id',
     ];
 
     /**

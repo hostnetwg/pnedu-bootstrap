@@ -40,8 +40,13 @@ return [
         'api_token' => env('PNEADM_API_TOKEN'),
         'timeout' => env('PNEADM_API_TIMEOUT', 30),
         // Publiczny adres panelu pneadm widoczny dla przeglądarki
-        // (do <img src="..."> z pliku w storage). Lokalnie ustaw http://adm.localhost:8083
-        'public_url' => rtrim(env('PNEADM_PUBLIC_URL', 'https://adm.pnedu.pl'), '/'),
+        // (do <img src="..."> z /storage). Lokalnie: PNEADM_PUBLIC_URL lub domyślnie adm.localhost:8083.
+        'public_url' => rtrim(
+            env('PNEADM_PUBLIC_URL') ?? (env('APP_ENV', 'production') === 'local'
+                ? 'http://adm.localhost:8083'
+                : 'https://adm.pnedu.pl'),
+            '/'
+        ),
     ],
 
     'payu' => [
@@ -75,6 +80,9 @@ return [
     'sendy' => [
         'url' => env('SENDY_URL', env('SENDY_BASE_URL', 'https://sendyhost.net')),
         'api_key' => env('SENDY_API_KEY', 'QWVN3gYyibFsPWh39Til'),
+        /** Nazwa parametru POST = tag pola custom (TEXT) z datą szkolenia RRRR-MM-DD — segment „data is …” w Sendy */
+        'training_date_field' => env('SENDY_TRAINING_DATE_FIELD', 'data'),
+        'timeout' => (int) env('SENDY_HTTP_TIMEOUT', 15),
     ],
 
     'google_analytics' => [

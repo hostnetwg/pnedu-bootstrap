@@ -1584,6 +1584,8 @@ class CourseController extends Controller
                 $validated['participant_email']
             );
 
+            $this->subscribeOrderFormContactsToSendyIfConfigured($course, $validated);
+
             return redirect()
                 ->route('orders.summary', ['ident' => $order->ident])
                 ->with('success', 'Zamówienie zostało złożone pomyślnie!')
@@ -1702,6 +1704,8 @@ class CourseController extends Controller
                 $validated['participant_email']
             );
 
+            $this->subscribeOrderFormContactsToSendyIfConfigured($course, $validated);
+
             $onlineOrder = \App\Models\OnlinePaymentOrder::create([
                 'form_order_id' => $formOrder->id,
                 'ident' => \App\Models\OnlinePaymentOrder::generateIdent(),
@@ -1783,6 +1787,32 @@ class CourseController extends Controller
         return redirect()->route('payment.order-form', $course->id)
             ->with('error', 'Nieznana bramka płatności.')
             ->withInput(array_merge($request->except('_token'), ['order_ident' => $formOrder->ident]));
+    }
+
+    /**
+     * Zapis zamawiającego i (jeśli inny e-mail) uczestnika na listę Sendy przypisaną do kursu.
+     */
+    protected function subscribeOrderFormContactsToSendyIfConfigured(Course $course, array $validated): void
+    {
+        if (trim((string) ($course->sendy_suppression_list_id ?? '')) === '') {
+            return;
+        }
+
+        $sendy = SendyService::fromConfig();
+        if (! $sendy) {
+            Log::warning('Sendy: brak SENDY_URL / SENDY_API_KEY – pominięto zapis z zamówienia', ['course_id' => $course->id]);
+
+            return;
+        }
+
+        try {
+            $sendy->subscribeOrderFormContacts($course, $validated);
+        } catch (\Throwable $e) {
+            Log::error('Sendy order-form subscribe exception', [
+                'course_id' => $course->id,
+                'message' => $e->getMessage(),
+            ]);
+        }
     }
 
     /**
