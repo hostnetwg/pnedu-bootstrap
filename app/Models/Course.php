@@ -135,6 +135,33 @@ class Course extends Model
     }
 
     /**
+     * Publiczny URL zapisu z listy (start): płatne → formularz zamówienia z domyślnym wariantem (najniższe aktywne ID, jak na stronie kursu);
+     * bezpłatne → szczegóły (formularz e-mailowy Sendy).
+     */
+    public function publicOrderFormUrl(): string
+    {
+        if (! $this->is_paid) {
+            return route('courses.show', $this->id);
+        }
+
+        $variants = $this->relationLoaded('priceVariants')
+            ? $this->priceVariants
+            : $this->priceVariants()->where('is_active', true)->orderBy('id')->get();
+
+        $sorted = $variants->filter(fn ($v) => (bool) $v->is_active)
+            ->sortBy(fn ($v) => (int) $v->id)
+            ->values();
+
+        $base = route('payment.order-form', $this->id);
+        $first = $sorted->first();
+        if ($first === null) {
+            return $base;
+        }
+
+        return $base.'?price_variant_id='.$first->id;
+    }
+
+    /**
      * Course has one online detail.
      */
     public function onlineDetail(): HasOne

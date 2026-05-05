@@ -220,7 +220,7 @@
                                         Czytaj więcej ...
                                     </a>
                                 </div>
-                                <a href="{{ route('courses.show', $course->id) }}"
+                                <a href="{{ $course->publicOrderFormUrl() }}"
                                    class="btn btn-warning w-100 fw-bold d-flex align-items-center justify-content-center gap-2 shadow-sm cta-btn"
                                    style="font-size:0.95rem; letter-spacing:0.5px;">
                                     <span>Zapisz się</span>
@@ -235,7 +235,7 @@
         
         <div class="row mt-4">
             <div class="col-12 text-end">
-                <a href="https://nowoczesna-edukacja.pl" target="_blank" class="btn btn-outline-primary rounded-pill px-4">Zobacz wszystkie szkolenia</a>
+                <a href="{{ route('courses.individual') }}" class="btn btn-outline-primary rounded-pill px-4">Zobacz wszystkie szkolenia</a>
             </div>
         </div>
     </div>
