@@ -2,10 +2,10 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Carbon\Carbon;
 
 class Participant extends Model
 {
@@ -27,13 +27,15 @@ class Participant extends Model
 
     protected $fillable = [
         'course_id',
-        'order',        
+        'order',
         'first_name',
         'last_name',
         'email',
         'birth_date',
         'birth_place',
-        'access_expires_at'
+        'phone',
+        'notes',
+        'access_expires_at',
     ];
 
     protected $casts = [
@@ -56,14 +58,14 @@ class Participant extends Model
      */
     public function hasExpiredAccess(): bool
     {
-        if (!$this->access_expires_at) {
+        if (! $this->access_expires_at) {
             return false; // Bezterminowy dostęp
         }
-        
+
         // Porównujemy w UTC - czas w bazie jest zawsze w UTC
         $now = Carbon::now('UTC');
         $expiresAt = $this->access_expires_at->setTimezone('UTC');
-        
+
         return $expiresAt->lt($now); // lt = less than (mniejsze niż)
     }
 
@@ -72,7 +74,6 @@ class Participant extends Model
      */
     public function hasActiveAccess(): bool
     {
-        return !$this->hasExpiredAccess();
+        return ! $this->hasExpiredAccess();
     }
 }
-
