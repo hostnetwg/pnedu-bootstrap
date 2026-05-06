@@ -1,9 +1,16 @@
-<div class="card">
-    <div class="card-header">{{ __('Usuń konto') }}</div>
+<div class="card border-danger">
+    <div class="card-header text-bg-danger">{{ __('Usuń konto') }}</div>
 
     <div class="card-body">
-        <div class="mb-3">
-            {{ __('Po usunięciu konta wszystkie jego zasoby i dane zostaną trwale usunięte. Przed usunięciem konta pobierz wszelkie dane albo informacje, które chcesz zachować.') }}
+        <div class="alert alert-warning mb-3" role="alert">
+            <strong>Uwaga.</strong>
+            Ta czynność trwale blokuje logowanie na to konto. Profil jest dezaktywowany (usuwanie nieodwracalne z poziomu strony —
+            rekord pozostaje w systemie dla celów księgowych / prawnych). Ten sam adres e-mail możesz ponownie wykorzystać przy nowej rejestracji,
+            dopóki ktoś inny go nie zajmie.
+        </div>
+
+        <div class="mb-3 text-muted">
+            Jeśli chcesz zachować coś ze swojego konta (np. dane zamówień lub certyfikatów), zrób to przed usunięciem.
         </div>
 
         <div class="row mb-0">
@@ -27,9 +34,13 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <div class="mb-3">
-            {{ __('Po usunięciu konta wszystkie jego zasoby i dane zostaną trwale usunięte. Wprowadź hasło, aby potwierdzić, że chcesz trwale usunąć swoje konto.') }}
+        <div class="alert alert-danger mb-3" role="alert">
+            Zamierzasz <strong>usunąć konto</strong>. Nie będziesz mógł/mogła się na nie zalogować. Konto zostaje oznaczone jako usunięte
+            (soft delete — wpis może pozostać w bazie zgodnie z przechowywaniem danych). Przywrócenia konta z tej strony nie ma.
         </div>
+        <p class="mb-3">
+            Wpisz swoje aktualne hasło, żeby potwierdzić, że to Ty.
+        </p>
         <form id="deleteAccountForm" method="post" action="{{ route('profile.destroy') }}" class="p-6">
             @csrf
             @method('delete')

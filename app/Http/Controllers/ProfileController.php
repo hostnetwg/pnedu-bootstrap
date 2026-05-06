@@ -50,7 +50,10 @@ class ProfileController extends Controller
 
         Auth::logout();
 
-        $user->delete();
+        $user->remember_token = null;
+        $user->save();
+
+        $user->delete(); // Soft delete — konto traci dostęp, rekord pozostaje w bazie (deleted_at)
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();

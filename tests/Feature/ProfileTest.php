@@ -23,12 +23,22 @@ class ProfileTest extends TestCase
 
     public function test_profile_information_can_be_updated(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create([
+            'first_name' => 'Jan',
+            'last_name' => 'Kowalski',
+            'birth_date' => null,
+            'birth_place' => null,
+            'email' => 'old@example.com',
+            'password' => 'password',
+        ]);
 
         $response = $this
             ->actingAs($user)
             ->patch('/profile', [
-                'name' => 'Test User',
+                'first_name' => 'Anna',
+                'last_name' => 'Nowak',
+                'birth_date' => '',
+                'birth_place' => 'Warszawa',
                 'email' => 'test@example.com',
             ]);
 
@@ -38,19 +48,29 @@ class ProfileTest extends TestCase
 
         $user->refresh();
 
-        $this->assertSame('Test User', $user->name);
+        $this->assertSame('Anna', $user->first_name);
+        $this->assertSame('Nowak', $user->last_name);
+        $this->assertSame('Warszawa', $user->birth_place);
         $this->assertSame('test@example.com', $user->email);
         $this->assertNull($user->email_verified_at);
     }
 
     public function test_email_verification_status_is_unchanged_when_the_email_address_is_unchanged(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create([
+            'first_name' => 'Jan',
+            'last_name' => 'Test',
+            'email' => 'stable@example.com',
+            'password' => 'password',
+        ]);
 
         $response = $this
             ->actingAs($user)
             ->patch('/profile', [
-                'name' => 'Test User',
+                'first_name' => $user->first_name,
+                'last_name' => $user->last_name,
+                'birth_date' => '',
+                'birth_place' => '',
                 'email' => $user->email,
             ]);
 
@@ -76,7 +96,8 @@ class ProfileTest extends TestCase
             ->assertRedirect('/');
 
         $this->assertGuest();
-        $this->assertNull($user->fresh());
+
+        $this->assertSoftDeleted($user);
     }
 
     public function test_correct_password_must_be_provided_to_delete_account(): void

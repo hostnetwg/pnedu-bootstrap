@@ -4,13 +4,14 @@ namespace App\Models;
 
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -52,21 +53,17 @@ class User extends Authenticatable implements MustVerifyEmail
 
     /**
      * Get the user's full name.
-     *
-     * @return string
      */
     public function getNameAttribute(): string
     {
         $firstName = $this->attributes['first_name'] ?? '';
         $lastName = $this->attributes['last_name'] ?? '';
-        return trim($firstName . ' ' . $lastName);
+
+        return trim($firstName.' '.$lastName);
     }
 
     /**
      * Set the user's name (split into first_name and last_name).
-     *
-     * @param  string  $value
-     * @return void
      */
     public function setNameAttribute(string $value): void
     {
