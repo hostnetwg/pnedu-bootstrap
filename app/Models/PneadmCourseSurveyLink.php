@@ -50,4 +50,17 @@ class PneadmCourseSurveyLink extends Model
 
         return true;
     }
+
+    /**
+     * Publiczny URL bramki /ankieta/{token} na tej aplikacji (pnedu.pl) lub null, gdy brak tokenu.
+     */
+    public function gateAbsoluteUrl(): ?string
+    {
+        $tok = strtolower(trim((string) ($this->public_token ?? '')));
+        if ($tok === '') {
+            return null;
+        }
+
+        return route('survey.gate.visit', ['token' => $tok], absolute: true);
+    }
 }

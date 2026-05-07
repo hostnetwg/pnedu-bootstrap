@@ -82,6 +82,29 @@
                         <p class="text-muted mb-4">To szkolenie udostępnia materiały do pobrania (linki poniżej).</p>
                     @endif
 
+                    @if($accessibleSurveyLinks->isNotEmpty())
+                        <div class="alert alert-primary border-0 shadow-sm mb-4" role="region" aria-labelledby="surveyHeading{{ $participant->id }}">
+                            <h6 class="alert-heading h6 mb-2" id="surveyHeading{{ $participant->id }}">
+                                <i class="bi bi-clipboard-check me-2" aria-hidden="true"></i>Ankiety po szkoleniu
+                            </h6>
+                            <p class="small mb-3 text-body">
+                                Pomóż nam doskonalić nasze szkolenia. Wypełnij krótką ankietę poszkoleniową —
+                                Twoja opinia pozwoli nam jeszcze lepiej odpowiadać na potrzeby dyrektorów i nauczycieli.
+                            </p>
+                            <div class="d-grid gap-2">
+                                @foreach($accessibleSurveyLinks as $survey)
+                                    <a href="{{ $survey['url'] }}"
+                                       class="btn btn-light btn-sm text-start d-flex justify-content-between align-items-center text-wrap"
+                                       target="_blank"
+                                       rel="noopener noreferrer">
+                                        <span class="me-2">{{ $survey['title'] }}</span>
+                                        <i class="bi bi-box-arrow-up-right flex-shrink-0" aria-hidden="true"></i>
+                                    </a>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+
                     @php
                         $certStatusKey = $course->certificate_download_status ?? 'in_preparation';
                         $certCanDownload = $certStatusKey === 'download_enabled';

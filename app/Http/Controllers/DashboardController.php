@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Participant;
+use App\Models\PneadmCourseSurveyLink;
 use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\Request;
@@ -60,6 +61,28 @@ class DashboardController extends Controller
             $selectedVideo = $course->videos->firstWhere('id', $selectedVideoId) ?? $course->videos->first();
         }
 
+        $accessibleSurveyLinks = PneadmCourseSurveyLink::query()
+            ->where('course_id', $course->id)
+            ->orderBy('order')
+            ->orderBy('id')
+            ->get()
+            ->filter(fn (PneadmCourseSurveyLink $link) => $link->isAvailableNow())
+            ->map(function (PneadmCourseSurveyLink $link) {
+                $gateUrl = $link->gateAbsoluteUrl();
+                if ($gateUrl === null) {
+                    return null;
+                }
+
+                $title = trim((string) ($link->title ?? ''));
+
+                return [
+                    'title' => $title !== '' ? $title : 'Ankieta poszkoleniowa',
+                    'url' => $gateUrl,
+                ];
+            })
+            ->filter()
+            ->values();
+
         return view('dashboard.szkolenia-wideo', [
             'participant' => $participant,
             'course' => $course,
@@ -67,6 +90,7 @@ class DashboardController extends Controller
             'selectedVideo' => $selectedVideo,
             'fileLinks' => $courseEnded ? $course->fileLinks : collect(),
             'courseEnded' => $courseEnded,
+            'accessibleSurveyLinks' => $accessibleSurveyLinks,
         ]);
     }
 
@@ -78,13 +102,13 @@ class DashboardController extends Controller
             $courseId = (int) $participant->course_id;
 
             DB::connection('pneadm')->statement(
-                "INSERT INTO participant_training_page_views (participant_id, course_id, open_count, first_opened_at, last_opened_at, created_at, updated_at)
+                'INSERT INTO participant_training_page_views (participant_id, course_id, open_count, first_opened_at, last_opened_at, created_at, updated_at)
                  VALUES (?, ?, 1, ?, ?, ?, ?)
                  ON DUPLICATE KEY UPDATE
                     open_count = open_count + 1,
                     last_opened_at = VALUES(last_opened_at),
                     first_opened_at = COALESCE(first_opened_at, VALUES(first_opened_at)),
-                    updated_at = VALUES(updated_at)",
+                    updated_at = VALUES(updated_at)',
                 [$participantId, $courseId, $now, $now, $now, $now]
             );
         } catch (\Throwable $e) {
