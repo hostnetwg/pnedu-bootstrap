@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ContactController;
+use App\Http\Controllers\ExternalSurveyGateController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SeoController;
@@ -10,6 +11,12 @@ Route::get('/robots.txt', [SeoController::class, 'robots'])->name('seo.robots');
 Route::get('/sitemap.xml', [SeoController::class, 'sitemap'])->name('seo.sitemap');
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
+
+// Bramka ankiet (link dla uczestników bez ujawniania adresu panelu administratora).
+Route::get('/ankieta/{token}', [ExternalSurveyGateController::class, 'visit'])
+    ->middleware('throttle:120,1')
+    ->where('token', '[a-z0-9]+')
+    ->name('survey.gate.visit');
 
 Route::get('/rodo', function () {
     return view('rodo');
