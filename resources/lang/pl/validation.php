@@ -44,6 +44,8 @@ return [
     |--------------------------------------------------------------------------
     */
 
+    'current_password' => 'Podane aktualne hasło jest nieprawidłowe.',
+
     'custom' => [
         'email' => [
             'unique' => 'Ten adres e-mail jest już zarejestrowany. Możesz się zalogować lub skorzystać z „Nie pamiętasz hasła?”.',
@@ -68,6 +70,7 @@ return [
         'first_name' => 'imię',
         'last_name' => 'nazwisko',
         'email' => 'adres e-mail',
+        'current_password' => 'aktualne hasło',
         'password' => 'hasło',
         'password_confirmation' => 'potwierdzenie hasła',
         'rodo_consent' => 'zgoda RODO',
