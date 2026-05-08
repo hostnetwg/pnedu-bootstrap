@@ -17,17 +17,24 @@
                     <form method="POST" action="{{ route('login') }}">
                         @csrf
 
+                        @error('email')
+                            <div id="login-auth-error" class="alert alert-danger" role="alert">
+                                {{ $message }}
+                            </div>
+                        @enderror
+
                         <div class="row mb-3">
                             <label for="email" class="col-md-4 col-form-label text-md-end">{{ __('Email') }}</label>
 
                             <div class="col-md-6">
-                                <input id="email" type="email" class="form-control @error('email') is-invalid @enderror" name="email" value="{{ old('email') }}" required autocomplete="email" autofocus>
-
-                                @error('email')
-                                    <span class="invalid-feedback" role="alert">
-                                        <strong>{{ $message }}</strong>
-                                    </span>
-                                @enderror
+                                <input id="email" type="email"
+                                    class="form-control @error('email') is-invalid @enderror"
+                                    name="email"
+                                    value="{{ old('email') }}"
+                                    required
+                                    autocomplete="email"
+                                    autofocus
+                                    @error('email') aria-invalid="true" aria-describedby="login-auth-error" @enderror>
                             </div>
                         </div>
 
@@ -35,12 +42,28 @@
                             <label for="password" class="col-md-4 col-form-label text-md-end">{{ __('Password') }}</label>
 
                             <div class="col-md-6">
-                                <input id="password" type="password" class="form-control @error('password') is-invalid @enderror" name="password" required autocomplete="current-password">
+                                <div class="input-group">
+                                    <input id="password"
+                                        type="password"
+                                        class="form-control @error('password') is-invalid @enderror"
+                                        name="password"
+                                        required
+                                        autocomplete="current-password"
+                                        @error('password') aria-invalid="true" aria-describedby="password-error" @enderror>
 
+                                    <button type="button"
+                                        class="btn btn-outline-secondary"
+                                        id="login-toggle-password"
+                                        aria-label="Pokaż hasło"
+                                        title="Pokaż hasło"
+                                        aria-pressed="false">
+                                        <i class="bi bi-eye" id="login-toggle-password-icon" aria-hidden="true"></i>
+                                    </button>
+                                </div>
                                 @error('password')
-                                    <span class="invalid-feedback" role="alert">
-                                        <strong>{{ $message }}</strong>
-                                    </span>
+                                    <div id="password-error" class="invalid-feedback d-block" role="alert">
+                                        {{ $message }}
+                                    </div>
                                 @enderror
                             </div>
                         </div>
@@ -77,3 +100,25 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const pwd = document.getElementById('password');
+    const btn = document.getElementById('login-toggle-password');
+    const icon = document.getElementById('login-toggle-password-icon');
+    if (!pwd || !btn || !icon) {
+        return;
+    }
+    btn.addEventListener('click', function () {
+        const hidden = pwd.getAttribute('type') === 'password';
+        pwd.setAttribute('type', hidden ? 'text' : 'password');
+        icon.className = hidden ? 'bi bi-eye-slash' : 'bi bi-eye';
+        let label = hidden ? 'Ukryj hasło' : 'Pokaż hasło';
+        btn.setAttribute('aria-label', label);
+        btn.setAttribute('title', label);
+        btn.setAttribute('aria-pressed', hidden ? 'true' : 'false');
+    });
+});
+</script>
+@endpush

@@ -11,6 +11,17 @@
                     <form method="POST" action="{{ route('register') }}">
                         @csrf
 
+                        @if ($errors->any())
+                            <div class="alert alert-danger" role="alert">
+                                <p class="fw-semibold mb-2">Popraw następujące pola:</p>
+                                <ul class="mb-0 ps-3">
+                                    @foreach ($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
+
                         <div class="row mb-3">
                             <label for="first_name" class="col-md-4 col-form-label text-md-end">{{ __('Imię') }} <span class="text-danger">*</span></label>
 
@@ -57,12 +68,28 @@
                             <label for="password" class="col-md-4 col-form-label text-md-end">{{ __('Password') }} <span class="text-danger">*</span></label>
 
                             <div class="col-md-6">
-                                <input id="password" type="password" class="form-control @error('password') is-invalid @enderror" name="password" required autocomplete="new-password">
+                                <div class="input-group">
+                                    <input id="password"
+                                        type="password"
+                                        class="form-control @error('password') is-invalid @enderror"
+                                        name="password"
+                                        required
+                                        autocomplete="new-password"
+                                        @error('password') aria-invalid="true" aria-describedby="register-password-error" @enderror>
 
+                                    <button type="button"
+                                        class="btn btn-outline-secondary"
+                                        id="register-toggle-password"
+                                        aria-label="Pokaż hasło"
+                                        title="Pokaż hasło"
+                                        aria-pressed="false">
+                                        <i class="bi bi-eye" id="register-toggle-password-icon" aria-hidden="true"></i>
+                                    </button>
+                                </div>
                                 @error('password')
-                                    <span class="invalid-feedback" role="alert">
-                                        <strong>{{ $message }}</strong>
-                                    </span>
+                                    <div id="register-password-error" class="invalid-feedback d-block" role="alert">
+                                        {{ $message }}
+                                    </div>
                                 @enderror
                             </div>
                         </div>
@@ -71,7 +98,23 @@
                             <label for="password-confirm" class="col-md-4 col-form-label text-md-end">{{ __('Confirm Password') }} <span class="text-danger">*</span></label>
 
                             <div class="col-md-6">
-                                <input id="password-confirm" type="password" class="form-control" name="password_confirmation" required>
+                                <div class="input-group">
+                                    <input id="password-confirm"
+                                        type="password"
+                                        class="form-control"
+                                        name="password_confirmation"
+                                        required
+                                        autocomplete="new-password">
+
+                                    <button type="button"
+                                        class="btn btn-outline-secondary"
+                                        id="register-toggle-password-confirm"
+                                        aria-label="Pokaż potwierdzenie hasła"
+                                        title="Pokaż potwierdzenie hasła"
+                                        aria-pressed="false">
+                                        <i class="bi bi-eye" id="register-toggle-password-confirm-icon" aria-hidden="true"></i>
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
@@ -119,3 +162,42 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    function wirePasswordToggle(inputId, buttonId, iconId, labelShow, labelHide) {
+        const pwd = document.getElementById(inputId);
+        const btn = document.getElementById(buttonId);
+        const icon = document.getElementById(iconId);
+        if (!pwd || !btn || !icon) {
+            return;
+        }
+        btn.addEventListener('click', function () {
+            const hidden = pwd.getAttribute('type') === 'password';
+            pwd.setAttribute('type', hidden ? 'text' : 'password');
+            icon.className = hidden ? 'bi bi-eye-slash' : 'bi bi-eye';
+            const label = hidden ? labelHide : labelShow;
+            btn.setAttribute('aria-label', label);
+            btn.setAttribute('title', label);
+            btn.setAttribute('aria-pressed', hidden ? 'true' : 'false');
+        });
+    }
+
+    wirePasswordToggle(
+        'password',
+        'register-toggle-password',
+        'register-toggle-password-icon',
+        'Pokaż hasło',
+        'Ukryj hasło'
+    );
+    wirePasswordToggle(
+        'password-confirm',
+        'register-toggle-password-confirm',
+        'register-toggle-password-confirm-icon',
+        'Pokaż potwierdzenie hasła',
+        'Ukryj potwierdzenie hasła'
+    );
+});
+</script>
+@endpush

@@ -44,9 +44,6 @@ class RegisteredUserController extends Controller
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'rodo_consent' => ['required', 'accepted'],
             'newsletter_consent' => ['sometimes', 'boolean'],
-        ], [
-            'rodo_consent.required' => 'Musisz wyrazić zgodę na przetwarzanie danych osobowych.',
-            'rodo_consent.accepted' => 'Musisz wyrazić zgodę na przetwarzanie danych osobowych.',
         ]);
 
         $user = User::create([
