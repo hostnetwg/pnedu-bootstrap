@@ -1,6 +1,13 @@
 @extends('layouts.guest')
 
 @section('content')
+{{-- Przy błędzie logowania: e-mail na czerwono jak hasło, ale bez ikonki SVG z .is-invalid (czytelniej dla użytkownika). --}}
+<style>
+    .form-control.login-email-invalid-border-only.is-invalid {
+        background-image: none;
+        padding-right: 0.75rem;
+    }
+</style>
 <div class="container">
     <div class="row justify-content-center">
         <div class="col-md-8">
@@ -14,27 +21,50 @@
                         </div>
                     @endif
 
-                    <form method="POST" action="{{ route('login') }}">
+                    <form method="POST" action="{{ route('login') }}" novalidate>
                         @csrf
 
-                        @error('email')
-                            <div id="login-auth-error" class="alert alert-danger" role="alert">
+                        @error('credentials')
+                            <div id="login-credentials-error" class="alert alert-danger" role="alert">
                                 {{ $message }}
                             </div>
                         @enderror
+
+                        @error('throttle')
+                            <div id="login-throttle-error" class="alert alert-danger" role="alert">
+                                {{ $message }}
+                            </div>
+                        @enderror
+
+                        @php
+                            $loginCredentialsFailed = $errors->has('credentials');
+                            $loginEmailRuleFailed = $errors->has('email');
+                            $loginEmailHighlighted = $loginEmailRuleFailed || $loginCredentialsFailed;
+                            $loginEmailInvalidNoIcon = $loginCredentialsFailed && ! $loginEmailRuleFailed;
+                        @endphp
 
                         <div class="row mb-3">
                             <label for="email" class="col-md-4 col-form-label text-md-end">{{ __('Email') }}</label>
 
                             <div class="col-md-6">
                                 <input id="email" type="email"
-                                    class="form-control @error('email') is-invalid @enderror"
+                                    class="form-control @if($loginEmailHighlighted) is-invalid @endif @if($loginEmailInvalidNoIcon) login-email-invalid-border-only @endif"
                                     name="email"
                                     value="{{ old('email') }}"
                                     required
                                     autocomplete="email"
                                     autofocus
-                                    @error('email') aria-invalid="true" aria-describedby="login-auth-error" @enderror>
+                                    @if($loginEmailRuleFailed)
+                                        aria-invalid="true" aria-describedby="login-email-field-error"
+                                    @elseif($loginCredentialsFailed)
+                                        aria-invalid="true" aria-describedby="login-credentials-error"
+                                    @endif>
+
+                                @error('email')
+                                    <div id="login-email-field-error" class="invalid-feedback d-block" role="alert">
+                                        {{ $message }}
+                                    </div>
+                                @enderror
                             </div>
                         </div>
 
@@ -42,14 +72,18 @@
                             <label for="password" class="col-md-4 col-form-label text-md-end">{{ __('Password') }}</label>
 
                             <div class="col-md-6">
-                                <div class="input-group">
+                                <div class="input-group @if($errors->has('password') || $errors->has('credentials')) has-validation @endif">
                                     <input id="password"
                                         type="password"
-                                        class="form-control @error('password') is-invalid @enderror"
+                                        class="form-control @if($errors->has('password') || $errors->has('credentials')) is-invalid @endif"
                                         name="password"
                                         required
                                         autocomplete="current-password"
-                                        @error('password') aria-invalid="true" aria-describedby="password-error" @enderror>
+                                        @if($errors->has('credentials'))
+                                            aria-invalid="true" aria-describedby="login-credentials-error"
+                                        @elseif($errors->has('password'))
+                                            aria-invalid="true" aria-describedby="login-password-field-error"
+                                        @endif>
 
                                     <button type="button"
                                         class="btn btn-outline-secondary"
@@ -61,9 +95,11 @@
                                     </button>
                                 </div>
                                 @error('password')
-                                    <div id="password-error" class="invalid-feedback d-block" role="alert">
-                                        {{ $message }}
-                                    </div>
+                                    @unless($errors->has('credentials'))
+                                        <div id="login-password-field-error" class="invalid-feedback d-block" role="alert">
+                                            {{ $message }}
+                                        </div>
+                                    @endunless
                                 @enderror
                             </div>
                         </div>

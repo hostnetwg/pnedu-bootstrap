@@ -101,10 +101,13 @@
                                 <div class="input-group">
                                     <input id="password-confirm"
                                         type="password"
-                                        class="form-control"
+                                        class="form-control @if($errors->has('password')) is-invalid @endif"
                                         name="password_confirmation"
                                         required
-                                        autocomplete="new-password">
+                                        autocomplete="new-password"
+                                        @if($errors->has('password'))
+                                            aria-invalid="true" aria-describedby="register-password-error"
+                                        @endif>
 
                                     <button type="button"
                                         class="btn btn-outline-secondary"
