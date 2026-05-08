@@ -18,7 +18,7 @@
                         {{ __('Forgot your password? No problem. Just let us know your email address and we will email you a password reset link that will allow you to choose a new one.') }}                        
                     </div>
 
-                    <form method="POST" action="{{ route('password.email') }}">
+                    <form method="POST" action="{{ route('password.email') }}" novalidate>
                         @csrf
 
                         <div class="row mb-3">
