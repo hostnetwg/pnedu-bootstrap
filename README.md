@@ -236,6 +236,7 @@ sail test --coverage
 
 - **[DEVELOPMENT.md](./DEVELOPMENT.md)** - Comprehensive development guide
 - **[README-COURSES.md](./README-COURSES.md)** - Course-specific documentation
+- **[.ai/DOMAIN_MIGRATION_STRATEGY.md](./.ai/DOMAIN_MIGRATION_STRATEGY.md)** - Strategic migration context for cross-project AI sessions
 - **[.cursorrules](./.cursorrules)** - Cursor AI configuration
 
 ## 🔧 Troubleshooting
