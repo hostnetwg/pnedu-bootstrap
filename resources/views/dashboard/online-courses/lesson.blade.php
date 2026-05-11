@@ -94,19 +94,22 @@
                     @include('dashboard.online-courses.partials.lesson-adjacent-nav')
 
                     @foreach($lesson->embeds as $embed)
+                        <div class="online-lesson-embed-slot mb-4" data-oc-embed-index="{{ $loop->index }}">
                         @if(in_array($embed->platform, ['youtube', 'vimeo'], true))
-                            <div class="ratio ratio-16x9 rounded overflow-hidden bg-dark mb-4">
-                                <iframe src="{{ $embed->getEmbedUrl() }}"
+                            @php($embedSrc = $embed->getEmbedUrl(true, rtrim(request()->getSchemeAndHttpHost(), '/')))
+                            <div class="ratio ratio-16x9 rounded overflow-hidden bg-dark">
+                                <iframe src="{{ $embedSrc }}"
+                                        id="oc-lesson-embed-{{ $loop->index }}"
                                         title="{{ $embed->title ?: $lesson->title }}"
                                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                                         allowfullscreen
-                                        referrerpolicy="strict-origin-when-cross-origin"></iframe>
+                                        referrerpolicy="strict-origin-when-cross-origin"
+                                        data-oc-video-platform="{{ $embed->platform }}"></iframe>
                             </div>
                         @else
-                            <div class="mb-4">
-                                <a href="{{ $embed->video_url }}" class="btn btn-outline-secondary" target="_blank" rel="noopener noreferrer">{{ $embed->title ?: 'Otwórz materiał wideo / zewnętrzny odtwarzacz' }}</a>
-                            </div>
+                            <a href="{{ $embed->video_url }}" class="btn btn-outline-secondary" target="_blank" rel="noopener noreferrer">{{ $embed->title ?: 'Otwórz materiał wideo / zewnętrzny odtwarzacz' }}</a>
                         @endif
+                        </div>
                     @endforeach
 
                     @if($lesson->body_html)
@@ -200,6 +203,12 @@
         overflow-y: auto;
         font-size: 0.8125rem;
         text-align: start;
+    }
+    /* Spis treści wideo (legacy z NE.pl: ul.no-bullets) */
+    .online-lesson-body ul.no-bullets,
+    .card-body ul.no-bullets {
+        list-style-type: none;
+        padding-left: 0;
     }
 </style>
 @endpush
@@ -606,6 +615,180 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 });
+</script>
+@endpush
+
+@push('scripts')
+<script>
+(function () {
+    var card = document.querySelector('.online-lesson-embed-slot');
+    if (card) {
+        card = card.closest('.card-body');
+    }
+    if (!card) {
+        return;
+    }
+
+    var links = card.querySelectorAll('a[data-time]');
+    if (!links.length) {
+        return;
+    }
+
+    function iframeInSlot(ix) {
+        var slot = document.querySelector('.online-lesson-embed-slot[data-oc-embed-index="' + ix + '"]');
+        if (!slot) return null;
+        return slot.querySelector('iframe[data-oc-video-platform]');
+    }
+
+    function parseTimeToSeconds(raw) {
+        if (raw == null) return 0;
+        var str = String(raw).trim();
+        if (!str) return 0;
+        if (str.indexOf(':') === -1) {
+            var nf = parseFloat(str);
+            return isNaN(nf) ? 0 : nf;
+        }
+        var parts = str.split(':').map(function (p) { return parseInt(p, 10) || 0; });
+        if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+        if (parts.length === 2) return parts[0] * 60 + parts[1];
+        return parts[0] || 0;
+    }
+
+    var youtubeApiPromise = null;
+    function ensureYouTubeApi() {
+        if (window.YT && window.YT.Player) {
+            return Promise.resolve();
+        }
+        if (youtubeApiPromise) {
+            return youtubeApiPromise;
+        }
+        youtubeApiPromise = new Promise(function (resolve) {
+            var settled = false;
+            function done() {
+                if (settled || !window.YT || !window.YT.Player) {
+                    return;
+                }
+                settled = true;
+                resolve();
+            }
+            var prev = window.onYouTubeIframeAPIReady;
+            window.onYouTubeIframeAPIReady = function () {
+                if (typeof prev === 'function') {
+                    prev();
+                }
+                done();
+            };
+            if (!document.querySelector('script[src^="https://www.youtube.com/iframe_api"]')) {
+                var tag = document.createElement('script');
+                tag.src = 'https://www.youtube.com/iframe_api';
+                tag.async = true;
+                document.head.appendChild(tag);
+            }
+            var attempts = 0;
+            (function poll() {
+                if (window.YT && window.YT.Player) {
+                    done();
+                    return;
+                }
+                if (++attempts > 200) {
+                    if (window.YT && window.YT.Player) {
+                        done();
+                    }
+                    resolve();
+                    return;
+                }
+                setTimeout(poll, 50);
+            })();
+        });
+        return youtubeApiPromise;
+    }
+
+    var ytPlayerByIframeId = {};
+    function getYouTubePlayer(iframeId) {
+        if (ytPlayerByIframeId[iframeId]) {
+            return ytPlayerByIframeId[iframeId];
+        }
+        ytPlayerByIframeId[iframeId] = ensureYouTubeApi().then(function () {
+            if (!window.YT || !window.YT.Player) {
+                return Promise.reject(new Error('YT API'));
+            }
+            return new Promise(function (resolve, reject) {
+                try {
+                    /* global YT */
+                    new YT.Player(iframeId, {
+                        events: {
+                            onReady: function (e) { resolve(e.target); },
+                        },
+                    });
+                } catch (err) {
+                    reject(err);
+                }
+            });
+        }).catch(function (err) {
+            delete ytPlayerByIframeId[iframeId];
+            return Promise.reject(err);
+        });
+        return ytPlayerByIframeId[iframeId];
+    }
+
+    var vimeoApiPromise = null;
+    function ensureVimeoApi() {
+        if (window.Vimeo && window.Vimeo.Player) return Promise.resolve();
+        if (vimeoApiPromise) return vimeoApiPromise;
+        vimeoApiPromise = new Promise(function (resolve, reject) {
+            var s = document.createElement('script');
+            s.src = 'https://player.vimeo.com/api/player.js';
+            s.async = true;
+            s.onload = function () { resolve(); };
+            s.onerror = function () { reject(new Error('vimeo player.js')); };
+            document.head.appendChild(s);
+        }).catch(function (err) {
+            vimeoApiPromise = null;
+            return Promise.reject(err);
+        });
+        return vimeoApiPromise;
+    }
+
+    var vimeoPlayerByIframe = new WeakMap();
+    function getVimeoPlayer(iframeEl) {
+        if (vimeoPlayerByIframe.has(iframeEl)) return vimeoPlayerByIframe.get(iframeEl);
+        var p = ensureVimeoApi().then(function () {
+            /* global Vimeo */
+            return new Vimeo.Player(iframeEl);
+        });
+        vimeoPlayerByIframe.set(iframeEl, p);
+        return p;
+    }
+
+    function seekByPlatform(iframe, seconds) {
+        var platform = iframe.getAttribute('data-oc-video-platform') || '';
+        if (platform === 'youtube') {
+            return getYouTubePlayer(iframe.id).then(function (player) {
+                player.seekTo(seconds, true);
+                player.playVideo();
+            });
+        }
+        if (platform === 'vimeo') {
+            return getVimeoPlayer(iframe).then(function (player) {
+                return player.setCurrentTime(seconds).then(function () {
+                    try { player.play(); } catch (ignore) {}
+                });
+            }).catch(function () {});
+        }
+        return Promise.resolve();
+    }
+
+    links.forEach(function (a) {
+        a.addEventListener('click', function (e) {
+            var ix = parseInt(a.getAttribute('data-embed-index') || '0', 10);
+            var iframe = iframeInSlot(ix);
+            if (!iframe || !iframe.id || !iframe.getAttribute('data-oc-video-platform')) return;
+            e.preventDefault();
+            var t = parseTimeToSeconds(a.getAttribute('data-time'));
+            seekByPlatform(iframe, t).catch(function () {});
+        });
+    });
+})();
 </script>
 @endpush
 
