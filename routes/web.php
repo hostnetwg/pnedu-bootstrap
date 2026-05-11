@@ -102,6 +102,22 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard/zaswiadczenia/{course}', [App\Http\Controllers\CertificateController::class, 'dashboardCertificateShow'])
         ->whereNumber('course')
         ->name('dashboard.zaswiadczenia.course');
+
+    Route::get('/dashboard/kursy-online', [App\Http\Controllers\DashboardOnlineCoursesController::class, 'index'])
+        ->name('dashboard.online-courses.index');
+    Route::get('/dashboard/kursy-online/{enrollment}', [App\Http\Controllers\DashboardOnlineCoursesController::class, 'show'])
+        ->name('dashboard.online-courses.show');
+    Route::get('/dashboard/kursy-online/{enrollment}/lekcje/{lesson}', [App\Http\Controllers\DashboardOnlineCoursesController::class, 'lesson'])
+        ->whereNumber('lesson')
+        ->name('dashboard.online-courses.lesson');
+    Route::post('/dashboard/kursy-online/{enrollment}/lekcje/{lesson}/ukonczenie', [App\Http\Controllers\DashboardOnlineCoursesController::class, 'toggleLessonCompletion'])
+        ->whereNumber('lesson')
+        ->middleware('throttle:120,1')
+        ->name('dashboard.online-courses.lesson-completion.toggle');
+    Route::post('/dashboard/kursy-online/{enrollment}/lekcje/{lesson}/notatka', [App\Http\Controllers\DashboardOnlineCoursesController::class, 'saveLessonNote'])
+        ->whereNumber('lesson')
+        ->middleware('throttle:60,1')
+        ->name('dashboard.online-courses.lesson-note.save');
 });
 
 Route::middleware('auth')->group(function () {
