@@ -634,6 +634,27 @@ document.addEventListener('DOMContentLoaded', function () {
         return;
     }
 
+    /* YouTube JS API wymaga, żeby ?origin= było IDENTYCZNE z origin strony — na prod PHP często myli host (www, proxy).
+       Nadpisanie przy starcie rozwiązuje seek/spis treści bez zmian konfiguracji serwera. */
+    function syncYouTubeIframeParamsForJsApi() {
+        var pageOrigin = window.location && window.location.origin ? window.location.origin : '';
+        if (!pageOrigin) return;
+        card.querySelectorAll('iframe[data-oc-video-platform="youtube"]').forEach(function (ifr) {
+            try {
+                var raw = ifr.getAttribute('src');
+                if (!raw) return;
+                var u = new URL(raw, window.location.href);
+                u.searchParams.set('enablejsapi', '1');
+                u.searchParams.set('origin', pageOrigin);
+                var next = u.toString();
+                if (ifr.src !== next) {
+                    ifr.src = next;
+                }
+            } catch (ignore) {}
+        });
+    }
+    syncYouTubeIframeParamsForJsApi();
+
     function iframeInSlot(ix) {
         var slot = document.querySelector('.online-lesson-embed-slot[data-oc-embed-index="' + ix + '"]');
         if (!slot) return null;
