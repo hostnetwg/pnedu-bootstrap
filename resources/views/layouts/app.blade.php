@@ -96,6 +96,13 @@
     @stack('styles')
 </head>
 <body class="d-flex flex-column min-vh-100">
+    @production
+        <!-- Google Tag Manager (noscript) -->
+        <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-5ZQ4MM74"
+            height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+        <!-- End Google Tag Manager (noscript) -->
+    @endproduction
+
     @include('layouts.navigation')
 
     @yield('banner')
