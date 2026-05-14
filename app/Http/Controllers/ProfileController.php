@@ -3,12 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
-use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class ProfileController extends Controller
@@ -61,19 +59,5 @@ class ProfileController extends Controller
         $request->session()->regenerateToken();
 
         return Redirect::to('/');
-    }
-
-    /**
-     * Wygeneruj nowe hasło dla zalogowanego użytkownika (treść wiadomości z danymi dostępowymi).
-     */
-    public function generateAccessEmailPassword(Request $request): JsonResponse
-    {
-        $plain = Str::password(20);
-
-        $request->user()->forceFill([
-            'password' => $plain,
-        ])->save();
-
-        return response()->json(['password' => $plain]);
     }
 }
