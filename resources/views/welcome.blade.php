@@ -79,12 +79,19 @@
                         <img src="{{ asset('logo-pne.png') }}" alt="Platforma Nowoczesnej Edukacji" style="max-width: 210px; height: auto;">
                     </div>
                     <div class="text-center">
-                        <h2 class="h4 mb-3 text-primary">Dziękujemy za udział w szkoleniu.</h2>
-                        <p class="mb-3 mt-2 small">
-                            Postaramy się jak najszybciej przygotować Twoje zaświadczenie. Jeżeli nie otrzymasz go w ciągu
-                            <strong>3–4 dni</strong>, napisz do nas na adres:
-                            <a href="mailto:kontakt@nowoczesna-edukacja.pl">kontakt@nowoczesna-edukacja.pl</a>.
-                        </p>
+                        @if(session('certificate_registration_updated'))
+                            <h2 class="h4 mb-3 text-primary">Zaktualizowaliśmy Twoje dane.</h2>
+                            <p class="mb-3 mt-2 small">
+                                Zapis na liście uczestników tego szkolenia pozostał ten sam (ten sam adres e-mail) — uzupełniliśmy dane zgodnie z przesłanym formularzem.
+                            </p>
+                        @else
+                            <h2 class="h4 mb-3 text-primary">Dziękujemy za udział w szkoleniu.</h2>
+                            <p class="mb-3 mt-2 small">
+                                Postaramy się jak najszybciej przygotować Twoje zaświadczenie. Jeżeli nie otrzymasz go w ciągu
+                                <strong>3–4 dni</strong>, napisz do nas na adres:
+                                <a href="mailto:kontakt@nowoczesna-edukacja.pl">kontakt@nowoczesna-edukacja.pl</a>.
+                            </p>
+                        @endif
                         <p class="mb-3 fw-semibold text-muted">Miłego dnia :)</p>
                         <hr class="my-3">
                         <p class="mb-0" style="color:#0d47a1; font-size: 0.95rem;">

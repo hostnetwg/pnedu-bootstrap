@@ -241,11 +241,10 @@ class CertificateRegistrationController extends Controller
                     }
                 }
 
-                return redirect()->route('home')->with('certificate_registration_success', true);
-            }
-
-            if ($response->status() === 422 && ! empty($data['already_registered'])) {
-                return redirect()->route('home')->with('info', $data['message'] ?? 'Jesteś już zarejestrowany dla tego szkolenia.');
+                return redirect()->route('home')->with([
+                    'certificate_registration_success' => true,
+                    'certificate_registration_updated' => ! empty($data['updated']),
+                ]);
             }
 
             if ($response->status() === 422 && ! empty($data['errors']) && is_array($data['errors'])) {
