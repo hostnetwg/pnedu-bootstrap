@@ -19,6 +19,7 @@ class ProfileTest extends TestCase
             ->get('/profile');
 
         $response->assertOk();
+        $response->assertSee('Wyślij e-mail z danymi dostępowymi', false);
     }
 
     public function test_profile_information_can_be_updated(): void
@@ -116,5 +117,30 @@ class ProfileTest extends TestCase
             ->assertRedirect('/profile');
 
         $this->assertNotNull($user->fresh());
+    }
+
+    public function test_access_email_password_endpoint_requires_authentication(): void
+    {
+        $this->postJson('/profile/access-email/password')
+            ->assertUnauthorized();
+    }
+
+    public function test_access_email_password_endpoint_generates_and_saves_password(): void
+    {
+        $user = User::factory()->create([
+            'password' => 'old-password-plain',
+        ]);
+
+        $response = $this
+            ->actingAs($user)
+            ->postJson('/profile/access-email/password');
+
+        $response->assertOk()
+            ->assertJsonStructure(['password']);
+
+        $plain = $response->json('password');
+        $this->assertNotEmpty($plain);
+        $this->assertTrue(\Illuminate\Support\Facades\Hash::check($plain, $user->fresh()->password));
+        $this->assertFalse(\Illuminate\Support\Facades\Hash::check('old-password-plain', $user->fresh()->password));
     }
 }

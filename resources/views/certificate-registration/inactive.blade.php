@@ -12,6 +12,9 @@
                     @if(!empty($courseTitle))
                         <p class="fs-5 fw-semibold text-dark text-center {{ !empty($instructorName) ? 'mb-2' : 'mb-4' }}">„{{ $courseTitle }}”</p>
                     @endif
+                    @if(!empty($courseStartDisplay))
+                        <p class="text-center text-muted small {{ !empty($instructorName) ? 'mb-2' : 'mb-3' }}">Data rozpoczęcia: <span class="text-body">{{ $courseStartDisplay }}</span></p>
+                    @endif
                     @if(!empty($instructorName))
                         <p class="text-muted mb-4 d-flex align-items-center justify-content-center">
                             @if(!empty($instructorPhoto))

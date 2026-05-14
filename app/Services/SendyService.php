@@ -10,6 +10,7 @@ class SendyService
 {
     public const LIST_TIK_NAUCZYCIEL = 'BkxVCp9892qphCpbeP892xmhdQ';
 
+    /** Lista „NAUCZYCIELE” (zgoda marketingowa m.in. z rejestracji zaświadczenia). */
     public const LIST_NAUCZYCIELE = 'K0w2hUq5uwwrkvtlgGyl4Q';
 
     public function __construct(
@@ -206,6 +207,88 @@ class SendyService
             ]);
 
             return false;
+        }
+    }
+
+    /**
+     * Zgoda marketingowa przy rejestracji zaświadczenia: zapis wyłącznie na listę NAUCZYCIELE
+     * ({@see self::LIST_NAUCZYCIELE}) — bez żadnej innej listy Sendy.
+     *
+     * Sendy API „Subscribe”: dodaje subskrybenta lub aktualizuje istniejącego (sendy.co/api).
+     * Jeśli adres był na tej liście ze statusem „Unsubscribed”, typowy efekt ponownego wywołania
+     * subscribe (np. z {@see silent}=true) to przywrócenie aktywnej subskrypcji na tej liście —
+     * zweryfikuj na swojej instalacji (6.x / 7.x). Przy globalnym wypisie „ze wszystkich list”
+     * Sendy może blokować automatyczny ponowny zapis; wtedy ustawienia listy / marki decydują
+     * (forum Sendy, opcja „Only this list” vs „All lists”).
+     */
+    public function subscribeCertificateRegistrationNewsletter(string $email, string $firstName, string $lastName): bool
+    {
+        $firstName = trim($firstName);
+        $lastName = trim($lastName);
+
+        $options = [
+            'gdpr' => 'true',
+            'silent' => 'true',
+        ];
+        if ($firstName !== '') {
+            $options['name'] = $firstName;
+            $options['Name'] = $firstName;
+        }
+        if ($lastName !== '') {
+            $options['Sername'] = $lastName;
+        }
+
+        return $this->subscribe($email, self::LIST_NAUCZYCIELE, $options);
+    }
+
+    /**
+     * Status adresu na liście: Subscribed, Unsubscribed, Unconfirmed, Bounced, Soft bounced, Complained;
+     * null gdy błąd API lub „Email does not exist in list”.
+     */
+    public function getSubscriptionStatus(string $email, string $listId): ?string
+    {
+        $email = trim($email);
+        $listId = trim($listId);
+        if ($email === '' || $listId === '' || ! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return null;
+        }
+
+        try {
+            $response = Http::asForm()
+                ->timeout($this->timeout)
+                ->post($this->baseUrl.'/api/subscribers/subscription-status.php', [
+                    'api_key' => $this->apiKey,
+                    'email' => $email,
+                    'list_id' => $listId,
+                ]);
+
+            $body = trim(preg_replace('/^\xEF\xBB\xBF/', '', $response->body()));
+
+            if (! $response->successful()) {
+                return null;
+            }
+
+            $lower = strtolower($body);
+            if (str_contains($lower, 'does not exist') || str_contains($lower, 'invalid') || str_contains($lower, 'not passed')) {
+                return null;
+            }
+
+            $known = ['Subscribed', 'Unsubscribed', 'Unconfirmed', 'Bounced', 'Soft bounced', 'Complained'];
+            foreach ($known as $label) {
+                if (strcasecmp($body, $label) === 0) {
+                    return $label;
+                }
+            }
+
+            return $body !== '' ? $body : null;
+        } catch (\Throwable $e) {
+            Log::warning('Sendy getSubscriptionStatus exception', [
+                'email' => $email,
+                'list_id' => $listId,
+                'message' => $e->getMessage(),
+            ]);
+
+            return null;
         }
     }
 

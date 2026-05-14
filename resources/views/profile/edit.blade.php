@@ -5,6 +5,7 @@
     <div class="row justify-content-center">
         <div class="col-md-8">
             <h2 class="mb-3">{{ __('Edytuj profil') }}</h2>
+            @include('profile.partials.access-credentials-email-modal')
             <div class="mb-4">
                 @include('profile.partials.update-profile-information-form')
             </div>

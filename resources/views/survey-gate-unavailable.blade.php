@@ -24,10 +24,10 @@
     @if(empty($active))
         <p>Organizator wyłączył tę ankietę dla tego szkolenia.</p>
     @elseif($opensAt && now()->lt($opensAt))
-        <p>Okno ankietowy jeszcze się nie rozpoczęło.</p>
+        <p>Okno ankietowe jeszcze się nie rozpoczęło.</p>
         <p class="muted">Udostępnienie planowane od: <strong>{{ $opensAt->timezone(config('app.timezone'))->format('d.m.Y H:i') }}</strong></p>
         @if($closesAt)
-            <p class="muted">planowane do: <strong>{{ $closesAt->timezone(config('app.timezone'))->format('d.m.Y H:i') }}</strong></p>
+            <p class="muted">Planowane do: <strong>{{ $closesAt->timezone(config('app.timezone'))->format('d.m.Y H:i') }}</strong></p>
         @endif
     @elseif($closesAt && now()->gt($closesAt))
         <p>Zapisy do ankiety zostały już zamknięte.</p>
