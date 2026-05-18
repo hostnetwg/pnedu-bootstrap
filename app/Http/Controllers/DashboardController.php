@@ -6,6 +6,7 @@ use App\Models\Participant;
 use App\Models\PneadmCourseSurveyLink;
 use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -23,12 +24,10 @@ class DashboardController extends Controller
     /**
      * Wyświetl widok z osadzonym wideo szkolenia
      */
-    public function szkoleniaWideo(Participant $participant)
+    public function szkoleniaWideo(Request $request, Participant $participant)
     {
-        $userEmail = Auth::user()->email;
-
-        if (strtolower(trim($participant->email)) !== strtolower(trim($userEmail))) {
-            abort(403, 'Brak dostępu do tego nagrania.');
+        if ($redirect = $this->redirectToLoginWhenTrainingEmailMismatch($request, $participant)) {
+            return $redirect;
         }
 
         $participant->load(['course.instructor', 'course.videos', 'course.fileLinks']);
@@ -92,6 +91,38 @@ class DashboardController extends Controller
             'courseEnded' => $courseEnded,
             'accessibleSurveyLinks' => $accessibleSurveyLinks,
         ]);
+    }
+
+    /**
+     * Link z e-maila dotyczy konkretnego uczestnika (adres e-mail). Inne konto → wyloguj i logowanie.
+     */
+    private function redirectToLoginWhenTrainingEmailMismatch(Request $request, Participant $participant): ?RedirectResponse
+    {
+        $user = Auth::user();
+        if (! $user) {
+            return null;
+        }
+
+        $userNorm = strtolower(trim((string) $user->email));
+        $participantNorm = strtolower(trim((string) ($participant->email ?? '')));
+
+        if ($participantNorm === '' || $userNorm === $participantNorm) {
+            return null;
+        }
+
+        $intended = route('dashboard.szkolenia.wideo', $participant);
+        $query = $request->query();
+        if ($query !== []) {
+            $intended .= '?'.http_build_query($query);
+        }
+
+        Auth::guard('web')->logout();
+
+        $request->session()->put('url.intended', $intended);
+        $request->session()->flash('training_access_relogin', true);
+        $request->session()->flash('login_email_hint', $participant->email);
+
+        return redirect()->route('login');
     }
 
     private function markTrainingPageOpened(Participant $participant): void

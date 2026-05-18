@@ -44,7 +44,7 @@ class PneadmCourseSurveyLink extends Model
             return false;
         }
 
-        if ($this->closes_at && $now->gt($this->closes_at)) {
+        if ($this->closes_at && $now->gte($this->closes_at)) {
             return false;
         }
 

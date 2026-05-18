@@ -15,6 +15,19 @@
                 <div class="card-header">{{ __('Login') }}</div>
 
                 <div class="card-body">
+                    @if (session('training_access_relogin'))
+                        <div class="alert alert-warning" role="alert">
+                            <strong>Ten link dotyczy innego konta.</strong>
+                            Zostałeś/aś wylogowany/a, bo link do szkolenia z e-maila jest przypisany do innego adresu niż obecnie zalogowane konto.
+                            @if (session('login_email_hint'))
+                                Zaloguj się na adres <strong>{{ session('login_email_hint') }}</strong>
+                                (ten sam, na który przyszła wiadomość o dostępie do materiałów).
+                            @else
+                                Zaloguj się na konto powiązane z adresem, na który wysłaliśmy e-mail o szkoleniu.
+                            @endif
+                        </div>
+                    @endif
+
                     @if (session('status'))
                         <div class="alert alert-success" role="alert">
                             {{ session('status') }}
@@ -50,7 +63,7 @@
                                 <input id="email" type="email"
                                     class="form-control @if($loginEmailHighlighted) is-invalid @endif @if($loginEmailInvalidNoIcon) login-email-invalid-border-only @endif"
                                     name="email"
-                                    value="{{ old('email') }}"
+                                    value="{{ old('email', session('login_email_hint')) }}"
                                     required
                                     autocomplete="email"
                                     autofocus
