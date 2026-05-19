@@ -24,6 +24,15 @@ class LoginRequest extends FormRequest
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
+    protected function prepareForValidation(): void
+    {
+        if ($this->filled('email')) {
+            $this->merge([
+                'email' => strtolower(trim((string) $this->input('email'))),
+            ]);
+        }
+    }
+
     public function rules(): array
     {
         return [
