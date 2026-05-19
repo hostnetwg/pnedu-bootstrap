@@ -8,8 +8,9 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * MySQL: UNIQUE(email, deleted_at) nie blokuje wielu aktywnych kont (deleted_at = NULL).
-     * Kolumna generowana: aktywne konto → slot = email; soft-deleted → email#timestamp.
+     * MySQL/MariaDB: UNIQUE(email, deleted_at) nie blokuje wielu aktywnych kont (deleted_at = NULL).
+     * Kolumna email_unique_slot (bez GENERATED — kompatybilność z produkcją):
+     * aktywne → email; soft-deleted → email#deleted_at
      */
     public function up(): void
     {
@@ -23,11 +24,13 @@ return new class extends Migration
 
         if (! Schema::hasColumn('users', 'email_unique_slot')) {
             Schema::table('users', function (Blueprint $table) {
-                $table->string('email_unique_slot', 320)
-                    ->storedAs("IF(deleted_at IS NULL, email, CONCAT(email, '#', DATE_FORMAT(deleted_at, '%Y%m%d%H%i%s')))")
-                    ->after('email');
+                $table->string('email_unique_slot', 320)->nullable()->after('email');
             });
         }
+
+        $this->backfillEmailUniqueSlots();
+
+        DB::statement('ALTER TABLE users MODIFY email_unique_slot VARCHAR(320) NOT NULL');
 
         if (! $this->indexExists('users_email_unique_slot_unique')) {
             Schema::table('users', function (Blueprint $table) {
@@ -67,6 +70,17 @@ return new class extends Migration
                 $table->unique(['email', 'deleted_at'], 'users_email_deleted_at_unique');
             });
         }
+    }
+
+    private function backfillEmailUniqueSlots(): void
+    {
+        DB::table('users')
+            ->whereNull('deleted_at')
+            ->update(['email_unique_slot' => DB::raw('LOWER(TRIM(email))')]);
+
+        DB::table('users')
+            ->whereNotNull('deleted_at')
+            ->update(['email_unique_slot' => DB::raw("CONCAT(LOWER(TRIM(email)), '#', deleted_at)")]);
     }
 
     private function deduplicateActiveUsers(): void
