@@ -41,9 +41,10 @@
         if (typeof window.gtag === 'function') {
             window.gtag('consent', 'update', { analytics_storage: value });
         }
-        if (typeof window.fbq === 'function') {
-            window.fbq('consent', value === 'granted' ? 'grant' : 'revoke');
-        }
+        // TYMCZASOWO wyłączone (test Meta Pixel) — odkomentuj razem z @include facebook-pixel w layoutach:
+        // if (typeof window.fbq === 'function') {
+        //     window.fbq('consent', value === 'granted' ? 'grant' : 'revoke');
+        // }
     }
 
     var consent = null;

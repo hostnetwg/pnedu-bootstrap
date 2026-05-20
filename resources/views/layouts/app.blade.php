@@ -9,7 +9,9 @@
 
     @include('layouts.google-tag-manager-head')
 
+    {{-- TYMCZASOWO wyłączone (test) — odkomentuj, aby przywrócić Meta Pixel:
     @include('layouts.facebook-pixel')
+    --}}
 
     @if(config('seo.block_search_indexing'))
         <meta name="robots" content="noindex, nofollow">
