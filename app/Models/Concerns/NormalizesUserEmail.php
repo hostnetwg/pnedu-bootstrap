@@ -35,7 +35,7 @@ trait NormalizesUserEmail
 
     protected static function bootNormalizesUserEmail(): void
     {
-        static::saving(function (self $model): void {
+        $sync = function (self $model): void {
             if ($model->isDirty('email')) {
                 $model->email = static::normalizeEmail($model->email);
             }
@@ -44,7 +44,10 @@ trait NormalizesUserEmail
                 $model->email,
                 $model->deleted_at
             );
-        });
+        };
+
+        static::saving($sync);
+        static::creating($sync);
 
         static::restored(function (self $model): void {
             $model->email_unique_slot = static::buildEmailUniqueSlot($model->email, null);
