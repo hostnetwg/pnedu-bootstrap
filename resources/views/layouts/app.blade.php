@@ -7,39 +7,7 @@
     <meta name="theme-color" content="#0d6efd">
     <title>@yield('title', 'Platforma Nowoczesnej Edukacji')</title>
 
-    @production
-        @php
-            $gaId = config('services.google_analytics.id');
-        @endphp
-        @if(!empty($gaId))
-            <!-- Google tag (gtag.js) -->
-            <script async src="https://www.googletagmanager.com/gtag/js?id={{ $gaId }}"></script>
-            <script>
-                window.dataLayer = window.dataLayer || [];
-                function gtag(){dataLayer.push(arguments);}
-                gtag('js', new Date());
-
-                // Consent Mode v2 (advanced): default deny, update after user choice
-                gtag('consent', 'default', {
-                    analytics_storage: 'denied',
-                    functionality_storage: 'granted',
-                    security_storage: 'granted',
-                    wait_for_update: 500
-                });
-
-                (function () {
-                    try {
-                        var consent = localStorage.getItem('cookie_consent');
-                        if (consent === 'accepted') {
-                            gtag('consent', 'update', { analytics_storage: 'granted' });
-                        }
-                    } catch (e) {}
-                })();
-
-                gtag('config', @json($gaId), { anonymize_ip: true });
-            </script>
-        @endif
-    @endproduction
+    @include('layouts.google-tag-manager-head')
 
     @include('layouts.facebook-pixel')
 
@@ -96,12 +64,7 @@
     @stack('styles')
 </head>
 <body class="d-flex flex-column min-vh-100">
-    @production
-        <!-- Google Tag Manager (noscript) -->
-        <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-5ZQ4MM74"
-            height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-        <!-- End Google Tag Manager (noscript) -->
-    @endproduction
+    @include('layouts.google-tag-manager-body')
 
     @include('layouts.navigation')
 

@@ -85,8 +85,8 @@ return [
         'timeout' => (int) env('SENDY_HTTP_TIMEOUT', 15),
     ],
 
-    'google_analytics' => [
-        'id' => env('GOOGLE_ANALYTICS_ID', 'G-5WJ5EP1W9N'),
+    'google_tag_manager' => [
+        'id' => env('GOOGLE_TAG_MANAGER_ID', 'GTM-5ZQ4MM74'),
     ],
 
     'facebook_pixel' => [

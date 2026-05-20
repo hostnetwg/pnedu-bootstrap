@@ -1,6 +1,6 @@
 {{-- 
     resources/views/layouts/cookie-consent.blade.php – baner zgody na używanie plików cookies
-    Google Consent Mode v2 (advanced): gtag ładuje się w produkcji z domyślną odmową,
+    Google Consent Mode v2 (advanced): GTM ładuje się w produkcji z domyślną odmową,
     a poniższy baner aktualizuje zgodę po wyborze użytkownika.
 --}}
 
