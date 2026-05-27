@@ -101,6 +101,7 @@ class CertificateRegistrationController extends Controller
 
         $courseTitle = $data['course_title'] ?? null;
         $courseStartDisplay = $data['course_start_display'] ?? null;
+        $registrationEndsDisplay = $data['certificate_registration_ends_at_display'] ?? null;
         $instructorName = $data['instructor_name'] ?? null;
         $instructorPhoto = $data['instructor_photo'] ?? null;
 
@@ -109,6 +110,7 @@ class CertificateRegistrationController extends Controller
                 'message' => $data['message'] ?? 'Link jest nieprawidłowy lub rejestracja nie jest aktywna.',
                 'courseTitle' => $courseTitle,
                 'courseStartDisplay' => $courseStartDisplay,
+                'registrationEndsDisplay' => $registrationEndsDisplay,
                 'instructorName' => $instructorName,
                 'instructorPhoto' => $instructorPhoto,
             ]);
@@ -119,6 +121,7 @@ class CertificateRegistrationController extends Controller
                 'message' => $data['message'] ?? 'Rejestracja nie jest aktywna.',
                 'courseTitle' => $courseTitle,
                 'courseStartDisplay' => $courseStartDisplay,
+                'registrationEndsDisplay' => $registrationEndsDisplay,
                 'instructorName' => $instructorName,
                 'instructorPhoto' => $instructorPhoto,
             ]);
@@ -128,6 +131,7 @@ class CertificateRegistrationController extends Controller
             'token' => $token,
             'courseTitle' => $courseTitle ?? 'Szkolenie',
             'courseStartDisplay' => $courseStartDisplay,
+            'registrationEndsDisplay' => $registrationEndsDisplay,
             'instructorName' => $instructorName,
             'instructorPhoto' => $instructorPhoto,
             'collectBirthData' => ! empty($data['certificate_registration_collect_birth_data']),

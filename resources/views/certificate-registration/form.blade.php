@@ -13,7 +13,12 @@
                         „{{ $courseTitle }}”
                     </p>
                     @if(!empty($courseStartDisplay))
-                        <p class="text-center text-muted small {{ !empty($instructorName) ? 'mb-2' : 'mb-3' }}">Data rozpoczęcia: <span class="text-body">{{ $courseStartDisplay }}</span></p>
+                        <p class="text-center text-muted small fw-bold {{ !empty($instructorName) ? 'mb-1' : 'mb-2' }}">Data szkolenia: <span class="text-body">{{ $courseStartDisplay }}</span></p>
+                    @endif
+                    @if(!empty($registrationEndsDisplay))
+                        <p class="text-center text-danger {{ !empty($instructorName) ? 'mb-2' : 'mb-3' }}" style="font-size:0.72rem;">
+                            Formularz dostępny do: {{ $registrationEndsDisplay }}
+                        </p>
                     @endif
                     @if(!empty($instructorName))
                         <p class="text-muted mb-4 d-flex align-items-center">
