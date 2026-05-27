@@ -102,7 +102,9 @@
                                 <p class="small text-muted mb-0">Zaświadczenie zostanie udostępnione po zakończeniu szkolenia.</p>
                             @elseif($certCanDownload)
                                 <a href="{{ $zaswiadczenieUrl }}"
-                                   class="btn btn-outline-primary btn-sm d-inline-flex align-items-center gap-2">
+                                   class="btn btn-outline-primary btn-sm d-inline-flex align-items-center gap-2"
+                                   target="_blank"
+                                   rel="noopener noreferrer">
                                     <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i>
                                     Przejdź do zaświadczenia
                                 </a>

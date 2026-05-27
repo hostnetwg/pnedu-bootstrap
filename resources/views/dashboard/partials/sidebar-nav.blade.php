@@ -20,3 +20,16 @@
         </a>
     </li>
 </ul>
+
+<div class="dashboard-sidebar-offer-cta">
+    <a href="{{ route('courses.individual') }}"
+       class="dashboard-sidebar-offer-cta__link"
+       @if(request()->routeIs('courses.individual')) aria-current="page" @endif>
+        <span class="dashboard-sidebar-offer-cta__badge">Aktualna oferta</span>
+        <span class="dashboard-sidebar-offer-cta__title">
+            <i class="bi bi-calendar2-week" aria-hidden="true"></i>
+            Nasza oferta szkoleń
+        </span>
+        <span class="dashboard-sidebar-offer-cta__hint">Zobacz terminy i zapisz się na kolejne szkolenia</span>
+    </a>
+</div>
