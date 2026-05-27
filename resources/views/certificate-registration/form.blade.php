@@ -8,7 +8,10 @@
         <div class="col-lg-7">
             <div class="card border-0 shadow-sm rounded-3" style="background-color:#f3f4f6;">
                 <div class="card-body p-4">
-                    <h1 class="h4 mb-2 text-center text-uppercase text-primary">Rejestracja zaświadczenia</h1>
+                    <h1 class="h4 mb-2 text-center text-uppercase text-primary">
+                        <div>LISTA OBECNOŚCI</div>
+                        <div>REJESTRACJA ZAŚWIADCZENIA</div>
+                    </h1>
                     <p class="fs-5 fw-semibold text-dark text-center {{ !empty($instructorName) ? 'mb-2' : 'mb-4' }}">
                         „{{ $courseTitle }}”
                     </p>
