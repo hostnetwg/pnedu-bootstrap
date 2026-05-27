@@ -245,6 +245,12 @@
         font-weight: 500;
         margin-top: 0.3rem;
     }
+    .course-title-section .course-ended-access-notice {
+        font-size: 0.9rem;
+        font-weight: 400;
+        margin-top: 0.75rem;
+        margin-bottom: 0;
+    }
     .organizer-section {
         background: #fff;
         border-radius: 12px;
@@ -281,7 +287,21 @@
             <div class="course-title-section text-center">
                 <div class="course-topic-label">TEMAT SZKOLENIA</div>
                 <div class="course-title"><a href="{{ route('courses.show', $course->id) }}">{!! $course->title !!}</a></div>
-                <div class="course-date">Data: {{ \Carbon\Carbon::parse($course->start_date)->format('d.m.Y H:i') }}</div>
+                @php
+                    $courseEnded = $course->end_date
+                        && \Carbon\Carbon::parse($course->end_date)->timezone(config('app.timezone'))->isPast();
+                    $courseStartFormatted = \Carbon\Carbon::parse($course->start_date)->format('d.m.Y H:i');
+                @endphp
+                @if($courseEnded)
+                    <p class="course-ended-access-notice text-danger mb-0">2 miesięczny dostęp do nagrania oraz materiałów</p>
+                @endif
+                <div class="course-date">
+                    @if($courseEnded)
+                        Szkolenie online odbyło się: {{ $courseStartFormatted }}
+                    @else
+                        Data szkolenia: {{ $courseStartFormatted }}
+                    @endif
+                </div>
                 @if(!empty($course->trainer))
                     <div class="course-trainer">{{ $course->trainer_title }}: {{ $course->trainer }}</div>
                 @endif
