@@ -291,9 +291,75 @@
                     $courseEnded = $course->end_date
                         && \Carbon\Carbon::parse($course->end_date)->timezone(config('app.timezone'))->isPast();
                     $courseStartFormatted = \Carbon\Carbon::parse($course->start_date)->format('d.m.Y H:i');
+                    $rawHeaderVid = old('price_variant_id', $prefillPriceVariantId ?? $testData['price_variant_id'] ?? null);
+                    $headerVariantId = ($rawHeaderVid !== null && $rawHeaderVid !== '') ? (int) $rawHeaderVid : null;
+
+                    $postEndAccessNotice = null;
+                    if ($courseEnded) {
+                        $unitLabel = static function (int $value, ?string $unit): string {
+                            $unit = $unit ?? 'months';
+                            $mod10 = $value % 10;
+                            $mod100 = $value % 100;
+                            $few = $mod10 >= 2 && $mod10 <= 4 && ! ($mod100 >= 12 && $mod100 <= 14);
+
+                            return match ($unit) {
+                                'days' => $value === 1 ? 'dzień' : 'dni',
+                                'weeks' => $value === 1 ? 'tydzień' : ($few ? 'tygodnie' : 'tygodni'),
+                                'years' => $value === 1 ? 'rok' : ($few ? 'lata' : 'lat'),
+                                default => $value === 1 ? 'miesiąc' : ($few ? 'miesiące' : 'miesięcy'),
+                            };
+                        };
+
+                        $buildDurationNotice = static function (?int $value, ?string $unit) use ($unitLabel): ?string {
+                            if (! is_int($value) || $value < 1) {
+                                return null;
+                            }
+
+                            return $value.' '.$unitLabel($value, $unit).' dostępu do nagrania oraz materiałów od daty zakupu';
+                        };
+
+                        $settings = \App\Models\PaymentDisplayOption::getForCoursePage();
+
+                        $variant = null;
+                        if ($headerVariantId !== null) {
+                            $candidate = \App\Models\CoursePriceVariant::query()
+                                ->where('course_id', $course->id)
+                                ->where('id', $headerVariantId)
+                                ->where('is_active', true)
+                                ->first();
+
+                            if ($candidate && $candidate->isAvailableForCourseEndState(true)) {
+                                $variant = $candidate;
+                            }
+                        }
+
+                        $variantRule = $variant?->post_end_access_rule;
+                        if ($variantRule === 'unlimited') {
+                            $postEndAccessNotice = 'Bezterminowy dostęp do nagrania oraz materiałów';
+                        } elseif ($variantRule === 'duration') {
+                            $postEndAccessNotice = $buildDurationNotice(
+                                $variant?->post_end_access_duration_value,
+                                $variant?->post_end_access_duration_unit
+                            );
+                        }
+
+                        if ($postEndAccessNotice === null) {
+                            $postEndAccessNotice = $buildDurationNotice(
+                                $course->post_end_access_duration_value,
+                                $course->post_end_access_duration_unit
+                            );
+                        }
+
+                        if ($postEndAccessNotice === null) {
+                            $postEndAccessNotice = $buildDurationNotice(
+                                $settings['default_post_end_access_duration_value'] ?? 2,
+                                $settings['default_post_end_access_duration_unit'] ?? 'months'
+                            );
+                        }
+                    }
                 @endphp
-                @if($courseEnded)
-                    <p class="course-ended-access-notice text-danger mb-0">2 miesięczny dostęp do nagrania oraz materiałów</p>
+                @if($postEndAccessNotice)
+                    <p class="course-ended-access-notice text-danger mb-0">{{ $postEndAccessNotice }}</p>
                 @endif
                 <div class="course-date">
                     @if($courseEnded)
@@ -306,8 +372,6 @@
                     <div class="course-trainer">{{ $course->trainer_title }}: {{ $course->trainer }}</div>
                 @endif
                 @php
-                    $rawHeaderVid = old('price_variant_id', $prefillPriceVariantId ?? $testData['price_variant_id'] ?? null);
-                    $headerVariantId = ($rawHeaderVid !== null && $rawHeaderVid !== '') ? (int) $rawHeaderVid : null;
                     $priceInfo = $course->getPriceInfoForOrderFormHeader($headerVariantId);
                 @endphp
                 @if($priceInfo && $headerVariantId !== null)
