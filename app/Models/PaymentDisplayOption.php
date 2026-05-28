@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
 /**
  * Odczyt ustawień widoczności opcji płatności (tabela w bazie pneadm).
@@ -21,6 +22,7 @@ class PaymentDisplayOption extends Model
         'show_order_form' => 'boolean',
         'show_order_form_alt' => 'boolean',
         'order_form_auto_fill_test_data' => 'boolean',
+        'order_form_auto_fill_test_data_enabled_at' => 'datetime',
         'default_post_end_access_duration_value' => 'integer',
     ];
 
@@ -32,13 +34,31 @@ class PaymentDisplayOption extends Model
         try {
             $row = self::first();
             if ($row) {
+                $autoFillEnabled = (bool) ($row->order_form_auto_fill_test_data ?? false);
+                $enabledAt = $row->order_form_auto_fill_test_data_enabled_at;
+
+                if (app()->environment('production') && $autoFillEnabled) {
+                    $isExpired = true;
+                    if ($enabledAt instanceof Carbon) {
+                        $isExpired = $enabledAt->lt(now()->subMinute());
+                    }
+
+                    if ($isExpired) {
+                        $autoFillEnabled = false;
+                        $row->forceFill([
+                            'order_form_auto_fill_test_data' => false,
+                            'order_form_auto_fill_test_data_enabled_at' => null,
+                        ])->save();
+                    }
+                }
+
                 return [
                     'show_pay_publigo' => (bool) $row->show_pay_publigo,
                     'show_pay_online' => (bool) $row->show_pay_online,
                     'show_deferred_order' => (bool) $row->show_deferred_order,
                     'show_order_form' => (bool) $row->show_order_form,
                     'show_order_form_alt' => (bool) $row->show_order_form_alt,
-                    'order_form_auto_fill_test_data' => (bool) ($row->order_form_auto_fill_test_data ?? false),
+                    'order_form_auto_fill_test_data' => $autoFillEnabled,
                     'default_post_end_access_duration_value' => (int) ($row->default_post_end_access_duration_value ?? 2),
                     'default_post_end_access_duration_unit' => (string) ($row->default_post_end_access_duration_unit ?? 'months'),
                 ];

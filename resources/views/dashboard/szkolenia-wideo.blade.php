@@ -38,6 +38,18 @@
                             ></iframe>
                         </div>
                     </div>
+                    @php
+                        $accessExpiresAt = $participant->access_expires_at;
+                        $accessExpiresAtFormatted = $accessExpiresAt
+                            ? $accessExpiresAt->copy()->timezone(config('app.timezone'))->format('d.m.Y H:i')
+                            : null;
+                    @endphp
+                    @if($accessExpiresAt && $participant->hasActiveAccess())
+                        <p class="small text-success mb-4 mt-n2">
+                            <i class="bi bi-clock-history me-1" aria-hidden="true"></i>
+                            Dostęp wygaśnie {{ $accessExpiresAtFormatted }}
+                        </p>
+                    @endif
 
                     @if($selectedVideo->platform === 'youtube')
                         <div class="youtube-external-hint border-top pt-3 mt-2 mb-4">
