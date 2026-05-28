@@ -10,6 +10,12 @@ class CoursePriceVariant extends Model
 {
     use HasFactory, SoftDeletes;
 
+    public const AVAILABILITY_ALWAYS = 'always';
+
+    public const AVAILABILITY_HIDE_AFTER_END = 'hide_after_end';
+
+    public const AVAILABILITY_SHOW_AFTER_END = 'show_after_end';
+
     /**
      * The connection name for the model.
      *
@@ -36,6 +42,10 @@ class CoursePriceVariant extends Model
         'promotion_price' => 'decimal:2',
         'promotion_start' => 'datetime',
         'promotion_end' => 'datetime',
+        'access_start_datetime' => 'datetime',
+        'access_end_datetime' => 'datetime',
+        'access_duration_value' => 'integer',
+        'post_end_access_duration_value' => 'integer',
     ];
 
     /**
@@ -72,6 +82,15 @@ class CoursePriceVariant extends Model
         }
 
         return false;
+    }
+
+    public function isAvailableForCourseEndState(bool $courseEnded): bool
+    {
+        return match ($this->availability_after_course_end ?? self::AVAILABILITY_ALWAYS) {
+            self::AVAILABILITY_HIDE_AFTER_END => ! $courseEnded,
+            self::AVAILABILITY_SHOW_AFTER_END => $courseEnded,
+            default => true,
+        };
     }
 
     /**

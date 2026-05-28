@@ -49,6 +49,17 @@ class Course extends Model
         'publigo_product_id',
         'publigo_price_id',
         'sendy_suppression_list_id',
+        'post_end_access_duration_value',
+        'post_end_access_duration_unit',
+    ];
+
+    protected $casts = [
+        'is_active' => 'boolean',
+        'show_on_pnedu' => 'boolean',
+        'is_paid' => 'boolean',
+        'start_date' => 'datetime',
+        'end_date' => 'datetime',
+        'post_end_access_duration_value' => 'integer',
     ];
 
     /**
@@ -134,6 +145,11 @@ class Course extends Model
         return $this->hasMany(CoursePriceVariant::class, 'course_id');
     }
 
+    public function hasEnded(): bool
+    {
+        return $this->end_date !== null && $this->end_date->isPast();
+    }
+
     /**
      * Publiczny URL zapisu z listy (start): płatne → formularz zamówienia z domyślnym wariantem (najniższe aktywne ID, jak na stronie kursu);
      * bezpłatne → szczegóły (formularz e-mailowy Sendy).
@@ -149,6 +165,7 @@ class Course extends Model
             : $this->priceVariants()->where('is_active', true)->orderBy('id')->get();
 
         $sorted = $variants->filter(fn ($v) => (bool) $v->is_active)
+            ->filter(fn ($v) => $v->isAvailableForCourseEndState($this->hasEnded()))
             ->sortBy(fn ($v) => (int) $v->id)
             ->values();
 
@@ -206,17 +223,23 @@ class Course extends Model
      */
     public function getCurrentPrice(): ?array
     {
+        $courseEnded = $this->hasEnded();
+
         // Try to find price variant by course_id first
         $priceVariant = CoursePriceVariant::where('course_id', $this->id)
             ->where('is_active', 1)
             ->orderBy('price', 'asc') // Get cheapest variant
-            ->first();
+            ->get()
+            ->first(fn ($variant) => $variant->isAvailableForCourseEndState($courseEnded));
 
         // If not found and we have publigo_price_id, try to find by it
         if (! $priceVariant && $this->publigo_price_id) {
             $priceVariant = CoursePriceVariant::where('id', $this->publigo_price_id)
                 ->where('is_active', 1)
                 ->first();
+            if ($priceVariant && ! $priceVariant->isAvailableForCourseEndState($courseEnded)) {
+                $priceVariant = null;
+            }
         }
 
         if (! $priceVariant) {
@@ -242,7 +265,7 @@ class Course extends Model
             ->where('id', $priceVariantId)
             ->first();
 
-        if (! $priceVariant) {
+        if (! $priceVariant || ! $priceVariant->isAvailableForCourseEndState($this->hasEnded())) {
             return $this->getCurrentPrice();
         }
 

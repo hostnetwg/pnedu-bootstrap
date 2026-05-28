@@ -63,7 +63,9 @@
                                     if (!$priceInfo) {
                                         // Sprawdź czy priceVariants są załadowane
                                         if ($course->relationLoaded('priceVariants') && $course->priceVariants && $course->priceVariants->count() > 0) {
-                                            $firstVariant = $course->priceVariants->where('is_active', true)->first();
+                                            $firstVariant = $course->priceVariants
+                                                ->where('is_active', true)
+                                                ->first(fn ($variant) => $variant->isAvailableForCourseEndState($course->hasEnded()));
                                             if ($firstVariant) {
                                                 $isPromotionActive = $firstVariant->isPromotionActive();
                                                 $currentPrice = $firstVariant->getCurrentPrice();

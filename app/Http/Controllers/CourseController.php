@@ -1965,8 +1965,11 @@ class CourseController extends Controller
      */
     protected function activePriceVariantsOrdered(Course $course): \Illuminate\Support\Collection
     {
+        $courseEnded = $course->hasEnded();
+
         return $course->priceVariants
             ->filter(fn ($v) => (bool) $v->is_active)
+            ->filter(fn ($v) => $v->isAvailableForCourseEndState($courseEnded))
             ->sortBy(fn ($v) => (int) $v->id)
             ->values();
     }
@@ -2061,12 +2064,13 @@ class CourseController extends Controller
      */
     protected function priceVariantExistsActiveForCourse(Course $course, int $variantId): bool
     {
-        return DB::connection('pneadm')
-            ->table('course_price_variants')
+        $variant = CoursePriceVariant::query()
             ->where('id', $variantId)
             ->where('course_id', $course->id)
-            ->where('is_active', 1)
-            ->exists();
+            ->where('is_active', true)
+            ->first();
+
+        return $variant !== null && $variant->isAvailableForCourseEndState($course->hasEnded());
     }
 
     /**
