@@ -21,7 +21,13 @@ class HomeController extends Controller
             ->where('is_active', true)
             ->where('show_on_pnedu', true)
             ->where('type', 'online')
-            ->where('start_date', '>', now())
+            ->where(function ($query) {
+                $query->where('end_date', '>', now())
+                    ->orWhere(function ($fallbackQuery) {
+                        $fallbackQuery->whereNull('end_date')
+                            ->where('start_date', '>', now());
+                    });
+            })
             ->whereNull('deleted_at')
             ->orderBy('start_date', 'asc')
             ->take(6)
