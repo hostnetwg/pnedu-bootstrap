@@ -7,7 +7,7 @@
     <meta name="theme-color" content="#0d6efd">
     <title>@yield('title', 'Platforma Nowoczesnej Edukacji')</title>
 
-    @include('layouts.google-tag-manager-head')
+    @include('layouts.analytics-head')
 
     {{-- Meta Pixel tymczasowo wyłączony (test). Przywróć: include layouts.facebook-pixel --}}
 

@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    @include('layouts.google-tag-manager-head')
+    @include('layouts.analytics-head')
 
     {{-- Meta Pixel tymczasowo wyłączony (test). Przywróć: include layouts.facebook-pixel --}}
 

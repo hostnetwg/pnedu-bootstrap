@@ -89,6 +89,10 @@ return [
         'id' => env('GOOGLE_TAG_MANAGER_ID', 'GTM-5ZQ4MM74'),
     ],
 
+    'google_analytics' => [
+        'id' => env('GOOGLE_ANALYTICS_ID'),
+    ],
+
     'facebook_pixel' => [
         'id' => env('FACEBOOK_PIXEL_ID', '378657018971423'),
     ],
