@@ -61,6 +61,14 @@ class OrderNotificationMail extends Mailable
         $subject = 'Twoje zamówienie #'.$this->order->id.' - SZKOLENIE: '.$courseTitle.($courseDate ? ' ('.$courseDate.')' : '');
 
         return $this
+            ->from(
+                config('mail.system.from_address'),
+                config('mail.system.from_name')
+            )
+            ->replyTo(
+                config('mail.system.reply_to_address'),
+                config('mail.system.reply_to_name')
+            )
             ->subject($subject)
             ->view('emails.order-notification')
             ->attachData($pdf->output(), $fileName, [
@@ -69,6 +77,8 @@ class OrderNotificationMail extends Mailable
             ->with([
                 'order' => $this->order,
                 'course' => $this->course,
+                'brandPublicUrl' => config('mail.brand.public_url'),
+                'brandPublicLabel' => config('mail.brand.public_label'),
             ]);
     }
 }

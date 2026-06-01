@@ -31,9 +31,9 @@
     @endphp
     
     @if($isCoursePassed)
-        <p style="margin: 0 0 24px;">Wkrótce prześlemy wszystkie dane dostępowe oraz fakturę z odroczonym terminem płatności. W razie pytań proszę o kontakt: kontakt@nowoczesna-edukacja.pl; tel. 501 654 274.</p>
+        <p style="margin: 0 0 24px;">Wkrótce prześlemy wszystkie dane dostępowe oraz fakturę z odroczonym terminem płatności. W razie pytań proszę o kontakt: kontakt@pnedu.pl; tel. 501 654 274.</p>
     @else
-        <p style="margin: 0 0 24px;">Dzień przed terminem szkolenia prześlemy wszystkie dane dostępowe oraz fakturę z odroczonym terminem płatności. W razie pytań proszę o kontakt: kontakt@nowoczesna-edukacja.pl; tel. 501 654 274.</p>
+        <p style="margin: 0 0 24px;">Dzień przed terminem szkolenia prześlemy wszystkie dane dostępowe oraz fakturę z odroczonym terminem płatności. W razie pytań proszę o kontakt: kontakt@pnedu.pl; tel. 501 654 274.</p>
     @endif
 
     <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: 28px 0; border: 1px solid #e0e0e0; border-radius: 6px; background-color: #fafafa;">
@@ -94,7 +94,7 @@
         <img src="https://pnedu.pl/grafika/NODN%20Platforma%20Nowoczesnej%20Edukacji%20-%20logo.png" alt="PNE - LOGO" width="180" style="display: block; max-width: 180px;">
     </p>
     <p style="margin: 16px 0 0;">
-        <a href="https://nowoczesna-edukacja.pl" style="color: #0066cc; text-decoration: underline;">nowoczesna-edukacja.pl</a>
+        <a href="{{ $brandPublicUrl }}" style="color: #0066cc; text-decoration: underline;">{{ $brandPublicLabel }}</a>
     </p>
 
 </td></tr>

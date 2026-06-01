@@ -109,8 +109,20 @@ return [
     */
 
     'from' => [
-        'address' => env('MAIL_FROM_ADDRESS', 'kontakt@nowoczesna-edukacja.pl'),
+        'address' => env('MAIL_FROM_ADDRESS', 'info@system.pnedu.pl'),
         'name' => env('MAIL_FROM_NAME', 'Platforma Nowoczesnej Edukacji'),
+    ],
+
+    'system' => [
+        'from_address' => env('MAIL_FROM_ADDRESS', 'info@system.pnedu.pl'),
+        'from_name' => env('MAIL_FROM_NAME', 'Platforma Nowoczesnej Edukacji'),
+        'reply_to_address' => env('MAIL_REPLY_TO_ADDRESS', 'kontakt@pnedu.pl'),
+        'reply_to_name' => env('MAIL_REPLY_TO_NAME', 'Platforma Nowoczesnej Edukacji'),
+    ],
+
+    'brand' => [
+        'public_url' => env('MAIL_BRAND_PUBLIC_URL', 'https://pnedu.pl'),
+        'public_label' => env('MAIL_BRAND_PUBLIC_LABEL', 'www.pnedu.pl'),
     ],
 
 ];
