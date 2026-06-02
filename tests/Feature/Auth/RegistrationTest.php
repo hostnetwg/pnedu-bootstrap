@@ -39,4 +39,29 @@ class RegistrationTest extends TestCase
 
         Notification::assertSentToTimes($user, SystemVerifyEmail::class, 1);
     }
+
+    public function test_existing_email_cannot_register_again(): void
+    {
+        Notification::fake();
+
+        User::factory()->create([
+            'email' => 'test@example.com',
+        ]);
+
+        $response = $this->from('/register')->post('/register', [
+            'first_name' => 'Test',
+            'last_name' => 'User',
+            'email' => 'test@example.com',
+            'password' => 'password',
+            'password_confirmation' => 'password',
+            'rodo_consent' => '1',
+        ]);
+
+        $response
+            ->assertRedirect('/register')
+            ->assertSessionHasErrors('email');
+
+        $this->assertGuest();
+        Notification::assertNothingSent();
+    }
 }
