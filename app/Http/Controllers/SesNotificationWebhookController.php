@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Services\SesNotificationService;
-use Aws\Sns\Exception\InvalidSnsMessageException;
 use Aws\Sns\Message;
 use Aws\Sns\MessageValidator;
 use Illuminate\Http\Request;
@@ -15,20 +14,25 @@ class SesNotificationWebhookController extends Controller
 {
     public function __invoke(Request $request, SesNotificationService $sesNotifications): Response
     {
-        try {
-            $message = Message::fromJsonString($request->getContent());
-            (new MessageValidator)->validate($message);
-        } catch (InvalidSnsMessageException $e) {
-            Log::warning('SES SNS webhook: invalid message', ['error' => $e->getMessage()]);
+        $rawBody = $this->readRawBody($request);
 
-            return response('Invalid SNS message', 403);
+        try {
+            $message = Message::fromJsonString($rawBody);
         } catch (\Throwable $e) {
-            Log::error('SES SNS webhook: failed to parse or validate message', [
+            Log::error('SES SNS webhook: failed to parse message', [
                 'error' => $e->getMessage(),
                 'exception' => $e::class,
             ]);
 
-            return response('SNS message processing error', 500);
+            return response('Invalid SNS payload', 400);
+        }
+
+        if (! $this->isMessageTrusted($message)) {
+            Log::warning('SES SNS webhook: message rejected', [
+                'type' => $message['Type'] ?? null,
+            ]);
+
+            return response('Invalid SNS message', 403);
         }
 
         try {
@@ -44,6 +48,66 @@ class SesNotificationWebhookController extends Controller
         }
     }
 
+    private function readRawBody(Request $request): string
+    {
+        $raw = file_get_contents('php://input');
+
+        if (is_string($raw) && $raw !== '') {
+            return $raw;
+        }
+
+        return (string) $request->getContent();
+    }
+
+    private function isMessageTrusted(Message $message): bool
+    {
+        $validator = new MessageValidator;
+
+        if ($validator->isValid($message)) {
+            return true;
+        }
+
+        $type = (string) ($message['Type'] ?? '');
+
+        if ($type === 'SubscriptionConfirmation' && $this->isTrustedSubscriptionConfirmation($message)) {
+            Log::warning('SES SNS webhook: using TopicArn/URL fallback for subscription confirmation');
+
+            return true;
+        }
+
+        return false;
+    }
+
+    private function isTrustedSubscriptionConfirmation(Message $message): bool
+    {
+        $expectedTopicArn = trim((string) config('services.ses.sns_topic_arn', ''));
+        $topicArn = trim((string) ($message['TopicArn'] ?? ''));
+        $subscribeUrl = trim((string) ($message['SubscribeURL'] ?? ''));
+        $token = trim((string) ($message['Token'] ?? ''));
+
+        if ($expectedTopicArn === '' || $topicArn !== $expectedTopicArn) {
+            return false;
+        }
+
+        if ($token === '' || $subscribeUrl === '' || ! $this->isTrustedSnsSubscribeUrl($subscribeUrl)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private function isTrustedSnsSubscribeUrl(string $url): bool
+    {
+        $parsed = parse_url($url);
+        if (! is_array($parsed) || ($parsed['scheme'] ?? '') !== 'https') {
+            return false;
+        }
+
+        $host = (string) ($parsed['host'] ?? '');
+
+        return (bool) preg_match('/^sns\.[a-zA-Z0-9\-]{3,}\.amazonaws\.com(\.cn)?$/', $host);
+    }
+
     private function handleValidatedMessage(Message $message, SesNotificationService $sesNotifications): Response
     {
         $type = $message['Type'] ?? '';
@@ -54,9 +118,15 @@ class SesNotificationWebhookController extends Controller
                 return response('Missing SubscribeURL', 400);
             }
 
+            Log::info('SES SNS subscription confirmation received', [
+                'subscribe_url' => $subscribeUrl,
+                'topic_arn' => $message['TopicArn'] ?? null,
+            ]);
+
             $response = Http::timeout(15)->get($subscribeUrl);
             if (! $response->successful()) {
                 Log::error('SES SNS subscription confirmation failed', [
+                    'subscribe_url' => $subscribeUrl,
                     'status' => $response->status(),
                     'body' => $response->body(),
                 ]);

@@ -22,6 +22,7 @@ return [
         'key' => env('AWS_ACCESS_KEY_ID'),
         'secret' => env('AWS_SECRET_ACCESS_KEY'),
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
+        'sns_topic_arn' => env('AWS_SNS_TOPIC_ARN', 'arn:aws:sns:eu-central-1:388786438877:ses-pne-system-events'),
     ],
 
     'resend' => [
