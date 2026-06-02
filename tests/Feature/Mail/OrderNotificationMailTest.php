@@ -35,6 +35,20 @@ class OrderNotificationMailTest extends TestCase
         $this->assertStringContainsString('kontakt@pnedu.pl', $html);
         $this->assertStringContainsString('www.pnedu.pl', $html);
         $this->assertStringContainsString('https://pnedu.pl', $html);
+
+        $pdfHtml = view('orders.pdf', [
+            'order' => $this->order(),
+            'course' => $this->course(),
+            'brandPublicUrl' => config('mail.brand.public_url'),
+            'brandPublicLabel' => config('mail.brand.public_label'),
+            'contactEmail' => config('mail.system.reply_to_address'),
+        ])->render();
+
+        $this->assertStringNotContainsString('nowoczesna-edukacja.pl', $pdfHtml);
+        $this->assertStringNotContainsString('kontakt@nowoczesna-edukacja.pl', $pdfHtml);
+        $this->assertStringContainsString('kontakt@pnedu.pl', $pdfHtml);
+        $this->assertStringContainsString('www.pnedu.pl', $pdfHtml);
+        $this->assertStringContainsString('https://pnedu.pl', $pdfHtml);
     }
 
     private function order(): FormOrder

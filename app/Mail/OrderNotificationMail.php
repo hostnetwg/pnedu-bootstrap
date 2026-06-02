@@ -49,6 +49,9 @@ class OrderNotificationMail extends Mailable
         $pdf = Pdf::loadView('orders.pdf', [
             'order' => $this->order,
             'course' => $this->course,
+            'brandPublicUrl' => config('mail.brand.public_url'),
+            'brandPublicLabel' => config('mail.brand.public_label'),
+            'contactEmail' => config('mail.system.reply_to_address'),
         ]);
 
         $fileName = 'zamowienie-'.$this->order->ident.'.pdf';

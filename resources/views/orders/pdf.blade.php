@@ -230,7 +230,7 @@
                 <p>ul. A. Zamoyskiego 30/14, 09-320 Bieżuń</p>
                 <p>RSPO: 481379 NIP: 7392137630</p>
                 <p>NR KONTA: {{ substr('25114020040000300282222577', 0, 2) }} {{ substr('25114020040000300282222577', 2, 4) }} {{ substr('25114020040000300282222577', 6, 4) }} {{ substr('25114020040000300282222577', 10, 4) }} {{ substr('25114020040000300282222577', 14, 4) }} {{ substr('25114020040000300282222577', 18, 4) }} {{ substr('25114020040000300282222577', 22, 4) }}</p>
-                <p>e-mail: kontakt@nowoczesna-edukacja.pl</p>
+                <p>e-mail: {{ $contactEmail }}</p>
                 <p>tel. +48501654274</p>
             </td>
         </tr>
@@ -320,7 +320,7 @@
     <div class="section-title">DANE DOSTĘPOWE DO KURSU</div>
     
     <div class="info-text" style="margin-bottom: 10px;">
-        strona logowania: <a href="https://nowoczesna-edukacja.pl" target="_blank">nowoczesna-edukacja.pl</a>
+        strona logowania: <a href="{{ $brandPublicUrl }}" target="_blank">{{ $brandPublicLabel }}</a>
     </div>
 
     <table class="access-table">
@@ -356,7 +356,7 @@
             Po złożeniu zamówienia prosimy o wydrukowanie wygenerowanego zamówienia w celu ewentualnej weryfikacji.
         </div>
         <div class="footer-text">
-            Kontakt: kontakt@nowoczesna-edukacja.pl lub 501 654 274
+            Kontakt: {{ $contactEmail }} lub 501 654 274
         </div>
     </div>
     </div>
