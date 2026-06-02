@@ -17,6 +17,10 @@ class EmailVerificationNotificationController extends Controller
             return redirect()->intended(route('dashboard', absolute: false));
         }
 
+        if ($request->user()->hasUndeliverableEmail()) {
+            return back()->with('error', 'Nie udało się dostarczyć wiadomości na ten adres. Popraw adres e-mail w profilu użytkownika.');
+        }
+
         $request->user()->sendEmailVerificationNotification();
 
         return back()->with('status', 'verification-link-sent');

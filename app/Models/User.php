@@ -50,6 +50,7 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return [
             'email_verified_at' => 'datetime',
+            'email_undeliverable_at' => 'datetime',
             'verification_reminder_3d_sent_at' => 'datetime',
             'verification_reminder_83d_sent_at' => 'datetime',
             'verification_reminder_89d_sent_at' => 'datetime',
@@ -111,5 +112,16 @@ class User extends Authenticatable implements MustVerifyEmail
     public function isProtectedFromUnverifiedPurge(): bool
     {
         return app(\App\Services\UnverifiedAccountService::class)->isProtectedFromUnverifiedPurge($this);
+    }
+
+    public function hasUndeliverableEmail(): bool
+    {
+        return $this->email_undeliverable_at !== null;
+    }
+
+    public function clearEmailDeliverabilityFlags(): void
+    {
+        $this->email_undeliverable_at = null;
+        $this->email_undeliverable_reason = null;
     }
 }

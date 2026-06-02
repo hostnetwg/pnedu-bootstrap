@@ -82,6 +82,7 @@ class UnverifiedAccountService
 
         User::query()
             ->whereNull('email_verified_at')
+            ->whereNull('email_undeliverable_at')
             ->whereNull($sentAtColumn)
             ->where('created_at', '<=', $threshold)
             ->orderBy('id')

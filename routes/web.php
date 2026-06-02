@@ -6,6 +6,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\NewsletterController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SeoController;
+use App\Http\Controllers\SesNotificationWebhookController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/robots.txt', [SeoController::class, 'robots'])->name('seo.robots');
@@ -135,6 +136,10 @@ Route::post('/kontakt', [ContactController::class, 'send'])->name('contact.send'
 Route::post('/newsletter', [NewsletterController::class, 'subscribe'])
     ->middleware('throttle:10,1')
     ->name('newsletter.subscribe');
+
+Route::post('/webhooks/ses/notifications', SesNotificationWebhookController::class)
+    ->middleware('throttle:120,1')
+    ->name('webhooks.ses.notifications');
 
 // Lookup uczestnika po e-mailu (musi być przed /courses/{id})
 Route::get('/courses/participant-lookup-by-email', [App\Http\Controllers\CourseController::class, 'participantLookupByEmail'])->name('courses.participant-lookup');

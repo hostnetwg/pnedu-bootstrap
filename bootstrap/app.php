@@ -24,6 +24,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'payment/paynow/notify',
             'certificate-registration/*', // formularz publiczny po linku z tokenem – token w URL jest wystarczającą ochroną
             'certificate/*',             // podgląd/pobieranie zaświadczeń i formularz daty/miejsca urodzenia – token w URL jest wystarczającą ochroną (unika 419 przy wygasłej sesji)
+            'webhooks/ses/*',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
