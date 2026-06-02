@@ -1,17 +1,19 @@
 # Strategia e-mail — pnedu.pl (skrót)
 
-**Status:** referencja do dokumentu master  
-**Master doc:** dokument master znajduje się w repozytorium `pneadm`, w pliku `docs/email-deliverability-strategy.md`.
+**Status:** referencja do dokumentu master + stan wdrożenia Laravel + SES
+**Ostatnia aktualizacja:** 2026-06-02
+**Master doc:** repozytorium `pneadm`, plik `docs/email-deliverability-strategy.md`.
 
-> Pełna strategia, mapy subdomen, plan etapów i ryzyka — w pliku master. Ten dokument opisuje **tylko to, co dotyczy serwisu publicznego `pnedu.pl`**.
+> Pełna strategia, mapy subdomen, plan etapów Sendy/DNS/SEO — w pliku master. Ten dokument opisuje **serwis publiczny `pnedu.pl`** i status wdrożenia maili systemowych.
 
 ---
 
-## Decyzja kierunkowa (2026-05)
+## Decyzja kierunkowa
 
 - **pnedu.pl** — docelowa domena frontu i aplikacji uczestnika.
-- **nowoczesna-edukacja.pl** — legacy (Publigo); docelowo prawdopodobnie **301 → pnedu.pl** — **osobny program**, nie teraz.
-- Nie wykonywać hurtowej podmiany domen w kodzie przy konfiguracji e-mail.
+- **nowoczesna-edukacja.pl** — legacy (Publigo); docelowo prawdopodobnie **301 → pnedu.pl** — **osobny program SEO**, nie blokada SES.
+- Maile systemowe Laravel: **wdrożone** na SES (`info@system.pnedu.pl`, Reply-To `kontakt@pnedu.pl`).
+- Treści www (regulamin, RODO, stopka) — nadal częściowo legacy; **osobny etap treści**.
 
 ---
 
@@ -21,75 +23,54 @@
 kontakt@pnedu.pl  →  (przekierowanie)  →  kontakt@nowoczesna-edukacja.pl
 ```
 
-- Publiczny Reply-To dla maili systemowych i marketingu: **`kontakt@pnedu.pl`**
-- Nie używać `kontakt@pnedu.pl` ani `kontakt@nowoczesna-edukacja.pl` jako masowego **From**
-- W kodzie nadal występuje `kontakt@nowoczesna-edukacja.pl` — migracja treści to osobny etap
+- Publiczny Reply-To dla maili systemowych: **`kontakt@pnedu.pl`**
+- Formularz kontaktowy w aplikacji wysyła **do** `kontakt@pnedu.pl` (`ContactController`)
+- Nie używać `kontakt@pnedu.pl` jako masowego **From**
 
 ---
 
 ## Kanały nadawcze (skrót)
 
-| Kanał | From | Narzędzie w pnedu |
-|-------|------|-------------------|
-| System / transakcyjny | `info@system.pnedu.pl` | Laravel Mail → SES (docelowo) |
-| Marketing ogólny | `szkolenia@news.pnedu.pl` | Sendy (zapis na listy z kodu) |
-| TIK / webinary | `webinary@tik.pnedu.pl` | Sendy |
-| Obsługa | `kontakt@pnedu.pl` | odbiorca formularza kontaktowego |
-
-**system.pnedu.pl** — na razie tylko tożsamość SES, nie publiczna strona www.
+| Kanał | From | Narzędzie w pnedu | Status |
+|-------|------|-------------------|--------|
+| System / transakcyjny | `info@system.pnedu.pl` | Laravel Mail → SES | **produkcja: `MAIL_MAILER=ses`** |
+| Marketing ogólny | `szkolenia@news.pnedu.pl` | Sendy | poza Laravel |
+| TIK / webinary | `webinary@tik.pnedu.pl` | Sendy | poza Laravel |
+| Obsługa | `kontakt@pnedu.pl` | odbiorca formularza | **wdrożone** |
 
 ---
 
 ## Wiadomości wysyłane z tego repozytorium
 
-| Wiadomość | Plik | Kanał docelowy |
-|-----------|------|----------------|
-| Potwierdzenie zamówienia + PDF | `OrderNotificationMail` | **system** — From `info@system.pnedu.pl`; wysyłka **zostaje w pnedu** |
-| Formularz kontaktowy (do biura) | `ContactFormMail` | odbiorca docelowo `kontakt@pnedu.pl`; w kodzie obecnie `kontakt@nowoczesna-edukacja.pl` |
-| Powiadomienie o płatności (admin) | `PaymentNotificationMail` | wewnętrzne |
-| Weryfikacja e-mail | Laravel Breeze | **system** |
-| Reset hasła | Laravel Breeze | **system** |
+| Wiadomość | Plik | Status |
+|-----------|------|--------|
+| Potwierdzenie zamówienia + PDF | `OrderNotificationMail` | **wdrożone** — SES + brand `pnedu.pl` w mailu i PDF |
+| Formularz kontaktowy (do biura) | `ContactFormMail` | **wdrożone** — systemowy From; odbiorca `kontakt@pnedu.pl` |
+| Powiadomienie o płatności (admin) | `PaymentNotificationMail` | **wdrożone** — wewnętrzne |
+| Weryfikacja e-mail | `SystemVerifyEmail` | **wdrożone** |
+| Reset hasła | `SystemResetPassword` | **wdrożone** |
 
-Sendy (bez Laravel Mail):
-
-- `LIST_TIK_NAUCZYCIEL` → kanał **tik**
-- `LIST_NAUCZYCIELE`, listy płatnych / per-kurs (`sendy_suppression_list_id`) → **news** (lub **tik** dla webinarów)
+Sendy (bez Laravel Mail): bez zmian w ramach strategii SES.
 
 ---
 
-## Linki publiczne (docelowo)
+## Konfiguracja Laravel
 
-Preferencja: tokeny na **pnedu.pl**, nie **adm.pnedu.pl**, np.:
-
-- `pnedu.pl/certificates/{token}`
-- `pnedu.pl/certificate/{token}/{course_id}`
-- `pnedu.pl/uzupelnij-dane/{token}` (do przeniesienia z adm — **nie implementować teraz**)
-
----
-
-## Zasady (skrót)
-
-- Nie wysyłać maili do klientów z From `@adm.pnedu.pl`.
-- Nie mieszać marketingu z kanałem `system.pnedu.pl`.
-- Nie robić cutover całej bazy TIK (~62k) naraz.
-- Nie zaostrzać DMARC bez monitoringu.
+- `config/mail.php` — sekcje `system`, `brand`; mailer `ses`.
+- Lokalnie: `MAIL_MAILER=log` (`.env.example`).
+- Produkcja: `MAIL_MAILER=ses`, `AWS_DEFAULT_REGION=eu-central-1`, klucze IAM SES.
+- `aws/aws-sdk-php`; `config.platform.php` = `8.3.27`.
+- Testy: `tests/Feature/Mail/OrderNotificationMailTest.php`, `SystemMailConfigurationTest.php`.
 
 ---
 
-## Konfiguracja (stan obecny — bez zmian)
+## Co dalej (poza Laravel + SES)
 
-- `config/mail.php` — domyślny mailer `smtp` / Mailpit lokalnie; FROM fallback `kontakt@nowoczesna-edukacja.pl`
-- `config/services.php` — Sendy (`SENDY_URL`, `SENDY_API_KEY`), połączenie z adm (`PNEADM_*`)
-- Brak aktywnego mailera SES — do wdrożenia w fazie C planu master
-
----
-
-## Następne kroki (pnedu)
-
-1. Czytać pełny plan w repozytorium `pneadm` (`docs/email-deliverability-strategy.md`), sekcje 13–15.
-2. Przy wdrożeniu: mailer `system` + SES `eu-central-1`, `OrderNotificationMail` jako pierwszy kandydat produkcyjny po testach.
-3. Osobno: migracja treści `nowoczesna-edukacja.pl` → `pnedu.pl` (SEO).
+1. Migracja treści www `nowoczesna-edukacja.pl` → `pnedu.pl` (regulamin, RODO, stopka).
+2. Sendy — nadawcy `news` / `tik` (konfiguracja poza repozytorium).
+3. SES advanced: custom MAIL FROM, configuration sets, bounce/complaint monitoring (master doc, sekcje 9–13).
+4. iFirma — osobna decyzja (`faktury@system.pnedu.pl`).
 
 ---
 
-*Ostatnia aktualizacja: 2026-05-22*
+*Skrót utrzymywany w repozytorium `pnedu`. Szczegóły wdrożenia adm.pnedu.pl — w master doc.*
