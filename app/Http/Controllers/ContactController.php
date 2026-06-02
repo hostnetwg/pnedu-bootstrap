@@ -23,7 +23,7 @@ class ContactController extends Controller
             'consent' => 'accepted',
         ]);
 
-        Mail::to('kontakt@nowoczesna-edukacja.pl')
+        Mail::to(config('mail.system.reply_to_address'))
             ->send(new ContactFormMail($data));
 
         return redirect()->route('home')

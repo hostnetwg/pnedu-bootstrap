@@ -40,6 +40,14 @@ class PaymentNotificationMail extends Mailable
         $subject = 'Nowa płatność online #' . $this->order->ident . ' - ' . $courseTitle;
 
         return $this
+            ->from(
+                config('mail.system.from_address'),
+                config('mail.system.from_name')
+            )
+            ->replyTo(
+                config('mail.system.reply_to_address'),
+                config('mail.system.reply_to_name')
+            )
             ->subject($subject)
             ->view('emails.payment-notification')
             ->with([

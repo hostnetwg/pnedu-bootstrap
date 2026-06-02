@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use App\Models\Concerns\NormalizesUserEmail;
+use App\Notifications\SystemResetPassword;
+use App\Notifications\SystemVerifyEmail;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -72,5 +74,15 @@ class User extends Authenticatable implements MustVerifyEmail
         $nameParts = explode(' ', trim($value), 2);
         $this->attributes['first_name'] = $nameParts[0] ?? null;
         $this->attributes['last_name'] = $nameParts[1] ?? null;
+    }
+
+    public function sendEmailVerificationNotification(): void
+    {
+        $this->notify(new SystemVerifyEmail);
+    }
+
+    public function sendPasswordResetNotification(#[\SensitiveParameter] $token): void
+    {
+        $this->notify(new SystemResetPassword($token));
     }
 }

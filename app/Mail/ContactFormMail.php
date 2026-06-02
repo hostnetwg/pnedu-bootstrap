@@ -36,6 +36,14 @@ class ContactFormMail extends Mailable
     public function build()
     {
         return $this
+            ->from(
+                config('mail.system.from_address'),
+                config('mail.system.from_name')
+            )
+            ->replyTo(
+                $this->data['email'],
+                $this->data['name']
+            )
             ->subject('Nowa wiadomość z formularza kontaktowego')
             ->view('emails.contact')
             ->with('data', $this->data);
