@@ -113,4 +113,16 @@ return [
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Unverified account grace period
+    |--------------------------------------------------------------------------
+    |
+    | Liczba dni od rejestracji, po których konto bez weryfikacji e-mail zostanie
+    | usunięte (soft delete). Komunikat w UI opiera się na tej samej wartości.
+    |
+    */
+
+    'unverified_account_grace_days' => (int) env('AUTH_UNVERIFIED_ACCOUNT_GRACE_DAYS', 14),
+
 ];

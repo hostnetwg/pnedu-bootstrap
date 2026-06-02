@@ -33,7 +33,7 @@ class RegistrationTest extends TestCase
         ]);
 
         $this->assertAuthenticated();
-        $response->assertRedirect(route('dashboard', absolute: false));
+        $response->assertRedirect(route('verification.notice', absolute: false));
 
         $user = User::where('email', 'test@example.com')->firstOrFail();
 
@@ -86,7 +86,7 @@ class RegistrationTest extends TestCase
             'rodo_consent' => '1',
         ]);
 
-        $response->assertRedirect(route('dashboard', absolute: false));
+        $response->assertRedirect(route('verification.notice', absolute: false));
         $this->assertAuthenticated();
 
         $newUser = User::where('email', 'test@example.com')->firstOrFail();

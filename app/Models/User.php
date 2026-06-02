@@ -85,4 +85,18 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         $this->notify(new SystemResetPassword($token));
     }
+
+    /**
+     * Termin usunięcia konta, jeśli e-mail nie zostanie zweryfikowany (null gdy zweryfikowany).
+     */
+    public function unverifiedAccountDeletionDeadline(): ?\Illuminate\Support\Carbon
+    {
+        if ($this->hasVerifiedEmail()) {
+            return null;
+        }
+
+        $graceDays = (int) config('auth.unverified_account_grace_days', 14);
+
+        return $this->created_at?->copy()->addDays($graceDays);
+    }
 }

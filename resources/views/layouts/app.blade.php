@@ -68,6 +68,8 @@
 
     @include('layouts.navigation')
 
+    @include('layouts.email-verification-notice')
+
     @yield('banner')
 
     @include('layouts.alerts')

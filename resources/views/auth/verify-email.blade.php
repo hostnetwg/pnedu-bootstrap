@@ -4,24 +4,38 @@
 <div class="container">
     <div class="row justify-content-center">
         <div class="col-md-8">
-            <div class="card">
-                <div class="card-header">{{ __('Verify Your Email Address') }}</div>
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-primary text-white fw-semibold">Weryfikacja adresu e-mail</div>
 
                 <div class="card-body">
-                    @if (session('status') == 'verification-link-sent')
-                        <div class="alert alert-success" role="alert">
-                            {{ __('A new verification link has been sent to the email address you provided during registration.') }}
-                        </div>
-                    @endif
+                    <p class="mb-3">
+                        Dziękujemy za rejestrację! Zanim zaczniesz korzystać z panelu użytkownika, potwierdź swój adres e-mail,
+                        klikając link w wiadomości, którą właśnie wysłaliśmy na <strong>{{ auth()->user()->email }}</strong>.
+                    </p>
 
-                    <div class="mb-3">
-                        {{ __('Thanks for signing up! Before getting started, could you verify your email address by clicking on the link we just emailed to you? If you didn\'t receive the email, we will gladly send you another.') }}                        
+                    @php
+                        $graceDays = (int) config('auth.unverified_account_grace_days', 14);
+                        $deletionDeadline = auth()->user()->unverifiedAccountDeletionDeadline();
+                    @endphp
+                    <div class="alert alert-warning small mb-4" role="alert">
+                        <strong>Uwaga:</strong> konta z niezweryfikowanym adresem e-mail zostaną usunięte
+                        @if ($deletionDeadline)
+                            najpóźniej <strong>{{ $deletionDeadline->timezone(config('app.timezone'))->format('d.m.Y') }}</strong>
+                            ({{ $graceDays }} dni od rejestracji).
+                        @else
+                            w ciągu {{ $graceDays }} dni od rejestracji.
+                        @endif
                     </div>
+
+                    <p class="mb-3 text-muted small">
+                        Nie dotarła wiadomość? Sprawdź folder spam lub wyślij link ponownie — możesz też użyć przycisku
+                        w żółtym pasku u góry strony.
+                    </p>
 
                     <form class="d-inline" method="POST" action="{{ route('verification.send') }}">
                         @csrf
-                        <button type="submit" class="btn btn-link p-0 m-0 align-baseline">
-                            {{ __('Resend Verification Email') }}
+                        <button type="submit" class="btn btn-primary">
+                            Wyślij link weryfikacyjny ponownie
                         </button>
                     </form>
                 </div>

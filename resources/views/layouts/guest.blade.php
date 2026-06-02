@@ -62,7 +62,8 @@
                     </ul>
                 </div>
             </div>
-        </nav>        
+        </nav>
+        @include('layouts.email-verification-notice')
         <main class="py-4">
             @yield('content')
         </main>
