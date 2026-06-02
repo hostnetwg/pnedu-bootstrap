@@ -50,6 +50,9 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return [
             'email_verified_at' => 'datetime',
+            'verification_reminder_3d_sent_at' => 'datetime',
+            'verification_reminder_83d_sent_at' => 'datetime',
+            'verification_reminder_89d_sent_at' => 'datetime',
             'birth_date' => 'date',
             'password' => 'hashed',
         ];
@@ -95,8 +98,18 @@ class User extends Authenticatable implements MustVerifyEmail
             return null;
         }
 
-        $graceDays = (int) config('auth.unverified_account_grace_days', 14);
+        $graceDays = (int) config('auth.unverified_account_grace_days', 90);
 
         return $this->created_at?->copy()->addDays($graceDays);
+    }
+
+    public function hasPaidCourseEnrollment(): bool
+    {
+        return app(\App\Services\UnverifiedAccountService::class)->hasPaidCourseEnrollment($this);
+    }
+
+    public function isProtectedFromUnverifiedPurge(): bool
+    {
+        return app(\App\Services\UnverifiedAccountService::class)->isProtectedFromUnverifiedPurge($this);
     }
 }

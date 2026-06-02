@@ -5,8 +5,9 @@
     @endphp
     @if ($authUser instanceof \Illuminate\Contracts\Auth\MustVerifyEmail && ! $authUser->hasVerifiedEmail())
         @php
-            $graceDays = (int) config('auth.unverified_account_grace_days', 14);
+            $graceDays = (int) config('auth.unverified_account_grace_days', 90);
             $deletionDeadline = $authUser->unverifiedAccountDeletionDeadline();
+            $protectedFromPurge = $authUser->isProtectedFromUnverifiedPurge();
         @endphp
         <div class="border-bottom border-warning border-3 bg-warning-subtle" role="alert" aria-live="polite">
             <div class="container py-3">
@@ -19,16 +20,25 @@
                         <p class="mb-1 small text-dark">
                             Kliknij link w wiadomości wysłanej na adres
                             <strong>{{ $authUser->email }}</strong>, aby aktywować konto i korzystać z panelu użytkownika.
+                            Zły adres?
+                            <a href="{{ route('profile.edit') }}" class="fw-semibold">Popraw go w profilu</a>.
                         </p>
-                        <p class="mb-0 small text-danger fw-semibold">
-                            Uwaga: konta z niezweryfikowanym adresem e-mail zostaną usunięte
-                            @if ($deletionDeadline)
-                                najpóźniej <strong>{{ $deletionDeadline->timezone(config('app.timezone'))->format('d.m.Y') }}</strong>
-                                ({{ $graceDays }} dni od rejestracji).
-                            @else
-                                w ciągu {{ $graceDays }} dni od rejestracji.
-                            @endif
-                        </p>
+                        @if ($protectedFromPurge)
+                            <p class="mb-0 small text-dark">
+                                Masz zapis na płatne szkolenie powiązany z tym adresem — konto <strong>nie zostanie usunięte</strong>,
+                                ale panel użytkownika wymaga potwierdzenia e-mail.
+                            </p>
+                        @else
+                            <p class="mb-0 small text-danger fw-semibold">
+                                Uwaga: niezweryfikowane konto zostanie usunięte
+                                @if ($deletionDeadline)
+                                    najpóźniej <strong>{{ $deletionDeadline->timezone(config('app.timezone'))->format('d.m.Y') }}</strong>
+                                    ({{ $graceDays }} dni od rejestracji).
+                                @else
+                                    w ciągu {{ $graceDays }} dni od rejestracji.
+                                @endif
+                            </p>
+                        @endif
                         @if (session('status') === 'verification-link-sent')
                             <p class="mb-0 mt-2 small text-success fw-semibold">
                                 Wysłaliśmy ponownie link weryfikacyjny na Twój adres e-mail.

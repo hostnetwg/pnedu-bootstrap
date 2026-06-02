@@ -21,7 +21,7 @@ class EmailVerificationNoticeTest extends TestCase
         $response->assertOk();
         $response->assertSee('Zweryfikuj swój adres e-mail', false);
         $response->assertSee('niezweryfikowany@gmail.com', false);
-        $response->assertSee('zostaną usunięte', false);
+        $response->assertSee('zostanie usunięte', false);
         $response->assertSee('Wyślij link ponownie', false);
     }
 
@@ -43,6 +43,6 @@ class EmailVerificationNoticeTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('Weryfikacja adresu e-mail', false);
-        $response->assertSee('zostaną usunięte', false);
+        $response->assertSee('zostanie usunięte', false);
     }
 }

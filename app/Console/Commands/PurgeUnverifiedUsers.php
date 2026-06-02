@@ -2,30 +2,21 @@
 
 namespace App\Console\Commands;
 
-use App\Models\User;
+use App\Services\UnverifiedAccountService;
 use Illuminate\Console\Command;
 
 class PurgeUnverifiedUsers extends Command
 {
     protected $signature = 'users:purge-unverified';
 
-    protected $description = 'Usuwa (soft delete) konta bez weryfikacji e-mail po upływie okresu karencji';
+    protected $description = 'Usuwa (soft delete) niezweryfikowane konta po okresie karencji, z wyłączeniem zapisów na płatne szkolenia';
 
-    public function handle(): int
+    public function handle(UnverifiedAccountService $service): int
     {
-        $days = (int) config('auth.unverified_account_grace_days', 14);
-        $cutoff = now()->subDays($days);
+        $days = (int) config('auth.unverified_account_grace_days', 90);
+        $purged = $service->purgeExpiredUnverifiedAccounts();
 
-        $users = User::query()
-            ->whereNull('email_verified_at')
-            ->where('created_at', '<=', $cutoff)
-            ->get();
-
-        foreach ($users as $user) {
-            $user->delete();
-        }
-
-        $this->info('Usunięto '.$users->count().' niezweryfikowanych kont (starszych niż '.$days.' dni).');
+        $this->info('Usunięto '.$purged.' niezweryfikowanych kont (starszych niż '.$days.' dni, bez płatnych szkoleń).');
 
         return self::SUCCESS;
     }

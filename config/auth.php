@@ -123,6 +123,22 @@ return [
     |
     */
 
-    'unverified_account_grace_days' => (int) env('AUTH_UNVERIFIED_ACCOUNT_GRACE_DAYS', 14),
+    'unverified_account_grace_days' => (int) env('AUTH_UNVERIFIED_ACCOUNT_GRACE_DAYS', 90),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Verification reminder schedule (days after registration)
+    |--------------------------------------------------------------------------
+    |
+    | Klucz = liczba dni od rejestracji; wartość = kolumna users oznaczająca wysłanie.
+    | Domyślnie: 3. dzień, 7 dni przed usunięciem (83.), 1 dzień przed usunięciem (89.).
+    |
+    */
+
+    'verification_reminder_days' => [
+        3 => 'verification_reminder_3d_sent_at',
+        83 => 'verification_reminder_83d_sent_at',
+        89 => 'verification_reminder_89d_sent_at',
+    ],
 
 ];
