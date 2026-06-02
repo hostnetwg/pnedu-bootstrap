@@ -22,8 +22,30 @@ class SesNotificationWebhookController extends Controller
             Log::warning('SES SNS webhook: invalid message', ['error' => $e->getMessage()]);
 
             return response('Invalid SNS message', 403);
+        } catch (\Throwable $e) {
+            Log::error('SES SNS webhook: failed to parse or validate message', [
+                'error' => $e->getMessage(),
+                'exception' => $e::class,
+            ]);
+
+            return response('SNS message processing error', 500);
         }
 
+        try {
+            return $this->handleValidatedMessage($message, $sesNotifications);
+        } catch (\Throwable $e) {
+            Log::error('SES SNS webhook: unhandled error', [
+                'type' => $message['Type'] ?? null,
+                'error' => $e->getMessage(),
+                'exception' => $e::class,
+            ]);
+
+            return response('SNS handler error', 500);
+        }
+    }
+
+    private function handleValidatedMessage(Message $message, SesNotificationService $sesNotifications): Response
+    {
         $type = $message['Type'] ?? '';
 
         if ($type === 'SubscriptionConfirmation') {
