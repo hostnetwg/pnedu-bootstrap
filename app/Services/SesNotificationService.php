@@ -9,17 +9,39 @@ class SesNotificationService
 {
     public function handleSesEvent(array $sesMessage): void
     {
-        $notificationType = $sesMessage['notificationType'] ?? null;
+        $eventType = self::resolveEventType($sesMessage);
 
-        if ($notificationType === 'Bounce') {
+        if ($eventType === 'Bounce') {
             $this->handleBounce($sesMessage);
 
             return;
         }
 
-        if ($notificationType === 'Complaint') {
+        if ($eventType === 'Complaint') {
             $this->handleComplaint($sesMessage);
         }
+    }
+
+    public static function resolveEventType(array $sesMessage): ?string
+    {
+        $type = $sesMessage['eventType'] ?? $sesMessage['notificationType'] ?? null;
+
+        return is_string($type) ? $type : null;
+    }
+
+    public static function isBounceOrComplaintPayload(array $payload): bool
+    {
+        $eventType = self::resolveEventType($payload);
+
+        if ($eventType === 'Bounce') {
+            return isset($payload['bounce']['bounceType']);
+        }
+
+        if ($eventType === 'Complaint') {
+            return isset($payload['complaint']);
+        }
+
+        return false;
     }
 
     private function handleBounce(array $sesMessage): void

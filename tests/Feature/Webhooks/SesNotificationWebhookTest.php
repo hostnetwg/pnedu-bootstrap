@@ -34,6 +34,30 @@ class SesNotificationWebhookTest extends TestCase
         $this->assertSame('permanent_bounce', $user->email_undeliverable_reason);
     }
 
+    public function test_marks_user_on_configuration_set_bounce_with_event_type(): void
+    {
+        $user = User::factory()->unverified()->create([
+            'email' => 'bad@gmail.com',
+        ]);
+
+        app(SesNotificationService::class)->handleSesEvent([
+            'eventType' => 'Bounce',
+            'bounce' => [
+                'bounceType' => 'Permanent',
+                'bouncedRecipients' => [
+                    ['emailAddress' => 'bad@gmail.com'],
+                ],
+            ],
+            'mail' => [
+                'destination' => ['bad@gmail.com'],
+            ],
+        ]);
+
+        $user->refresh();
+        $this->assertNotNull($user->email_undeliverable_at);
+        $this->assertSame('permanent_bounce', $user->email_undeliverable_reason);
+    }
+
     public function test_ignores_transient_bounce(): void
     {
         $user = User::factory()->unverified()->create([
@@ -85,12 +109,15 @@ class SesNotificationWebhookTest extends TestCase
         ]);
 
         $sesPayload = [
-            'notificationType' => 'Bounce',
+            'eventType' => 'Bounce',
             'bounce' => [
                 'bounceType' => 'Permanent',
                 'bouncedRecipients' => [
                     ['emailAddress' => 'bounce@simulator.amazonses.com'],
                 ],
+            ],
+            'mail' => [
+                'destination' => ['bounce@simulator.amazonses.com'],
             ],
         ];
 

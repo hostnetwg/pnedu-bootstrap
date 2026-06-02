@@ -30,6 +30,7 @@ class SesNotificationWebhookController extends Controller
         if (! $this->isMessageTrusted($message)) {
             Log::warning('SES SNS webhook: message rejected', [
                 'type' => $message['Type'] ?? null,
+                'reasons' => $this->describeTrustFailure($message),
             ]);
 
             return response('Invalid SNS message', 403);
@@ -133,17 +134,69 @@ class SesNotificationWebhookController extends Controller
             return false;
         }
 
-        $notificationType = $payload['notificationType'] ?? null;
+        return SesNotificationService::isBounceOrComplaintPayload($payload);
+    }
 
-        if ($notificationType === 'Bounce') {
-            return isset($payload['bounce']['bounceType']);
+    /**
+     * @return list<string>
+     */
+    private function describeTrustFailure(Message $message): array
+    {
+        $reasons = [];
+        $type = (string) ($message['Type'] ?? '');
+
+        if ($type === '') {
+            $reasons[] = 'missing_type';
         }
 
-        if ($notificationType === 'Complaint') {
-            return isset($payload['complaint']);
+        if (! $this->topicArnMatchesConfig($message)) {
+            $reasons[] = 'topic_arn_mismatch';
         }
 
-        return false;
+        if ($type === 'Notification') {
+            if (trim((string) ($message['MessageId'] ?? '')) === '') {
+                $reasons[] = 'missing_message_id';
+            }
+
+            if (trim((string) ($message['Timestamp'] ?? '')) === '') {
+                $reasons[] = 'missing_timestamp';
+            }
+
+            $signingCertUrl = trim((string) ($message['SigningCertURL'] ?? ''));
+
+            if ($signingCertUrl !== '' && ! $this->isTrustedSnsHttpsUrl($signingCertUrl)) {
+                $reasons[] = 'invalid_signing_cert_url';
+            }
+
+            $payload = json_decode($message['Message'] ?? '', true);
+
+            if (! is_array($payload)) {
+                $reasons[] = 'invalid_inner_message_json';
+            } elseif (! SesNotificationService::isBounceOrComplaintPayload($payload)) {
+                $reasons[] = 'unsupported_ses_event_payload';
+                $reasons[] = 'resolved_event_type='.(SesNotificationService::resolveEventType($payload) ?? 'null');
+            }
+        }
+
+        if ($type === 'SubscriptionConfirmation') {
+            if (trim((string) ($message['Token'] ?? '')) === '') {
+                $reasons[] = 'missing_token';
+            }
+
+            $subscribeUrl = trim((string) ($message['SubscribeURL'] ?? ''));
+
+            if ($subscribeUrl === '') {
+                $reasons[] = 'missing_subscribe_url';
+            } elseif (! $this->isTrustedSnsHttpsUrl($subscribeUrl)) {
+                $reasons[] = 'invalid_subscribe_url';
+            }
+        }
+
+        if ($reasons === []) {
+            $reasons[] = 'invalid_signature';
+        }
+
+        return $reasons;
     }
 
     private function isTrustedSnsHttpsUrl(string $url): bool
