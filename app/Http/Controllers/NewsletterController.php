@@ -27,7 +27,7 @@ class NewsletterController extends Controller
             Log::warning('Newsletter: Sendy not configured (missing SENDY_URL or SENDY_API_KEY)');
 
             return redirect()
-                ->to(route('home').'#newsletter')
+                ->route('home')
                 ->with('error', 'Zapis na newsletter jest tymczasowo niedostępny. Spróbuj później.');
         }
 
@@ -35,13 +35,14 @@ class NewsletterController extends Controller
 
         if (! $subscribed) {
             return redirect()
-                ->to(route('home').'#newsletter')
+                ->route('home')
                 ->withInput()
                 ->with('error', 'Nie udało się zapisać na newsletter. Spróbuj ponownie za chwilę.');
         }
 
         return redirect()
-            ->to(route('home').'#newsletter')
-            ->with('success', 'Dziękujemy! Zapisaliśmy Twój adres e-mail na listę newslettera.');
+            ->route('home')
+            ->with('newsletter_subscribed', true)
+            ->with('newsletter_subscribed_email', $email);
     }
 }

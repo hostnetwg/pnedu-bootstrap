@@ -131,6 +131,66 @@
     @endpush
 @endif
 
+@if(session('newsletter_subscribed'))
+    <div class="modal fade" id="newsletterThanksModal" tabindex="-1" aria-labelledby="newsletterThanksLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg overflow-hidden">
+                <div class="bg-primary bg-gradient text-white px-3 py-2 d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center">
+                        <span class="me-2"><i class="bi bi-envelope-check-fill"></i></span>
+                        <h2 class="h6 mb-0 text-uppercase" id="newsletterThanksLabel">Newsletter</h2>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-light border-0" data-bs-dismiss="modal" aria-label="Zamknij">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+                <div class="modal-body p-4 p-md-5 d-flex flex-column flex-md-row align-items-center">
+                    <div class="me-md-4 mb-3 mb-md-0 text-center">
+                        <img src="{{ asset('logo-pne.png') }}" alt="Platforma Nowoczesnej Edukacji" style="max-width: 210px; height: auto;">
+                    </div>
+                    <div class="text-center text-md-start">
+                        <h2 class="h4 mb-3 text-primary">Dziękujemy za zapis na newsletter!</h2>
+                        <p class="mb-3 small">
+                            @if(session('newsletter_subscribed_email'))
+                                Adres <strong>{{ session('newsletter_subscribed_email') }}</strong> został dodany do naszej listy mailingowej.
+                            @else
+                                Twój adres e-mail został dodany do naszej listy mailingowej.
+                            @endif
+                            Będziemy przesyłać informacje o nowościach, promocjach i materiałach edukacyjnych.
+                        </p>
+                        <p class="mb-3 small text-muted">
+                            Zgodę na newsletter możesz w każdej chwili wycofać — link „wypisz się” znajdziesz w stopce każdej wiadomości
+                            lub napisz na <a href="mailto:kontakt@pnedu.pl">kontakt@pnedu.pl</a>.
+                        </p>
+                        <p class="mb-0 fw-semibold text-muted">Miłego dnia :)</p>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0 pb-4 pe-4">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Rozumiem</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @push('scripts')
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                var modalEl = document.getElementById('newsletterThanksModal');
+                if (modalEl) {
+                    var thanksModal = new bootstrap.Modal(modalEl);
+                    thanksModal.show();
+
+                    setTimeout(function () {
+                        if (modalEl.classList.contains('show')) {
+                            thanksModal.hide();
+                        }
+                    }, 60000);
+                }
+            });
+        </script>
+    @endpush
+@endif
+
 <!-- ===== UPCOMING COURSES ======================================= -->
 <section id="courses" class="pt-3 pb-5">
     <div class="container">

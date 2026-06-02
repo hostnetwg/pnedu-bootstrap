@@ -27,8 +27,9 @@ class NewsletterSubscriptionTest extends TestCase
             'newsletter_consent' => '1',
         ]);
 
-        $response->assertRedirect(route('home').'#newsletter');
-        $response->assertSessionHas('success');
+        $response->assertRedirect(route('home'));
+        $response->assertSessionHas('newsletter_subscribed', true);
+        $response->assertSessionHas('newsletter_subscribed_email', 'nauczyciel@gmail.com');
 
         Http::assertSent(function ($request) {
             return $request->url() === 'https://sendy.test/subscribe'
