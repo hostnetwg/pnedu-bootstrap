@@ -1934,7 +1934,13 @@ class CourseController extends Controller
         $order = FormOrder::with('primaryParticipant')->where('ident', $ident)->firstOrFail();
         $course = $order->course;
 
-        $pdf = Pdf::loadView('orders.pdf', compact('order', 'course'));
+        $pdf = Pdf::loadView('orders.pdf', [
+            'order' => $order,
+            'course' => $course,
+            'brandPublicUrl' => config('mail.brand.public_url'),
+            'brandPublicLabel' => config('mail.brand.public_label'),
+            'contactEmail' => config('mail.system.reply_to_address'),
+        ]);
 
         return $pdf->stream('zamowienie-'.$order->ident.'.pdf');
     }
