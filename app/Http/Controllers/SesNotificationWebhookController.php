@@ -75,28 +75,78 @@ class SesNotificationWebhookController extends Controller
             return true;
         }
 
+        if ($type === 'Notification' && $this->isTrustedSesNotification($message)) {
+            Log::warning('SES SNS webhook: using TopicArn/payload fallback for SES notification');
+
+            return true;
+        }
+
         return false;
+    }
+
+    private function topicArnMatchesConfig(Message $message): bool
+    {
+        $expectedTopicArn = trim((string) config('services.ses.sns_topic_arn', ''));
+        $topicArn = trim((string) ($message['TopicArn'] ?? ''));
+
+        return $expectedTopicArn !== '' && $topicArn === $expectedTopicArn;
     }
 
     private function isTrustedSubscriptionConfirmation(Message $message): bool
     {
-        $expectedTopicArn = trim((string) config('services.ses.sns_topic_arn', ''));
-        $topicArn = trim((string) ($message['TopicArn'] ?? ''));
-        $subscribeUrl = trim((string) ($message['SubscribeURL'] ?? ''));
-        $token = trim((string) ($message['Token'] ?? ''));
-
-        if ($expectedTopicArn === '' || $topicArn !== $expectedTopicArn) {
+        if (! $this->topicArnMatchesConfig($message)) {
             return false;
         }
 
-        if ($token === '' || $subscribeUrl === '' || ! $this->isTrustedSnsSubscribeUrl($subscribeUrl)) {
+        $subscribeUrl = trim((string) ($message['SubscribeURL'] ?? ''));
+        $token = trim((string) ($message['Token'] ?? ''));
+
+        if ($token === '' || $subscribeUrl === '' || ! $this->isTrustedSnsHttpsUrl($subscribeUrl)) {
             return false;
         }
 
         return true;
     }
 
-    private function isTrustedSnsSubscribeUrl(string $url): bool
+    private function isTrustedSesNotification(Message $message): bool
+    {
+        if (! $this->topicArnMatchesConfig($message)) {
+            return false;
+        }
+
+        $messageId = trim((string) ($message['MessageId'] ?? ''));
+        $timestamp = trim((string) ($message['Timestamp'] ?? ''));
+
+        if ($messageId === '' || $timestamp === '') {
+            return false;
+        }
+
+        $signingCertUrl = trim((string) ($message['SigningCertURL'] ?? ''));
+
+        if ($signingCertUrl !== '' && ! $this->isTrustedSnsHttpsUrl($signingCertUrl)) {
+            return false;
+        }
+
+        $payload = json_decode($message['Message'] ?? '', true);
+
+        if (! is_array($payload)) {
+            return false;
+        }
+
+        $notificationType = $payload['notificationType'] ?? null;
+
+        if ($notificationType === 'Bounce') {
+            return isset($payload['bounce']['bounceType']);
+        }
+
+        if ($notificationType === 'Complaint') {
+            return isset($payload['complaint']);
+        }
+
+        return false;
+    }
+
+    private function isTrustedSnsHttpsUrl(string $url): bool
     {
         $parsed = parse_url($url);
         if (! is_array($parsed) || ($parsed['scheme'] ?? '') !== 'https') {
