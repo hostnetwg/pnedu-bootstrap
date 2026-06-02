@@ -221,6 +221,17 @@ class SendyService
      * Sendy może blokować automatyczny ponowny zapis; wtedy ustawienia listy / marki decydują
      * (forum Sendy, opcja „Only this list” vs „All lists”).
      */
+    /**
+     * Zapis z paska newslettera na stronie głównej — lista NAUCZYCIELE.
+     */
+    public function subscribeHomepageNewsletter(string $email): bool
+    {
+        return $this->subscribe($email, self::LIST_NAUCZYCIELE, [
+            'gdpr' => 'true',
+            'silent' => 'true',
+        ]);
+    }
+
     public function subscribeCertificateRegistrationNewsletter(string $email, string $firstName, string $lastName): bool
     {
         $firstName = trim($firstName);

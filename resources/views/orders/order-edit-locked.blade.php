@@ -77,7 +77,7 @@
 
     <div class="locked-actions mb-4">
         <a href="{{ route('home') }}#kontakt" class="btn btn-primary"><i class="bi bi-envelope me-1"></i> Formularz kontaktowy</a>
-        <a href="mailto:kontakt@nowoczesna-edukacja.pl?subject={{ rawurlencode('Zamówienie '.$order->id) }}" class="btn btn-outline-primary"><i class="bi bi-at me-1"></i> kontakt@nowoczesna-edukacja.pl</a>
+        <a href="mailto:kontakt@pnedu.pl?subject={{ rawurlencode('Zamówienie '.$order->id) }}" class="btn btn-outline-primary"><i class="bi bi-at me-1"></i> kontakt@pnedu.pl</a>
         @if($course)
             <a href="{{ route('courses.show', $course->id) }}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i> Strona szkolenia</a>
         @endif

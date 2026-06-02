@@ -28,7 +28,7 @@
     <h2>3. Administrator danych</h2>
     <p>Dane Administratora oraz kontakt w&nbsp;sprawach prywatności:</p>
     <ul>
-        <li>E‑mail: <a href="mailto:kontakt@nowoczesna-edukacja.pl">kontakt@nowoczesna-edukacja.pl</a></li>
+        <li>E‑mail: <a href="mailto:kontakt@pnedu.pl">kontakt@pnedu.pl</a></li>
         <li>Tel.: <a href="tel:+48501654274">+48&nbsp;501&nbsp;654&nbsp;274</a></li>
     </ul>
 
@@ -83,7 +83,7 @@
     <p>Administrator może aktualizować niniejszy dokument. Zmiany będą publikowane w&nbsp;Serwisie, a&nbsp;jeśli będą istotne – Użytkownicy zostaną poinformowani drogą e‑mailową.</p>
 
     <h2>14. Kontakt</h2>
-    <p>W razie pytań dotyczących niniejszej polityki prywatności skontaktuj się z&nbsp;Administratorem pod adresem <a href="mailto:kontakt@nowoczesna-edukacja.pl">kontakt@nowoczesna-edukacja.pl</a>.</p>
+    <p>W razie pytań dotyczących niniejszej polityki prywatności skontaktuj się z&nbsp;Administratorem pod adresem <a href="mailto:kontakt@pnedu.pl">kontakt@pnedu.pl</a>.</p>
                 </div>
             </div>
         </div>

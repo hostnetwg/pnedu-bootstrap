@@ -28,7 +28,7 @@
                         </div>
                     </div>
                 @endif
-                <p class="text-muted mb-0">W razie pytań skontaktuj się z nami: kontakt@nowoczesna-edukacja.pl</p>
+                <p class="text-muted mb-0">W razie pytań skontaktuj się z nami: kontakt@pnedu.pl</p>
                 <div class="mt-4">
                     <a href="{{ route('courses.show', $order->course_id) }}" class="btn btn-primary">Powrót do szczegółów szkolenia</a>
                     <a href="{{ route('home') }}" class="btn btn-secondary ms-2">Strona główna</a>

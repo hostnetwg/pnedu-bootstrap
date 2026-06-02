@@ -20,7 +20,7 @@
     <p><strong>Platforma Nowoczesnej Edukacji Waldemar Grabowski</strong>, ul.&nbsp;Andrzeja&nbsp;Zamoyskiego&nbsp;30/14, 09‑320&nbsp;Bieżuń, NIP&nbsp;7392137630 (dalej: „Administrator”).</p>
 
     <h2>2. Dane kontaktowe</h2>
-    <p>E‑mail: <a href="mailto:kontakt@nowoczesna-edukacja.pl">kontakt@nowoczesna-edukacja.pl</a><br>
+    <p>E‑mail: <a href="mailto:kontakt@pnedu.pl">kontakt@pnedu.pl</a><br>
        Tel.: <a href="tel:+48501654274">+48&nbsp;501&nbsp;654&nbsp;274</a></p>
 
     <h3>2.1. Inspektor Ochrony Danych</h3>
@@ -111,7 +111,7 @@
     </ol>
 
     <h2>9. Prawo do cofnięcia zgody</h2>
-    <p>Zgodę na otrzymywanie newslettera możesz wycofać w&nbsp;każdej chwili, klikając link <em>„wypisz się”</em> w&nbsp;stopce każdej wiadomości lub pisząc na adres <a href="mailto:kontakt@nowoczesna-edukacja.pl">kontakt@nowoczesna-edukacja.pl</a>.</p>
+    <p>Zgodę na otrzymywanie newslettera możesz wycofać w&nbsp;każdej chwili, klikając link <em>„wypisz się”</em> w&nbsp;stopce każdej wiadomości lub pisząc na adres <a href="mailto:kontakt@pnedu.pl">kontakt@pnedu.pl</a>.</p>
 
     <h2>10. Obowiązek / dobrowolność podania danych</h2>
     <p>Podanie danych jest <strong>dobrowolne</strong>, lecz niezbędne do zawarcia umowy szkoleniowej lub otrzymywania newslettera. Konsekwencją niepodania danych będzie brak możliwości wzięcia udziału w&nbsp;szkoleniu lub otrzymywania materiałów marketingowych.</p>

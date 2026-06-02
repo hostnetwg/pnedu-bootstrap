@@ -3,6 +3,7 @@
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\ExternalSurveyGateController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\NewsletterController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SeoController;
 use Illuminate\Support\Facades\Route;
@@ -130,6 +131,10 @@ require __DIR__.'/auth.php';
 
 // Handle contact form submissions from the welcome page
 Route::post('/kontakt', [ContactController::class, 'send'])->name('contact.send');
+
+Route::post('/newsletter', [NewsletterController::class, 'subscribe'])
+    ->middleware('throttle:10,1')
+    ->name('newsletter.subscribe');
 
 // Lookup uczestnika po e-mailu (musi być przed /courses/{id})
 Route::get('/courses/participant-lookup-by-email', [App\Http\Controllers\CourseController::class, 'participantLookupByEmail'])->name('courses.participant-lookup');

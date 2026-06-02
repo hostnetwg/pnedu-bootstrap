@@ -31,7 +31,7 @@
             'url' => $baseUrl.'/',
             'logo' => $baseUrl.'/logo-pne.png',
             'image' => $baseUrl.'/logo-pne.png',
-            'email' => 'kontakt@nowoczesna-edukacja.pl',
+            'email' => 'kontakt@pnedu.pl',
             'telephone' => '+48-501-654-274',
             'address' => [
                 '@type' => 'PostalAddress',
@@ -89,7 +89,7 @@
                             <p class="mb-3 mt-2 small">
                                 Postaramy się jak najszybciej przygotować Twoje zaświadczenie. Jeżeli nie otrzymasz go w ciągu
                                 <strong>3–4 dni</strong>, napisz do nas na adres:
-                                <a href="mailto:kontakt@nowoczesna-edukacja.pl">kontakt@nowoczesna-edukacja.pl</a>.
+                                <a href="mailto:kontakt@pnedu.pl">kontakt@pnedu.pl</a>.
                             </p>
                         @endif
                         <p class="mb-3 fw-semibold text-muted">Miłego dnia :)</p>
@@ -98,7 +98,7 @@
                             <strong style="color:#0d47a1; font-size: 1rem;">ORGANIZATOR</strong><br>
                             Niepubliczny Ośrodek Doskonalenia Nauczycieli<br>
                             „Platforma Nowoczesnej Edukacji”<br>
-                            tel. 501 654 274, <a href="mailto:kontakt@nowoczesna-edukacja.pl" style="color:#0d47a1;">kontakt@nowoczesna-edukacja.pl</a><br>
+                            tel. 501 654 274, <a href="mailto:kontakt@pnedu.pl" style="color:#0d47a1;">kontakt@pnedu.pl</a><br>
                             <a href="https://pnedu.pl" target="_blank" rel="noopener noreferrer" style="color:#0d47a1;">pnedu.pl</a>
                         </p>
                     </div>
@@ -623,7 +623,7 @@
 </section>    
 
 <!-- ===== NEWSLETTER STRIP ======================================== -->
-<section class="py-5 bg-primary bg-gradient">
+<section id="newsletter" class="py-5 bg-primary bg-gradient">
     <div class="container">
         <div class="row align-items-center">
             <div class="col-lg-6 text-center text-lg-start text-white mb-4 mb-lg-0">
@@ -631,9 +631,31 @@
                 <p class="mb-0">Otrzymuj informacje o nowościach i promocjach</p>
             </div>
             <div class="col-lg-6">
-                <form class="needs-validation d-flex gap-2">
-                    <input type="email" class="form-control" placeholder="Twój e-mail" required>
-                    <button type="submit" class="btn btn-warning px-4">Zapisz się</button>
+                <form method="POST" action="{{ route('newsletter.subscribe') }}" class="needs-validation">
+                    @csrf
+                    <div class="d-flex flex-column flex-sm-row gap-2">
+                        <input type="email"
+                               name="email"
+                               class="form-control @error('email') is-invalid @enderror"
+                               placeholder="Twój e-mail"
+                               value="{{ old('email') }}"
+                               required
+                               autocomplete="email">
+                        <button type="submit" class="btn btn-warning px-4 flex-shrink-0">Zapisz się</button>
+                    </div>
+                    <div class="form-check mt-2 text-white text-start">
+                        <input class="form-check-input @error('newsletter_consent') is-invalid @enderror"
+                               type="checkbox"
+                               name="newsletter_consent"
+                               id="newsletter_consent"
+                               value="1"
+                               {{ old('newsletter_consent') ? 'checked' : '' }}
+                               required>
+                        <label class="form-check-label small" for="newsletter_consent">
+                            Wyrażam zgodę na otrzymywanie newslettera z materiałami edukacyjnymi i informacjami o nowych usługach
+                            (<a href="{{ route('rodo') }}" class="link-light link-underline-opacity-75">RODO</a>).
+                        </label>
+                    </div>
                 </form>
             </div>
         </div>
@@ -665,7 +687,7 @@
                     </div>
                     <div>
                         <h6 class="fw-bold mb-1">Email</h6>
-                        <p class="mb-0">kontakt@nowoczesna-edukacja.pl</p>
+                        <p class="mb-0">kontakt@pnedu.pl</p>
                     </div>
                 </div>
                 

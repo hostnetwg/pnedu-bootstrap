@@ -48,7 +48,7 @@
                     </li>
                     <li class="mb-3 d-flex">
                         <i class="bi bi-envelope-fill me-2 text-primary"></i>
-                        <span>kontakt@nowoczesna-edukacja.pl</span>
+                        <span>kontakt@pnedu.pl</span>
                     </li>
                     <li class="mb-3 d-flex">
                         <i class="bi bi-geo-alt-fill me-2 text-primary"></i>

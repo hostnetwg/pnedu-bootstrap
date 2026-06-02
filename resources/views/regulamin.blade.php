@@ -20,7 +20,7 @@
         <h2>§&nbsp;1. Postanowienia wstępne</h2>
         <ol>
             <li>Niniejszy regulamin (dalej: „<strong>Regulamin</strong>”) określa zasady korzystania z&nbsp;serwisu <strong>nowoczesna-edukacja.pl</strong> oraz świadczonych za jego pośrednictwem usług szkoleniowych i&nbsp;informacyjnych.</li>
-            <li>Usługodawcą jest <strong>Platforma Nowoczesnej Edukacji Waldemar Grabowski</strong>, ul.&nbsp;Andrzeja&nbsp;Zamoyskiego&nbsp;30/14, 09‑320&nbsp;Bieżuń, NIP&nbsp;7392137630 (zwolniony z&nbsp;podatku VAT zgodnie z&nbsp;art.&nbsp;43 ust.&nbsp;1 pkt&nbsp;29 lit.&nbsp;b i&nbsp;art.&nbsp;113 ust.&nbsp;1 ustawy o&nbsp;VAT), e‑mail: <a href="mailto:kontakt@nowoczesna-edukacja.pl">kontakt@nowoczesna-edukacja.pl</a>, tel.: +48&nbsp;501&nbsp;654&nbsp;274 (dalej: „<strong>Usługodawca</strong>”).</li>
+            <li>Usługodawcą jest <strong>Platforma Nowoczesnej Edukacji Waldemar Grabowski</strong>, ul.&nbsp;Andrzeja&nbsp;Zamoyskiego&nbsp;30/14, 09‑320&nbsp;Bieżuń, NIP&nbsp;7392137630 (zwolniony z&nbsp;podatku VAT zgodnie z&nbsp;art.&nbsp;43 ust.&nbsp;1 pkt&nbsp;29 lit.&nbsp;b i&nbsp;art.&nbsp;113 ust.&nbsp;1 ustawy o&nbsp;VAT), e‑mail: <a href="mailto:kontakt@pnedu.pl">kontakt@pnedu.pl</a>, tel.: +48&nbsp;501&nbsp;654&nbsp;274 (dalej: „<strong>Usługodawca</strong>”).</li>
             <li>Regulamin stanowi regulamin świadczenia usług drogą elektroniczną w&nbsp;rozumieniu art.&nbsp;8 ustawy z&nbsp;18&nbsp;lipca&nbsp;2002&nbsp;r. o&nbsp;świadczeniu usług drogą elektroniczną.</li>
         </ol>
 
@@ -89,7 +89,7 @@
 
         <h2>§&nbsp;9. Reklamacje</h2>
         <ol>
-            <li>Reklamacje należy kierować na adres <a href="mailto:kontakt@nowoczesna-edukacja.pl">kontakt@nowoczesna-edukacja.pl</a> w&nbsp;terminie 14&nbsp;dni od zdarzenia.</li>
+            <li>Reklamacje należy kierować na adres <a href="mailto:kontakt@pnedu.pl">kontakt@pnedu.pl</a> w&nbsp;terminie 14&nbsp;dni od zdarzenia.</li>
             <li>Usługodawca udzieli odpowiedzi w ciągu 14&nbsp;dni kalendarzowych.</li>
         </ol>
 
