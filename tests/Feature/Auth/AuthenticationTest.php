@@ -51,4 +51,21 @@ class AuthenticationTest extends TestCase
         $this->assertGuest();
         $response->assertRedirect('/');
     }
+
+    public function test_users_can_logout_via_get_for_back_button_and_direct_links(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->get('/logout');
+
+        $this->assertGuest();
+        $response->assertRedirect('/');
+    }
+
+    public function test_guest_get_logout_redirects_to_login(): void
+    {
+        $response = $this->get('/logout');
+
+        $response->assertRedirect(route('login', absolute: false));
+    }
 }
