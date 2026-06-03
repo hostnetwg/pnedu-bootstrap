@@ -11,7 +11,7 @@
         <div class="col-lg-9">
             <div class="card border-0 shadow-sm rounded-4">
                 <div class="card-body py-4">
-                    <h2 class="h4 mb-2">Moje szkolenia</h2>
+                    <h2 class="h4 mb-2">Twoje szkolenia</h2>
                     @include('dashboard.partials.szkolenia-list-inner', ['szkoleniaFilterRoute' => 'dashboard.szkolenia'])
                 </div>
             </div>
