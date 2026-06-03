@@ -51,6 +51,7 @@ class User extends Authenticatable implements MustVerifyEmail
         return [
             'email_verified_at' => 'datetime',
             'email_undeliverable_at' => 'datetime',
+            'last_login_at' => 'datetime',
             'verification_reminder_3d_sent_at' => 'datetime',
             'verification_reminder_83d_sent_at' => 'datetime',
             'verification_reminder_89d_sent_at' => 'datetime',

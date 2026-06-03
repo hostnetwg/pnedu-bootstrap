@@ -13,6 +13,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->web(append: [
             \App\Http\Middleware\CaptureMarketingSource::class,
+            \App\Http\Middleware\RecordPneduUserLoginSession::class,
         ]);
 
         // Za tunelami (ngrok, Cloudflare Tunnel) Laravel musi ufać nagłówkom X-Forwarded-*,
