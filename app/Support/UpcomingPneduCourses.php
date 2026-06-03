@@ -36,6 +36,6 @@ class UpcomingPneduCourses
             })
             ->whereNull('deleted_at')
             ->orderBy('start_date', 'asc')
-            ->with('instructor');
+            ->with(['instructor', 'priceVariants']);
     }
 }
