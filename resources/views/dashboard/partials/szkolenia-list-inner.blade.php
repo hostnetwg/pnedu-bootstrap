@@ -46,6 +46,9 @@
                 $accessExpiresFormatted = $participant->access_expires_at
                     ? $participant->access_expires_at->timezone(config('app.timezone'))->format('Y-m-d H:i')
                     : null;
+                $courseDisplayTitle = $course
+                    ? trim(str_replace(['&nbsp;', "\xc2\xa0"], ' ', strip_tags(html_entity_decode((string) $course->title, ENT_QUOTES | ENT_HTML5, 'UTF-8'))))
+                    : 'Szkolenie niedostępne w katalogu';
             @endphp
             <div class="training-item">
                 <div class="training-content">
@@ -57,7 +60,7 @@
                                 @else
                                     <i class="bi bi-folder2-open training-title-folder-icon--leading" aria-hidden="true"></i>
                                 @endif
-                                <span>{{ $course?->title ?? 'Szkolenie niedostępne w katalogu' }}</span>
+                                <span>{{ $courseDisplayTitle }}</span>
                             </a>
                         @elseif($hasOnlineMaterials && !$accessActive)
                             <span class="training-title-link training-title-link--disabled training-title-link--expired" title="Dostęp wygasł">
@@ -66,10 +69,10 @@
                                 @else
                                     <i class="bi bi-folder-x training-title-folder-icon--leading" aria-hidden="true"></i>
                                 @endif
-                                <span>{{ $course?->title ?? 'Szkolenie niedostępne w katalogu' }}</span>
+                                <span>{{ $courseDisplayTitle }}</span>
                             </span>
                         @else
-                            <span class="training-title-text">{{ $course?->title ?? 'Szkolenie niedostępne w katalogu' }}</span>
+                            <span class="training-title-text">{{ $courseDisplayTitle }}</span>
                         @endif
                     </h3>
                     @if($course)
