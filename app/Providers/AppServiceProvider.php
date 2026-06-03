@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\View\Composers\DashboardResourceCountsComposer;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -19,5 +21,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        View::composer([
+            'layouts.navigation',
+            'dashboard.partials.sidebar-nav',
+            'dashboard.index',
+        ], DashboardResourceCountsComposer::class);
     }
 }

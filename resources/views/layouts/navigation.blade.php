@@ -77,13 +77,21 @@
             {{-- Prawa strona paska – tylko autoryzacja --}}
             <ul class="navbar-nav mb-2 mb-lg-0"><!-- brak me-auto => doklejone do prawej -->
                 @auth
+                    @if(($dashboardMojeZasobyCount ?? 0) > 0)
+                        <li class="nav-item d-flex align-items-center">
+                            <a class="nav-link nav-moje-zasoby @if(request()->routeIs('dashboard*')) nav-moje-zasoby--active @endif"
+                               href="{{ route('dashboard') }}">
+                                <i class="bi bi-grid-1x2-fill me-1" aria-hidden="true"></i>
+                                Twoje zasoby ({{ $dashboardMojeZasobyCount }})
+                            </a>
+                        </li>
+                    @endif
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="bi bi-person-circle me-1"></i> {{ Auth::user()->first_name }}
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                            <li><a href="{{ route('dashboard') }}" class="dropdown-item" href="#">Panel użytkownika</a></li>
-                            <li><a href="{{ route('profile.edit') }}" class="dropdown-item" href="#">Edytuj profil</a></li>                            
+                            <li><a href="{{ route('profile.edit') }}" class="dropdown-item">Edytuj profil</a></li>
                             <li>
                                 <form method="POST" action="{{ route('logout') }}">
                                     @csrf
@@ -100,3 +108,37 @@
         </div>
     </div>
 </nav>
+
+<style>
+.nav-moje-zasoby {
+    margin: 0.2rem 0.35rem 0.2rem 0;
+    padding: 0.45rem 0.9rem !important;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    color: #fff !important;
+    background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 55%, #084298 100%);
+    transition: background 0.15s ease;
+}
+.nav-moje-zasoby:hover,
+.nav-moje-zasoby:focus-visible {
+    color: #fff !important;
+    background: linear-gradient(135deg, #0b5ed7 0%, #094bac 55%, #063d8a 100%);
+}
+.nav-moje-zasoby--active,
+.nav-moje-zasoby--active:hover,
+.nav-moje-zasoby--active:focus-visible {
+    color: #fff !important;
+    background: linear-gradient(135deg, #084298 0%, #052c65 100%);
+    outline: 2px solid rgba(255, 255, 255, 0.5);
+    outline-offset: 0;
+}
+.nav-moje-zasoby i {
+    color: rgba(255, 255, 255, 0.92);
+}
+@media (max-width: 991.98px) {
+    .nav-moje-zasoby {
+        margin: 0.35rem 0 0.5rem;
+        display: inline-block;
+    }
+}
+</style>

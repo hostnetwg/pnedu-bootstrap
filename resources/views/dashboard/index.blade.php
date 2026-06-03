@@ -11,20 +11,20 @@
         <div class="col-lg-9">
             <div class="card border-0 shadow-sm rounded-4">
                 <div class="card-body py-4">
-                    <h2 class="h4 mb-3">Panel użytkownika</h2>
+                    <h2 class="h4 mb-3">Twoje zasoby</h2>
                     <p class="mb-3">
                         Witaj w swoim panelu. Z tego miejsca możesz przejść do listy zapisanych szkoleń i zaświadczeń — wybierz pozycję w menu po lewej (lub użyj linków poniżej).
                     </p>
                     <p class="text-muted mb-3">
                         Pełna lista Twoich szkoleń (z filtrem płatne / bezpłatne) znajduje się w zakładce
-                        <a href="{{ route('dashboard.szkolenia') }}" class="fw-semibold text-decoration-none">Moje szkolenia</a>.
+                        <a href="{{ route('dashboard.szkolenia') }}" class="fw-semibold text-decoration-none">Moje szkolenia ({{ $dashboardSzkoleniaCount ?? 0 }})</a>.
                         Materiały z kursów online (wcześniej m.in. na nowoczesna-edukacja.pl) są w zakładce
-                        <a href="{{ route('dashboard.online-courses.index') }}" class="fw-semibold text-decoration-none">Kursy online</a> — przy tym samym adresie e-mail co konto.
+                        <a href="{{ route('dashboard.online-courses.index') }}" class="fw-semibold text-decoration-none">Kursy online ({{ $dashboardOnlineCoursesCount ?? 0 }})</a> — przy tym samym adresie e-mail co konto.
                     </p>
                     <div class="d-flex flex-wrap gap-2">
-                        <a href="{{ route('dashboard.szkolenia') }}" class="btn btn-primary btn-sm">Moje szkolenia</a>
-                        <a href="{{ route('dashboard.online-courses.index') }}" class="btn btn-outline-primary btn-sm">Kursy online</a>
-                        <a href="{{ route('dashboard.zaswiadczenia') }}" class="btn btn-outline-primary btn-sm">Zaświadczenia</a>
+                        <a href="{{ route('dashboard.szkolenia') }}" class="btn btn-primary btn-sm">Moje szkolenia ({{ $dashboardSzkoleniaCount ?? 0 }})</a>
+                        <a href="{{ route('dashboard.online-courses.index') }}" class="btn btn-outline-primary btn-sm">Kursy online ({{ $dashboardOnlineCoursesCount ?? 0 }})</a>
+                        <a href="{{ route('dashboard.zaswiadczenia') }}" class="btn btn-outline-primary btn-sm">Zaświadczenia ({{ $dashboardZaswiadczeniaCount ?? 0 }})</a>
                     </div>
                 </div>
             </div>
