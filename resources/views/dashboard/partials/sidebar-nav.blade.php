@@ -21,6 +21,7 @@
     </li>
 </ul>
 
+@if(! request()->routeIs('dashboard.online-courses.lesson'))
 <div class="dashboard-sidebar-offer">
     <div class="dashboard-sidebar-offer__header">
         <span class="dashboard-sidebar-offer__badge">Aktualna oferta</span>
@@ -88,3 +89,4 @@
         </a>
     </div>
 </div>
+@endif

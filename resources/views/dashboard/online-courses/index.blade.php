@@ -22,7 +22,8 @@
                                 @php($pctRow = (($p['total'] ?? 0) > 0) ? min(100, (int) round(100 * (int) ($p['completed'] ?? 0) / (int) $p['total'])) : 0)
                                 @php($imgUrl = $enrollment->onlineCourse->publicImageUrl())
                                 <div class="col d-flex">
-                                    <article class="card border-0 shadow-sm rounded-4 overflow-hidden h-100 w-100 d-flex flex-column online-course-tile">
+                                    <a href="{{ route('dashboard.online-courses.show', $enrollment) }}"
+                                       class="card border-0 shadow-sm rounded-4 overflow-hidden h-100 w-100 d-flex flex-column online-course-tile text-decoration-none text-body">
                                         <div class="online-course-tile-media bg-body-secondary border-bottom">
                                             @if($imgUrl)
                                                 <img src="{{ $imgUrl }}"
@@ -49,10 +50,10 @@
                                                 </div>
                                             @endif
                                             <div class="mt-auto pt-3">
-                                                <a href="{{ route('dashboard.online-courses.show', $enrollment) }}" class="btn btn-primary w-100">Przejdź do kursu</a>
+                                                <span class="btn btn-primary w-100">Przejdź do kursu</span>
                                             </div>
                                         </div>
-                                    </article>
+                                    </a>
                                 </div>
                             @endforeach
                         </div>
@@ -67,6 +68,15 @@
 @push('styles')
 @include('dashboard.partials.minimal-sidebar-css')
 <style>
+    .online-course-tile {
+        transition: box-shadow 0.15s ease, transform 0.15s ease;
+    }
+    .online-course-tile:hover,
+    .online-course-tile:focus-visible {
+        box-shadow: 0 0.5rem 1.25rem rgba(0, 0, 0, 0.12) !important;
+        transform: translateY(-2px);
+        color: inherit;
+    }
     .online-course-tile-media {
         min-height: 10rem;
         display: flex;
