@@ -27,6 +27,10 @@ class UserLoginTrackingTest extends TestCase
         $user->refresh();
 
         $this->assertSame(1, $user->login_count);
+        $this->assertDatabaseCount('user_login_sessions', 1);
+        $this->assertDatabaseHas('user_login_sessions', [
+            'user_id' => $user->id,
+        ]);
     }
 
     public function test_guest_requests_do_not_increment_login_count(): void
