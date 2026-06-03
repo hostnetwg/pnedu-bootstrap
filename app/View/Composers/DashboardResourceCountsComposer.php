@@ -3,6 +3,7 @@
 namespace App\View\Composers;
 
 use App\Support\DashboardResourceCounts;
+use App\Support\UpcomingPneduCourses;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
@@ -18,6 +19,7 @@ class DashboardResourceCountsComposer
             'dashboardZaswiadczeniaCount' => $counts['zaswiadczenia'],
             'dashboardMojeZasobyCount' => $counts['total'],
             'dashboardTwojeZasobyUrl' => $counts['twoje_zasoby_url'],
+            'dashboardUpcomingCourses' => UpcomingPneduCourses::query(),
         ]);
     }
 }
