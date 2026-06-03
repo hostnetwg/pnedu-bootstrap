@@ -24,6 +24,22 @@
                                 <a href="{{ route('profile.edit') }}" class="fw-semibold">Popraw adres e-mail w profilu</a>,
                                 a po zapisaniu wyślemy link ponownie.
                             </p>
+                            @if ($protectedFromPurge)
+                                <p class="mb-0 small text-dark">
+                                    Masz zapis na płatne szkolenie powiązany z tym adresem — konto <strong>nie zostanie usunięte</strong>,
+                                    ale panel wymaga potwierdzenia poprawnego adresu e-mail.
+                                </p>
+                            @else
+                                <p class="mb-0 small text-danger fw-semibold">
+                                    Uwaga: jeśli nie poprawisz adresu, konto zostanie usunięte
+                                    @if ($deletionDeadline)
+                                        najpóźniej <strong>{{ $deletionDeadline->timezone(config('app.timezone'))->format('d.m.Y') }}</strong>
+                                        ({{ $graceDays }} dni od rejestracji).
+                                    @else
+                                        w ciągu {{ $graceDays }} dni od rejestracji.
+                                    @endif
+                                </p>
+                            @endif
                         @else
                             <p class="mb-1 fw-semibold text-dark">
                                 <i class="bi bi-exclamation-triangle-fill text-warning me-1" aria-hidden="true"></i>
@@ -52,7 +68,7 @@
                                 </p>
                             @endif
                         @endif
-                        @if (session('status') === 'verification-link-sent')
+                        @if (session('status') === 'verification-link-sent' && ! $undeliverable)
                             <p class="mb-0 mt-2 small text-success fw-semibold">
                                 Wysłaliśmy ponownie link weryfikacyjny na Twój adres e-mail.
                             </p>

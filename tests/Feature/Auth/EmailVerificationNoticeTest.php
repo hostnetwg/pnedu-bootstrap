@@ -44,5 +44,39 @@ class EmailVerificationNoticeTest extends TestCase
         $response->assertOk();
         $response->assertSee('Weryfikacja adresu e-mail', false);
         $response->assertSee('zostanie usunięte', false);
+        $response->assertSee('Wyślij link weryfikacyjny ponownie', false);
+    }
+
+    public function test_undeliverable_user_sees_bounce_messaging_on_verify_email_page(): void
+    {
+        $user = User::factory()->unverified()->create([
+            'email' => 'bounce@simulator.amazonses.com',
+            'email_undeliverable_at' => now(),
+            'email_undeliverable_reason' => 'permanent_bounce',
+        ]);
+
+        $response = $this->actingAs($user)->get(route('verification.notice'));
+
+        $response->assertOk();
+        $response->assertSee('Adres e-mail niedostarczalny', false);
+        $response->assertSee('Popraw adres e-mail w profilu', false);
+        $response->assertSee('zostanie usunięte', false);
+        $response->assertDontSee('Wyślij link weryfikacyjny ponownie', false);
+        $response->assertDontSee('Sprawdź folder spam', false);
+    }
+
+    public function test_undeliverable_user_does_not_see_resend_button_in_notice_banner(): void
+    {
+        $user = User::factory()->unverified()->create([
+            'email' => 'bounce@simulator.amazonses.com',
+            'email_undeliverable_at' => now(),
+            'email_undeliverable_reason' => 'permanent_bounce',
+        ]);
+
+        $response = $this->actingAs($user)->get(route('home'));
+
+        $response->assertOk();
+        $response->assertSee('Nie udało się dostarczyć wiadomości na ten adres', false);
+        $response->assertDontSee('Wyślij link ponownie', false);
     }
 }
