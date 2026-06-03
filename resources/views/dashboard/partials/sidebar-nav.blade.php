@@ -6,7 +6,7 @@
     </li>
     <li>
         <a href="{{ route('dashboard.szkolenia') }}" class="d-flex align-items-center gap-2 @if(request()->routeIs('dashboard.szkolenia') || request()->routeIs('dashboard.szkolenia.wideo')) active @endif">
-            <i class="bi bi-journal-text"></i> Moje szkolenia ({{ $dashboardSzkoleniaCount ?? 0 }})
+            <i class="bi bi-journal-text"></i> Twoje szkolenia ({{ $dashboardSzkoleniaCount ?? 0 }})
         </a>
     </li>
     <li>
