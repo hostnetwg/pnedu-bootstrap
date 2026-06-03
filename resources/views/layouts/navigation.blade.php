@@ -80,7 +80,7 @@
                     @if(($dashboardMojeZasobyCount ?? 0) > 0)
                         <li class="nav-item d-flex align-items-center">
                             <a class="nav-link nav-moje-zasoby @if(request()->routeIs('dashboard*')) nav-moje-zasoby--active @endif"
-                               href="{{ route('dashboard') }}">
+                               href="{{ $dashboardTwojeZasobyUrl ?? route('dashboard') }}">
                                 <i class="bi bi-grid-1x2-fill me-1" aria-hidden="true"></i>
                                 Twoje zasoby ({{ $dashboardMojeZasobyCount }})
                             </a>

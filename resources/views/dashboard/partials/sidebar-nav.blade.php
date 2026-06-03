@@ -1,6 +1,6 @@
 <ul class="list-unstyled dashboard-minimal-menu">
     <li>
-        <a href="{{ route('dashboard') }}" class="d-flex align-items-center gap-2 @if(request()->routeIs('dashboard')) active @endif">
+        <a href="{{ $dashboardTwojeZasobyUrl ?? route('dashboard') }}" class="d-flex align-items-center gap-2 @if(request()->routeIs('dashboard*')) active @endif">
             <i class="bi bi-grid-1x2-fill"></i> Twoje zasoby
         </a>
     </li>

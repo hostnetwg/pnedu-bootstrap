@@ -17,6 +17,7 @@ class DashboardResourceCountsComposer
             'dashboardOnlineCoursesCount' => $counts['online_courses'],
             'dashboardZaswiadczeniaCount' => $counts['zaswiadczenia'],
             'dashboardMojeZasobyCount' => $counts['total'],
+            'dashboardTwojeZasobyUrl' => $counts['twoje_zasoby_url'],
         ]);
     }
 }

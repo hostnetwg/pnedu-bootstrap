@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Participant;
 use App\Models\PneadmCourseSurveyLink;
+use App\Support\DashboardResourceCounts;
 use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\RedirectResponse;
@@ -14,10 +15,20 @@ use Illuminate\Support\Facades\DB;
 class DashboardController extends Controller
 {
     /**
-     * Panel główny konta — strona powitalna (lista szkoleń jest na /dashboard/szkolenia).
+     * Panel główny konta — przekierowanie do szkoleń / kursów online, gdy użytkownik ma zasoby.
      */
-    public function index()
+    public function index(): RedirectResponse|\Illuminate\View\View
     {
+        $counts = DashboardResourceCounts::forUser(Auth::user());
+
+        if ($counts['szkolenia'] > 0) {
+            return redirect()->route('dashboard.szkolenia');
+        }
+
+        if ($counts['online_courses'] > 0) {
+            return redirect()->route('dashboard.online-courses.index');
+        }
+
         return view('dashboard.index');
     }
 
