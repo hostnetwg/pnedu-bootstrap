@@ -76,7 +76,7 @@
     display: flex;
     flex-direction: column;
     gap: 0.55rem;
-    max-height: min(92vh, calc(5 * 11.5rem + 1.25rem));
+    max-height: min(92vh, calc(4 * 11.5rem + 1.25rem));
     overflow-y: auto;
     padding: 0.25rem 0.05rem 0.25rem 0;
     background: #f1f3f5;
