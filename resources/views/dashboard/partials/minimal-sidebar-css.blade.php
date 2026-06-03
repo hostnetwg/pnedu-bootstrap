@@ -34,14 +34,14 @@
     margin-top: 1.25rem;
     padding: 0.95rem;
     border-radius: 1rem;
-    background: linear-gradient(180deg, #fff 0%, #fafbfc 100%);
-    border: 1px solid #e9ecef;
+    background: #f1f3f5;
+    border: 1px solid #dee2e6;
     box-shadow: 0 0.125rem 0.5rem rgba(0, 0, 0, 0.04);
 }
 .dashboard-sidebar-offer__header {
     padding: 0 0.15rem 0.85rem;
     margin-bottom: 0.15rem;
-    border-bottom: 1px solid #e9ecef;
+    border-bottom: 1px solid #dee2e6;
     border-left: 3px solid #c6a300;
     padding-left: 0.75rem;
 }
@@ -78,9 +78,10 @@
     gap: 0.55rem;
     max-height: min(92vh, calc(5 * 11.5rem + 1.25rem));
     overflow-y: auto;
-    padding: 0.15rem 0.05rem 0.15rem 0;
+    padding: 0.25rem 0.05rem 0.25rem 0;
+    background: #f1f3f5;
     scrollbar-width: thin;
-    scrollbar-color: #dee2e6 transparent;
+    scrollbar-color: #ced4da transparent;
 }
 .dashboard-sidebar-upcoming::-webkit-scrollbar {
     width: 4px;
@@ -218,7 +219,8 @@
 .dashboard-sidebar-offer__footer {
     margin-top: 0.85rem;
     padding-top: 0.75rem;
-    border-top: 1px solid #e9ecef;
+    border-top: 1px solid #dee2e6;
+    background: #f1f3f5;
 }
 .dashboard-sidebar-offer__all-link {
     display: flex;
