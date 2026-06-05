@@ -36,6 +36,16 @@ return [
         ],
     ],
 
+    'certificate_registration' => [
+        /** Cache statusu formularza (sekundy). 0 = wyłączony. Domyślnie 60 s — redukuje obciążenie API przy spike po webinarze. */
+        'status_cache_ttl' => (int) env('CERT_REG_STATUS_CACHE_TTL', 60),
+        /** Cache-Control max-age dla GET formularza (sekundy). 0 = wyłączony. Cloudflare może respektować ten nagłówek. */
+        'page_cache_max_age' => (int) env('CERT_REG_PAGE_CACHE_MAX_AGE', 30),
+        'page_cache_stale_while_revalidate' => (int) env('CERT_REG_PAGE_CACHE_STALE', 60),
+        /** Sesja dla /certificate-registration/*: redis | inherit (domyślny SESSION_DRIVER). */
+        'session_driver' => env('CERT_REG_SESSION_DRIVER', 'inherit'),
+    ],
+
     'pneadm' => [
         'api_url' => env('PNEADM_API_URL'),
         'api_token' => env('PNEADM_API_TOKEN'),

@@ -177,8 +177,14 @@ Route::get('/orders/{ident}/summary', [App\Http\Controllers\CourseController::cl
 Route::get('/orders/{ident}/pdf', [App\Http\Controllers\CourseController::class, 'orderPdf'])->name('orders.pdf');
 
 // Rejestracja zaświadczenia (formularz po tokenie – zapis do participants w pneadm)
-Route::get('/certificate-registration/{token}', [App\Http\Controllers\CertificateRegistrationController::class, 'show'])->name('certificate-registration.show');
-Route::post('/certificate-registration/{token}', [App\Http\Controllers\CertificateRegistrationController::class, 'submit'])->name('certificate-registration.submit');
+Route::middleware([
+    \App\Http\Middleware\CacheCertificateRegistrationPage::class,
+])->withoutMiddleware([
+    \App\Http\Middleware\CaptureMarketingSource::class,
+])->group(function () {
+    Route::get('/certificate-registration/{token}', [App\Http\Controllers\CertificateRegistrationController::class, 'show'])->name('certificate-registration.show');
+    Route::post('/certificate-registration/{token}', [App\Http\Controllers\CertificateRegistrationController::class, 'submit'])->name('certificate-registration.submit');
+});
 
 // Link z tokenem – lista szkoleń i pobieranie zaświadczeń (bez logowania)
 Route::get('/certificates/{token}', [App\Http\Controllers\CertificateController::class, 'showListByToken'])->name('certificates.list-by-token');

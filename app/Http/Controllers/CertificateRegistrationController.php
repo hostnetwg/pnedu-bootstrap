@@ -2,7 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\SendyService;
+use App\Jobs\SubscribeCertificateRegistrationNewsletterJob;
+use App\Services\CertificateRegistrationStatusService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -53,45 +54,12 @@ class CertificateRegistrationController extends Controller
     }
 
     /**
-     * GET status z API pneadm lub null przy błędzie konfiguracji / wyjątku.
-     *
-     * @return array<string, mixed>|null
-     */
-    private function fetchRegistrationStatus(string $token): ?array
-    {
-        $apiUrl = $this->getApiUrl();
-        $apiToken = $this->getApiToken();
-
-        if ($apiUrl === '' || $apiToken === '') {
-            return null;
-        }
-
-        try {
-            $response = Http::timeout(15)
-                ->withToken($apiToken)
-                ->get($apiUrl.'/api/certificate-registration/status/'.$token);
-
-            $data = $response->json() ?? [];
-            $data['_http_successful'] = $response->successful();
-
-            return $data;
-        } catch (\Throwable $e) {
-            Log::error('CertificateRegistration: API error', [
-                'token' => $token,
-                'message' => $e->getMessage(),
-            ]);
-
-            return null;
-        }
-    }
-
-    /**
      * GET /certificate-registration/{token}
      * Wyświetla formularz rejestracji lub widok "rejestracja nieaktywna".
      */
-    public function show(string $token)
+    public function show(string $token, CertificateRegistrationStatusService $statusService)
     {
-        $data = $this->fetchRegistrationStatus($token);
+        $data = $statusService->getStatus($token);
 
         if ($data === null) {
             Log::warning('CertificateRegistration: PNEADM API not configured');
@@ -143,9 +111,9 @@ class CertificateRegistrationController extends Controller
      * POST /certificate-registration/{token}
      * Wysyła dane do API pneadm i przekierowuje z komunikatem.
      */
-    public function submit(Request $request, string $token)
+    public function submit(Request $request, string $token, CertificateRegistrationStatusService $statusService)
     {
-        $status = $this->fetchRegistrationStatus($token);
+        $status = $statusService->getStatus($token);
 
         if ($status === null) {
             return redirect()->route('home')->with('error', 'Usługa jest chwilowo niedostępna.');
@@ -221,33 +189,25 @@ class CertificateRegistrationController extends Controller
                 $payload['birth_place'] = $request->input('birth_place');
             }
 
-            $response = Http::timeout(15)
+            $timeout = (int) config('services.pneadm.timeout', 30);
+
+            $response = Http::timeout($timeout)
                 ->withToken($apiToken)
                 ->post($apiUrl.'/api/certificate-registration/register', $payload);
 
             $data = $response->json() ?? [];
 
             if ($response->successful() && ! empty($data['success'])) {
-                $email = $validated['email'];
-
                 if ($newsletterConsent) {
-                    $sendy = SendyService::fromConfig();
-                    if ($sendy !== null) {
-                        try {
-                            $sendy->subscribeCertificateRegistrationNewsletter(
-                                $email,
-                                $validated['first_name'],
-                                $validated['last_name']
-                            );
-                        } catch (\Throwable $e) {
-                            Log::warning('CertificateRegistration: Sendy subscribe failed', ['email' => $email, 'message' => $e->getMessage()]);
-                        }
-                    }
+                    SubscribeCertificateRegistrationNewsletterJob::dispatch(
+                        $validated['email'],
+                        $validated['first_name'],
+                        $validated['last_name'],
+                    );
                 }
 
-                return redirect()->route('home')->with([
-                    'certificate_registration_success' => true,
-                    'certificate_registration_updated' => ! empty($data['updated']),
+                return response()->view('certificate-registration.success', [
+                    'updated' => ! empty($data['updated']),
                 ]);
             }
 

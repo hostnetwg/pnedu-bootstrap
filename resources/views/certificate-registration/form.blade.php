@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.certificate-registration')
 
 @section('title', 'Rejestracja zaświadczenia – ' . config('app.name'))
 

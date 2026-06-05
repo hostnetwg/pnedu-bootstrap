@@ -79,32 +79,13 @@
                         <img src="{{ asset('logo-pne.png') }}" alt="Platforma Nowoczesnej Edukacji" style="max-width: 210px; height: auto;">
                     </div>
                     <div class="text-center">
-                        @if(session('certificate_registration_updated'))
-                            <h2 class="h4 mb-3 text-primary">Zaktualizowaliśmy Twoje dane.</h2>
-                            <p class="mb-3 mt-2 small">
-                                Zapis na liście uczestników tego szkolenia pozostał ten sam (ten sam adres e-mail) — uzupełniliśmy dane zgodnie z przesłanym formularzem.
-                            </p>
-                        @else
-                            <h2 class="h4 mb-3 text-primary">Dziękujemy za udział w szkoleniu.</h2>
-                            <p class="mb-3 mt-2 small">
-                                Postaramy się jak najszybciej przygotować Twoje zaświadczenie. Jeżeli nie otrzymasz go w ciągu
-                                <strong>3–4 dni</strong>, napisz do nas na adres:
-                                <a href="mailto:kontakt@pnedu.pl">kontakt@pnedu.pl</a>.
-                            </p>
-                        @endif
-                        <p class="mb-3 fw-semibold text-muted">Miłego dnia :)</p>
-                        <hr class="my-3">
-                        <p class="mb-0" style="color:#0d47a1; font-size: 0.95rem;">
-                            <strong style="color:#0d47a1; font-size: 1rem;">ORGANIZATOR</strong><br>
-                            Niepubliczny Ośrodek Doskonalenia Nauczycieli<br>
-                            „Platforma Nowoczesnej Edukacji”<br>
-                            tel. 501 654 274, <a href="mailto:kontakt@pnedu.pl" style="color:#0d47a1;">kontakt@pnedu.pl</a><br>
-                            <a href="https://pnedu.pl" target="_blank" rel="noopener noreferrer" style="color:#0d47a1;">pnedu.pl</a>
-                        </p>
+                        @include('certificate-registration.partials.thanks-content', [
+                            'updated' => session('certificate_registration_updated'),
+                        ])
                     </div>
                 </div>
                 <div class="modal-footer border-0 pt-0 pb-4 pe-4">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zamknij</button>
+                    <button type="button" class="btn btn-primary btn-lg px-4" data-bs-dismiss="modal">Zamknij</button>
                 </div>
             </div>
         </div>
