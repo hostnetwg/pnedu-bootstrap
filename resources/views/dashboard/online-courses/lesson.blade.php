@@ -12,45 +12,13 @@
 @endphp
 <div class="container py-4">
     <div class="row justify-content-center">
-        <div class="col-lg-4 mb-4 mb-lg-0">
-            <nav>@include('dashboard.partials.sidebar-nav')</nav>
-            <div class="card border-0 shadow-sm rounded-4 mt-3">
-                <div class="card-body py-3">
-                    <div class="small text-muted mb-2">{{ $course->title }}</div>
-                    @foreach($course->modulesWithPublishedLessons as $mod)
-                        <div class="fw-semibold mt-3 mb-1">{{ $mod->title }}</div>
-                        <ul class="list-unstyled mb-0 small">
-                            @foreach($mod->lessons as $les)
-                                @php($lesDone = in_array((int) $les->id, $completedLessonIds, true))
-                                <li class="mb-1" data-oc-lesson-id="{{ $les->id }}">
-                                    <div class="d-flex align-items-start gap-1">
-                                        <a href="{{ route('dashboard.online-courses.lesson', [$enrollment, $les]) }}"
-                                           class="d-flex align-items-start gap-2 text-start flex-grow-1 min-w-0 {{ $les->id === $lesson->id ? 'fw-bold text-primary' : 'text-decoration-none text-body' }}">
-                                            @if($lesDone)
-                                                <i class="bi bi-check-circle-fill text-success flex-shrink-0 mt-1 js-oc-lesson-status-icon" aria-hidden="true"></i>
-                                                <span><span class="visually-hidden">Ukończone: </span>{{ $les->title }}</span>
-                                            @else
-                                                <i class="bi bi-circle text-secondary flex-shrink-0 mt-1 js-oc-lesson-status-icon" aria-hidden="true"></i>
-                                                <span><span class="visually-hidden">Do zrobienia: </span>{{ $les->title }}</span>
-                                            @endif
-                                        </a>
-                                        @if(array_key_exists((string) (int) $les->id, $lessonNotesForSidebar))
-                                            <button type="button"
-                                                    class="btn btn-link p-0 border-0 lh-1 mt-1 text-primary flex-shrink-0 js-oc-lesson-note-popover"
-                                                    data-oc-note-lesson-id="{{ $les->id }}"
-                                                    aria-label="Podgląd notatki do lekcji: {{ $les->title }}">
-                                                <i class="bi bi-journal-text" aria-hidden="true"></i>
-                                            </button>
-                                        @endif
-                                    </div>
-                                </li>
-                            @endforeach
-                        </ul>
-                    @endforeach
-                </div>
+        <div class="col-12 col-lg-4 order-1 order-lg-1 mb-4 mb-lg-0">
+            <nav>@include('dashboard.partials.sidebar-nav-menu')</nav>
+            <div class="d-none d-lg-block mt-3">
+                @include('dashboard.online-courses.partials.lesson-toc')
             </div>
         </div>
-        <div class="col-lg-8">
+        <div class="col-12 col-lg-8 order-2 order-lg-2">
             <div class="mb-3">
                 <a href="{{ route('dashboard.online-courses.index') }}" class="btn btn-link text-decoration-none p-0 small">← Lista kursów online</a>
             </div>
@@ -176,6 +144,9 @@
 
                 </div>
             </div>
+            <div class="d-lg-none mt-3">
+                @include('dashboard.online-courses.partials.lesson-toc')
+            </div>
         </div>
     </div>
 </div>
@@ -233,15 +204,15 @@
 
     function applySidebarIcon(done) {
         if (!lessonId) return;
-        var row = document.querySelector('[data-oc-lesson-id="' + lessonId + '"]');
-        if (!row) return;
-        var icon = row.querySelector('.js-oc-lesson-status-icon');
-        if (!icon) return;
-        icon.className = 'bi flex-shrink-0 mt-1 js-oc-lesson-status-icon' + (done
-            ? ' bi-check-circle-fill text-success'
-            : ' bi-circle text-secondary');
-        var hidden = row.querySelector('.visually-hidden');
-        if (hidden) hidden.textContent = done ? 'Ukończone: ' : 'Do zrobienia: ';
+        document.querySelectorAll('[data-oc-lesson-id="' + lessonId + '"]').forEach(function (row) {
+            var icon = row.querySelector('.js-oc-lesson-status-icon');
+            if (!icon) return;
+            icon.className = 'bi flex-shrink-0 mt-1 js-oc-lesson-status-icon' + (done
+                ? ' bi-check-circle-fill text-success'
+                : ' bi-circle text-secondary');
+            var hidden = row.querySelector('.visually-hidden');
+            if (hidden) hidden.textContent = done ? 'Ukończone: ' : 'Do zrobienia: ';
+        });
     }
 
     function applyLabel(done) {
@@ -336,38 +307,44 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function syncSidebarNoteButton(lessonIdStr, bodyText) {
-        var row = document.querySelector('[data-oc-lesson-id="' + lessonIdStr + '"]');
-        if (!row) return;
-
-        var flexDiv = row.querySelector('div.d-flex.align-items-start');
-        if (!flexDiv) return;
+        var rows = document.querySelectorAll('[data-oc-lesson-id="' + lessonIdStr + '"]');
+        if (!rows.length) return;
 
         var hasText = typeof bodyText === 'string' && bodyText.length > 0;
-        var btn = flexDiv.querySelector('.js-oc-lesson-note-popover');
 
         if (!hasText) {
-            disposePopover(btn);
-            if (btn) btn.remove();
             delete notesMap[lessonIdStr];
             syncLessonNotesJsonFile();
-            return;
+        } else {
+            notesMap[lessonIdStr] = bodyText;
+            syncLessonNotesJsonFile();
         }
 
-        notesMap[lessonIdStr] = bodyText;
-        syncLessonNotesJsonFile();
+        rows.forEach(function (row) {
+            var flexDiv = row.querySelector('div.d-flex.align-items-start');
+            if (!flexDiv) return;
 
-        if (!btn) {
-            btn = document.createElement('button');
-            btn.type = 'button';
-            btn.className = 'btn btn-link p-0 border-0 lh-1 mt-1 text-primary flex-shrink-0 js-oc-lesson-note-popover';
-            btn.setAttribute('data-oc-note-lesson-id', lessonIdStr);
-            btn.setAttribute('aria-label', 'Podgląd notatki do lekcji');
-            btn.innerHTML = '<i class="bi bi-journal-text" aria-hidden="true"></i>';
-            var link = flexDiv.querySelector('a');
-            if (link) link.insertAdjacentElement('afterend', btn);
-            else flexDiv.appendChild(btn);
-        }
-        attachPopover(btn, bodyText);
+            var btn = flexDiv.querySelector('.js-oc-lesson-note-popover');
+
+            if (!hasText) {
+                disposePopover(btn);
+                if (btn) btn.remove();
+                return;
+            }
+
+            if (!btn) {
+                btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'btn btn-link p-0 border-0 lh-1 mt-1 text-primary flex-shrink-0 js-oc-lesson-note-popover';
+                btn.setAttribute('data-oc-note-lesson-id', lessonIdStr);
+                btn.setAttribute('aria-label', 'Podgląd notatki do lekcji');
+                btn.innerHTML = '<i class="bi bi-journal-text" aria-hidden="true"></i>';
+                var link = flexDiv.querySelector('a');
+                if (link) link.insertAdjacentElement('afterend', btn);
+                else flexDiv.appendChild(btn);
+            }
+            attachPopover(btn, bodyText);
+        });
     }
 
     function initSidebarLessonNotePopovers() {
