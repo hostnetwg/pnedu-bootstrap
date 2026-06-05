@@ -7,22 +7,30 @@
 .dashboard-minimal-menu li {
     margin-bottom: 0.5rem;
 }
-.dashboard-minimal-menu a {
+.dashboard-minimal-menu a,
+.dashboard-minimal-menu__label {
     color: #6c757d;
     font-size: 1.08rem;
     padding: 0.75rem 1rem 0.75rem 0.5rem;
     border-radius: 0.5rem;
-    text-decoration: none;
-    transition: background 0.15s, color 0.15s;
     font-weight: 400;
     position: relative;
+}
+.dashboard-minimal-menu a {
+    text-decoration: none;
+    transition: background 0.15s, color 0.15s;
     display: block;
+}
+.dashboard-minimal-menu__label {
+    cursor: default;
+    user-select: none;
 }
 .dashboard-minimal-menu a.active, .dashboard-minimal-menu a:hover {
     color: #0d6efd;
     background: #f5f7fa;
 }
-.dashboard-minimal-menu i {
+.dashboard-minimal-menu i,
+.dashboard-minimal-menu__label i {
     font-size: 1.2rem;
     color: #adb5bd;
     transition: color 0.15s;
@@ -259,7 +267,8 @@
     .dashboard-minimal-menu li {
         margin-bottom: 0;
     }
-    .dashboard-minimal-menu a {
+    .dashboard-minimal-menu a,
+    .dashboard-minimal-menu__label {
         padding: 0.5rem 0.9rem;
         font-size: 1rem;
     }
