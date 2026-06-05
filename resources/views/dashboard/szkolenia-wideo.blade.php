@@ -5,12 +5,15 @@
 @section('content')
 <div class="container py-4">
     <div class="row justify-content-center">
-        <div class="col-lg-3 mb-4 mb-lg-0">
+        <div class="col-12 col-lg-3 order-1 order-lg-1 mb-4 mb-lg-0">
             <nav>
-                @include('dashboard.partials.sidebar-nav')
+                @include('dashboard.partials.sidebar-nav-menu')
             </nav>
+            <div class="d-none d-lg-block">
+                @include('dashboard.partials.sidebar-nav-offer')
+            </div>
         </div>
-        <div class="col-lg-9">
+        <div class="col-12 col-lg-9 order-2 order-lg-2">
             <div class="card border-0 shadow-sm rounded-4">
                 <div class="card-body py-4">
                     <div class="d-flex align-items-center gap-2 mb-3">
@@ -171,6 +174,9 @@
                     @endif
                 </div>
             </div>
+        </div>
+        <div class="col-12 d-lg-none order-3">
+            @include('dashboard.partials.sidebar-nav-offer')
         </div>
     </div>
 </div>
