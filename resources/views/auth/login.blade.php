@@ -15,7 +15,18 @@
                 <div class="card-header">{{ __('Login') }}</div>
 
                 <div class="card-body">
-                    @if (session('training_access_relogin'))
+                    @if (session('email_verification_relogin'))
+                        <div class="alert alert-warning" role="alert">
+                            <strong>Ten link dotyczy innego konta.</strong>
+                            Zostałeś/aś wylogowany/a, aby potwierdzić adres e-mail z wiadomości.
+                            @if (session('login_email_hint'))
+                                Zaloguj się na adres <strong>{{ session('login_email_hint') }}</strong>
+                                (ten sam, na który wysłaliśmy link weryfikacyjny).
+                            @else
+                                Zaloguj się na konto powiązane z adresem z wiadomości weryfikacyjnej.
+                            @endif
+                        </div>
+                    @elseif (session('training_access_relogin'))
                         <div class="alert alert-warning" role="alert">
                             <strong>Ten link dotyczy innego konta.</strong>
                             Zostałeś/aś wylogowany/a, bo link do szkolenia z e-maila jest przypisany do innego adresu niż obecnie zalogowane konto.

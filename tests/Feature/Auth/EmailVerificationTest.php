@@ -75,7 +75,7 @@ class EmailVerificationTest extends TestCase
         $response->assertSessionHas('error');
     }
 
-    public function test_email_is_not_verified_for_different_user_id(): void
+    public function test_wrong_account_on_verification_link_redirects_to_login_with_email_hint(): void
     {
         $user = User::factory()->unverified()->create();
         $otherUser = User::factory()->unverified()->create();
@@ -88,7 +88,39 @@ class EmailVerificationTest extends TestCase
         $response = $this->actingAs($user)->get($verificationUrl);
 
         $this->assertFalse($user->fresh()->hasVerifiedEmail());
-        $response->assertRedirect(route('verification.notice', absolute: false));
-        $response->assertSessionHas('error');
+        $this->assertFalse($otherUser->fresh()->hasVerifiedEmail());
+        $this->assertGuest();
+        $response->assertRedirect(route('login', absolute: false));
+        $response->assertSessionHas('email_verification_relogin', true);
+        $response->assertSessionHas('login_email_hint', $otherUser->email);
+        $response->assertSessionHas('url.intended', $verificationUrl);
+    }
+
+    public function test_user_can_verify_after_relogin_from_wrong_account_redirect(): void
+    {
+        $loggedInUser = User::factory()->unverified()->create();
+        $targetUser = User::factory()->unverified()->create();
+
+        $verificationUrl = URL::route('verification.verify', [
+            'id' => $targetUser->id,
+            'hash' => sha1($targetUser->email),
+        ]);
+
+        $this->actingAs($loggedInUser)->get($verificationUrl);
+
+        Event::fake();
+
+        $loginResponse = $this->post('/login', [
+            'email' => $targetUser->email,
+            'password' => 'password',
+        ]);
+
+        $loginResponse->assertRedirect($verificationUrl);
+
+        $verifyResponse = $this->get($verificationUrl);
+
+        Event::assertDispatched(Verified::class);
+        $this->assertTrue($targetUser->fresh()->hasVerifiedEmail());
+        $verifyResponse->assertRedirect(route('dashboard', absolute: false).'?verified=1');
     }
 }
