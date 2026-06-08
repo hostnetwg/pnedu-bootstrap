@@ -62,10 +62,11 @@ class AuthenticationTest extends TestCase
         $response->assertRedirect('/');
     }
 
-    public function test_guest_get_logout_redirects_to_login(): void
+    public function test_guest_get_logout_redirects_to_homepage(): void
     {
         $response = $this->get('/logout');
 
-        $response->assertRedirect(route('login', absolute: false));
+        $response->assertRedirect('/');
+        $this->assertGuest();
     }
 }

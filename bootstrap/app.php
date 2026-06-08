@@ -25,6 +25,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->trustProxies(at: '*');
 
         $middleware->validateCsrfTokens(except: [
+            'logout',                    // GET w menu + POST ze starych zakładek — zawsze kończy sesję i idzie na /
             'payment/payu/notify',
             'payment/paynow/notify',
             'certificate-registration/*', // formularz publiczny po linku z tokenem – token w URL jest wystarczającą ochroną

@@ -92,12 +92,7 @@
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                             <li><a href="{{ route('profile.edit') }}" class="dropdown-item">Edytuj profil</a></li>
-                            <li>
-                                <form method="POST" action="{{ route('logout') }}">
-                                    @csrf
-                                    <button class="dropdown-item" type="submit">Wyloguj</button>
-                                </form>
-                            </li>
+                            <li><a href="{{ route('logout') }}" class="dropdown-item">Wyloguj</a></li>
                         </ul>
                     </li>
                 @else

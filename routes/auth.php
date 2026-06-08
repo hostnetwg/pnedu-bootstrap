@@ -53,7 +53,8 @@ Route::middleware('auth')->group(function () {
     Route::post('confirm-password', [ConfirmablePasswordController::class, 'store']);
 
     Route::put('password', [PasswordController::class, 'update'])->name('password.update');
-
-    Route::match(['get', 'post'], 'logout', [AuthenticatedSessionController::class, 'destroy'])
-        ->name('logout');
 });
+
+// Poza auth: działa także przy wygasłej sesji (unika 419 i przekierowania na login).
+Route::match(['get', 'post'], 'logout', [AuthenticatedSessionController::class, 'destroy'])
+    ->name('logout');
