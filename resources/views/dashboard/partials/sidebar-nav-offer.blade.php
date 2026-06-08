@@ -14,6 +14,8 @@
                 $priceInfo = $course->is_paid ? $course->getCurrentPrice() : null;
             @endphp
             <a href="{{ route('courses.show', $course->id) }}"
+               target="_blank"
+               rel="noopener noreferrer"
                class="dashboard-sidebar-upcoming__item @if(! $course->is_paid) dashboard-sidebar-upcoming__item--free @endif"
                title="{{ $titlePlain }}">
                 <span class="dashboard-sidebar-upcoming__top">
@@ -59,6 +61,8 @@
 
     <div class="dashboard-sidebar-offer__footer">
         <a href="{{ route('courses.individual') }}"
+           target="_blank"
+           rel="noopener noreferrer"
            class="dashboard-sidebar-offer__all-link"
            @if(request()->routeIs('courses.individual')) aria-current="page" @endif>
             Zobacz pełną ofertę
