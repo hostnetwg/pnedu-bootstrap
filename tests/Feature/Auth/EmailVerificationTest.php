@@ -28,9 +28,27 @@ class EmailVerificationTest extends TestCase
 
         Event::fake();
 
+        $verificationUrl = URL::route('verification.verify', [
+            'id' => $user->id,
+            'hash' => sha1($user->email),
+        ]);
+
+        $response = $this->actingAs($user)->get($verificationUrl);
+
+        Event::assertDispatched(Verified::class);
+        $this->assertTrue($user->fresh()->hasVerifiedEmail());
+        $response->assertRedirect(route('dashboard', absolute: false).'?verified=1');
+    }
+
+    public function test_expired_signed_verification_link_still_verifies_email(): void
+    {
+        $user = User::factory()->unverified()->create();
+
+        Event::fake();
+
         $verificationUrl = URL::temporarySignedRoute(
             'verification.verify',
-            now()->addMinutes(60),
+            now()->subDay(),
             ['id' => $user->id, 'hash' => sha1($user->email)]
         );
 
@@ -45,14 +63,32 @@ class EmailVerificationTest extends TestCase
     {
         $user = User::factory()->unverified()->create();
 
-        $verificationUrl = URL::temporarySignedRoute(
-            'verification.verify',
-            now()->addMinutes(60),
-            ['id' => $user->id, 'hash' => sha1('wrong-email')]
-        );
+        $verificationUrl = URL::route('verification.verify', [
+            'id' => $user->id,
+            'hash' => sha1('wrong-email'),
+        ]);
 
-        $this->actingAs($user)->get($verificationUrl);
+        $response = $this->actingAs($user)->get($verificationUrl);
 
         $this->assertFalse($user->fresh()->hasVerifiedEmail());
+        $response->assertRedirect(route('verification.notice', absolute: false));
+        $response->assertSessionHas('error');
+    }
+
+    public function test_email_is_not_verified_for_different_user_id(): void
+    {
+        $user = User::factory()->unverified()->create();
+        $otherUser = User::factory()->unverified()->create();
+
+        $verificationUrl = URL::route('verification.verify', [
+            'id' => $otherUser->id,
+            'hash' => sha1($otherUser->email),
+        ]);
+
+        $response = $this->actingAs($user)->get($verificationUrl);
+
+        $this->assertFalse($user->fresh()->hasVerifiedEmail());
+        $response->assertRedirect(route('verification.notice', absolute: false));
+        $response->assertSessionHas('error');
     }
 }

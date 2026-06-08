@@ -39,6 +39,16 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function (Exceptions $exceptions) {
         $exceptions->render(function (HttpException $e, Request $request): ?Response {
+            if ($e->getStatusCode() === 403 && $request->is('verify-email/*')) {
+                $message = Auth::check()
+                    ? 'Nie udało się potwierdzić adresu e-mail tym linkiem. Wyślij nowy link weryfikacyjny lub zaloguj się na właściwe konto.'
+                    : 'Aby potwierdzić adres e-mail, zaloguj się na konto powiązane z adresem z wiadomości, a następnie kliknij link ponownie.';
+
+                return Auth::check()
+                    ? redirect()->route('verification.notice')->with('error', $message)
+                    : redirect()->route('login')->with('error', $message);
+            }
+
             if ($e->getStatusCode() !== 419) {
                 return null;
             }

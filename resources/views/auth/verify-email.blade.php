@@ -87,6 +87,12 @@
                             <a href="{{ route('profile.edit') }}">popraw adres e-mail w profilu</a>, jeśli zauważyłeś/aś literówkę.
                         </p>
 
+                        @if (session('error'))
+                            <div class="alert alert-warning small mb-3" role="alert">
+                                {{ session('error') }}
+                            </div>
+                        @endif
+
                         @if (session('status') === 'verification-link-sent')
                             <div class="alert alert-success small mb-3" role="alert">
                                 Wysłaliśmy ponownie link weryfikacyjny na adres <strong>{{ $user->email }}</strong>.

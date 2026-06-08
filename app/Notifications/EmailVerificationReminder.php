@@ -2,11 +2,13 @@
 
 namespace App\Notifications;
 
+use App\Notifications\Concerns\BuildsPermanentVerificationUrl;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Notifications\Messages\MailMessage;
 
 class EmailVerificationReminder extends VerifyEmail
 {
+    use BuildsPermanentVerificationUrl;
     public function __construct(
         protected int $daysSinceRegistration,
     ) {}
