@@ -64,6 +64,14 @@
             </div>
         </nav>
         @include('layouts.email-verification-notice')
+        @if (session('error'))
+            <div class="container mt-3">
+                <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                    {{ session('error') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Zamknij"></button>
+                </div>
+            </div>
+        @endif
         <main class="py-4">
             @yield('content')
         </main>

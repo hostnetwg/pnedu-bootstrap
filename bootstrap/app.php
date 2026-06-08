@@ -3,6 +3,10 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -34,5 +38,50 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        $exceptions->render(function (HttpException $e, Request $request): ?Response {
+            if ($e->getStatusCode() !== 419) {
+                return null;
+            }
+
+            $message = 'Sesja wygasła — spróbuj ponownie.';
+
+            if ($request->expectsJson()) {
+                return response()->json(['message' => $message], 419);
+            }
+
+            $safeInput = $request->except([
+                '_token',
+                'password',
+                'password_confirmation',
+                'current_password',
+            ]);
+
+            if ($request->is('login', 'register', 'forgot-password', 'reset-password*')) {
+                return redirect()
+                    ->to($request->url())
+                    ->withInput($safeInput)
+                    ->with('error', $message);
+            }
+
+            if (Auth::check()) {
+                Auth::guard('web')->logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+
+                return redirect()
+                    ->route('login')
+                    ->with('error', $message);
+            }
+
+            if ($request->headers->get('referer')) {
+                return redirect()
+                    ->back()
+                    ->withInput($safeInput)
+                    ->with('error', $message);
+            }
+
+            return redirect()
+                ->route('login')
+                ->with('error', $message);
+        });
     })->create();
