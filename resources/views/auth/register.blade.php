@@ -80,6 +80,7 @@
                                     <button type="button"
                                         class="btn btn-outline-secondary"
                                         id="register-toggle-password"
+                                        tabindex="-1"
                                         aria-label="Pokaż hasło"
                                         title="Pokaż hasło"
                                         aria-pressed="false">
@@ -112,6 +113,7 @@
                                     <button type="button"
                                         class="btn btn-outline-secondary"
                                         id="register-toggle-password-confirm"
+                                        tabindex="-1"
                                         aria-label="Pokaż potwierdzenie hasła"
                                         title="Pokaż potwierdzenie hasła"
                                         aria-pressed="false">
