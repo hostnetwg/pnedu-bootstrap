@@ -23,3 +23,9 @@
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
 </IfModule>
+
+# Faza 3: długi cache plików Vite (hash w nazwie → bezpieczne immutable)
+<IfModule mod_headers.c>
+    SetEnvIf Request_URI "^/build/assets/" vite_build_asset=1
+    Header set Cache-Control "public, max-age=31536000, immutable" env=vite_build_asset
+</IfModule>
