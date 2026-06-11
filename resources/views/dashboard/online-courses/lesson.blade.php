@@ -614,7 +614,10 @@ document.addEventListener('DOMContentLoaded', function () {
 @push('scripts')
 <script>
 (function () {
-    var card = document.querySelector('.card-body');
+    /* Nie querySelector('.card-body') — pierwszy card-body to sidebar (spis lekcji), bez linków data-time. */
+    var cardAnchor = document.querySelector('.online-lesson-embed-slot')
+        || document.querySelector('.online-lesson-body');
+    var card = cardAnchor ? cardAnchor.closest('.card-body') : null;
     if (!card) {
         return;
     }
@@ -686,16 +689,69 @@ document.addEventListener('DOMContentLoaded', function () {
                 var raw = ifr.getAttribute('src');
                 if (!raw) return;
                 var u = new URL(raw, window.location.href);
+                var needsUpdate = u.searchParams.get('enablejsapi') !== '1'
+                    || u.searchParams.get('origin') !== pageOrigin;
+                if (!needsUpdate) {
+                    return;
+                }
                 u.searchParams.set('enablejsapi', '1');
                 u.searchParams.set('origin', pageOrigin);
-                var next = u.toString();
-                if (ifr.src !== next) {
-                    ifr.src = next;
-                }
+                ifr.src = u.toString();
             } catch (ignore) {}
         });
     }
     syncYouTubeIframeParamsForJsApi();
+
+    card.querySelectorAll('iframe').forEach(function (ifr) {
+        if (detectPlatform(ifr) === 'youtube') {
+            ifr.addEventListener('load', function () {
+                ensureYouTubeListening(ifr);
+            });
+            if (ifr.contentDocument || ifr.contentWindow) {
+                ensureYouTubeListening(ifr);
+            }
+        }
+    });
+
+    function youtubePostCommand(iframe, func, args) {
+        if (!iframe || !iframe.contentWindow) {
+            return;
+        }
+        var payload = JSON.stringify({
+            event: 'command',
+            func: func,
+            args: args || [],
+        });
+        try {
+            iframe.contentWindow.postMessage(payload, 'https://www.youtube.com');
+        } catch (ignore) {}
+        try {
+            iframe.contentWindow.postMessage(payload, '*');
+        } catch (ignore2) {}
+    }
+
+    function ensureYouTubeListening(iframe) {
+        if (!iframe || iframe.getAttribute('data-oc-yt-listening') === '1') {
+            return;
+        }
+        if (!iframe.contentWindow) {
+            return;
+        }
+        var payload = JSON.stringify({ event: 'listening', id: iframe.id || 'oc-lesson-embed', channel: 'widget' });
+        try {
+            iframe.contentWindow.postMessage(payload, 'https://www.youtube.com');
+        } catch (ignore) {}
+        try {
+            iframe.contentWindow.postMessage(payload, '*');
+        } catch (ignore2) {}
+        iframe.setAttribute('data-oc-yt-listening', '1');
+    }
+
+    function seekYouTubeEmbed(iframe, seconds) {
+        ensureYouTubeListening(iframe);
+        youtubePostCommand(iframe, 'seekTo', [seconds, true]);
+        youtubePostCommand(iframe, 'playVideo', []);
+    }
 
     function iframeInSlot(ix) {
         var slot = document.querySelector('.online-lesson-embed-slot[data-oc-embed-index="' + ix + '"]');
@@ -741,83 +797,6 @@ document.addEventListener('DOMContentLoaded', function () {
         return parts[0] || 0;
     }
 
-    var youtubeApiPromise = null;
-    function ensureYouTubeApi() {
-        if (window.YT && window.YT.Player) {
-            return Promise.resolve();
-        }
-        if (youtubeApiPromise) {
-            return youtubeApiPromise;
-        }
-        youtubeApiPromise = new Promise(function (resolve) {
-            var settled = false;
-            function done() {
-                if (settled || !window.YT || !window.YT.Player) {
-                    return;
-                }
-                settled = true;
-                resolve();
-            }
-            var prev = window.onYouTubeIframeAPIReady;
-            window.onYouTubeIframeAPIReady = function () {
-                if (typeof prev === 'function') {
-                    prev();
-                }
-                done();
-            };
-            if (!document.querySelector('script[src^="https://www.youtube.com/iframe_api"]')) {
-                var tag = document.createElement('script');
-                tag.src = 'https://www.youtube.com/iframe_api';
-                tag.async = true;
-                document.head.appendChild(tag);
-            }
-            var attempts = 0;
-            (function poll() {
-                if (window.YT && window.YT.Player) {
-                    done();
-                    return;
-                }
-                if (++attempts > 200) {
-                    if (window.YT && window.YT.Player) {
-                        done();
-                    }
-                    resolve();
-                    return;
-                }
-                setTimeout(poll, 50);
-            })();
-        });
-        return youtubeApiPromise;
-    }
-
-    var ytPlayerByIframeId = {};
-    function getYouTubePlayer(iframeId) {
-        if (ytPlayerByIframeId[iframeId]) {
-            return ytPlayerByIframeId[iframeId];
-        }
-        ytPlayerByIframeId[iframeId] = ensureYouTubeApi().then(function () {
-            if (!window.YT || !window.YT.Player) {
-                return Promise.reject(new Error('YT API'));
-            }
-            return new Promise(function (resolve, reject) {
-                try {
-                    /* global YT */
-                    new YT.Player(iframeId, {
-                        events: {
-                            onReady: function (e) { resolve(e.target); },
-                        },
-                    });
-                } catch (err) {
-                    reject(err);
-                }
-            });
-        }).catch(function (err) {
-            delete ytPlayerByIframeId[iframeId];
-            return Promise.reject(err);
-        });
-        return ytPlayerByIframeId[iframeId];
-    }
-
     var vimeoApiPromise = null;
     function ensureVimeoApi() {
         if (window.Vimeo && window.Vimeo.Player) return Promise.resolve();
@@ -850,10 +829,8 @@ document.addEventListener('DOMContentLoaded', function () {
     function seekByPlatform(iframe, seconds) {
         var platform = detectPlatform(iframe);
         if (platform === 'youtube') {
-            return getYouTubePlayer(ensureIframeId(iframe)).then(function (player) {
-                player.seekTo(seconds, true);
-                player.playVideo();
-            });
+            seekYouTubeEmbed(iframe, seconds);
+            return Promise.resolve();
         }
         if (platform === 'vimeo') {
             return getVimeoPlayer(iframe).then(function (player) {
@@ -867,12 +844,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
     links.forEach(function (a) {
         a.addEventListener('click', function (e) {
+            e.preventDefault();
             var ix = parseInt(a.getAttribute('data-embed-index') || '0', 10);
             var iframe = iframeForEmbedIndex(ix);
             if (!iframe || !detectPlatform(iframe)) {
                 return;
             }
-            e.preventDefault();
             var t = parseTimeToSeconds(a.getAttribute('data-time'));
             seekByPlatform(iframe, t).catch(function () {});
         });
