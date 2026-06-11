@@ -5,6 +5,7 @@ namespace App\Support;
 use App\Models\OnlineCourseEnrollment;
 use App\Models\Participant;
 use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Support\Facades\Cache;
 
 class DashboardResourceCounts
 {
@@ -12,6 +13,9 @@ class DashboardResourceCounts
 
     /** @var array{szkolenia: int, online_courses: int, zaswiadczenia: int, total: int, twoje_zasoby_url: string}|null */
     private static ?array $cachedCounts = null;
+
+    /** @var array<string, array{all: int, paid: int, free: int, with_course: int}> */
+    private static array $participantEmailStatsCache = [];
 
     /**
      * @return array{szkolenia: int, online_courses: int, zaswiadczenia: int, total: int, twoje_zasoby_url: string}
@@ -39,21 +43,77 @@ class DashboardResourceCounts
 
         self::$cachedUserId = $userId;
 
+        return self::$cachedCounts = Cache::remember(
+            'dashboard.resource-counts.v1.'.$userId,
+            now()->addMinutes(2),
+            fn () => self::computeForUser($user),
+        );
+    }
+
+    /**
+     * Liczby szkoleń w filtrach listy dashboardu (all / paid / free) — jedno zapytanie z menu.
+     *
+     * @return array{all: int, paid: int, free: int}
+     */
+    public static function szkoleniaFilterCountsForEmail(string $emailNormalized): array
+    {
+        $stats = self::participantEmailStats($emailNormalized);
+
+        return [
+            'all' => $stats['all'],
+            'paid' => $stats['paid'],
+            'free' => $stats['free'],
+        ];
+    }
+
+    /**
+     * @return array{all: int, paid: int, free: int, with_course: int}
+     */
+    public static function participantEmailStats(string $emailNormalized): array
+    {
+        if ($emailNormalized === '') {
+            return ['all' => 0, 'paid' => 0, 'free' => 0, 'with_course' => 0];
+        }
+
+        if (isset(self::$participantEmailStatsCache[$emailNormalized])) {
+            return self::$participantEmailStatsCache[$emailNormalized];
+        }
+
+        $row = Participant::query()
+            ->whereRaw('LOWER(TRIM(participants.email)) = ?', [$emailNormalized])
+            ->leftJoin('courses', 'participants.course_id', '=', 'courses.id')
+            ->selectRaw('COUNT(*) as total')
+            ->selectRaw('SUM(CASE WHEN courses.id IS NOT NULL AND courses.is_paid = 1 THEN 1 ELSE 0 END) as paid')
+            ->selectRaw('SUM(CASE WHEN courses.id IS NOT NULL AND courses.is_paid = 0 THEN 1 ELSE 0 END) as free')
+            ->selectRaw('SUM(CASE WHEN courses.id IS NOT NULL THEN 1 ELSE 0 END) as with_course')
+            ->first();
+
+        if (! $row) {
+            return self::$participantEmailStatsCache[$emailNormalized] = [
+                'all' => 0,
+                'paid' => 0,
+                'free' => 0,
+                'with_course' => 0,
+            ];
+        }
+
+        return self::$participantEmailStatsCache[$emailNormalized] = [
+            'all' => (int) ($row->total ?? 0),
+            'paid' => (int) ($row->paid ?? 0),
+            'free' => (int) ($row->free ?? 0),
+            'with_course' => (int) ($row->with_course ?? 0),
+        ];
+    }
+
+    /**
+     * @return array{szkolenia: int, online_courses: int, zaswiadczenia: int, total: int, twoje_zasoby_url: string}
+     */
+    private static function computeForUser(Authenticatable $user): array
+    {
         $emailNormalized = strtolower(trim((string) $user->email));
         $onlineEmail = OnlineCourseEnrollment::normalizeEmail($user->email);
 
-        $szkoleniaCount = $emailNormalized !== ''
-            ? Participant::query()
-                ->whereRaw('LOWER(TRIM(participants.email)) = ?', [$emailNormalized])
-                ->count()
-            : 0;
-
-        $zaswiadczeniaCount = $emailNormalized !== ''
-            ? Participant::query()
-                ->whereRaw('LOWER(TRIM(participants.email)) = ?', [$emailNormalized])
-                ->whereHas('course')
-                ->count()
-            : 0;
+        $participantStats = self::participantEmailStats($emailNormalized);
 
         $onlineCoursesCount = 0;
         if ($onlineEmail) {
@@ -65,10 +125,12 @@ class DashboardResourceCounts
                 ->count();
         }
 
-        return self::$cachedCounts = [
+        $szkoleniaCount = $participantStats['all'];
+
+        return [
             'szkolenia' => $szkoleniaCount,
             'online_courses' => $onlineCoursesCount,
-            'zaswiadczenia' => $zaswiadczeniaCount,
+            'zaswiadczenia' => $participantStats['with_course'],
             'total' => $szkoleniaCount + $onlineCoursesCount,
             'twoje_zasoby_url' => self::resolveTwojeZasobyUrl($szkoleniaCount, $onlineCoursesCount),
         ];

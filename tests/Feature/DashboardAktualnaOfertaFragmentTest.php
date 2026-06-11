@@ -36,7 +36,7 @@ class DashboardAktualnaOfertaFragmentTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('js-dashboard-offer-sidebar', false);
-        $response->assertSee(route('dashboard.fragments.aktualna-oferta'), false);
+        $response->assertSee('/dashboard/fragments/aktualna-oferta', false);
         $response->assertSee('Ładowanie terminów', false);
         $response->assertSee('initDashboardOfferSidebars', false);
     }

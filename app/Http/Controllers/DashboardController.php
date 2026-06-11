@@ -181,7 +181,7 @@ class DashboardController extends Controller
             $typ = 'all';
         }
 
-        $szkoleniaCounts = $this->participantFilterCountsForDashboard($emailNormalized);
+        $szkoleniaCounts = DashboardResourceCounts::szkoleniaFilterCountsForEmail($emailNormalized);
 
         // Wszyscy uczestnicy (wiersze w pneadm.participants) — także gdy kurs został usunięty (LEFT JOIN).
         // access_expires_at w participants decyduje o dostępie do nagrań/materiałów na pnedu.pl.
@@ -189,7 +189,23 @@ class DashboardController extends Controller
             ->whereRaw('LOWER(TRIM(participants.email)) = ?', [$emailNormalized])
             ->leftJoin('courses', 'participants.course_id', '=', 'courses.id')
             ->select('participants.*')
-            ->with(['course.instructor', 'course.videos', 'course.fileLinks'])
+            ->with([
+                'course' => function ($courseQuery) {
+                    $courseQuery->select([
+                        'id',
+                        'title',
+                        'start_date',
+                        'end_date',
+                        'is_paid',
+                        'instructor_id',
+                        'trainer',
+                        'certificate_download_status',
+                    ]);
+                },
+                'course.instructor:id,title,first_name,last_name,gender',
+                'course.videos:id,course_id,order',
+                'course.fileLinks:id,course_id,title,url,order',
+            ])
             ->orderByRaw('COALESCE(courses.start_date, participants.created_at) DESC')
             ->orderByDesc('participants.id');
 
@@ -203,28 +219,6 @@ class DashboardController extends Controller
             'participants' => $query->paginate(15)->withQueryString(),
             'szkoleniaTyp' => $typ,
             'szkoleniaCounts' => $szkoleniaCounts,
-        ];
-    }
-
-    /**
-     * Liczby szkoleń w filtrach (zgodnie z tym samym kryterium co lista: all / płatne / bezpłatne).
-     *
-     * @return array{all: int, paid: int, free: int}
-     */
-    private function participantFilterCountsForDashboard(string $emailNormalized): array
-    {
-        $row = Participant::query()
-            ->whereRaw('LOWER(TRIM(participants.email)) = ?', [$emailNormalized])
-            ->leftJoin('courses', 'participants.course_id', '=', 'courses.id')
-            ->selectRaw('COUNT(*) as total')
-            ->selectRaw('SUM(CASE WHEN courses.id IS NOT NULL AND courses.is_paid = 1 THEN 1 ELSE 0 END) as paid')
-            ->selectRaw('SUM(CASE WHEN courses.id IS NOT NULL AND courses.is_paid = 0 THEN 1 ELSE 0 END) as free')
-            ->first();
-
-        return [
-            'all' => (int) ($row->total ?? 0),
-            'paid' => (int) ($row->paid ?? 0),
-            'free' => (int) ($row->free ?? 0),
         ];
     }
 }
