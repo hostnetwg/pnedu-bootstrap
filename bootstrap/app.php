@@ -22,6 +22,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             \App\Http\Middleware\CaptureMarketingSource::class,
             \App\Http\Middleware\RecordPneduUserLoginSession::class,
+            \App\Http\Middleware\LogDashboardPerformance::class,
             \App\Http\Middleware\CacheHomepage::class,
         ]);
 
