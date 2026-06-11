@@ -7,3 +7,9 @@
      aria-busy="true">
     @include('dashboard.partials.sidebar-nav-offer-skeleton')
 </div>
+
+@once
+@push('scripts')
+@include('dashboard.partials.sidebar-nav-offer-loader-script')
+@endpush
+@endonce

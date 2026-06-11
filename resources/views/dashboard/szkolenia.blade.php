@@ -32,7 +32,3 @@
 @include('dashboard.partials.szkolenia-training-styles')
 </style>
 @endpush
-
-@push('scripts')
-@include('dashboard.partials.sidebar-nav-offer-loader-script')
-@endpush

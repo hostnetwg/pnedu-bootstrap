@@ -40,4 +40,15 @@ class DashboardAktualnaOfertaFragmentTest extends TestCase
         $response->assertSee('Ładowanie terminów', false);
         $response->assertSee('initDashboardOfferSidebars', false);
     }
+
+    public function test_dashboard_zaswiadczenia_page_uses_lazy_offer_mount(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->get(route('dashboard.zaswiadczenia'));
+
+        $response->assertOk();
+        $response->assertSee('js-dashboard-offer-sidebar', false);
+        $response->assertSee('initDashboardOfferSidebars', false);
+    }
 }

@@ -188,7 +188,3 @@
 .video-wrapper iframe { border: none; }
 </style>
 @endpush
-
-@push('scripts')
-@include('dashboard.partials.sidebar-nav-offer-loader-script')
-@endpush
