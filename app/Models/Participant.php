@@ -48,6 +48,37 @@ class Participant extends Model
         return $this->belongsTo(Course::class);
     }
 
+    /**
+     * Normalizacja e-maila (zgodnie z kolumną email_normalized w pneadm).
+     */
+    public static function normalizeEmail(?string $email): ?string
+    {
+        if ($email === null) {
+            return null;
+        }
+
+        $normalized = strtolower(trim($email));
+
+        return $normalized === '' ? null : $normalized;
+    }
+
+    /**
+     * Uczestnicy przypisani do znormalizowanego adresu e-mail (dashboard, liczniki).
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder<self>  $query
+     * @return \Illuminate\Database\Eloquent\Builder<self>
+     */
+    public function scopeForNormalizedEmail($query, string $emailNormalized)
+    {
+        return $query->where(function ($emailQuery) use ($emailNormalized) {
+            $emailQuery->where('participants.email_normalized', $emailNormalized)
+                ->orWhere(function ($fallbackQuery) use ($emailNormalized) {
+                    $fallbackQuery->whereNull('participants.email_normalized')
+                        ->whereRaw('LOWER(TRIM(participants.email)) = ?', [$emailNormalized]);
+                });
+        });
+    }
+
     public function certificate()
     {
         return $this->hasOne(Certificate::class, 'participant_id');

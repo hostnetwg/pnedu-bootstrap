@@ -80,7 +80,7 @@ class DashboardResourceCounts
         }
 
         $row = Participant::query()
-            ->whereRaw('LOWER(TRIM(participants.email)) = ?', [$emailNormalized])
+            ->forNormalizedEmail($emailNormalized)
             ->leftJoin('courses', 'participants.course_id', '=', 'courses.id')
             ->selectRaw('COUNT(*) as total')
             ->selectRaw('SUM(CASE WHEN courses.id IS NOT NULL AND courses.is_paid = 1 THEN 1 ELSE 0 END) as paid')

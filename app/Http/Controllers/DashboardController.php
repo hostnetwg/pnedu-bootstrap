@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CourseFileLink;
 use App\Models\Participant;
 use App\Models\PneadmCourseSurveyLink;
 use App\Support\DashboardResourceCounts;
@@ -174,7 +175,7 @@ class DashboardController extends Controller
     private function participantsListingForDashboard(Request $request): array
     {
         $userEmail = Auth::user()->email;
-        $emailNormalized = strtolower(trim($userEmail));
+        $emailNormalized = Participant::normalizeEmail($userEmail) ?? '';
 
         $typ = $request->query('typ', 'all');
         if (! in_array($typ, ['all', 'paid', 'free'], true)) {
@@ -186,7 +187,7 @@ class DashboardController extends Controller
         // Wszyscy uczestnicy (wiersze w pneadm.participants) — także gdy kurs został usunięty (LEFT JOIN).
         // access_expires_at w participants decyduje o dostępie do nagrań/materiałów na pnedu.pl.
         $query = Participant::query()
-            ->whereRaw('LOWER(TRIM(participants.email)) = ?', [$emailNormalized])
+            ->forNormalizedEmail($emailNormalized)
             ->leftJoin('courses', 'participants.course_id', '=', 'courses.id')
             ->select('participants.*')
             ->with([
@@ -199,11 +200,9 @@ class DashboardController extends Controller
                         'is_paid',
                         'instructor_id',
                         'certificate_download_status',
-                    ]);
+                    ])->withCount(['videos', 'fileLinks']);
                 },
                 'course.instructor:id,title,first_name,last_name,gender',
-                'course.videos:id,course_id,order',
-                'course.fileLinks:id,course_id,title,url,order',
             ])
             ->orderByRaw('COALESCE(courses.start_date, participants.created_at) DESC')
             ->orderByDesc('participants.id');
@@ -214,10 +213,61 @@ class DashboardController extends Controller
             $query->whereNotNull('courses.id')->where('courses.is_paid', 0);
         }
 
+        $participants = $query->paginate(15)->withQueryString();
+        $this->hydrateEndedCourseFileLinksForListing($participants);
+
         return [
-            'participants' => $query->paginate(15)->withQueryString(),
+            'participants' => $participants,
             'szkoleniaTyp' => $typ,
             'szkoleniaCounts' => $szkoleniaCounts,
         ];
+    }
+
+    /**
+     * Materiały do pobrania tylko dla zakończonych szkoleń na bieżącej stronie listy (Faza 4).
+     */
+    private function hydrateEndedCourseFileLinksForListing(LengthAwarePaginator $participants): void
+    {
+        $tz = config('app.timezone');
+
+        foreach ($participants->getCollection() as $participant) {
+            if ($participant->course) {
+                $participant->course->setRelation('fileLinks', collect());
+            }
+        }
+
+        $courseIds = $participants->getCollection()
+            ->filter(function (Participant $participant) use ($tz) {
+                $course = $participant->course;
+                if (! $course || ! $course->end_date || ! $participant->hasActiveAccess()) {
+                    return false;
+                }
+
+                return Carbon::parse($course->end_date)->timezone($tz)->isPast()
+                    && ($course->file_links_count ?? 0) > 0;
+            })
+            ->pluck('course_id')
+            ->unique()
+            ->values();
+
+        if ($courseIds->isEmpty()) {
+            return;
+        }
+
+        $linksByCourseId = CourseFileLink::query()
+            ->select(['id', 'course_id', 'title', 'url', 'order'])
+            ->whereIn('course_id', $courseIds)
+            ->orderBy('order')
+            ->get()
+            ->groupBy('course_id');
+
+        foreach ($participants->getCollection() as $participant) {
+            $course = $participant->course;
+            if (! $course || ! $linksByCourseId->has($course->id)) {
+                continue;
+            }
+
+            $course->setRelation('fileLinks', $linksByCourseId->get($course->id));
+        }
     }
 }

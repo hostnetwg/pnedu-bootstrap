@@ -37,11 +37,11 @@
         @foreach($participants as $participant)
             @php
                 $course = $participant->course;
-                $firstVideo = $course?->videos->first();
-                $hasFileLinks = $course?->fileLinks && $course->fileLinks->isNotEmpty();
+                $hasVideos = ($course?->videos_count ?? 0) > 0;
+                $hasFileLinks = ($course?->file_links_count ?? 0) > 0;
                 $certCourseEnded = $course && $course->end_date && \Carbon\Carbon::parse($course->end_date)->isPast();
                 $fileLinksUnlocked = $hasFileLinks && $certCourseEnded;
-                $hasOnlineMaterials = $firstVideo || $fileLinksUnlocked;
+                $hasOnlineMaterials = $hasVideos || $fileLinksUnlocked;
                 $accessActive = $participant->hasActiveAccess();
                 $accessExpiresFormatted = $participant->access_expires_at
                     ? $participant->access_expires_at->timezone(config('app.timezone'))->format('Y-m-d H:i')
@@ -54,8 +54,8 @@
                 <div class="training-content">
                     <h3 class="training-title mb-2">
                         @if($hasOnlineMaterials && $accessActive)
-                            <a href="{{ route('dashboard.szkolenia.wideo', $participant) }}" class="training-title-link training-title-link--has-access" title="{{ $firstVideo ? 'Odtwórz nagranie wideo' : 'Materiały do pobrania' }}">
-                                @if($firstVideo)
+                            <a href="{{ route('dashboard.szkolenia.wideo', $participant) }}" class="training-title-link training-title-link--has-access" title="{{ $hasVideos ? 'Odtwórz nagranie wideo' : 'Materiały do pobrania' }}">
+                                @if($hasVideos)
                                     <span class="training-title-play-badge training-title-play-badge--leading" aria-hidden="true"><i class="bi bi-play-fill"></i></span>
                                 @else
                                     <i class="bi bi-folder2-open training-title-folder-icon--leading" aria-hidden="true"></i>
@@ -64,7 +64,7 @@
                             </a>
                         @elseif($hasOnlineMaterials && !$accessActive)
                             <span class="training-title-link training-title-link--disabled training-title-link--expired" title="Dostęp wygasł">
-                                @if($firstVideo)
+                                @if($hasVideos)
                                     <span class="training-title-play-badge training-title-play-badge--disabled training-title-play-badge--leading" aria-hidden="true"><i class="bi bi-play-fill"></i></span>
                                 @else
                                     <i class="bi bi-folder-x training-title-folder-icon--leading" aria-hidden="true"></i>
