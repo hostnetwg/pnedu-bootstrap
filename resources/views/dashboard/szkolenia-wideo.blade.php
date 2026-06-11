@@ -23,14 +23,45 @@
                     </div>
                     <h2 class="h4 mb-2">{{ $course->title }}</h2>
                     @if($course->instructor)
-                        <p class="text-muted mb-4">
+                        <p class="text-muted mb-3">
                             <small>{{ $course->trainer_title }}: {{ $course->instructor->full_name_with_title }}</small>
                         </p>
                     @endif
 
                     @if($selectedVideo)
+                    @php
+                        $accessExpiresAt = $participant->access_expires_at;
+                        $accessExpiresAtFormatted = $accessExpiresAt
+                            ? $accessExpiresAt->copy()->timezone(config('app.timezone'))->format('d.m.Y H:i')
+                            : null;
+                    @endphp
+
+                    @if(! $materialsAccessActive)
+                        <div class="alert alert-warning border-0 shadow-sm mb-3" role="status">
+                            <p class="small mb-0">
+                                <i class="bi bi-clock-history me-1" aria-hidden="true"></i>
+                                Dostęp do nagrania i materiałów do pobrania wygasł. Poniżej możesz nadal przeglądać i edytować swoje notatki.
+                            </p>
+                        </div>
+                    @elseif($accessExpiresAt && $participant->hasActiveAccess())
+                        <p class="small text-success mb-3">
+                            <i class="bi bi-clock-history me-1" aria-hidden="true"></i>
+                            Dostęp wygaśnie {{ $accessExpiresAtFormatted }}
+                        </p>
+                    @endif
+
+                    @if($materialsAccessActive && $course->fileLinks->isNotEmpty() && ! $courseEnded)
+                        <div class="alert alert-light border mb-3" role="status">
+                            <p class="small mb-0 text-body-secondary">
+                                <i class="bi bi-info-circle me-1 text-primary" aria-hidden="true"></i>
+                                Materiały do pobrania będą dostępne po zakończeniu szkolenia (wg daty zakończenia w kursie).
+                            </p>
+                        </div>
+                    @endif
+
+                    @if($materialsAccessActive)
                     {{-- Osadzony odtwarzacz wideo --}}
-                    <div class="video-wrapper mb-4">
+                    <div class="video-wrapper mb-0">
                         <div class="ratio ratio-16x9 rounded overflow-hidden bg-dark">
                             <iframe
                                 src="{{ $selectedVideo->getEmbedUrl() }}"
@@ -41,21 +72,24 @@
                             ></iframe>
                         </div>
                     </div>
-                    @php
-                        $accessExpiresAt = $participant->access_expires_at;
-                        $accessExpiresAtFormatted = $accessExpiresAt
-                            ? $accessExpiresAt->copy()->timezone(config('app.timezone'))->format('d.m.Y H:i')
-                            : null;
-                    @endphp
-                    @if($accessExpiresAt && $participant->hasActiveAccess())
-                        <p class="small text-success mb-4 mt-n2">
-                            <i class="bi bi-clock-history me-1" aria-hidden="true"></i>
-                            Dostęp wygaśnie {{ $accessExpiresAtFormatted }}
-                        </p>
+                    @else
+                        <div class="border rounded-3 bg-body-secondary p-4 text-center">
+                            <p class="small text-muted mb-0">
+                                <i class="bi bi-camera-video-off me-1" aria-hidden="true"></i>
+                                Odtwarzacz niedostępny — dostęp do nagrania wygasł.
+                            </p>
+                        </div>
                     @endif
 
-                    @if($selectedVideo->platform === 'youtube')
-                        <div class="youtube-external-hint border-top pt-3 mt-2 mb-4">
+                    @include('dashboard.partials.training-video-notes', [
+                        'participant' => $participant,
+                        'selectedVideo' => $selectedVideo,
+                        'videoNote' => $videoNote,
+                        'videoNotesForList' => $videoNotesForList ?? [],
+                    ])
+
+                    @if($materialsAccessActive && $selectedVideo->platform === 'youtube')
+                        <div class="youtube-external-hint border-top pt-3 mt-4 mb-0">
                             <p class="small text-muted mb-2">
                                 Na YouTube nagranie otwiera się w widoku z <strong>zapisem czatu</strong> obok wideo — wygodniej śledzisz pytania i odpowiedzi z transmisji.
                                 Jeśli materiał jest dla Ciebie wartościowy, możesz <strong>zasubskrybować kanał</strong> i zostawić <strong>polubienie</strong>; to realnie wspiera powstawanie kolejnych treści.
@@ -69,19 +103,11 @@
                             </a>
                         </div>
                     @endif
-                        @if($course->fileLinks->isNotEmpty() && ! $courseEnded)
-                            <div class="alert alert-light border mb-0" role="status">
-                                <p class="small mb-0 text-body-secondary">
-                                    <i class="bi bi-info-circle me-1 text-primary" aria-hidden="true"></i>
-                                    Materiały do pobrania będą dostępne po zakończeniu szkolenia (wg daty zakończenia w kursie).
-                                </p>
-                            </div>
-                        @endif
                     @elseif($fileLinks->isNotEmpty())
                         <p class="text-muted mb-4">To szkolenie udostępnia materiały do pobrania (linki poniżej).</p>
                     @endif
 
-                    @if($accessibleSurveyLinks->isNotEmpty())
+                    @if($accessibleSurveyLinks->isNotEmpty() && ($materialsAccessActive ?? true))
                         <div class="alert alert-primary border-0 shadow-sm mb-4" role="region" aria-labelledby="surveyHeading{{ $participant->id }}">
                             <h6 class="alert-heading h6 mb-2" id="surveyHeading{{ $participant->id }}">
                                 <i class="bi bi-clipboard-check me-2" aria-hidden="true"></i>Ankiety po szkoleniu
@@ -159,14 +185,26 @@
                             <div class="list-group">
                                 @foreach($videos as $video)
                                     <a href="{{ route('dashboard.szkolenia.wideo', $participant) }}?video={{ $video->id }}"
-                                       class="list-group-item list-group-item-action d-flex justify-content-between align-items-center {{ $selectedVideo && $video->id === $selectedVideo->id ? 'active' : '' }}">
+                                       class="list-group-item list-group-item-action d-flex justify-content-between align-items-center {{ $selectedVideo && $video->id === $selectedVideo->id ? 'active' : '' }}"
+                                       data-training-video-id="{{ $video->id }}">
                                         <span>
                                             {{ $video->title ?: ('Nagranie nr ' . $loop->iteration) }}
                                             @if($selectedVideo && $video->id === $selectedVideo->id)
-                                                <span class="badge bg-light text-dark ms-2">Odtwarzane</span>
+                                                <span class="badge bg-light text-dark ms-2">{{ ($materialsAccessActive ?? true) ? 'Odtwarzane' : 'Wybrane' }}</span>
                                             @endif
                                         </span>
-                                        <i class="bi bi-play-circle"></i>
+                                        <span class="d-flex align-items-center gap-2">
+                                            @if(array_key_exists((string) (int) $video->id, $videoNotesForList ?? []))
+                                                <button type="button"
+                                                        class="btn btn-link p-0 border-0 lh-1 text-primary flex-shrink-0 js-training-video-note-popover {{ $selectedVideo && $video->id === $selectedVideo->id ? 'text-light' : '' }}"
+                                                        data-training-note-video-id="{{ $video->id }}"
+                                                        aria-label="Podgląd notatki do nagrania: {{ $video->title ?: ('Nagranie nr ' . $loop->iteration) }}"
+                                                        onclick="event.preventDefault(); event.stopPropagation();">
+                                                    <i class="bi bi-journal-text" aria-hidden="true"></i>
+                                                </button>
+                                            @endif
+                                            <i class="bi bi-play-circle"></i>
+                                        </span>
                                     </a>
                                 @endforeach
                             </div>

@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CourseVideo;
 use App\Models\Participant;
+use App\Models\ParticipantTrainingVideoNote;
 use App\Models\PneadmCourseSurveyLink;
 use App\Support\DashboardParticipantsListing;
 use App\Support\DashboardResourceCounts;
 use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -48,22 +51,25 @@ class DashboardController extends Controller
             abort(404, 'Brak materiałów dla tego szkolenia.');
         }
 
-        if ($participant->hasExpiredAccess()) {
-            abort(403, 'Dostęp do materiałów wygasł.');
-        }
-
         $tz = config('app.timezone');
         $courseEnded = $course->end_date
             && Carbon::parse($course->end_date)->timezone($tz)->isPast();
 
         $hasVideos = $course->videos->isNotEmpty();
         $hasFileLinks = $course->fileLinks->isNotEmpty();
+        $materialsAccessActive = $participant->hasActiveAccess();
 
         if (! $hasVideos && $hasFileLinks && ! $courseEnded) {
             abort(403, 'Materiały do pobrania będą dostępne po zakończeniu szkolenia.');
         }
 
-        $this->markTrainingPageOpened($participant);
+        if (! $materialsAccessActive && ! $hasVideos) {
+            abort(403, 'Dostęp do materiałów wygasł.');
+        }
+
+        if ($materialsAccessActive) {
+            $this->markTrainingPageOpened($participant);
+        }
 
         $selectedVideo = null;
         if ($course->videos->isNotEmpty()) {
@@ -71,37 +77,117 @@ class DashboardController extends Controller
             $selectedVideo = $course->videos->firstWhere('id', $selectedVideoId) ?? $course->videos->first();
         }
 
-        $accessibleSurveyLinks = PneadmCourseSurveyLink::query()
-            ->where('course_id', $course->id)
-            ->orderBy('order')
-            ->orderBy('id')
-            ->get()
-            ->filter(fn (PneadmCourseSurveyLink $link) => $link->isAvailableNow())
-            ->map(function (PneadmCourseSurveyLink $link) {
-                $gateUrl = $link->gateAbsoluteUrl();
-                if ($gateUrl === null) {
-                    return null;
-                }
+        $videoNote = null;
+        $videoNotesForList = [];
+        if ($selectedVideo) {
+            $videoNote = ParticipantTrainingVideoNote::query()
+                ->where('participant_id', $participant->id)
+                ->where('course_video_id', $selectedVideo->id)
+                ->first();
+        }
+        $videoNotesForList = $this->trainingVideoNotesBodiesForList($participant, $course->videos);
 
-                $title = trim((string) ($link->title ?? ''));
+        $accessibleSurveyLinks = $materialsAccessActive
+            ? PneadmCourseSurveyLink::query()
+                ->where('course_id', $course->id)
+                ->orderBy('order')
+                ->orderBy('id')
+                ->get()
+                ->filter(fn (PneadmCourseSurveyLink $link) => $link->isAvailableNow())
+                ->map(function (PneadmCourseSurveyLink $link) {
+                    $gateUrl = $link->gateAbsoluteUrl();
+                    if ($gateUrl === null) {
+                        return null;
+                    }
 
-                return [
-                    'title' => $title !== '' ? $title : 'Ankieta poszkoleniowa',
-                    'url' => $gateUrl,
-                ];
-            })
-            ->filter()
-            ->values();
+                    $title = trim((string) ($link->title ?? ''));
+
+                    return [
+                        'title' => $title !== '' ? $title : 'Ankieta poszkoleniowa',
+                        'url' => $gateUrl,
+                    ];
+                })
+                ->filter()
+                ->values()
+            : collect();
 
         return view('dashboard.szkolenia-wideo', [
             'participant' => $participant,
             'course' => $course,
             'videos' => $course->videos,
             'selectedVideo' => $selectedVideo,
-            'fileLinks' => $courseEnded ? $course->fileLinks : collect(),
+            'fileLinks' => ($courseEnded && $materialsAccessActive) ? $course->fileLinks : collect(),
             'courseEnded' => $courseEnded,
+            'materialsAccessActive' => $materialsAccessActive,
             'accessibleSurveyLinks' => $accessibleSurveyLinks,
+            'videoNote' => $videoNote,
+            'videoNotesForList' => $videoNotesForList,
         ]);
+    }
+
+    public function saveTrainingVideoNote(Request $request, Participant $participant, CourseVideo $video): RedirectResponse|JsonResponse
+    {
+        if ($redirect = $this->redirectToLoginWhenTrainingEmailMismatch($request, $participant)) {
+            return $redirect;
+        }
+
+        $this->assertParticipantBelongsToUser($participant);
+
+        abort_unless((int) $video->course_id === (int) $participant->course_id, 404);
+
+        $validated = $request->validate([
+            'training_video_note_body' => ['nullable', 'string', 'max:65535'],
+        ]);
+
+        $raw = $validated['training_video_note_body'] ?? '';
+        $isEmpty = trim($raw) === '';
+
+        $query = ParticipantTrainingVideoNote::query()
+            ->where('participant_id', $participant->id)
+            ->where('course_video_id', $video->id);
+
+        if ($isEmpty) {
+            $deleted = $query->delete();
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'video_id' => (int) $video->id,
+                    'deleted' => $deleted > 0,
+                    'message' => $deleted > 0
+                        ? 'Notatka do tego nagrania została usunięta.'
+                        : 'Brak zapisanego tekstu — nie zmieniono notatki.',
+                ]);
+            }
+
+            return redirect()->route('dashboard.szkolenia.wideo', [
+                'participant' => $participant,
+                'video' => $video->id,
+            ])->with($deleted > 0 ? 'success' : 'info', $deleted > 0
+                ? 'Notatka do tego nagrania została usunięta.'
+                : 'Brak zapisanego tekstu — nie zmieniono notatki.');
+        }
+
+        ParticipantTrainingVideoNote::query()->updateOrCreate(
+            [
+                'participant_id' => $participant->id,
+                'course_video_id' => $video->id,
+            ],
+            ['body' => $raw]
+        );
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'video_id' => (int) $video->id,
+                'saved' => true,
+                'body' => $raw,
+                'message' => 'Twoja notatka została zapisana.',
+            ]);
+        }
+
+        return redirect()->route('dashboard.szkolenia.wideo', [
+            'participant' => $participant,
+            'video' => $video->id,
+        ])->with('success', 'Twoja notatka została zapisana.');
     }
 
     /**
@@ -134,6 +220,40 @@ class DashboardController extends Controller
         $request->session()->flash('login_email_hint', $participant->email);
 
         return redirect()->route('login');
+    }
+
+    private function assertParticipantBelongsToUser(Participant $participant): void
+    {
+        $userNorm = strtolower(trim((string) (Auth::user()->email ?? '')));
+        $participantNorm = strtolower(trim((string) ($participant->email ?? '')));
+
+        abort_unless($participantNorm !== '' && $userNorm === $participantNorm, 403);
+    }
+
+    /**
+     * Treści notatek do podglądu na liście nagrań: klucz = ID wideo (string).
+     *
+     * @param  \Illuminate\Support\Collection<int, CourseVideo>  $videos
+     * @return array<string, string>
+     */
+    private function trainingVideoNotesBodiesForList(Participant $participant, $videos): array
+    {
+        $videoIds = $videos->pluck('id')->map(fn ($id) => (int) $id)->all();
+        if ($videoIds === []) {
+            return [];
+        }
+
+        $out = [];
+        $rows = ParticipantTrainingVideoNote::query()
+            ->where('participant_id', $participant->id)
+            ->whereIn('course_video_id', $videoIds)
+            ->get(['course_video_id', 'body']);
+
+        foreach ($rows as $row) {
+            $out[(string) (int) $row->course_video_id] = $row->body;
+        }
+
+        return $out;
     }
 
     private function markTrainingPageOpened(Participant $participant): void

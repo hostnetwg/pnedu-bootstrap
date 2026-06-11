@@ -49,6 +49,7 @@
                 $courseDisplayTitle = $course
                     ? trim(str_replace(['&nbsp;', "\xc2\xa0"], ' ', strip_tags(html_entity_decode((string) $course->title, ENT_QUOTES | ENT_HTML5, 'UTF-8'))))
                     : 'Szkolenie niedostępne w katalogu';
+                $trainingNotesCount = (int) ($participant->training_video_notes_count ?? 0);
             @endphp
             <div class="training-item">
                 <div class="training-content">
@@ -63,14 +64,17 @@
                                 <span>{{ $courseDisplayTitle }}</span>
                             </a>
                         @elseif($hasOnlineMaterials && !$accessActive)
+                            @if($hasVideos)
+                                <a href="{{ route('dashboard.szkolenia.wideo', $participant) }}" class="training-title-link training-title-link--expired-notes" title="Twoje notatki (dostęp do nagrania wygasł)">
+                                    <span class="training-title-play-badge training-title-play-badge--disabled training-title-play-badge--leading" aria-hidden="true"><i class="bi bi-journal-text"></i></span>
+                                    <span>{{ $courseDisplayTitle }}</span>
+                                </a>
+                            @else
                             <span class="training-title-link training-title-link--disabled training-title-link--expired" title="Dostęp wygasł">
-                                @if($hasVideos)
-                                    <span class="training-title-play-badge training-title-play-badge--disabled training-title-play-badge--leading" aria-hidden="true"><i class="bi bi-play-fill"></i></span>
-                                @else
-                                    <i class="bi bi-folder-x training-title-folder-icon--leading" aria-hidden="true"></i>
-                                @endif
+                                <i class="bi bi-folder-x training-title-folder-icon--leading" aria-hidden="true"></i>
                                 <span>{{ $courseDisplayTitle }}</span>
                             </span>
+                            @endif
                         @else
                             <span class="training-title-text">{{ $courseDisplayTitle }}</span>
                         @endif
@@ -107,6 +111,24 @@
                             Dostęp bezterminowy
                         @endif
                     </p>
+                    @if($trainingNotesCount > 0 && $hasVideos)
+                        <p class="training-notes-indicator small mb-0 mt-2">
+                            <a href="{{ route('dashboard.szkolenia.wideo', $participant) }}"
+                               class="training-notes-indicator__link d-inline-flex align-items-center gap-1 text-decoration-none"
+                               title="Przejdź do notatek do nagrań z tego szkolenia">
+                                <i class="bi bi-journal-text" aria-hidden="true"></i>
+                                <span>
+                                    @if($trainingNotesCount === 1)
+                                        Masz zapisaną notatkę
+                                    @elseif($trainingNotesCount >= 2 && $trainingNotesCount <= 4)
+                                        Masz {{ $trainingNotesCount }} zapisane notatki
+                                    @else
+                                        Masz {{ $trainingNotesCount }} zapisanych notatek
+                                    @endif
+                                </span>
+                            </a>
+                        </p>
+                    @endif
                     @if($course && ! $certCourseEnded)
                         <div class="training-pending-end-notice alert alert-light border mb-0 mt-2 py-2 px-3" role="status">
                             <div class="d-flex gap-2 align-items-start">

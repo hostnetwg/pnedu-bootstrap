@@ -51,6 +51,15 @@
     color: #6c757d;
     opacity: 1;
 }
+.training-title-link--expired-notes {
+    color: #6c757d;
+}
+.training-title-link--expired-notes:hover {
+    color: #495057;
+}
+.training-title-link--expired-notes .training-title-play-badge--disabled {
+    background: #6c757d;
+}
 /* Wyraźny „PLAY” przy tytule, gdy jest nagranie wideo */
 .training-title-play-badge {
     display: inline-flex;
@@ -93,6 +102,14 @@
 .training-access-term {
     font-size: 0.9rem;
     margin-bottom: 0.5rem;
+}
+.training-notes-indicator__link {
+    color: #0d6efd;
+    font-weight: 500;
+}
+.training-notes-indicator__link:hover {
+    color: #0a58ca;
+    text-decoration: underline !important;
 }
 .training-meta {
     font-size: 0.95rem;

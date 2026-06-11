@@ -84,6 +84,11 @@ class Participant extends Model
         return $this->hasOne(Certificate::class, 'participant_id');
     }
 
+    public function trainingVideoNotes()
+    {
+        return $this->hasMany(ParticipantTrainingVideoNote::class);
+    }
+
     /**
      * Sprawdź czy dostęp wygasł
      */

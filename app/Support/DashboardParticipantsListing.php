@@ -4,6 +4,7 @@ namespace App\Support;
 
 use App\Models\CourseFileLink;
 use App\Models\Participant;
+use App\Models\ParticipantTrainingVideoNote;
 use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\Request;
@@ -55,6 +56,7 @@ class DashboardParticipantsListing
 
         $participants = $query->paginate(15)->withQueryString();
         self::hydrateEndedCourseFileLinksForListing($participants);
+        self::hydrateTrainingVideoNotesCountsForListing($participants);
 
         return [
             'participants' => $participants,
@@ -105,6 +107,27 @@ class DashboardParticipantsListing
             }
 
             $course->setRelation('fileLinks', $linksByCourseId->get($course->id));
+        }
+    }
+
+    private static function hydrateTrainingVideoNotesCountsForListing(LengthAwarePaginator $participants): void
+    {
+        $participantIds = $participants->getCollection()->pluck('id')->map(fn ($id) => (int) $id)->all();
+        if ($participantIds === []) {
+            return;
+        }
+
+        $countsByParticipantId = ParticipantTrainingVideoNote::query()
+            ->whereIn('participant_id', $participantIds)
+            ->selectRaw('participant_id, COUNT(*) as notes_count')
+            ->groupBy('participant_id')
+            ->pluck('notes_count', 'participant_id');
+
+        foreach ($participants->getCollection() as $participant) {
+            $participant->setAttribute(
+                'training_video_notes_count',
+                (int) ($countsByParticipantId[(int) $participant->id] ?? 0)
+            );
         }
     }
 }

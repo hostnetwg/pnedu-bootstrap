@@ -97,6 +97,11 @@ Route::get('/dashboard/szkolenia/{participant}/wideo', [App\Http\Controllers\Das
     ->middleware(['auth', 'verified'])
     ->name('dashboard.szkolenia.wideo');
 
+Route::post('/dashboard/szkolenia/{participant}/wideo/{video}/notatka', [App\Http\Controllers\DashboardController::class, 'saveTrainingVideoNote'])
+    ->middleware(['auth', 'verified', 'throttle:60,1'])
+    ->whereNumber('video')
+    ->name('dashboard.szkolenia.wideo-note.save');
+
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard/zaswiadczenia', [App\Http\Controllers\CertificateController::class, 'dashboardCertificatesIndex'])
         ->name('dashboard.zaswiadczenia');
