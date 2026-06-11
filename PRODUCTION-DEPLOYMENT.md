@@ -1,5 +1,7 @@
 # Instrukcja wdrożenia na produkcji
 
+Optymalizacje wydajności (Fazy 1–7, panel, strona główna): **[DEPLOY-PERF.md](./DEPLOY-PERF.md)**.
+
 ## Po wykonaniu git pull na produkcji wykonaj:
 
 ### 1. Zaktualizuj autoloader Composer
