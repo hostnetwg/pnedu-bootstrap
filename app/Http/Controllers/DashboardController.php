@@ -198,7 +198,6 @@ class DashboardController extends Controller
                         'end_date',
                         'is_paid',
                         'instructor_id',
-                        'trainer',
                         'certificate_download_status',
                     ]);
                 },
