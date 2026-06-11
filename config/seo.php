@@ -39,4 +39,18 @@ return [
 
     'default_og_image' => env('SEO_OG_IMAGE') ?: (rtrim((string) env('APP_URL', 'http://localhost'), '/').'/logo-pne.png'),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Strona główna — krótki cache HTML dla gości (CDN / LiteSpeed)
+    |--------------------------------------------------------------------------
+    |
+    | 0 = wyłączony. Domyślnie 60 s + stale-while-revalidate 120 s.
+    |
+    */
+
+    'homepage' => [
+        'page_cache_max_age' => (int) env('HOMEPAGE_PAGE_CACHE_MAX_AGE', 60),
+        'page_cache_stale_while_revalidate' => (int) env('HOMEPAGE_PAGE_CACHE_STALE', 120),
+    ],
+
 ];

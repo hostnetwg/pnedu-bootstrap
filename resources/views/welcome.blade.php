@@ -190,7 +190,11 @@
                         <div class="position-relative">
                             <a href="{{ route('courses.show', $course->id) }}" style="text-decoration: none; display: block;">
                                 @if(!empty($course->image))
-                                    <img src="{{ rtrim(config('services.pneadm.public_url'), '/') . '/storage/' . ltrim($course->image, '/') }}" class="card-img-top" alt="{{ $course->title }}">
+                                    <img src="{{ rtrim(config('services.pneadm.public_url'), '/') . '/storage/' . ltrim($course->image, '/') }}"
+                                         class="card-img-top"
+                                         alt="{{ strip_tags($course->title) }}"
+                                         loading="lazy"
+                                         decoding="async">
                                 @else
                                     <div class="card-img-top d-flex align-items-center justify-content-center mb-2" style="width:100%; aspect-ratio:1/1; background:#e9ecef; border: 2px solid #dee2e6; border-radius: .5rem; border-style:dashed;">
                                         <i class="bi bi-mortarboard" style="font-size: 4rem; color: #f8f9fa;"></i>
@@ -311,9 +315,11 @@
                     </div>
                     <div class="col-md-6 d-none d-md-block">
                         <img src="{{ asset('images/carousel/szkolenia_dla_nauczycieli_02.png') }}"
-                                class="d-block w-100"
-                                alt="Szkolenia dla nauczycieli"
-                                style="height: 320px; object-fit: cover;">
+                             class="d-block w-100"
+                             alt="Szkolenia dla nauczycieli"
+                             style="height: 320px; object-fit: cover;"
+                             fetchpriority="high"
+                             decoding="async">
                     </div>
                 </div>
             </div>
@@ -327,7 +333,11 @@
                         <a href="#courses" class="btn btn-light btn-lg">Dowiedz się więcej</a>
                     </div>
                     <div class="col-md-6 d-none d-md-block">
-                        <img src="images/carousel/szkolenia_dla_dyrektorow_01.png" class="img-fluid rounded shadow-lg" alt="Szkolenia dla dyrektorów">
+                        <img src="{{ asset('images/carousel/szkolenia_dla_dyrektorow_01.png') }}"
+                             class="img-fluid rounded shadow-lg"
+                             alt="Szkolenia dla dyrektorów"
+                             loading="lazy"
+                             decoding="async">
                     </div>
                 </div>
             </div>
@@ -341,7 +351,11 @@
                         <a href="https://nowoczesna-edukacja.pl" class="btn btn-light btn-lg">Zobacz ofertę</a>
                     </div>
                     <div class="col-md-6 d-none d-md-block">
-                        <img src="images/carousel/szkolenia_dla_rad_pedagogicznych_04.png" class="img-fluid rounded shadow-lg" alt="Rady pedagogiczne">
+                        <img src="{{ asset('images/carousel/szkolenia_dla_rad_pedagogicznych_04.png') }}"
+                             class="img-fluid rounded shadow-lg"
+                             alt="Rady pedagogiczne"
+                             loading="lazy"
+                             decoding="async">
                     </div>
                 </div>
             </div>
@@ -355,7 +369,11 @@
                         <a href="#courses" class="btn btn-light btn-lg">Zapisz się teraz</a>
                     </div>
                     <div class="col-md-6 d-none d-md-block">
-                        <img src="images/carousel/bezplatne_webinary_01.png" class="img-fluid rounded shadow-lg" alt="Bezpłatne webinary">
+                        <img src="{{ asset('images/carousel/bezplatne_webinary_01.png') }}"
+                             class="img-fluid rounded shadow-lg"
+                             alt="Bezpłatne webinary"
+                             loading="lazy"
+                             decoding="async">
                     </div>
                 </div>
             </div>
@@ -369,7 +387,11 @@
                         <a href="#courses" class="btn btn-light btn-lg">Poznaj szczegóły</a>
                     </div>
                     <div class="col-md-6 d-none d-md-block">
-                        <img src="images/carousel/tik_w_pracy_nauczyciela_01.png" class="img-fluid rounded shadow-lg" alt="TIK w pracy nauczyciela">
+                        <img src="{{ asset('images/carousel/tik_w_pracy_nauczyciela_01.png') }}"
+                             class="img-fluid rounded shadow-lg"
+                             alt="TIK w pracy nauczyciela"
+                             loading="lazy"
+                             decoding="async">
                     </div>
                 </div>
             </div>

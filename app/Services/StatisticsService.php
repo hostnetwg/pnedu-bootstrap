@@ -2,39 +2,37 @@
 
 namespace App\Services;
 
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Cache;
 use App\Models\Survey;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 class StatisticsService
 {
     const CACHE_KEY = 'homepage_statistics';
+
     const CACHE_TTL = 86400; // 24 godziny (w sekundach)
 
     /**
      * Pobiera wszystkie statystyki z cache lub generuje nowe
-     *
-     * @return array
      */
     public function getStatistics(): array
     {
         $statistics = Cache::remember(self::CACHE_KEY, self::CACHE_TTL, function () {
             $stats = $this->calculateStatistics();
-            // Zapisz timestamp aktualizacji
-            Cache::put(self::CACHE_KEY . '_timestamp', now(), self::CACHE_TTL);
+            $stats['last_updated'] = now();
+
             return $stats;
         });
-        
-        // Dodaj timestamp do zwracanych statystyk
-        $statistics['last_updated'] = Cache::get(self::CACHE_KEY . '_timestamp', now());
-        
+
+        if (isset($statistics['last_updated']) && is_string($statistics['last_updated'])) {
+            $statistics['last_updated'] = \Carbon\Carbon::parse($statistics['last_updated']);
+        }
+
         return $statistics;
     }
 
     /**
      * Oblicza wszystkie statystyki
-     *
-     * @return array
      */
     public function calculateStatistics(): array
     {
@@ -48,8 +46,6 @@ class StatisticsService
 
     /**
      * Oblicza ilość przeszkolonych nauczycieli (unikalni uczestnicy)
-     *
-     * @return int
      */
     public function getTrainedTeachersCount(): int
     {
@@ -65,9 +61,9 @@ class StatisticsService
             // Uczestnicy bez emaila - liczymy po unikalnych kombinacjach imię+nazwisko
             $uniqueByName = DB::connection('pneadm')
                 ->table('participants')
-                ->where(function($query) {
+                ->where(function ($query) {
                     $query->whereNull('email')
-                          ->orWhere('email', '=', '');
+                        ->orWhere('email', '=', '');
                 })
                 ->select(DB::raw('CONCAT(first_name, " ", last_name) as full_name'))
                 ->distinct()
@@ -75,7 +71,8 @@ class StatisticsService
 
             return $uniqueByEmail + $uniqueByName;
         } catch (\Exception $e) {
-            \Log::error('Błąd obliczania przeszkolonych nauczycieli: ' . $e->getMessage());
+            \Log::error('Błąd obliczania przeszkolonych nauczycieli: '.$e->getMessage());
+
             return 0;
         }
     }
@@ -83,8 +80,6 @@ class StatisticsService
     /**
      * Oblicza średnią roczną ilość szkoleń na podstawie ostatnich 12 miesięcy
      * Liczy szkolenia z ostatnich 12 miesięcy od daty obliczenia
-     *
-     * @return int
      */
     public function getCoursesThisYearCount(): int
     {
@@ -101,7 +96,8 @@ class StatisticsService
 
             return $coursesCount;
         } catch (\Exception $e) {
-            \Log::error('Błąd obliczania średniej rocznej szkoleń: ' . $e->getMessage());
+            \Log::error('Błąd obliczania średniej rocznej szkoleń: '.$e->getMessage());
+
             return 0;
         }
     }
@@ -109,8 +105,6 @@ class StatisticsService
     /**
      * Oblicza średnią ocenę ze wszystkich ankiet
      * (podobnie jak w DashboardController w pneadm-bootstrap)
-     *
-     * @return float
      */
     public function getAverageRating(): float
     {
@@ -158,14 +152,14 @@ class StatisticsService
                 foreach ($ratingQuestions as $question) {
                     foreach ($responses as $response) {
                         // response_data może być JSON stringiem lub już tablicą
-                        $responseData = is_string($response->response_data) 
-                            ? json_decode($response->response_data, true) 
+                        $responseData = is_string($response->response_data)
+                            ? json_decode($response->response_data, true)
                             : $response->response_data;
-                        
-                        if (!is_array($responseData)) {
+
+                        if (! is_array($responseData)) {
                             continue;
                         }
-                        
+
                         $answer = $responseData[$question->question_text] ?? null;
 
                         if (is_numeric($answer)) {
@@ -184,7 +178,8 @@ class StatisticsService
 
             return $surveysWithRatings > 0 ? round($totalRating / $surveysWithRatings, 2) : 0;
         } catch (\Exception $e) {
-            \Log::error('Błąd obliczania średniej oceny: ' . $e->getMessage());
+            \Log::error('Błąd obliczania średniej oceny: '.$e->getMessage());
+
             return 0;
         }
     }
@@ -193,8 +188,6 @@ class StatisticsService
      * Oblicza wskaźnik poleceń (NPS - Net Promoter Score)
      * Na podstawie pytań o polecanie szkoleń innym (skala 1-5)
      * Używa DOKŁADNIE tej samej logiki co SurveyController::calculateNPS w pneadm-bootstrap
-     *
-     * @return float
      */
     public function getNPS(): float
     {
@@ -205,7 +198,7 @@ class StatisticsService
                 '/poleci.*szkolenie.*innym/i',
                 '/poleci.*innym.*osobom/i',
                 '/czy.*poleci.*innym/i',
-                '/poleci.*innym/i'
+                '/poleci.*innym/i',
             ];
 
             // Pobierz wszystkie ankiety z odpowiedziami - IDENTYCZNIE jak w SurveyController
@@ -216,6 +209,7 @@ class StatisticsService
 
             if ($surveys->isEmpty()) {
                 \Log::info('Brak ankiet z odpowiedziami dla obliczenia NPS');
+
                 return 0;
             }
 
@@ -226,8 +220,8 @@ class StatisticsService
                 foreach ($survey->responses as $response) {
                     // response_data jest automatycznie dekodowane jako tablica przez cast w modelu
                     $responseData = $response->response_data;
-                    
-                    if (!is_array($responseData)) {
+
+                    if (! is_array($responseData)) {
                         continue;
                     }
 
@@ -241,7 +235,7 @@ class StatisticsService
                                 break;
                             }
                         }
-                        
+
                         if ($isNpsQuestion && is_numeric($answer) && $answer >= 1 && $answer <= 5) {
                             $npsResponses[] = (int) $answer;
                         }
@@ -260,7 +254,8 @@ class StatisticsService
                         }
                     }
                 }
-                \Log::info('Brak odpowiedzi NPS w ankietach. Przykładowe pytania: ' . json_encode(array_slice($sampleQuestions, 0, 10)));
+                \Log::info('Brak odpowiedzi NPS w ankietach. Przykładowe pytania: '.json_encode(array_slice($sampleQuestions, 0, 10)));
+
                 return 0;
             }
 
@@ -287,39 +282,42 @@ class StatisticsService
 
             return $nps;
         } catch (\Exception $e) {
-            \Log::error('Błąd obliczania wskaźnika poleceń (NPS): ' . $e->getMessage());
-            \Log::error('Stack trace: ' . $e->getTraceAsString());
+            \Log::error('Błąd obliczania wskaźnika poleceń (NPS): '.$e->getMessage());
+            \Log::error('Stack trace: '.$e->getTraceAsString());
+
             return 0;
         }
     }
 
     /**
      * Odświeża statystyki (czyści cache i generuje nowe)
-     *
-     * @return array
      */
     public function refreshStatistics(): array
     {
         Cache::forget(self::CACHE_KEY);
-        Cache::forget(self::CACHE_KEY . '_timestamp');
-        
+        Cache::forget(self::CACHE_KEY.'_timestamp');
+
         $statistics = $this->calculateStatistics();
-        
-        // Zapisz w cache z timestamp
+        $statistics['last_updated'] = now();
+
         Cache::put(self::CACHE_KEY, $statistics, self::CACHE_TTL);
-        Cache::put(self::CACHE_KEY . '_timestamp', now(), self::CACHE_TTL);
-        
+
         return $statistics;
     }
 
     /**
      * Pobiera czas ostatniej aktualizacji statystyk
-     *
-     * @return \Carbon\Carbon|null
      */
     public function getLastUpdated(): ?\Carbon\Carbon
     {
-        return Cache::get(self::CACHE_KEY . '_timestamp');
+        $statistics = Cache::get(self::CACHE_KEY);
+
+        if (! is_array($statistics) || ! isset($statistics['last_updated'])) {
+            return Cache::get(self::CACHE_KEY.'_timestamp');
+        }
+
+        $lastUpdated = $statistics['last_updated'];
+
+        return is_string($lastUpdated) ? \Carbon\Carbon::parse($lastUpdated) : $lastUpdated;
     }
 }
-

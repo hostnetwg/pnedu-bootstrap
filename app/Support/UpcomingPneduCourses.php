@@ -42,6 +42,16 @@ class UpcomingPneduCourses
     }
 
     /**
+     * Nadchodzące szkolenia na stronie głównej (ten sam cache co sidebar dashboardu).
+     *
+     * @return Collection<int, Course>
+     */
+    public static function forHomepage(int $limit = self::SIDEBAR_LIMIT): Collection
+    {
+        return self::forSidebar($limit);
+    }
+
+    /**
      * @return Builder<Course>
      */
     public static function baseQuery(): Builder

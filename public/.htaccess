@@ -25,7 +25,11 @@
 </IfModule>
 
 # Faza 3: długi cache plików Vite (hash w nazwie → bezpieczne immutable)
+# Faza 6: cache statycznych obrazów i favicon (30 dni)
 <IfModule mod_headers.c>
     SetEnvIf Request_URI "^/build/assets/" vite_build_asset=1
     Header set Cache-Control "public, max-age=31536000, immutable" env=vite_build_asset
+
+    SetEnvIf Request_URI "^/(images|logo-pne\.png|favicon|apple-touch-icon|site\.webmanifest)" static_public_asset=1
+    Header set Cache-Control "public, max-age=2592000" env=static_public_asset
 </IfModule>
