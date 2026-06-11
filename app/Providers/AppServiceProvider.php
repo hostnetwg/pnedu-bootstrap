@@ -25,7 +25,6 @@ class AppServiceProvider extends ServiceProvider
             'layouts.navigation',
             'dashboard.partials.sidebar-nav',
             'dashboard.partials.sidebar-nav-menu',
-            'dashboard.partials.sidebar-nav-offer',
             'dashboard.index',
         ], DashboardResourceCountsComposer::class);
     }

@@ -280,4 +280,52 @@
         max-height: none;
     }
 }
+.dashboard-offer-sidebar-mount--loaded > .dashboard-sidebar-offer {
+    animation: dashboardOfferFadeIn 0.35s ease;
+}
+@keyframes dashboardOfferFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+.dashboard-sidebar-upcoming--skeleton {
+    gap: 0.55rem;
+}
+.dashboard-sidebar-upcoming__skeleton-item {
+    padding: 0.65rem;
+    border-radius: 0.65rem;
+    border: 1px solid #e9ecef;
+    background: #fff;
+}
+.dashboard-sidebar-upcoming__skeleton-line {
+    display: block;
+    height: 0.65rem;
+    margin-bottom: 0.45rem;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #e9ecef 0%, #f8f9fa 45%, #e9ecef 90%);
+    background-size: 200% 100%;
+    animation: dashboardOfferShimmer 1.2s ease-in-out infinite;
+}
+.dashboard-sidebar-upcoming__skeleton-line:last-child {
+    margin-bottom: 0;
+}
+.dashboard-sidebar-upcoming__skeleton-line--short {
+    width: 42%;
+}
+.dashboard-sidebar-upcoming__skeleton-line--medium {
+    width: 72%;
+}
+@keyframes dashboardOfferShimmer {
+    0% {
+        background-position: 100% 0;
+    }
+    100% {
+        background-position: -100% 0;
+    }
+}
 </style>

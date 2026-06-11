@@ -8,20 +8,36 @@ use Illuminate\Contracts\Auth\Authenticatable;
 
 class DashboardResourceCounts
 {
+    private static ?int $cachedUserId = null;
+
+    /** @var array{szkolenia: int, online_courses: int, zaswiadczenia: int, total: int, twoje_zasoby_url: string}|null */
+    private static ?array $cachedCounts = null;
+
     /**
      * @return array{szkolenia: int, online_courses: int, zaswiadczenia: int, total: int, twoje_zasoby_url: string}
      */
     public static function forUser(?Authenticatable $user): array
     {
+        $userId = $user?->getAuthIdentifier();
+
+        if (self::$cachedCounts !== null && self::$cachedUserId === $userId) {
+            return self::$cachedCounts;
+        }
+
         if (! $user) {
-            return [
+            self::$cachedUserId = null;
+            self::$cachedCounts = [
                 'szkolenia' => 0,
                 'online_courses' => 0,
                 'zaswiadczenia' => 0,
                 'total' => 0,
                 'twoje_zasoby_url' => route('dashboard'),
             ];
+
+            return self::$cachedCounts;
         }
+
+        self::$cachedUserId = $userId;
 
         $emailNormalized = strtolower(trim((string) $user->email));
         $onlineEmail = OnlineCourseEnrollment::normalizeEmail($user->email);
@@ -49,7 +65,7 @@ class DashboardResourceCounts
                 ->count();
         }
 
-        return [
+        return self::$cachedCounts = [
             'szkolenia' => $szkoleniaCount,
             'online_courses' => $onlineCoursesCount,
             'zaswiadczenia' => $zaswiadczeniaCount,

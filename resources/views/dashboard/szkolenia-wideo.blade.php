@@ -10,7 +10,7 @@
                 @include('dashboard.partials.sidebar-nav-menu')
             </nav>
             <div class="d-none d-lg-block">
-                @include('dashboard.partials.sidebar-nav-offer')
+                @include('dashboard.partials.sidebar-nav-offer-mount', ['offerMountClass' => ''])
             </div>
         </div>
         <div class="col-12 col-lg-9 order-2 order-lg-2">
@@ -176,7 +176,7 @@
             </div>
         </div>
         <div class="col-12 d-lg-none order-3">
-            @include('dashboard.partials.sidebar-nav-offer')
+            @include('dashboard.partials.sidebar-nav-offer-mount', ['offerMountClass' => ''])
         </div>
     </div>
 </div>

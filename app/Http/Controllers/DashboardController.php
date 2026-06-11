@@ -213,12 +213,18 @@ class DashboardController extends Controller
      */
     private function participantFilterCountsForDashboard(string $emailNormalized): array
     {
-        $base = fn () => Participant::query()->whereRaw('LOWER(TRIM(participants.email)) = ?', [$emailNormalized]);
+        $row = Participant::query()
+            ->whereRaw('LOWER(TRIM(participants.email)) = ?', [$emailNormalized])
+            ->leftJoin('courses', 'participants.course_id', '=', 'courses.id')
+            ->selectRaw('COUNT(*) as total')
+            ->selectRaw('SUM(CASE WHEN courses.id IS NOT NULL AND courses.is_paid = 1 THEN 1 ELSE 0 END) as paid')
+            ->selectRaw('SUM(CASE WHEN courses.id IS NOT NULL AND courses.is_paid = 0 THEN 1 ELSE 0 END) as free')
+            ->first();
 
         return [
-            'all' => $base()->count(),
-            'paid' => $base()->whereHas('course', fn ($q) => $q->where('is_paid', 1))->count(),
-            'free' => $base()->whereHas('course', fn ($q) => $q->where('is_paid', 0))->count(),
+            'all' => (int) ($row->total ?? 0),
+            'paid' => (int) ($row->paid ?? 0),
+            'free' => (int) ($row->free ?? 0),
         ];
     }
 }

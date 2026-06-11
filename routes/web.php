@@ -85,6 +85,10 @@ Route::get('/dashboard/szkolenia', [App\Http\Controllers\DashboardController::cl
     ->middleware(['auth', 'verified'])
     ->name('dashboard.szkolenia');
 
+Route::get('/dashboard/fragments/aktualna-oferta', [App\Http\Controllers\DashboardFragmentController::class, 'aktualnaOferta'])
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard.fragments.aktualna-oferta');
+
 Route::get('/dashboard/szkolenia/{participant}/wideo', [App\Http\Controllers\DashboardController::class, 'szkoleniaWideo'])
     ->middleware(['auth', 'verified'])
     ->name('dashboard.szkolenia.wideo');

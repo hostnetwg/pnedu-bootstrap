@@ -5,9 +5,16 @@ namespace App\Support;
 use App\Models\Course;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Cache;
 
 class UpcomingPneduCourses
 {
+    public const SIDEBAR_LIMIT = 6;
+
+    public const SIDEBAR_CACHE_KEY = 'dashboard.upcoming-offer.sidebar.v1';
+
+    public const SIDEBAR_CACHE_TTL_MINUTES = 10;
+
     /**
      * Nadchodzące szkolenia online widoczne na pnedu.pl (jak na stronie głównej).
      *
@@ -16,6 +23,22 @@ class UpcomingPneduCourses
     public static function query(): Collection
     {
         return self::baseQuery()->get();
+    }
+
+    /**
+     * Ograniczona lista nadchodzących szkoleń do sidebara dashboardu (cache globalny).
+     *
+     * @return Collection<int, Course>
+     */
+    public static function forSidebar(int $limit = self::SIDEBAR_LIMIT): Collection
+    {
+        $cacheKey = self::SIDEBAR_CACHE_KEY.'.'.$limit;
+
+        return Cache::remember(
+            $cacheKey,
+            now()->addMinutes(self::SIDEBAR_CACHE_TTL_MINUTES),
+            fn () => self::baseQuery()->limit($limit)->get()
+        );
     }
 
     /**
