@@ -7,6 +7,7 @@ use App\Models\OnlineCourseEnrollment;
 use App\Models\OnlineCourseLesson;
 use App\Models\OnlineCourseLessonCompletion;
 use App\Models\OnlineCourseLessonNote;
+use App\Services\OnlineCourseLessonCertificateService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -63,13 +64,13 @@ class DashboardOnlineCoursesController extends Controller
         ]);
     }
 
-    public function lesson(OnlineCourseEnrollment $enrollment, OnlineCourseLesson $lesson): View
+    public function lesson(OnlineCourseEnrollment $enrollment, OnlineCourseLesson $lesson, OnlineCourseLessonCertificateService $certificateService): View
     {
         $this->assertEnrollmentAccess($enrollment);
         $course = $enrollment->onlineCourse;
         $this->assertAccessibleLesson($enrollment, $lesson);
 
-        $lesson->load(['embeds', 'resourceLinks', 'module']);
+        $lesson->load(['embeds', 'resourceLinks', 'module', 'linkedCourse.videos']);
         $course->load('modulesWithPublishedLessons');
 
         $enrollment->loadMissing('lessonCompletions');
@@ -78,12 +79,20 @@ class DashboardOnlineCoursesController extends Controller
         $lessonProgress = $this->progressCounts($enrollment, $course);
         $adjacent = $this->adjacentPublishedLessons($course, $lesson);
 
+        $linkedCourseLiveVideos = collect();
+        if ($lesson->linkedCourse) {
+            $linkedCourseLiveVideos = $lesson->linkedCourse->videos
+                ->filter(fn ($video) => trim((string) ($video->video_url ?? '')) !== '')
+                ->values();
+        }
+
         $lessonNote = OnlineCourseLessonNote::query()
             ->where('online_course_enrollment_id', $enrollment->id)
             ->where('online_course_lesson_id', $lesson->id)
             ->first();
 
         $lessonNotesForSidebar = $this->lessonNotesBodiesForSidebar($enrollment, $course);
+        $certificateContext = $certificateService->lessonCertificateContext($enrollment, $lesson);
 
         return view('dashboard.online-courses.lesson', [
             'enrollment' => $enrollment,
@@ -96,6 +105,8 @@ class DashboardOnlineCoursesController extends Controller
             'nextLesson' => $adjacent['next'],
             'lessonNote' => $lessonNote,
             'lessonNotesForSidebar' => $lessonNotesForSidebar,
+            'certificateContext' => $certificateContext,
+            'linkedCourseLiveVideos' => $linkedCourseLiveVideos,
         ]);
     }
 

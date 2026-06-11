@@ -142,6 +142,11 @@
                         </div>
                     </section>
 
+                    @include('dashboard.online-courses.partials.linked-course-live-recordings', [
+                        'linkedCourseLiveVideos' => $linkedCourseLiveVideos ?? collect(),
+                    ])
+                    @include('dashboard.online-courses.partials.certificate-registration-cta')
+
                 </div>
             </div>
             <div class="d-lg-none mt-3">

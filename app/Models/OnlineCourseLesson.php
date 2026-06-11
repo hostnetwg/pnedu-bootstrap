@@ -18,6 +18,7 @@ class OnlineCourseLesson extends Model
         'body_html',
         'is_published',
         'sort_order',
+        'linked_course_id',
     ];
 
     protected $casts = [
@@ -38,5 +39,10 @@ class OnlineCourseLesson extends Model
     public function resourceLinks(): HasMany
     {
         return $this->hasMany(OnlineCourseLessonResourceLink::class)->orderBy('sort_order')->orderBy('id');
+    }
+
+    public function linkedCourse(): BelongsTo
+    {
+        return $this->belongsTo(Course::class, 'linked_course_id');
     }
 }

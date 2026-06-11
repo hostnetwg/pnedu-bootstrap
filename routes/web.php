@@ -133,6 +133,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->whereNumber('lesson')
         ->middleware('throttle:60,1')
         ->name('dashboard.online-courses.lesson-note.save');
+    Route::post('/dashboard/kursy-online/{enrollment}/lekcje/{lesson}/zaswiadczenie', [App\Http\Controllers\OnlineCourseLessonCertificateController::class, 'submit'])
+        ->whereNumber('lesson')
+        ->middleware('throttle:30,1')
+        ->name('dashboard.online-courses.lesson-certificate.submit');
 });
 
 Route::middleware('auth')->group(function () {
