@@ -9,7 +9,7 @@
     $cPaid = $szkoleniaCounts['paid'] ?? null;
     $cFree = $szkoleniaCounts['free'] ?? null;
 @endphp
-<div class="d-flex flex-wrap align-items-center gap-2 mb-3" role="group" aria-label="Filtr rodzaju szkolenia">
+<div class="d-flex flex-wrap align-items-center gap-2 mb-3 js-szkolenia-list-filters" role="group" aria-label="Filtr rodzaju szkolenia">
     <span class="text-muted small me-1">Pokaż:</span>
     <div class="btn-group btn-group-sm" role="group">
         <a href="{{ route($szkoleniaFilterRoute, ['typ' => 'all']) }}"
@@ -194,7 +194,7 @@
     </div>
 
     @if($participants->hasPages())
-        <div class="mt-4 d-flex justify-content-center">
+        <div class="mt-4 d-flex justify-content-center js-szkolenia-list-pagination">
             {{ $participants->links('pagination::bootstrap-4') }}
         </div>
     @endif

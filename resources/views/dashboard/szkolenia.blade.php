@@ -15,7 +15,13 @@
             <div class="card border-0 shadow-sm rounded-4">
                 <div class="card-body py-4">
                     <h2 class="h4 mb-2">Twoje szkolenia</h2>
-                    @include('dashboard.partials.szkolenia-list-inner', ['szkoleniaFilterRoute' => 'dashboard.szkolenia'])
+                    <div class="js-szkolenia-list-root"
+                         data-fragment-url="{{ url('/dashboard/fragments/szkolenia-list') }}"
+                         data-page-url="{{ url('/dashboard/szkolenia') }}"
+                         aria-live="polite"
+                         aria-busy="false">
+                        @include('dashboard.partials.szkolenia-list-inner', ['szkoleniaFilterRoute' => 'dashboard.szkolenia'])
+                    </div>
                 </div>
             </div>
         </div>
@@ -30,5 +36,12 @@
 @include('dashboard.partials.minimal-sidebar-css')
 <style>
 @include('dashboard.partials.szkolenia-training-styles')
+.szkolenia-list-root--loading { opacity: 0.55; pointer-events: none; transition: opacity 0.15s ease; }
 </style>
 @endpush
+
+@once
+@push('scripts')
+@include('dashboard.partials.szkolenia-list-ajax-script')
+@endpush
+@endonce
