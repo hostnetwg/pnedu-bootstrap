@@ -60,17 +60,8 @@
                     @endif
 
                     @if($materialsAccessActive)
-                    {{-- Osadzony odtwarzacz wideo --}}
                     <div class="video-wrapper mb-0">
-                        <div class="ratio ratio-16x9 rounded overflow-hidden bg-dark">
-                            <iframe
-                                src="{{ $selectedVideo->getEmbedUrl() }}"
-                                title="{{ $selectedVideo->title ?: 'Nagranie szkolenia' }}"
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                                allowfullscreen
-                                referrerpolicy="strict-origin-when-cross-origin"
-                            ></iframe>
-                        </div>
+                        @include('dashboard.partials.training-video-embed', ['video' => $selectedVideo])
                     </div>
                     @else
                         <div class="border rounded-3 bg-body-secondary p-4 text-center">
@@ -222,7 +213,4 @@
 
 @push('styles')
 @include('dashboard.partials.minimal-sidebar-css')
-<style>
-.video-wrapper iframe { border: none; }
-</style>
 @endpush

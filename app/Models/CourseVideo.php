@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
 
 class CourseVideo extends Model
 {
@@ -70,11 +72,58 @@ class CourseVideo extends Model
         if ($this->platform === 'vimeo') {
             $videoId = $this->extractVimeoId($raw);
             if ($videoId) {
-                return "https://player.vimeo.com/video/{$videoId}?badge=0&autopause=0&player_id=0&app_id=58479";
+                return 'https://player.vimeo.com/video/'.$videoId.'?badge=0&autopause=0&player_id=0&app_id=58479&dnt=1&title=0&byline=0&portrait=0';
             }
         }
 
         return $raw;
+    }
+
+    /**
+     * URL miniatury do podglądu przed odtworzeniem (YouTube: statyczny CDN; Vimeo: oEmbed + cache).
+     */
+    public function getPosterUrl(): ?string
+    {
+        $raw = $this->normalizedVideoUrl();
+
+        if ($this->platform === 'youtube') {
+            $videoId = $this->extractYouTubeId($raw);
+
+            return $videoId ? 'https://i.ytimg.com/vi/'.$videoId.'/hqdefault.jpg' : null;
+        }
+
+        if ($this->platform === 'vimeo') {
+            $videoId = $this->extractVimeoId($raw);
+            if (! $videoId) {
+                return null;
+            }
+
+            return Cache::remember(
+                'course_video_vimeo_poster_'.$videoId,
+                now()->addDays(7),
+                function () use ($videoId): ?string {
+                    try {
+                        $response = Http::timeout(5)
+                            ->acceptJson()
+                            ->get('https://vimeo.com/api/oembed.json', [
+                                'url' => 'https://vimeo.com/'.$videoId,
+                            ]);
+
+                        if ($response->successful()) {
+                            $thumbnailUrl = $response->json('thumbnail_url');
+
+                            return is_string($thumbnailUrl) && $thumbnailUrl !== '' ? $thumbnailUrl : null;
+                        }
+                    } catch (\Throwable) {
+                        // Brak miniatury — facade pokaże neutralne tło z przyciskiem play.
+                    }
+
+                    return null;
+                }
+            );
+        }
+
+        return null;
     }
 
     private function normalizedVideoUrl(): string
