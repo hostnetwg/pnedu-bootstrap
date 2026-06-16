@@ -141,9 +141,18 @@ ls -la public/build/
 ### 4. Uruchom ponownie cache (opcjonalnie, dla lepszej wydajności)
 ```bash
 php artisan config:cache
+php artisan route:clear
 php artisan route:cache
 php artisan view:cache
 ```
+
+**Linki krótkie `/l/{kod_kampanii}`:** po wdrożeniu sprawdź:
+```bash
+php artisan route:list --path=l/
+curl -sI "https://pnedu.pl/l/1241" | head -5
+# Oczekiwane: HTTP/2 302 oraz Location: .../courses/...?utm_campaign=1241
+```
+Jeśli nadal 404: `php artisan route:clear` (stary `route:cache` bez tej trasy) lub upewnij się, że na serwerze są pliki `public/l.php`, `public/.htaccess` (reguła `^l/`) oraz `app/Services/MarketingCampaignLinkResolver.php`.
 
 ### 5. Sprawdź logi błędów
 ```bash

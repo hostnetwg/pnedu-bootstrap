@@ -103,6 +103,7 @@ class FormOrder extends Model
         'updated_manually_at',
         'ip_address',
         'fb_source',
+        'conversion_placement',
     ];
 
     /**

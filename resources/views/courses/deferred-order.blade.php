@@ -275,6 +275,7 @@
                 @endif
                 <input type="hidden" name="price_variant_id" value="{{ old('price_variant_id', $prefillPriceVariantId ?? $testData['price_variant_id'] ?? '') }}">
                 <input type="hidden" name="fb_source" value="{{ old('fb_source', $testData['fb_source'] ?? ($fbSourceDefault ?? '')) }}">
+                <input type="hidden" name="conversion_placement" value="{{ old('conversion_placement', $testData['conversion_placement'] ?? ($conversionPlacementDefault ?? '')) }}">
                 <div class="form-sections-grid">
                 <fieldset class="order-form-section">
                     <legend>DANE KONTAKTOWE ZAMAWIAJĄCEGO</legend>

@@ -623,4 +623,5 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
     </div>
 </div>
+@include('courses.partials.marketing-ga-event', ['course' => $course, 'gaEvent' => 'course_view'])
 @endsection 

@@ -13,7 +13,7 @@
                 $titlePlain = \Illuminate\Support\Str::limit(strip_tags((string) $course->title), 90);
                 $priceInfo = $course->is_paid ? $course->getCurrentPrice() : null;
             @endphp
-            <a href="{{ route('courses.show', $course->id) }}"
+            <a href="{{ route('courses.show', ['id' => $course->id, 'entry' => 'dashboard_sidebar']) }}"
                target="_blank"
                rel="noopener noreferrer"
                class="dashboard-sidebar-upcoming__item @if(! $course->is_paid) dashboard-sidebar-upcoming__item--free @endif"

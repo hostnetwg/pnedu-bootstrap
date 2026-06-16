@@ -457,6 +457,7 @@
                 <input type="hidden" name="price_variant_id" value="{{ old('price_variant_id', $prefillPriceVariantId ?? $testData['price_variant_id'] ?? '') }}">
                 {{-- Źródło marketingowe (jak stary ?fb=1134) – przekazywane w fb_source do form_orders --}}
                 <input type="hidden" name="fb_source" value="{{ old('fb_source', $testData['fb_source'] ?? ($fbSourceDefault ?? '')) }}">
+                <input type="hidden" name="conversion_placement" value="{{ old('conversion_placement', $testData['conversion_placement'] ?? ($conversionPlacementDefault ?? '')) }}">
                 <div class="form-sections-grid">
                 <fieldset class="order-form-section">
                     <legend class="visually-hidden">DANE KONTAKTOWE ZAMAWIAJĄCEGO</legend>
@@ -1306,5 +1307,6 @@
     }
 })();
 </script>
+@include('courses.partials.marketing-ga-event', ['course' => $course, 'gaEvent' => 'order_form_view'])
 @endsection
 

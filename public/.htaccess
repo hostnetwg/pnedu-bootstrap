@@ -5,6 +5,9 @@
 
     RewriteEngine On
 
+    # Krótkie linki kampanii: /l/{campaign_code} → l.php (działa także przy starym route:cache)
+    RewriteRule ^l/([A-Za-z0-9._-]+)$ l.php?code=$1 [L,QSA]
+
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]

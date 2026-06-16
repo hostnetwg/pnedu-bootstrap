@@ -2,28 +2,40 @@
 
 namespace App\Http\Middleware;
 
+use App\Services\MarketingAttributionService;
+use App\Services\OrderEntryPlacementService;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 class CaptureMarketingSource
 {
+    public function __construct(
+        private readonly MarketingAttributionService $attribution,
+        private readonly OrderEntryPlacementService $placement,
+    ) {}
+
     /**
-     * Persist marketing source code (fb/fb_source) in session.
+     * Persist marketing attribution (UTM + legacy fb) in session and cookie.
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $raw = $request->query('fb', $request->query('fb_source'));
+        $payload = $this->attribution->captureFromRequest($request);
 
-        if (is_string($raw)) {
-            $raw = trim($raw);
+        if ($payload !== []) {
+            $this->attribution->persist($request, $payload);
         }
 
-        if ($raw !== null && $raw !== '') {
-            $request->session()->put('marketing.fb_source', mb_substr((string) $raw, 0, 255));
+        $this->placement->captureFromRequest($request);
+
+        $response = $next($request);
+
+        if ($payload !== []) {
+            $existing = $this->attribution->readCookiePayload($request);
+            $merged = array_merge($existing, $payload);
+            $response->headers->setCookie($this->attribution->writeCookiePayload($merged));
         }
 
-        return $next($request);
+        return $response;
     }
 }
-

@@ -12,6 +12,11 @@ use Illuminate\Support\Facades\Route;
 Route::get('/robots.txt', [SeoController::class, 'robots'])->name('seo.robots');
 Route::get('/sitemap.xml', [SeoController::class, 'sitemap'])->name('seo.sitemap');
 
+Route::get('/l/{campaign_code}', App\Http\Controllers\MarketingCampaignShortLinkController::class)
+    ->where('campaign_code', '[A-Za-z0-9._-]+')
+    ->middleware('throttle:180,1')
+    ->name('marketing.short-link');
+
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
 // Bramka ankiet (link dla uczestników bez ujawniania adresu panelu administratora).
@@ -161,7 +166,9 @@ Route::post('/webhooks/ses/notifications', SesNotificationWebhookController::cla
 // Lookup uczestnika po e-mailu (musi być przed /courses/{id})
 Route::get('/courses/participant-lookup-by-email', [App\Http\Controllers\CourseController::class, 'participantLookupByEmail'])->name('courses.participant-lookup');
 // Szczegóły szkolenia
-Route::get('/courses/{id}', [App\Http\Controllers\CourseController::class, 'show'])->name('courses.show');
+Route::get('/courses/{id}', [App\Http\Controllers\CourseController::class, 'show'])
+    ->middleware(\App\Http\Middleware\TrackCoursePageView::class.':course_show')
+    ->name('courses.show');
 Route::post('/courses/{id}/register', [App\Http\Controllers\CourseController::class, 'register'])->name('courses.register');
 // Płatność online
 Route::get('/courses/{id}/pay-online', [App\Http\Controllers\CourseController::class, 'payOnline'])->name('payment.online');
@@ -180,13 +187,21 @@ Route::get('/payment/success/{ident}', [App\Http\Controllers\PaymentController::
 Route::get('/payment/pending/{ident}', [App\Http\Controllers\PaymentController::class, 'pending'])->name('payment.pending');
 // Zamówienie z odroczonym terminem
 Route::get('/courses/{id}/deferred-order/test', [App\Http\Controllers\CourseController::class, 'deferredOrder'])->name('payment.deferred.test');
-Route::get('/courses/{id}/deferred-order/edit/{ident}', [App\Http\Controllers\CourseController::class, 'deferredOrder'])->name('payment.deferred.edit');
-Route::get('/courses/{id}/deferred-order', [App\Http\Controllers\CourseController::class, 'deferredOrder'])->name('payment.deferred');
+Route::get('/courses/{id}/deferred-order/edit/{ident}', [App\Http\Controllers\CourseController::class, 'deferredOrder'])
+    ->middleware(\App\Http\Middleware\TrackCoursePageView::class.':order_form')
+    ->name('payment.deferred.edit');
+Route::get('/courses/{id}/deferred-order', [App\Http\Controllers\CourseController::class, 'deferredOrder'])
+    ->middleware(\App\Http\Middleware\TrackCoursePageView::class.':order_form')
+    ->name('payment.deferred');
 Route::post('/courses/{id}/deferred-order', [App\Http\Controllers\CourseController::class, 'storeDeferredOrder'])->name('payment.deferred.store');
 
 // Formularz zamówienia (główny)
-Route::get('/courses/{id}/order-form/edit/{ident}', [App\Http\Controllers\CourseController::class, 'orderForm'])->name('payment.order-form.edit');
-Route::get('/courses/{id}/order-form', [App\Http\Controllers\CourseController::class, 'orderForm'])->name('payment.order-form');
+Route::get('/courses/{id}/order-form/edit/{ident}', [App\Http\Controllers\CourseController::class, 'orderForm'])
+    ->middleware(\App\Http\Middleware\TrackCoursePageView::class.':order_form')
+    ->name('payment.order-form.edit');
+Route::get('/courses/{id}/order-form', [App\Http\Controllers\CourseController::class, 'orderForm'])
+    ->middleware(\App\Http\Middleware\TrackCoursePageView::class.':order_form')
+    ->name('payment.order-form');
 Route::post('/courses/{id}/order-form', [App\Http\Controllers\CourseController::class, 'storeOrderForm'])->name('payment.order-form.store');
 
 // Podsumowanie i PDF zamówienia

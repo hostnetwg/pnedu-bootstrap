@@ -827,6 +827,7 @@ class CourseController extends Controller
                 'order_id' => $existingOrder->id,
                 'order_ident' => $existingOrder->ident,
                 'fb_source' => $existingOrder->fb_source,
+                'conversion_placement' => $existingOrder->conversion_placement,
                 'price_variant_id' => $existingOrder->course_price_variant_id,
             ];
         }
@@ -871,8 +872,9 @@ class CourseController extends Controller
         $user = auth()->user();
 
         $fbSourceDefault = $this->resolveFbSourceDefaultForForm($existingOrder);
+        $conversionPlacementDefault = $this->resolveConversionPlacementDefaultForForm((int) $id, $existingOrder);
 
-        return view('courses.deferred-order', compact('course', 'testData', 'isTestMode', 'isEditMode', 'user', 'prefillPriceVariantId', 'fbSourceDefault'));
+        return view('courses.deferred-order', compact('course', 'testData', 'isTestMode', 'isEditMode', 'user', 'prefillPriceVariantId', 'fbSourceDefault', 'conversionPlacementDefault'));
     }
 
     /**
@@ -926,8 +928,9 @@ class CourseController extends Controller
 
         // Źródło marketingowe (jak stary URL ?fb=1134) – domyślnie z query, potem z edycji zamówienia
         $fbSourceDefault = $this->resolveFbSourceDefaultForForm($existingOrder);
+        $conversionPlacementDefault = $this->resolveConversionPlacementDefaultForForm((int) $id, $existingOrder);
 
-        return view('courses.order-form', compact('course', 'testData', 'isTestMode', 'isEditMode', 'user', 'prefillPriceVariantId', 'fbSourceDefault'));
+        return view('courses.order-form', compact('course', 'testData', 'isTestMode', 'isEditMode', 'user', 'prefillPriceVariantId', 'fbSourceDefault', 'conversionPlacementDefault'));
     }
 
     /**
@@ -1147,6 +1150,7 @@ class CourseController extends Controller
             'order_id' => $existingOrder->id,
             'order_ident' => $existingOrder->ident,
             'fb_source' => $existingOrder->fb_source,
+            'conversion_placement' => $existingOrder->conversion_placement,
             'price_variant_id' => $existingOrder->course_price_variant_id,
         ];
 
@@ -1180,12 +1184,8 @@ class CourseController extends Controller
             $raw = trim($raw);
         }
 
-        if (($raw === null || $raw === '') && request()->hasSession()) {
-            $sessionRaw = session('marketing.fb_source');
-            if (is_string($sessionRaw)) {
-                $sessionRaw = trim($sessionRaw);
-            }
-            $raw = $sessionRaw;
+        if ($raw === null || $raw === '') {
+            $raw = app(\App\Services\MarketingAttributionService::class)->resolveCampaignCode(request());
         }
 
         if ($raw !== null && $raw !== '') {
@@ -1204,18 +1204,7 @@ class CourseController extends Controller
      */
     protected function resolveFbSourceDefaultForForm(?FormOrder $existingOrder = null): ?string
     {
-        $raw = request()->query('fb', request()->query('fb_source'));
-        if (is_string($raw)) {
-            $raw = trim($raw);
-        }
-
-        if (($raw === null || $raw === '') && request()->hasSession()) {
-            $sessionRaw = session('marketing.fb_source');
-            if (is_string($sessionRaw)) {
-                $sessionRaw = trim($sessionRaw);
-            }
-            $raw = $sessionRaw;
-        }
+        $raw = app(\App\Services\MarketingAttributionService::class)->resolveCampaignCode(request());
 
         if ($raw !== null && $raw !== '') {
             return Str::limit($raw, 255, '');
@@ -1223,6 +1212,47 @@ class CourseController extends Controller
 
         if ($existingOrder && $existingOrder->fb_source) {
             return $existingOrder->fb_source;
+        }
+
+        return null;
+    }
+
+    /**
+     * Miejsce konwersji (entry=…) — osobno od kampanii w fb_source.
+     * Przy edycji zamówienia zachowaj istniejące conversion_placement, jeśli pole jest puste.
+     */
+    protected function resolveConversionPlacementForFormOrder(array $validated, int $courseId, ?FormOrder $existingOrder = null): ?string
+    {
+        $placement = app(\App\Services\OrderEntryPlacementService::class)->resolveForCourse(
+            request(),
+            $courseId,
+            $validated['conversion_placement'] ?? null
+        );
+
+        if ($placement !== null) {
+            return $placement;
+        }
+
+        if ($existingOrder && filled($existingOrder->conversion_placement)) {
+            return $existingOrder->conversion_placement;
+        }
+
+        return null;
+    }
+
+    /**
+     * Domyślne miejsce konwersji do prefill formularza: sesja (powiązana z kursem) → edycja zamówienia.
+     */
+    protected function resolveConversionPlacementDefaultForForm(int $courseId, ?FormOrder $existingOrder = null): ?string
+    {
+        $placement = app(\App\Services\OrderEntryPlacementService::class)->resolveForCourse(request(), $courseId);
+
+        if ($placement !== null) {
+            return $placement;
+        }
+
+        if ($existingOrder && filled($existingOrder->conversion_placement)) {
+            return $existingOrder->conversion_placement;
         }
 
         return null;
@@ -1255,6 +1285,7 @@ class CourseController extends Controller
             'invoice_notes' => 'nullable|string',
             'payment_terms' => 'required|integer|min:0|max:31',
             'fb_source' => 'nullable|string|max:255',
+            'conversion_placement' => 'nullable|string|max:50',
         ];
         $this->addPriceVariantValidationRules($course, $rules);
 
@@ -1334,6 +1365,7 @@ class CourseController extends Controller
                 'submission_source' => FormOrder::SUBMISSION_SOURCE_PNEDU_ORDER_FORM,
                 'ip_address' => $request->ip(),
                 'fb_source' => $this->resolveFbSourceForFormOrder($validated, $order),
+                'conversion_placement' => $this->resolveConversionPlacementForFormOrder($validated, (int) $id, $order),
             ];
 
             // Aktualizuj istniejące zamówienie lub utwórz nowe
@@ -1366,6 +1398,8 @@ class CourseController extends Controller
                 $validated['participant_last_name'],
                 $validated['participant_email']
             );
+
+            app(\App\Services\OrderEntryPlacementService::class)->clear($request);
 
             // Przekierowanie do strony podsumowania z PDF
             return redirect()
@@ -1424,6 +1458,7 @@ class CourseController extends Controller
             'payment_terms' => 'nullable|integer|min:0|max:31',
             'payment_gateway' => 'nullable|in:payu,paynow',
             'fb_source' => 'nullable|string|max:255',
+            'conversion_placement' => 'nullable|string|max:50',
         ];
 
         if ($buyerType === 'organisation') {
@@ -1545,6 +1580,7 @@ class CourseController extends Controller
                 'submission_source' => FormOrder::SUBMISSION_SOURCE_PNEDU_ORDER_FORM,
                 'ip_address' => $request->ip(),
                 'fb_source' => $this->resolveFbSourceForFormOrder($validated, $order),
+                'conversion_placement' => $this->resolveConversionPlacementForFormOrder($validated, (int) $id, $order),
             ];
 
             if ($order) {
@@ -1566,6 +1602,8 @@ class CourseController extends Controller
             );
 
             $this->subscribeOrderFormContactsToSendyIfConfigured($course, $validated);
+
+            app(\App\Services\OrderEntryPlacementService::class)->clear($request);
 
             return redirect()
                 ->route('orders.summary', ['ident' => $order->ident])
@@ -1666,6 +1704,7 @@ class CourseController extends Controller
                 'submission_source' => FormOrder::SUBMISSION_SOURCE_PNEDU_ORDER_FORM,
                 'ip_address' => $request->ip(),
                 'fb_source' => $this->resolveFbSourceForFormOrder($validated, $formOrder),
+                'conversion_placement' => $this->resolveConversionPlacementForFormOrder($validated, (int) $course->id, $formOrder),
             ];
 
             if ($formOrder) {
@@ -1686,6 +1725,8 @@ class CourseController extends Controller
             );
 
             $this->subscribeOrderFormContactsToSendyIfConfigured($course, $validated);
+
+            app(\App\Services\OrderEntryPlacementService::class)->clear($request);
 
             $onlineOrder = \App\Models\OnlinePaymentOrder::create([
                 'form_order_id' => $formOrder->id,
