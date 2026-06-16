@@ -19,4 +19,15 @@ return [
 
     'entry_query_param' => 'entry',
 
+    /*
+    |--------------------------------------------------------------------------
+    | Opt-out lejka (dev / zespół) — cookie po ?pne_skip_funnel=1&token=…
+    |--------------------------------------------------------------------------
+    */
+    'funnel_skip_cookie' => 'pne_skip_funnel',
+    'funnel_skip_token' => env('MARKETING_FUNNEL_SKIP_TOKEN'),
+    'funnel_skip_cookie_days' => (int) env('MARKETING_FUNNEL_SKIP_COOKIE_DAYS', 365),
+    'funnel_skip_query_param' => 'pne_skip_funnel',
+    'funnel_skip_token_param' => 'token',
+
 ];

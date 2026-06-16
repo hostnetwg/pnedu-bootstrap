@@ -2,7 +2,9 @@
     $gaCourseId = $courseId ?? ($course->id ?? null);
     $gaEvent = $gaEvent ?? 'course_view';
     $gaCampaign = app(\App\Services\MarketingAttributionService::class)->resolveCampaignCode(request());
+    $skipFunnelStats = app(\App\Services\FunnelSkipService::class)->shouldSkipTracking(request());
 @endphp
+@if(! $skipFunnelStats)
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function () {
@@ -18,3 +20,4 @@
     });
 </script>
 @endpush
+@endif

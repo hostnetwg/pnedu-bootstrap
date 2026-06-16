@@ -11,10 +11,15 @@ class CoursePageViewTracker
 {
     public function __construct(
         private readonly MarketingAttributionService $attribution,
+        private readonly FunnelSkipService $funnelSkip,
     ) {}
 
     public function shouldTrack(Request $request): bool
     {
+        if ($this->funnelSkip->shouldSkipTracking($request)) {
+            return false;
+        }
+
         if (! $request->isMethod('GET')) {
             return false;
         }

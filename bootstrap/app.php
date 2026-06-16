@@ -17,6 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->web(prepend: [
             \App\Http\Middleware\ConfigureCertificateRegistrationSession::class,
+            \App\Http\Middleware\CaptureFunnelSkipOptOut::class,
         ]);
 
         $middleware->web(append: [
@@ -29,6 +30,10 @@ return Application::configure(basePath: dirname(__DIR__))
         // Za tunelami (ngrok, Cloudflare Tunnel) Laravel musi ufać nagłówkom X-Forwarded-*,
         // inaczej generuje URL-e jako http:// mimo HTTPS — Chrome blokuje wysyłkę formularzy.
         $middleware->trustProxies(at: '*');
+
+        $middleware->encryptCookies(except: [
+            'pne_skip_funnel',
+        ]);
 
         $middleware->validateCsrfTokens(except: [
             'logout',                    // GET w menu + POST ze starych zakładek — zawsze kończy sesję i idzie na /
