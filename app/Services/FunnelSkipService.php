@@ -7,6 +7,13 @@ use Symfony\Component\HttpFoundation\Cookie;
 
 class FunnelSkipService
 {
+    public function cookieDomain(): ?string
+    {
+        $domain = config('marketing.funnel_skip_cookie_domain');
+
+        return is_string($domain) && trim($domain) !== '' ? trim($domain) : null;
+    }
+
     public function isConfigured(): bool
     {
         $token = config('marketing.funnel_skip_token');
@@ -27,6 +34,11 @@ class FunnelSkipService
     public function tokenParam(): string
     {
         return (string) config('marketing.funnel_skip_token_param', 'token');
+    }
+
+    public function untilCookieName(): string
+    {
+        return (string) config('marketing.funnel_skip_until_cookie', 'pne_skip_funnel_until');
     }
 
     public function tokenMatches(Request $request): bool
@@ -84,9 +96,28 @@ class FunnelSkipService
             '1',
             $minutes,
             '/',
-            null,
+            $this->cookieDomain(),
             app()->environment('production'),
             true,
+            false,
+            'Lax'
+        );
+    }
+
+    public function makeOptOutUntilCookie(): Cookie
+    {
+        $days = max(1, (int) config('marketing.funnel_skip_cookie_days', 365));
+        $minutes = $days * 24 * 60;
+        $until = now()->addDays($days)->toIso8601String();
+
+        return cookie(
+            $this->untilCookieName(),
+            $until,
+            $minutes,
+            '/',
+            $this->cookieDomain(),
+            app()->environment('production'),
+            false,
             false,
             'Lax'
         );
@@ -99,9 +130,24 @@ class FunnelSkipService
             '',
             -1,
             '/',
-            null,
+            $this->cookieDomain(),
             app()->environment('production'),
             true,
+            false,
+            'Lax'
+        );
+    }
+
+    public function forgetOptOutUntilCookie(): Cookie
+    {
+        return cookie(
+            $this->untilCookieName(),
+            '',
+            -1,
+            '/',
+            $this->cookieDomain(),
+            app()->environment('production'),
+            false,
             false,
             'Lax'
         );
@@ -120,5 +166,53 @@ class FunnelSkipService
         ]);
 
         return $base.'/?'.$query;
+    }
+
+    /**
+     * Bezpieczny powrót do panelu adm po ustawieniu cookie (tylko znane hosty + ścieżka ustawień).
+     */
+    public function resolveAdmReturnUrl(Request $request): ?string
+    {
+        $raw = $request->query('adm_return');
+        if (! is_string($raw) || trim($raw) === '') {
+            return null;
+        }
+
+        $parsed = parse_url($raw);
+        if (! is_array($parsed) || empty($parsed['host']) || empty($parsed['path'])) {
+            return null;
+        }
+
+        $host = strtolower((string) $parsed['host']);
+        if (! in_array($host, $this->allowedAdmReturnHosts(), true)) {
+            return null;
+        }
+
+        $path = rtrim((string) $parsed['path'], '/');
+        if ($path !== '/settings/pnedu-zakupy') {
+            return null;
+        }
+
+        $scheme = strtolower((string) ($parsed['scheme'] ?? 'https'));
+        if (! in_array($scheme, ['http', 'https'], true)) {
+            return null;
+        }
+
+        return $raw;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function allowedAdmReturnHosts(): array
+    {
+        $hosts = ['localhost', 'adm.localhost', 'adm.pnedu.pl'];
+
+        $fromConfig = parse_url((string) config('services.pneadm.public_url', ''), PHP_URL_HOST);
+        if (is_string($fromConfig) && $fromConfig !== '') {
+            $hosts[] = strtolower($fromConfig);
+        }
+
+        return array_values(array_unique($hosts));
     }
 }

@@ -45,4 +45,15 @@ class FunnelSkipOptOutTest extends TestCase
         $response->assertOk();
         $response->assertCookieMissing('pne_skip_funnel');
     }
+
+    public function test_valid_enable_with_adm_return_redirects_to_adm_settings(): void
+    {
+        config(['services.pneadm.public_url' => 'http://localhost:8083']);
+
+        $admReturn = 'http://localhost:8083/settings/pnedu-zakupy?funnel_skip=enabled';
+        $response = $this->get('/?pne_skip_funnel=1&token=feature-test-secret&adm_return='.urlencode($admReturn));
+
+        $response->assertRedirect($admReturn);
+        $response->assertCookie('pne_skip_funnel', '1', false);
+    }
 }

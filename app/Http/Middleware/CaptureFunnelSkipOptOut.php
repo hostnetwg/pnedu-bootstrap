@@ -23,9 +23,12 @@ class CaptureFunnelSkipOptOut
         }
 
         $enable = $request->query($this->funnelSkip->queryParam()) === '1';
+        $admReturn = $this->funnelSkip->resolveAdmReturnUrl($request);
+        $target = $admReturn ?? $request->url();
 
-        $response = redirect()->to($request->url())
+        $response = redirect()->to($target)
             ->withCookie($enable ? $this->funnelSkip->makeOptOutCookie() : $this->funnelSkip->forgetOptOutCookie())
+            ->withCookie($enable ? $this->funnelSkip->makeOptOutUntilCookie() : $this->funnelSkip->forgetOptOutUntilCookie())
             ->with(
                 'info',
                 $enable
