@@ -25,6 +25,7 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\RecordPneduUserLoginSession::class,
             \App\Http\Middleware\LogDashboardPerformance::class,
             \App\Http\Middleware\CacheHomepage::class,
+            \App\Http\Middleware\RefreshFunnelSkipOptOutCookies::class,
         ]);
 
         // Za tunelami (ngrok, Cloudflare Tunnel) Laravel musi ufać nagłówkom X-Forwarded-*,

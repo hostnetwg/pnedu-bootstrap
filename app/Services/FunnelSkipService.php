@@ -241,6 +241,27 @@ class FunnelSkipService
         );
     }
 
+    /**
+     * Odnawia ważność cookie opt-out przy każdej wizycie — wyłączenie trwa do ręcznego ON.
+     *
+     * @return list<Cookie>
+     */
+    public function renewalCookiesForRequest(Request $request): array
+    {
+        $cookies = [];
+
+        if ($request->cookie($this->cookieName()) === '1') {
+            $cookies[] = $this->makeOptOutCookie();
+            $cookies[] = $this->makeOptOutUntilCookie();
+        }
+
+        if ($request->cookie($this->analyticsCookieName()) === '1') {
+            $cookies[] = $this->makeAnalyticsOptOutCookie();
+        }
+
+        return $cookies;
+    }
+
     public function optOutBookmarkUrl(bool $enable = true): ?string
     {
         if (! $this->isConfigured()) {
