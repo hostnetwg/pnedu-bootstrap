@@ -886,9 +886,10 @@ class CourseController extends Controller
         $existingOrder = null;
 
         // Tryb testowy: ?test=1 włącza, ?test=0 wyłącza. Bez parametru – ustawienie z panelu (Zakupy pnedu.pl).
+        $displayOptions = \App\Models\PaymentDisplayOption::getForCoursePage();
         $isTestMode = request()->has('test')
             ? (bool) request()->boolean('test')
-            : (\App\Models\PaymentDisplayOption::getForCoursePage()['order_form_auto_fill_test_data'] ?? false);
+            : \App\Models\PaymentDisplayOption::isOrderFormTestModeEnabled($displayOptions, auth()->user());
 
         // Sprawdź czy to edycja istniejącego zamówienia (opcjonalnie, przez ident)
         $orderData = [];
