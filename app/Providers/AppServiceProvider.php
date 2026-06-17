@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\View\Composers\DashboardResourceCountsComposer;
+use App\View\Composers\MarketingAnalyticsSkipComposer;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -27,5 +28,12 @@ class AppServiceProvider extends ServiceProvider
             'dashboard.partials.sidebar-nav-menu',
             'dashboard.index',
         ], DashboardResourceCountsComposer::class);
+
+        View::composer([
+            'layouts.analytics-head',
+            'layouts.google-tag-manager-body',
+            'layouts.cookie-consent',
+            'courses.partials.marketing-ga-event',
+        ], MarketingAnalyticsSkipComposer::class);
     }
 }

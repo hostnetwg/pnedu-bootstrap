@@ -21,6 +21,7 @@
 (function () {
     var STORAGE_KEY = 'cookie_consent';
     var IS_PROD = @json(app()->environment('production'));
+    var SKIP_MARKETING_ANALYTICS = @json($skipMarketingAnalytics ?? false);
 
     var banner = document.getElementById('cookie-consent-banner');
     var acceptBtn = document.getElementById('accept-cookies');
@@ -37,7 +38,7 @@
     }
 
     function updateAnalyticsConsent(value) {
-        if (!IS_PROD) return;
+        if (!IS_PROD || SKIP_MARKETING_ANALYTICS) return;
         if (typeof window.gtag === 'function') {
             window.gtag('consent', 'update', { analytics_storage: value });
         }

@@ -26,6 +26,7 @@ return [
     */
     'funnel_skip_cookie' => 'pne_skip_funnel',
     'funnel_skip_until_cookie' => 'pne_skip_funnel_until',
+    'funnel_skip_analytics_cookie' => 'pne_skip_analytics',
     'funnel_skip_token' => env('MARKETING_FUNNEL_SKIP_TOKEN'),
     'funnel_skip_cookie_days' => (int) env('MARKETING_FUNNEL_SKIP_COOKIE_DAYS', 365),
     'funnel_skip_cookie_domain' => env(
@@ -33,6 +34,7 @@ return [
         env('APP_ENV') === 'production' ? '.pnedu.pl' : null
     ),
     'funnel_skip_query_param' => 'pne_skip_funnel',
+    'funnel_skip_analytics_query_param' => 'pne_skip_analytics',
     'funnel_skip_token_param' => 'token',
 
 ];

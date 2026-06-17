@@ -41,6 +41,16 @@ class FunnelSkipService
         return (string) config('marketing.funnel_skip_until_cookie', 'pne_skip_funnel_until');
     }
 
+    public function analyticsCookieName(): string
+    {
+        return (string) config('marketing.funnel_skip_analytics_cookie', 'pne_skip_analytics');
+    }
+
+    public function analyticsQueryParam(): string
+    {
+        return (string) config('marketing.funnel_skip_analytics_query_param', 'pne_skip_analytics');
+    }
+
     public function tokenMatches(Request $request): bool
     {
         if (! $this->isConfigured()) {
@@ -74,6 +84,26 @@ class FunnelSkipService
         return $this->isQueryToggle($request) && $request->query($this->queryParam()) === '1';
     }
 
+    public function isAnalyticsQueryToggle(Request $request): bool
+    {
+        if ($request->has($this->queryParam())) {
+            return false;
+        }
+
+        if (! $request->has($this->analyticsQueryParam())) {
+            return false;
+        }
+
+        $value = $request->query($this->analyticsQueryParam());
+
+        return in_array($value, ['0', '1'], true) && $this->tokenMatches($request);
+    }
+
+    public function isEnablingAnalyticsFromQuery(Request $request): bool
+    {
+        return $this->isAnalyticsQueryToggle($request) && $request->query($this->analyticsQueryParam()) === '1';
+    }
+
     /**
      * Nie licz wejść w lejku (cookie lub włączenie opt-out w tym samym żądaniu).
      */
@@ -84,6 +114,31 @@ class FunnelSkipService
         }
 
         return $request->cookie($this->cookieName()) === '1';
+    }
+
+    /**
+     * Wyłącz GA4 i GTM (osobny cookie względem lejka, z zachowaniem kompatybilności).
+     */
+    public function shouldSkipAnalytics(Request $request): bool
+    {
+        if ($this->isEnablingAnalyticsFromQuery($request)) {
+            return true;
+        }
+
+        if ($this->isEnablingFromQuery($request)) {
+            $query = $request->query($this->analyticsQueryParam());
+            if ($query === '0') {
+                return false;
+            }
+            if ($query === '1') {
+                return true;
+            }
+
+            // Backward compatibility for old funnel links without explicit analytics flag.
+            return true;
+        }
+
+        return $request->cookie($this->analyticsCookieName()) === '1';
     }
 
     public function makeOptOutCookie(): Cookie
@@ -123,6 +178,24 @@ class FunnelSkipService
         );
     }
 
+    public function makeAnalyticsOptOutCookie(): Cookie
+    {
+        $days = max(1, (int) config('marketing.funnel_skip_cookie_days', 365));
+        $minutes = $days * 24 * 60;
+
+        return cookie(
+            $this->analyticsCookieName(),
+            '1',
+            $minutes,
+            '/',
+            $this->cookieDomain(),
+            app()->environment('production'),
+            true,
+            false,
+            'Lax'
+        );
+    }
+
     public function forgetOptOutCookie(): Cookie
     {
         return cookie(
@@ -148,6 +221,21 @@ class FunnelSkipService
             $this->cookieDomain(),
             app()->environment('production'),
             false,
+            false,
+            'Lax'
+        );
+    }
+
+    public function forgetAnalyticsOptOutCookie(): Cookie
+    {
+        return cookie(
+            $this->analyticsCookieName(),
+            '',
+            -1,
+            '/',
+            $this->cookieDomain(),
+            app()->environment('production'),
+            true,
             false,
             'Lax'
         );
@@ -189,7 +277,7 @@ class FunnelSkipService
         }
 
         $path = rtrim((string) $parsed['path'], '/');
-        if ($path !== '/settings/pnedu-zakupy') {
+        if (! in_array($path, ['/settings/pnedu-zakupy', '/settings/analityka'], true)) {
             return null;
         }
 
