@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Services\MarketingAttributionService;
+use App\Services\MarketingCampaignLinkTracker;
 use App\Services\OrderEntryPlacementService;
 use Closure;
 use Illuminate\Http\Request;
@@ -13,6 +14,7 @@ class CaptureMarketingSource
     public function __construct(
         private readonly MarketingAttributionService $attribution,
         private readonly OrderEntryPlacementService $placement,
+        private readonly MarketingCampaignLinkTracker $campaignLinkTracker,
     ) {}
 
     /**
@@ -27,6 +29,8 @@ class CaptureMarketingSource
         }
 
         $this->placement->captureFromRequest($request);
+
+        $this->campaignLinkTracker->trackFromRequest($request);
 
         $response = $next($request);
 
