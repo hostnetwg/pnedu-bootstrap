@@ -8,6 +8,7 @@ use App\Models\FormOrder;
 use App\Models\OnlinePaymentOrder;
 use App\Models\Participant;
 use App\Models\WebhookLog;
+use App\Services\FormOrderCheckoutResumeService;
 use App\Services\PayNowService;
 use App\Services\PayUService;
 use Carbon\Carbon;
@@ -540,13 +541,14 @@ class PaymentController extends Controller
         $formOrder->update(['payment_status' => $paymentStatus]);
 
         if ($paymentStatus === FormOrder::PAYMENT_STATUS_PAID) {
-            $resume = session(self::SESSION_ONLINE_CHECKOUT_FORM_ORDER_RESUME);
+            $resumeService = app(FormOrderCheckoutResumeService::class);
+            $payload = $resumeService->readSessionPayload();
             if (
-                is_array($resume)
-                && ($resume['ident'] ?? '') === $formOrder->ident
-                && (int) ($resume['course_id'] ?? 0) === (int) $formOrder->product_id
+                is_array($payload)
+                && ($payload['ident'] ?? '') === $formOrder->ident
+                && (int) ($payload['course_id'] ?? 0) === (int) $formOrder->product_id
             ) {
-                session()->forget(self::SESSION_ONLINE_CHECKOUT_FORM_ORDER_RESUME);
+                $resumeService->clearResume();
             }
         }
     }

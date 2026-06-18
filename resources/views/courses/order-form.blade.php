@@ -437,6 +437,8 @@
                 </div>
             @endif
 
+            @include('courses.partials.checkout-resume-banner')
+
             <form method="POST" action="{{ route('payment.order-form.store', $course->id) }}">
                 @csrf
                 @php
@@ -868,7 +870,7 @@
                                 Wypełnij dane testowe
                             </button>
                         @endif
-                        <button type="submit" class="btn btn-primary flex-fill" id="order-form-submit-btn">{{ ($prefillPaymentType ?? 'deferred') === 'online' ? 'Przejdź do płatności online' : 'Wyślij zamówienie' }}</button>
+                        <button type="submit" class="btn btn-primary flex-fill" id="order-form-submit-btn" data-submitting-text="{{ ($prefillPaymentType ?? 'deferred') === 'online' ? 'Przekierowanie do płatności…' : 'Wysyłanie…' }}">{{ ($prefillPaymentType ?? 'deferred') === 'online' ? 'Przejdź do płatności online' : 'Wyślij zamówienie' }}</button>
                         <a href="{{ route('courses.show', $course->id) }}" class="btn btn-link flex-fill">Powrót do szczegółów szkolenia</a>
                     </div>
                 </div>
@@ -1307,6 +1309,7 @@
     }
 })();
 </script>
+@include('courses.partials.order-form-submit-guard')
 @include('courses.partials.marketing-ga-event', ['course' => $course, 'gaEvent' => 'order_form_view'])
 @endsection
 

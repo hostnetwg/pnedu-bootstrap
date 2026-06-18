@@ -261,6 +261,8 @@
                 </div>
             @endif
 
+            @include('courses.partials.checkout-resume-banner')
+
             <form method="POST" action="{{ route('payment.deferred.store', $course->id) }}">
                 @csrf
                 <!-- Hidden fields for publigo integration -->
@@ -429,7 +431,7 @@
                 </fieldset>
                 <div class="order-form-section form-section-full-width">
                     <div class="d-flex flex-column flex-md-row gap-3 mt-4">
-                        <button type="submit" class="btn btn-primary flex-fill">Wyślij zamówienie</button>
+                        <button type="submit" class="btn btn-primary flex-fill" id="order-form-submit-btn" data-submitting-text="Wysyłanie…">Wyślij zamówienie</button>
                         <a href="{{ route('courses.show', $course->id) }}" class="btn btn-link flex-fill">Powrót do szczegółów szkolenia</a>
                     </div>
                 </div>
@@ -500,4 +502,5 @@
     }
 })();
 </script>
+@include('courses.partials.order-form-submit-guard')
 @endsection 

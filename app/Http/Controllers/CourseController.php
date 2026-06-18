@@ -8,6 +8,7 @@ use App\Models\CoursePriceVariant;
 use App\Models\FormOrder;
 use App\Models\FormOrderParticipant;
 use App\Models\Participant;
+use App\Services\FormOrderCheckoutResumeService;
 use App\Services\SendyService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Exception;
@@ -20,10 +21,9 @@ use Illuminate\Support\Str;
 class CourseController extends Controller
 {
     /**
-     * Sesja: ostatnie zamówienie z formularza (online) dla kursu — wznowienie bez drugiego rekordu form_orders.
-     * Ta sama wartość co w PaymentController::SESSION_ONLINE_CHECKOUT_FORM_ORDER_RESUME.
+     * @deprecated Użyj {@see FormOrderCheckoutResumeService::SESSION_KEY}.
      */
-    private const SESSION_ONLINE_CHECKOUT_FORM_ORDER_RESUME = 'form_order_online_checkout_resume';
+    private const SESSION_ONLINE_CHECKOUT_FORM_ORDER_RESUME = FormOrderCheckoutResumeService::LEGACY_ONLINE_SESSION_KEY;
 
     /**
      * Display a listing of online live courses.
@@ -868,13 +868,22 @@ class CourseController extends Controller
             ];
         }
 
+        [$testData, $checkoutResumeBanner] = $this->prepareOrderFormCheckoutResume(
+            (int) $id,
+            $testData,
+            $isEditMode,
+            'payment.deferred.edit',
+            'payment.deferred',
+            $this->orderFormResumeRouteParams($prefillPriceVariantId)
+        );
+
         // Pobierz dane zalogowanego użytkownika (jeśli jest zalogowany)
         $user = auth()->user();
 
         $fbSourceDefault = $this->resolveFbSourceDefaultForForm($existingOrder);
         $conversionPlacementDefault = $this->resolveConversionPlacementDefaultForForm((int) $id, $existingOrder);
 
-        return view('courses.deferred-order', compact('course', 'testData', 'isTestMode', 'isEditMode', 'user', 'prefillPriceVariantId', 'fbSourceDefault', 'conversionPlacementDefault'));
+        return view('courses.deferred-order', compact('course', 'testData', 'isTestMode', 'isEditMode', 'user', 'prefillPriceVariantId', 'fbSourceDefault', 'conversionPlacementDefault', 'checkoutResumeBanner'));
     }
 
     /**
@@ -923,7 +932,14 @@ class CourseController extends Controller
 
         // Bez automatycznego uzupełniania danymi testowymi przy wejściu na formularz:
         // tryb testowy udostępnia tylko przycisk ręcznego wypełnienia.
-        $testData = $this->mergePendingOnlineCheckoutIdentIntoTestData((int) $id, $orderData);
+        [$testData, $checkoutResumeBanner] = $this->prepareOrderFormCheckoutResume(
+            (int) $id,
+            $orderData,
+            $isEditMode,
+            'payment.order-form.edit',
+            'payment.order-form',
+            $this->orderFormResumeRouteParams($prefillPriceVariantId)
+        );
 
         $user = auth()->user();
 
@@ -931,7 +947,7 @@ class CourseController extends Controller
         $fbSourceDefault = $this->resolveFbSourceDefaultForForm($existingOrder);
         $conversionPlacementDefault = $this->resolveConversionPlacementDefaultForForm((int) $id, $existingOrder);
 
-        return view('courses.order-form', compact('course', 'testData', 'isTestMode', 'isEditMode', 'user', 'prefillPriceVariantId', 'fbSourceDefault', 'conversionPlacementDefault'));
+        return view('courses.order-form', compact('course', 'testData', 'isTestMode', 'isEditMode', 'user', 'prefillPriceVariantId', 'fbSourceDefault', 'conversionPlacementDefault', 'checkoutResumeBanner'));
     }
 
     /**
@@ -1014,7 +1030,53 @@ class CourseController extends Controller
     }
 
     /**
-     * Znajdź zamówienie po ident (również soft delete). Przy ponownym zapisie z formularza przywróć rekord w bazie.
+     * @return array{0: array<string, mixed>, 1: array<string, mixed>|null}
+     */
+    protected function prepareOrderFormCheckoutResume(
+        int $courseId,
+        array $formData,
+        bool $isEditMode,
+        string $editRouteName,
+        string $formRouteName,
+        array $formRouteParams = []
+    ): array {
+        $resumeService = app(FormOrderCheckoutResumeService::class);
+
+        if (request()->boolean('new_order')) {
+            $resumeService->clearResumeForCourse($courseId);
+        }
+
+        $formData = $resumeService->mergeResumeIntoFormData($courseId, $formData, $isEditMode);
+        $banner = $resumeService->resumeBannerContext(
+            $courseId,
+            $isEditMode,
+            $editRouteName,
+            $formRouteName,
+            $formRouteParams
+        );
+
+        return [$formData, $banner];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function orderFormResumeRouteParams(?int $prefillPriceVariantId): array
+    {
+        $params = [];
+        $variantId = request()->query('price_variant_id', $prefillPriceVariantId);
+        if ($variantId !== null && $variantId !== '') {
+            $params['price_variant_id'] = $variantId;
+        }
+        if (request()->filled('fb')) {
+            $params['fb'] = request()->query('fb');
+        }
+
+        return $params;
+    }
+
+    /**
+     * @deprecated Użyj {@see FormOrderCheckoutResumeService::resolveForSubmit()}.
      */
     protected function resolveFormOrderForUpdate(?string $orderIdent, int $courseId): ?FormOrder
     {
@@ -1042,52 +1104,12 @@ class CourseController extends Controller
     }
 
     /**
-     * Dołącza order_ident z sesji (ostatnie zamówienie online dla tego kursu), żeby ponowny POST nie tworzył drugiego form_orders.
-     *
-     * @param  array<string, mixed>  $testData
-     * @return array<string, mixed>
+     * @deprecated Użyj {@see FormOrderCheckoutResumeService}.
      */
     protected function mergePendingOnlineCheckoutIdentIntoTestData(int $courseId, array $testData): array
     {
-        if (! empty($testData['order_ident'])) {
-            return $testData;
-        }
-
-        $resume = session(self::SESSION_ONLINE_CHECKOUT_FORM_ORDER_RESUME);
-        if (! is_array($resume)) {
-            return $testData;
-        }
-
-        if ((int) ($resume['course_id'] ?? 0) !== $courseId) {
-            return $testData;
-        }
-
-        $ident = trim((string) ($resume['ident'] ?? ''));
-        if ($ident === '') {
-            session()->forget(self::SESSION_ONLINE_CHECKOUT_FORM_ORDER_RESUME);
-
-            return $testData;
-        }
-
-        $formOrder = FormOrder::query()
-            ->where('ident', $ident)
-            ->where('product_id', $courseId)
-            ->first();
-
-        if (
-            ! $formOrder
-            || $formOrder->isEditLocked()
-            || $formOrder->payment_mode !== FormOrder::PAYMENT_MODE_ONLINE_GATEWAY
-            || $formOrder->payment_status !== FormOrder::PAYMENT_STATUS_AWAITING_PAYMENT
-        ) {
-            session()->forget(self::SESSION_ONLINE_CHECKOUT_FORM_ORDER_RESUME);
-
-            return $testData;
-        }
-
-        $testData['order_ident'] = $ident;
-
-        return $testData;
+        return app(FormOrderCheckoutResumeService::class)
+            ->mergeResumeIntoFormData($courseId, $testData, false);
     }
 
     /**
@@ -1325,7 +1347,12 @@ class CourseController extends Controller
             $currentPrice = $this->productPriceForFormOrder($course, $coursePriceVariantId);
 
             // Sprawdź czy to edycja istniejącego zamówienia (w tym soft delete → restore przy zapisie)
-            $order = $this->resolveFormOrderForUpdate($request->order_ident, (int) $id);
+            $checkoutResume = app(FormOrderCheckoutResumeService::class);
+            $order = $checkoutResume->resolveForSubmit(
+                (int) $id,
+                $request->order_ident,
+                $validated['participant_email']
+            );
 
             if ($order && $order->isEditLocked()) {
                 return redirect()
@@ -1401,6 +1428,12 @@ class CourseController extends Controller
             );
 
             app(\App\Services\OrderEntryPlacementService::class)->clear($request);
+
+            app(FormOrderCheckoutResumeService::class)->storeAfterSubmit(
+                (int) $id,
+                $order,
+                $validated['participant_email']
+            );
 
             // Przekierowanie do strony podsumowania z PDF
             return redirect()
@@ -1534,7 +1567,12 @@ class CourseController extends Controller
             $currentPrice = $this->productPriceForFormOrder($course, $coursePriceVariantId);
 
             // Sprawdź czy to edycja istniejącego zamówienia (w tym soft delete → restore przy zapisie)
-            $order = $this->resolveFormOrderForUpdate($request->order_ident, (int) $id);
+            $checkoutResume = app(FormOrderCheckoutResumeService::class);
+            $order = $checkoutResume->resolveForSubmit(
+                (int) $id,
+                $request->order_ident,
+                $validated['participant_email']
+            );
 
             if ($order && $order->isEditLocked()) {
                 return redirect()
@@ -1606,6 +1644,12 @@ class CourseController extends Controller
 
             app(\App\Services\OrderEntryPlacementService::class)->clear($request);
 
+            app(FormOrderCheckoutResumeService::class)->storeAfterSubmit(
+                (int) $id,
+                $order,
+                $validated['participant_email']
+            );
+
             return redirect()
                 ->route('orders.summary', ['ident' => $order->ident])
                 ->with('success', 'Zamówienie zostało złożone pomyślnie!')
@@ -1658,7 +1702,12 @@ class CourseController extends Controller
             $publigoPriceId = $this->resolvePubligoPriceIdForFormOrder($course, $publicoProductId);
             $currentPrice = $totalAmount;
 
-            $formOrder = $this->resolveFormOrderForUpdate($request->order_ident, (int) $course->id);
+            $checkoutResume = app(FormOrderCheckoutResumeService::class);
+            $formOrder = $checkoutResume->resolveForSubmit(
+                (int) $course->id,
+                $request->order_ident,
+                $validated['participant_email']
+            );
 
             if ($formOrder && $formOrder->isEditLocked()) {
                 return redirect()
@@ -1748,12 +1797,11 @@ class CourseController extends Controller
                 'ip_address' => $request->ip(),
             ]);
 
-            session([
-                self::SESSION_ONLINE_CHECKOUT_FORM_ORDER_RESUME => [
-                    'course_id' => (int) $course->id,
-                    'ident' => $formOrder->ident,
-                ],
-            ]);
+            app(FormOrderCheckoutResumeService::class)->storeAfterSubmit(
+                (int) $course->id,
+                $formOrder,
+                $validated['participant_email']
+            );
         } catch (Exception $e) {
             Log::error('Error creating FormOrder/OnlinePaymentOrder (order-form online)', [
                 'error' => $e->getMessage(),
