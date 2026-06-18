@@ -17,10 +17,31 @@ class RefreshFunnelSkipOptOutCookies
     {
         $response = $next($request);
 
+        if ($this->shouldSkipRenewal($request, $response)) {
+            return $response;
+        }
+
         foreach ($this->funnelSkip->renewalCookiesForRequest($request) as $cookie) {
             $response = $response->withCookie($cookie);
         }
 
         return $response;
+    }
+
+    private function shouldSkipRenewal(Request $request, Response $response): bool
+    {
+        $trackedNames = [
+            $this->funnelSkip->cookieName(),
+            $this->funnelSkip->untilCookieName(),
+            $this->funnelSkip->analyticsCookieName(),
+        ];
+
+        foreach ($response->headers->getCookies() as $cookie) {
+            if (in_array($cookie->getName(), $trackedNames, true)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

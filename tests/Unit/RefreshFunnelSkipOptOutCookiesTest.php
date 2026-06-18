@@ -44,4 +44,22 @@ class RefreshFunnelSkipOptOutCookiesTest extends TestCase
 
         $this->assertSame([], $cookies);
     }
+
+    public function test_renewal_skipped_when_response_already_sets_opt_out_cookie(): void
+    {
+        $request = Request::create('/login', 'GET');
+        $request->cookies->set('pne_skip_funnel', '1');
+
+        $middleware = app(RefreshFunnelSkipOptOutCookies::class);
+        $response = $middleware->handle($request, function () {
+            return response('ok')->withCookie(
+                app(FunnelSkipService::class)->forgetOptOutCookie()
+            );
+        });
+
+        $names = collect($response->headers->getCookies())->map->getName()->all();
+
+        $this->assertContains('pne_skip_funnel', $names);
+        $this->assertCount(1, $names);
+    }
 }

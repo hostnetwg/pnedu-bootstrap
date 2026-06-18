@@ -12,6 +12,7 @@ use Tests\TestCase;
 class MarketingCampaignLinkTrackerTest extends TestCase
 {
     private ?string $testCampaignCode = null;
+    private ?string $secondTestCampaignCode = null;
 
     protected function setUp(): void
     {
@@ -24,32 +25,52 @@ class MarketingCampaignLinkTrackerTest extends TestCase
         }
 
         $this->testCampaignCode = 't'.Str::lower(Str::random(8));
-
-        DB::connection('pneadm')->table('marketing_campaigns')->insert([
-            'campaign_code' => $this->testCampaignCode,
-            'name' => 'Test campaign link tracker',
-            'source_type_id' => $this->firstSourceTypeId(),
-            'course_id' => $this->firstCourseId(),
-            'landing_target' => 'course_show',
-            'is_active' => true,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        $this->insertTestCampaign($this->testCampaignCode, $this->firstCourseId());
     }
 
     protected function tearDown(): void
     {
-        if ($this->testCampaignCode !== null) {
+        foreach (array_filter([$this->testCampaignCode, $this->secondTestCampaignCode]) as $code) {
             MarketingCampaignStatsDaily::query()
-                ->where('campaign_code', $this->testCampaignCode)
+                ->where('campaign_code', $code)
                 ->delete();
 
             DB::connection('pneadm')->table('marketing_campaigns')
-                ->where('campaign_code', $this->testCampaignCode)
+                ->where('campaign_code', $code)
                 ->delete();
         }
 
         parent::tearDown();
+    }
+
+    public function test_same_visitor_counts_two_different_campaigns_on_same_day(): void
+    {
+        $this->secondTestCampaignCode = 't'.Str::lower(Str::random(8));
+        $courseId = $this->firstCourseId();
+
+        $this->insertTestCampaign($this->secondTestCampaignCode, $courseId);
+
+        $this->get("/courses/{$courseId}?utm_campaign={$this->testCampaignCode}&utm_source=facebook&utm_medium=paid")
+            ->assertOk();
+        $this->get("/courses/{$courseId}?utm_campaign={$this->secondTestCampaignCode}&utm_source=facebook&utm_medium=paid")
+            ->assertOk();
+
+        $this->assertSame(1, $this->linkEntriesTotal($this->testCampaignCode));
+        $this->assertSame(1, $this->linkEntriesTotal($this->secondTestCampaignCode));
+    }
+
+    public function test_funnel_opt_out_cookie_blocks_link_entry_tracking(): void
+    {
+        $courseId = $this->firstCourseId();
+
+        $this->call(
+            'GET',
+            "/courses/{$courseId}?utm_campaign={$this->testCampaignCode}&utm_source=facebook&utm_medium=paid",
+            [],
+            ['pne_skip_funnel' => '1']
+        )->assertOk();
+
+        $this->assertSame(0, $this->linkEntriesTotal($this->testCampaignCode));
     }
 
     public function test_utm_campaign_in_query_increments_link_entry_once_per_day(): void
@@ -85,11 +106,27 @@ class MarketingCampaignLinkTrackerTest extends TestCase
             ->sum('link_entries'));
     }
 
-    private function linkEntriesTotal(): int
+    private function linkEntriesTotal(?string $campaignCode = null): int
     {
+        $campaignCode ??= $this->testCampaignCode;
+
         return (int) MarketingCampaignStatsDaily::query()
-            ->where('campaign_code', $this->testCampaignCode)
+            ->where('campaign_code', $campaignCode)
             ->sum('link_entries');
+    }
+
+    private function insertTestCampaign(string $campaignCode, int $courseId): void
+    {
+        DB::connection('pneadm')->table('marketing_campaigns')->insert([
+            'campaign_code' => $campaignCode,
+            'name' => 'Test campaign link tracker',
+            'source_type_id' => $this->firstSourceTypeId(),
+            'course_id' => $courseId,
+            'landing_target' => 'course_show',
+            'is_active' => true,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
     }
 
     private function pneadmMarketingTablesAvailable(): bool

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Services\MarketingCampaignLinkResolver;
 use App\Services\MarketingCampaignLinkTracker;
+use App\Services\CoursePageViewTracker;
 use Symfony\Component\HttpFoundation\Response;
 
 class MarketingCampaignShortLinkController extends Controller
@@ -12,6 +13,7 @@ class MarketingCampaignShortLinkController extends Controller
         string $campaign_code,
         MarketingCampaignLinkResolver $resolver,
         MarketingCampaignLinkTracker $linkTracker,
+        CoursePageViewTracker $coursePageViewTracker,
     ): Response {
         $target = $resolver->resolveRedirectPath($campaign_code);
         if ($target === null) {
@@ -20,6 +22,13 @@ class MarketingCampaignShortLinkController extends Controller
 
         $linkTracker->trackCampaignCode(request(), $campaign_code);
 
-        return redirect($target, 302);
+        $response = redirect($target, 302);
+
+        $funnelSessionCookie = $coursePageViewTracker->funnelSessionCookie(request());
+        if ($funnelSessionCookie !== null) {
+            $response->headers->setCookie($funnelSessionCookie);
+        }
+
+        return $response;
     }
 }

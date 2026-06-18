@@ -28,6 +28,9 @@ class MarketingCampaignLinkTracker
         $this->incrementOnce($request, $campaignCode);
     }
 
+    /**
+     * Zlicza wejście z linku kampanii — osobno dla każdego campaign_code (max 1× gość/kampania/dzień).
+     */
     public function trackCampaignCode(Request $request, string $campaignCode): void
     {
         if (! $this->shouldTrack($request)) {
