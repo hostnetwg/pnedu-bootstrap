@@ -12,6 +12,7 @@ class CoursePageViewTracker
     public function __construct(
         private readonly MarketingAttributionService $attribution,
         private readonly FunnelSkipService $funnelSkip,
+        private readonly MarketingBotDetector $botDetector,
     ) {}
 
     public function shouldTrack(Request $request): bool
@@ -28,8 +29,7 @@ class CoursePageViewTracker
             return false;
         }
 
-        $ua = strtolower((string) $request->userAgent());
-        if ($ua === '' || str_contains($ua, 'bot') || str_contains($ua, 'spider') || str_contains($ua, 'crawl')) {
+        if ($this->botDetector->isBotOrPreviewCrawler($request)) {
             return false;
         }
 

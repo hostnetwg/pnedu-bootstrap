@@ -37,4 +37,54 @@ return [
     'funnel_skip_analytics_query_param' => 'pne_skip_analytics',
     'funnel_skip_token_param' => 'token',
 
+    /*
+    |--------------------------------------------------------------------------
+    | Wykluczenia z liczenia wejść lejka / linków kampanii (User-Agent)
+    |--------------------------------------------------------------------------
+    | Dopasowanie po fragmencie (case-insensitive). Obejmuje boty ogólne oraz
+    | crawlery podglądu linków (Facebook/Meta, Twitter, LinkedIn itd.).
+    */
+    'tracking_excluded_user_agent_substrings' => [
+        'bot',
+        'spider',
+        'crawl',
+        'slurp',
+        'mediapartners-google',
+        'adsbot',
+        'bingpreview',
+        'yandexbot',
+        'baiduspider',
+        'duckduckbot',
+        'applebot',
+        'semrush',
+        'ahrefs',
+        'petalbot',
+        'dotbot',
+        'mj12bot',
+        'screaming frog',
+        'headlesschrome',
+        'phantomjs',
+        'python-requests',
+        'curl/',
+        'wget/',
+        'go-http-client',
+        'libwww',
+        'httpclient',
+        'scrapy',
+        'facebookexternalhit',
+        'facebot',
+        'facebookcatalog',
+        'meta-externalagent',
+        'meta-externalfetcher',
+        'twitterbot',
+        'linkedinbot',
+        'pinterestbot',
+        'telegrambot',
+        'discordbot',
+        'slackbot',
+        'embedly',
+        'vkshare',
+        'skypeuripreview',
+    ],
+
 ];

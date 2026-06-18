@@ -106,6 +106,60 @@ class MarketingCampaignLinkTrackerTest extends TestCase
             ->sum('link_entries'));
     }
 
+    public function test_facebook_link_preview_crawler_is_not_counted(): void
+    {
+        $courseId = $this->firstCourseId();
+
+        $this->call(
+            'GET',
+            "/courses/{$courseId}?utm_campaign={$this->testCampaignCode}&utm_source=facebook&utm_medium=paid",
+            [],
+            [],
+            [],
+            [
+                'HTTP_USER_AGENT' => 'facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)',
+            ]
+        )->assertOk();
+
+        $this->assertSame(0, $this->linkEntriesTotal());
+    }
+
+    public function test_meta_external_fetcher_is_not_counted(): void
+    {
+        $courseId = $this->firstCourseId();
+
+        $this->call(
+            'GET',
+            '/l/'.$this->testCampaignCode,
+            [],
+            [],
+            [],
+            [
+                'HTTP_USER_AGENT' => 'Meta-ExternalFetcher/1.0 (+https://developers.facebook.com/docs/sharing/webmasters/crawler)',
+            ]
+        )->assertRedirect();
+
+        $this->assertSame(0, $this->linkEntriesTotal());
+    }
+
+    public function test_regular_browser_still_counts_after_bot_filter(): void
+    {
+        $courseId = $this->firstCourseId();
+
+        $this->call(
+            'GET',
+            "/courses/{$courseId}?utm_campaign={$this->testCampaignCode}&utm_source=facebook&utm_medium=paid",
+            [],
+            [],
+            [],
+            [
+                'HTTP_USER_AGENT' => 'Mozilla/5.0 (Linux; Android 14; SM-S911B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36',
+            ]
+        )->assertOk();
+
+        $this->assertSame(1, $this->linkEntriesTotal());
+    }
+
     private function linkEntriesTotal(?string $campaignCode = null): int
     {
         $campaignCode ??= $this->testCampaignCode;

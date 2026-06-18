@@ -12,6 +12,7 @@ class MarketingCampaignLinkTracker
 {
     public function __construct(
         private readonly FunnelSkipService $funnelSkip,
+        private readonly MarketingBotDetector $botDetector,
     ) {}
 
     public function trackFromRequest(Request $request): void
@@ -59,8 +60,7 @@ class MarketingCampaignLinkTracker
             return false;
         }
 
-        $ua = strtolower((string) $request->userAgent());
-        if ($ua === '' || str_contains($ua, 'bot') || str_contains($ua, 'spider') || str_contains($ua, 'crawl')) {
+        if ($this->botDetector->isBotOrPreviewCrawler($request)) {
             return false;
         }
 

@@ -5,6 +5,7 @@ namespace Tests\Unit;
 use App\Services\CoursePageViewTracker;
 use App\Services\FunnelSkipService;
 use App\Services\MarketingAttributionService;
+use App\Services\MarketingBotDetector;
 use Illuminate\Http\Request;
 use Tests\TestCase;
 
@@ -52,6 +53,7 @@ class FunnelSkipServiceTest extends TestCase
         $tracker = new CoursePageViewTracker(
             app(MarketingAttributionService::class),
             app(FunnelSkipService::class),
+            app(MarketingBotDetector::class),
         );
 
         $this->assertFalse($tracker->shouldTrack($request));
