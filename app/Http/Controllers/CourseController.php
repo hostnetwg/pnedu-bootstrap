@@ -8,6 +8,7 @@ use App\Models\CoursePriceVariant;
 use App\Models\FormOrder;
 use App\Models\FormOrderParticipant;
 use App\Models\Participant;
+use App\Services\Analytics\BackendAnalyticsTracker;
 use App\Services\FormOrderCheckoutResumeService;
 use App\Services\SendyService;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -17,6 +18,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class CourseController extends Controller
 {
@@ -1457,7 +1459,7 @@ class CourseController extends Controller
      * Zapisz zamówienie z nowego formularza (na razie deleguje do istniejącej logiki odroczonej).
      * Docelowo tu będzie rozgałęzienie: odroczone vs płatność online.
      */
-    public function storeOrderForm(Request $request, $id)
+    public function storeOrderForm(Request $request, $id, BackendAnalyticsTracker $backendAnalyticsTracker)
     {
         $course = Course::with('priceVariants')->findOrFail($id);
 
@@ -1508,12 +1510,25 @@ class CourseController extends Controller
 
         $this->addPriceVariantValidationRules($course, $rules);
 
-        $validated = $request->validate($rules, [
-            'buyer_type.required' => 'Wybierz, jako kto zamawiasz.',
-            'buyer_type.in' => 'Wybierz prawidłową opcję.',
-            'payment_type.required' => 'Wybierz sposób rozliczenia.',
-            'payment_type.in' => 'Wybierz prawidłowy sposób rozliczenia.',
-        ]);
+        $backendAnalyticsTracker->trackOrderFormSubmitAttempted($request, $course);
+
+        try {
+            $validated = $request->validate($rules, [
+                'buyer_type.required' => 'Wybierz, jako kto zamawiasz.',
+                'buyer_type.in' => 'Wybierz prawidłową opcję.',
+                'payment_type.required' => 'Wybierz sposób rozliczenia.',
+                'payment_type.in' => 'Wybierz prawidłowy sposób rozliczenia.',
+            ]);
+        } catch (ValidationException $e) {
+            $backendAnalyticsTracker->trackOrderFormValidationFailed(
+                request: $request,
+                course: $course,
+                validationException: $e,
+                context: 'laravel_validation'
+            );
+
+            throw $e;
+        }
 
         // ODBIORCA: jeśli podano jakiekolwiek dane odbiorcy, NIP odbiorcy jest wymagany (tylko dla instytucji/firmy)
         if ($buyerType === 'organisation') {
@@ -1526,6 +1541,13 @@ class CourseController extends Controller
             if ($hasRecipientData) {
                 $recipientNip = preg_replace('/[^0-9]/', '', (string) $request->input('recipient_nip', ''));
                 if ($recipientNip === '' || strlen($recipientNip) !== 10) {
+                    $backendAnalyticsTracker->trackOrderFormManualValidationFailed(
+                        request: $request,
+                        course: $course,
+                        fieldKeys: ['recipient_nip'],
+                        context: 'manual_recipient_nip'
+                    );
+
                     return back()
                         ->withErrors(['recipient_nip' => 'NIP odbiorcy jest wymagany (10 cyfr), jeśli podano dane odbiorcy.'])
                         ->withInput();
@@ -1535,12 +1557,26 @@ class CourseController extends Controller
 
         // Dodatkowa walidacja: termin płatności wymagany tylko dla faktury z odroczonym terminem
         if (($validated['payment_type'] ?? null) === 'deferred' && (! isset($validated['payment_terms']) || $validated['payment_terms'] === '')) {
+            $backendAnalyticsTracker->trackOrderFormManualValidationFailed(
+                request: $request,
+                course: $course,
+                fieldKeys: ['payment_terms'],
+                context: 'manual_payment_terms'
+            );
+
             return back()
                 ->withErrors(['payment_terms' => 'Podaj termin płatności dla faktury z odroczonym terminem (0–31 dni).'])
                 ->withInput();
         }
 
         if (($validated['payment_type'] ?? null) === 'online' && empty($validated['payment_gateway'])) {
+            $backendAnalyticsTracker->trackOrderFormManualValidationFailed(
+                request: $request,
+                course: $course,
+                fieldKeys: ['payment_gateway'],
+                context: 'manual_payment_gateway'
+            );
+
             return back()
                 ->withErrors(['payment_gateway' => 'Wybierz bramkę płatności.'])
                 ->withInput();
@@ -1550,7 +1586,7 @@ class CourseController extends Controller
 
         // Płatność online – utwórz OnlinePaymentOrder i przekieruj do bramki
         if (($validated['payment_type'] ?? null) === 'online') {
-            return $this->processOrderFormOnlinePayment($request, $course, $validated, $buyerType, $coursePriceVariantId);
+            return $this->processOrderFormOnlinePayment($request, $course, $validated, $buyerType, $coursePriceVariantId, $backendAnalyticsTracker);
         }
 
         try {
@@ -1650,6 +1686,11 @@ class CourseController extends Controller
                 $validated['participant_email']
             );
 
+            $backendAnalyticsTracker->trackFormOrderCreated($request, $course, $order, [
+                'order_flow' => 'deferred',
+                'buyer_type' => $buyerType,
+            ]);
+
             return redirect()
                 ->route('orders.summary', ['ident' => $order->ident])
                 ->with('success', 'Zamówienie zostało złożone pomyślnie!')
@@ -1671,7 +1712,7 @@ class CourseController extends Controller
      * Przetwórz płatność online z formularza order-form – zapis FormOrder + uczestnicy,
      * OnlinePaymentOrder (powiązanie) i przekierowanie do bramki.
      */
-    protected function processOrderFormOnlinePayment(Request $request, Course $course, array $validated, string $buyerType, ?int $coursePriceVariantId)
+    protected function processOrderFormOnlinePayment(Request $request, Course $course, array $validated, string $buyerType, ?int $coursePriceVariantId, BackendAnalyticsTracker $backendAnalyticsTracker)
     {
         $totalAmount = $this->productPriceForFormOrder($course, $coursePriceVariantId) ?? 0;
 
@@ -1777,6 +1818,11 @@ class CourseController extends Controller
             $this->subscribeOrderFormContactsToSendyIfConfigured($course, $validated);
 
             app(\App\Services\OrderEntryPlacementService::class)->clear($request);
+
+            $backendAnalyticsTracker->trackFormOrderCreated($request, $course, $formOrder, [
+                'order_flow' => 'online',
+                'buyer_type' => $buyerType,
+            ]);
 
             $onlineOrder = \App\Models\OnlinePaymentOrder::create([
                 'form_order_id' => $formOrder->id,

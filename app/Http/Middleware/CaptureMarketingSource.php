@@ -2,10 +2,11 @@
 
 namespace App\Http\Middleware;
 
+use App\Services\Analytics\BackendAnalyticsTracker;
+use App\Services\CoursePageViewTracker;
 use App\Services\MarketingAttributionService;
 use App\Services\MarketingCampaignLinkTracker;
 use App\Services\OrderEntryPlacementService;
-use App\Services\CoursePageViewTracker;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -17,6 +18,7 @@ class CaptureMarketingSource
         private readonly OrderEntryPlacementService $placement,
         private readonly MarketingCampaignLinkTracker $campaignLinkTracker,
         private readonly CoursePageViewTracker $coursePageViewTracker,
+        private readonly BackendAnalyticsTracker $analyticsTracker,
     ) {}
 
     /**
@@ -28,6 +30,7 @@ class CaptureMarketingSource
 
         if ($payload !== []) {
             $this->attribution->persist($request, $payload);
+            $this->analyticsTracker->trackUtmCaptured($request, $payload);
         }
 
         $this->placement->captureFromRequest($request);
@@ -48,6 +51,8 @@ class CaptureMarketingSource
         if ($funnelSessionCookie !== null) {
             $response->headers->setCookie($funnelSessionCookie);
         }
+
+        $this->analyticsTracker->appendResponseCookies($response, $request);
 
         return $response;
     }
