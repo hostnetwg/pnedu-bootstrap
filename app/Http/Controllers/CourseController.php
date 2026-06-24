@@ -1586,8 +1586,12 @@ class CourseController extends Controller
 
         // Płatność online – utwórz OnlinePaymentOrder i przekieruj do bramki
         if (($validated['payment_type'] ?? null) === 'online') {
+            $backendAnalyticsTracker->trackOnlinePaymentSelected($request, $course, $validated['payment_gateway'] ?? null, $buyerType);
+
             return $this->processOrderFormOnlinePayment($request, $course, $validated, $buyerType, $coursePriceVariantId, $backendAnalyticsTracker);
         }
+
+        $backendAnalyticsTracker->trackDeferredInvoiceSelected($request, $course, $buyerType);
 
         try {
             // Określ publigo_product_id - dla kursów z Publigo użyj id_old

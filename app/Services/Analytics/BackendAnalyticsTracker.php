@@ -150,6 +150,45 @@ class BackendAnalyticsTracker
         );
     }
 
+    public function trackOnlinePaymentSelected(Request $request, Course $course, ?string $paymentGateway, ?string $buyerType): void
+    {
+        $this->trackOrderFormPostEvent(
+            $request,
+            $course,
+            AnalyticsEventName::OnlinePaymentSelected,
+            [
+                'metadata' => array_merge(
+                    [
+                        'payment_type' => 'online',
+                        'payment_gateway' => $this->normalizePaymentGateway($paymentGateway),
+                        'has_price_variant' => $request->filled('price_variant_id'),
+                        'order_flow' => 'online',
+                    ],
+                    $this->buyerTypeMetadata($buyerType),
+                ),
+            ]
+        );
+    }
+
+    public function trackDeferredInvoiceSelected(Request $request, Course $course, ?string $buyerType): void
+    {
+        $this->trackOrderFormPostEvent(
+            $request,
+            $course,
+            AnalyticsEventName::DeferredInvoiceSelected,
+            [
+                'metadata' => array_merge(
+                    [
+                        'payment_type' => 'deferred_invoice',
+                        'has_price_variant' => $request->filled('price_variant_id'),
+                        'order_flow' => 'deferred',
+                    ],
+                    $this->buyerTypeMetadata($buyerType),
+                ),
+            ]
+        );
+    }
+
     public function appendResponseCookies(Response $response, Request $request, ?int $orderFormCourseId = null): void
     {
         $this->sessions->appendCookie($response, $request);
@@ -295,6 +334,25 @@ class BackendAnalyticsTracker
         }
 
         return $request->isMethod('POST');
+    }
+
+    private function normalizePaymentGateway(?string $gateway): string
+    {
+        $normalized = strtolower(trim((string) $gateway));
+
+        return in_array($normalized, ['payu', 'paynow'], true) ? $normalized : 'unknown';
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function buyerTypeMetadata(?string $buyerType): array
+    {
+        $normalized = strtolower(trim((string) $buyerType));
+
+        return in_array($normalized, ['organisation', 'person'], true)
+            ? ['buyer_type' => $normalized]
+            : [];
     }
 
     private function priceVariantMetadata(Request $request): array
