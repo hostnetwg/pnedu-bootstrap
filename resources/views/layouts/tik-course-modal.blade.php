@@ -6,7 +6,7 @@
             <!-- Modal Header with Image -->
             <div class="position-relative bg-light" style="overflow: hidden; padding: 20px 0;">
                 @if(!empty($upcomingTikCourse->image))
-                    <img src="{{ rtrim(config('services.pneadm.public_url'), '/') . '/storage/' . ltrim($upcomingTikCourse->image, '/') }}" 
+                    <img src="{{ $upcomingTikCourse->publicImageUrl() }}" 
                          alt="{{ strip_tags($upcomingTikCourse->title) }}" 
                          class="w-100" 
                          style="width: 100%; height: auto; object-fit: contain; display: block;">
@@ -41,7 +41,7 @@
                         @if($upcomingTikCourse->trainer)
                             <div class="mt-2 d-flex align-items-center justify-content-center gap-2">
                                 @if($upcomingTikCourse->instructor && !empty($upcomingTikCourse->instructor->photo))
-                                    <img src="{{ rtrim(config('services.pneadm.public_url'), '/') . '/storage/' . ltrim($upcomingTikCourse->instructor->photo, '/') }}" 
+                                    <img src="{{ \App\Support\PneadmMedia::url($upcomingTikCourse->instructor->photo) }}" 
                                          alt="{{ $upcomingTikCourse->instructor->full_name }}" 
                                          class="rounded-circle"
                                          style="width: 40px; height: 40px; object-fit: cover; border: 2px solid #dee2e6;">

@@ -190,7 +190,7 @@
                         <div class="position-relative">
                             <a href="{{ route('courses.show', $course->id) }}" style="text-decoration: none; display: block;">
                                 @if(!empty($course->image))
-                                    <img src="{{ rtrim(config('services.pneadm.public_url'), '/') . '/storage/' . ltrim($course->image, '/') }}"
+                                    <img src="{{ $course->publicImageUrl() }}"
                                          class="card-img-top"
                                          alt="{{ strip_tags($course->title) }}"
                                          loading="lazy"

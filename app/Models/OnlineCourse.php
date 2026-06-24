@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\PneadmMedia;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -63,13 +64,6 @@ class OnlineCourse extends Model
     /** Pełny URL obrazu w publicznym storage pneadm (miniatury na pnedu.pl). */
     public function publicImageUrl(): ?string
     {
-        $path = trim((string) ($this->image ?? ''));
-        if ($path === '') {
-            return null;
-        }
-
-        $base = rtrim((string) config('services.pneadm.public_url'), '/');
-
-        return $base.'/storage/'.ltrim($path, '/');
+        return PneadmMedia::url($this->image);
     }
 }

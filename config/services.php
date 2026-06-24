@@ -58,6 +58,12 @@ return [
                 : 'https://adm.pnedu.pl'),
             '/'
         ),
+        // Na produkcji domyślnie true: obrazy przez /media/pneadm/… (ten sam host co pnedu.pl).
+        // Dev: false — przeglądarka ładuje bezpośrednio z adm.localhost.
+        'media_proxy' => filter_var(
+            env('PNEADM_MEDIA_PROXY', env('APP_ENV', 'production') === 'production'),
+            FILTER_VALIDATE_BOOLEAN
+        ),
     ],
 
     'payu' => [

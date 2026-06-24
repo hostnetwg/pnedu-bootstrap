@@ -12,6 +12,10 @@ use Illuminate\Support\Facades\Route;
 Route::get('/robots.txt', [SeoController::class, 'robots'])->name('seo.robots');
 Route::get('/sitemap.xml', [SeoController::class, 'sitemap'])->name('seo.sitemap');
 
+Route::get('/media/pneadm/{path}', [App\Http\Controllers\PneadmMediaController::class, 'show'])
+    ->where('path', '.*')
+    ->name('pneadm.media');
+
 Route::get('/l/{campaign_code}', App\Http\Controllers\MarketingCampaignShortLinkController::class)
     ->where('campaign_code', '[A-Za-z0-9._-]+')
     ->middleware('throttle:180,1')

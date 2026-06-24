@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\PneadmMedia;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -133,6 +134,12 @@ class Course extends Model
     public function instructor(): BelongsTo
     {
         return $this->belongsTo(Instructor::class, 'instructor_id');
+    }
+
+    /** Pełny URL miniatury kursu (storage pneadm, opcjonalnie przez proxy pnedu). */
+    public function publicImageUrl(): ?string
+    {
+        return PneadmMedia::url($this->image);
     }
 
     /**

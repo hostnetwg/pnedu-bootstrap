@@ -42,7 +42,7 @@
                             <div class="row align-items-center">
                                 <div class="col-md-3 text-center mb-3 mb-md-0">
                                     @if(!empty($director->photo))
-                                        <img src="{{ rtrim(config('services.pneadm.public_url'), '/') . '/storage/' . ltrim($director->photo, '/') }}" 
+                                        <img src="{{ \App\Support\PneadmMedia::url($director->photo) }}" 
                                              alt="{{ $director->full_name }}" 
                                              class="rounded shadow-sm"
                                              width="160"
@@ -93,7 +93,7 @@
                                 <div class="row align-items-center">
                                     <div class="col-md-3 text-center mb-3 mb-md-0">
                                         @if(!empty($instructor->photo))
-                                            <img src="{{ rtrim(config('services.pneadm.public_url'), '/') . '/storage/' . ltrim($instructor->photo, '/') }}" 
+                                            <img src="{{ \App\Support\PneadmMedia::url($instructor->photo) }}" 
                                                  alt="{{ $instructor->full_name }}" 
                                                  class="rounded shadow-sm"
                                                  width="160"

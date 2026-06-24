@@ -433,7 +433,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="course-meta-row">
                         @if($course->instructor && !empty($course->instructor->photo))
                             <div class="instructor-photo-header">
-                                <img src="{{ rtrim(config('services.pneadm.public_url'), '/') . '/storage/' . ltrim($course->instructor->photo, '/') }}" 
+                                <img src="{{ \App\Support\PneadmMedia::url($course->instructor->photo) }}" 
                                      alt="{{ $course->instructor->full_name }}" 
                                      class="instructor-photo-header-img">
                             </div>
@@ -511,7 +511,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     
                     @if(!empty($course->instructor->photo))
                         <div class="instructor-photo">
-                            <img src="{{ rtrim(config('services.pneadm.public_url'), '/') . '/storage/' . ltrim($course->instructor->photo, '/') }}" 
+                            <img src="{{ \App\Support\PneadmMedia::url($course->instructor->photo) }}" 
                                  alt="{{ $course->instructor->full_name }}" 
                                  class="instructor-photo-img">
                         </div>
