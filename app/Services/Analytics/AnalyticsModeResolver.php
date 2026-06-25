@@ -60,6 +60,10 @@ class AnalyticsModeResolver
             AnalyticsEventName::PaymentOrderCreated->value,
             AnalyticsEventName::PaymentStatusChanged->value,
             AnalyticsEventName::InvoiceCreated->value,
+            // Etap B1 — w trybie light z JS dopuszczamy tylko start i kliknięcie submitu
+            // (sekcje i CTA generują zbyt dużo szumu jak na tryb ograniczony).
+            AnalyticsEventName::OrderFormStarted->value,
+            AnalyticsEventName::OrderFormSubmitClicked->value,
         ];
 
         if ($mode === AnalyticsMode::Light) {

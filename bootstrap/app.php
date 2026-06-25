@@ -45,6 +45,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'certificate-registration/*', // formularz publiczny po linku z tokenem – token w URL jest wystarczającą ochroną
             'certificate/*',             // podgląd/pobieranie zaświadczeń i formularz daty/miejsca urodzenia – token w URL jest wystarczającą ochroną (unika 419 przy wygasłej sesji)
             'webhooks/ses/*',
+            'analytics/client-events',   // Etap B1 — beacon analityczny (sendBeacon nie ustawi tokenu CSRF); brak mutacji stanu, fail-silent, bez PII
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

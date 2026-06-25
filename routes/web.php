@@ -208,6 +208,11 @@ Route::get('/courses/{id}/order-form', [App\Http\Controllers\CourseController::c
     ->name('payment.order-form');
 Route::post('/courses/{id}/order-form', [App\Http\Controllers\CourseController::class, 'storeOrderForm'])->name('payment.order-form.store');
 
+// Etap B1 — publiczny endpoint JS analityki (batch eventów formularza). Fail-silent, zawsze 204.
+Route::post('/analytics/client-events', [App\Http\Controllers\Analytics\ClientEventController::class, 'store'])
+    ->middleware('throttle:analytics-client-events')
+    ->name('analytics.client-events.store');
+
 // Podsumowanie i PDF zamówienia
 Route::get('/orders/{ident}/summary', [App\Http\Controllers\CourseController::class, 'orderSummary'])->name('orders.summary');
 Route::get('/orders/{ident}/pdf', [App\Http\Controllers\CourseController::class, 'orderPdf'])->name('orders.pdf');
