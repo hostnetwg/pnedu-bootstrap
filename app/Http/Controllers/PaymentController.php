@@ -8,6 +8,7 @@ use App\Models\FormOrder;
 use App\Models\OnlinePaymentOrder;
 use App\Models\Participant;
 use App\Models\WebhookLog;
+use App\Services\Analytics\BackendAnalyticsTracker;
 use App\Services\FormOrderCheckoutResumeService;
 use App\Services\PayNowService;
 use App\Services\PayUService;
@@ -22,6 +23,10 @@ class PaymentController extends Controller
      * @see \App\Http\Controllers\CourseController::SESSION_ONLINE_CHECKOUT_FORM_ORDER_RESUME
      */
     private const SESSION_ONLINE_CHECKOUT_FORM_ORDER_RESUME = 'form_order_online_checkout_resume';
+
+    public function __construct(
+        private readonly BackendAnalyticsTracker $backendAnalyticsTracker,
+    ) {}
 
     /**
      * PayU notify – webhook wywoływany przez PayU przy zmianie statusu płatności.
@@ -70,6 +75,7 @@ class PaymentController extends Controller
         $mappedStatus = WebhookLog::mapStatus('payu', $payuStatus);
 
         if ($mappedStatus) {
+            $previousModelStatus = $order->status;
             $order->update(['status' => $mappedStatus]);
             $order->refresh();
             $this->syncLinkedFormOrderPaymentStatus($order);
@@ -77,6 +83,8 @@ class PaymentController extends Controller
                 'status_mapped' => $mappedStatus,
                 'signature_valid' => true, // PayU nie wymaga weryfikacji podpisu w REST API
             ]);
+
+            $this->trackPaymentStatusChangedSafely($order, 'payu', $payuStatus, $previousModelStatus, 'webhook');
 
             if ($payuStatus === 'COMPLETED') {
                 Log::info('PayU: płatność potwierdzona - rozpoczynam przetwarzanie', [
@@ -133,9 +141,12 @@ class PaymentController extends Controller
                 return;
             }
 
+            $previousModelStatus = $order->status;
             $order->update(['status' => $mappedStatus]);
             $order->refresh();
             $this->syncLinkedFormOrderPaymentStatus($order);
+
+            $this->trackPaymentStatusChangedSafely($order, 'payu', $payuStatus, $previousModelStatus, 'return_sync');
 
             if ($payuStatus === 'COMPLETED' && ! $wasPaid) {
                 Log::info('PayU return: zsynchronizowano COMPLETED z API (notify niedostępny lub błąd)', [
@@ -398,10 +409,13 @@ class PaymentController extends Controller
         $mappedStatus = WebhookLog::mapStatus('paynow', $paynowStatus);
 
         if ($mappedStatus) {
+            $previousModelStatus = $order->status;
             $order->update(['status' => $mappedStatus]);
             $order->refresh();
             $this->syncLinkedFormOrderPaymentStatus($order);
             $webhookLog->update(['status_mapped' => $mappedStatus]);
+
+            $this->trackPaymentStatusChangedSafely($order, 'paynow', $paynowStatus, $previousModelStatus, 'webhook');
 
             if ($paynowStatus === 'CONFIRMED') {
                 Log::info('PayNow: płatność potwierdzona - rozpoczynam przetwarzanie', [
@@ -457,9 +471,12 @@ class PaymentController extends Controller
                 return;
             }
 
+            $previousModelStatus = $order->status;
             $order->update(['status' => $mappedStatus]);
             $order->refresh();
             $this->syncLinkedFormOrderPaymentStatus($order);
+
+            $this->trackPaymentStatusChangedSafely($order, 'paynow', $paynowStatus, $previousModelStatus, 'return_sync');
 
             if ($paynowStatus === 'CONFIRMED' && ! $wasPaid) {
                 Log::info('PayNow return: zsynchronizowano CONFIRMED z API (notify niedostępny lub błąd)', [
@@ -513,6 +530,30 @@ class PaymentController extends Controller
 
         return redirect()->route('payment.pending', $order->ident)
             ->with('info', 'Płatność jest w trakcie realizacji. Otrzymasz potwierdzenie na adres e-mail.');
+    }
+
+    /**
+     * Analityka payment_status_changed (Etap 2B-1). Fail-silent — nigdy nie wpływa na flow płatności.
+     * Kontroler przekazuje tylko bezpieczne dane; payload buduje BackendAnalyticsTracker.
+     */
+    private function trackPaymentStatusChangedSafely(
+        OnlinePaymentOrder $order,
+        string $gateway,
+        string $rawGatewayStatus,
+        ?string $previousModelStatus,
+        string $statusSource
+    ): void {
+        try {
+            $this->backendAnalyticsTracker->trackPaymentStatusChanged(
+                $order,
+                $gateway,
+                BackendAnalyticsTracker::normalizeAnalyticsPaymentStatus($gateway, $rawGatewayStatus),
+                BackendAnalyticsTracker::normalizeModelStatusToAnalytics($previousModelStatus),
+                $statusSource,
+            );
+        } catch (\Throwable) {
+            // Fail-silent: błąd analityki nie może popsuć webhooka, return sync ani statusu płatności.
+        }
     }
 
     /**

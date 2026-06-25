@@ -5,11 +5,13 @@ namespace App\Services\Analytics;
 use App\Enums\Analytics\AnalyticsEventName;
 use App\Models\Course;
 use App\Models\FormOrder;
+use App\Models\OnlinePaymentOrder;
 use App\Services\FunnelSkipService;
 use App\Services\MarketingAttributionService;
 use App\Services\MarketingBotDetector;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
+use Ramsey\Uuid\Uuid;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 
@@ -187,6 +189,150 @@ class BackendAnalyticsTracker
                 ),
             ]
         );
+    }
+
+    public function trackPaymentOrderCreated(
+        Request $request,
+        Course $course,
+        FormOrder $formOrder,
+        OnlinePaymentOrder $onlineOrder,
+        ?string $buyerType
+    ): void {
+        if (! $formOrder->id || ! $onlineOrder->id) {
+            return;
+        }
+
+        $this->trackOrderFormPostEvent(
+            $request,
+            $course,
+            AnalyticsEventName::PaymentOrderCreated,
+            [
+                'form_order_id' => (int) $formOrder->id,
+                'payment_order_id' => (int) $onlineOrder->id,
+                'amount_snapshot' => $onlineOrder->total_amount !== null ? (float) $onlineOrder->total_amount : null,
+                'metadata' => array_merge(
+                    [
+                        'payment_gateway' => $this->normalizePaymentGateway($onlineOrder->payment_gateway),
+                        'payment_type' => 'online',
+                        'order_flow' => 'online',
+                        'has_price_variant' => $formOrder->course_price_variant_id !== null,
+                    ],
+                    $this->buyerTypeMetadata($buyerType),
+                ),
+            ]
+        );
+    }
+
+    /**
+     * Event server-to-server: brak sesji, requestu i kontekstu przeglądarki.
+     * Deduplikacja przez deterministyczny event_uuid + insertOrIgnore.
+     */
+    public function trackPaymentStatusChanged(
+        OnlinePaymentOrder $onlinePaymentOrder,
+        string $gateway,
+        string $normalizedStatus,
+        ?string $previousStatus,
+        string $statusSource
+    ): void {
+        try {
+            if (! $onlinePaymentOrder->id || ! $onlinePaymentOrder->form_order_id) {
+                return;
+            }
+
+            $normalizedGateway = $this->normalizePaymentGateway($gateway);
+            $paymentOrderId = (int) $onlinePaymentOrder->id;
+            $formOrderId = (int) $onlinePaymentOrder->form_order_id;
+            $courseId = $onlinePaymentOrder->course_id !== null ? (int) $onlinePaymentOrder->course_id : null;
+            $amount = $onlinePaymentOrder->total_amount !== null ? (float) $onlinePaymentOrder->total_amount : null;
+
+            $this->analytics->track(
+                AnalyticsEventName::PaymentStatusChanged,
+                [
+                    'event_uuid' => $this->paymentStatusEventUuid($normalizedGateway, $paymentOrderId, $normalizedStatus),
+                    'form_order_id' => $formOrderId,
+                    'payment_order_id' => $paymentOrderId,
+                    'course_id' => $courseId,
+                    'amount_snapshot' => $amount,
+                    'metadata' => array_filter(
+                        [
+                            'payment_gateway' => $normalizedGateway,
+                            'payment_status' => $normalizedStatus,
+                            'payment_previous_status' => $previousStatus,
+                            'status_source' => $statusSource,
+                            'payment_type' => 'online',
+                            'amount_gross' => $amount,
+                            'order_flow' => 'online',
+                        ],
+                        static fn ($value): bool => $value !== null,
+                    ),
+                ]
+            );
+        } catch (Throwable) {
+            // Fail-silent: analityka nie może popsuć webhooka, return sync ani statusu płatności.
+        }
+    }
+
+    /**
+     * Normalizacja surowego statusu bramki na analityczny status (pisownia: canceled).
+     * Niezależna od statusu modelu i WebhookLog::mapStatus().
+     */
+    public static function normalizeAnalyticsPaymentStatus(string $gateway, string $rawStatus): string
+    {
+        $status = strtoupper(trim($rawStatus));
+        $normalizedGateway = strtolower(trim($gateway));
+
+        if ($normalizedGateway === 'payu') {
+            return match ($status) {
+                'COMPLETED' => 'paid',
+                'CANCELED', 'CANCELLED' => 'canceled',
+                'REJECTED' => 'failed',
+                'EXPIRED' => 'expired',
+                'PENDING' => 'pending',
+                'NEW' => 'created',
+                default => 'unknown',
+            };
+        }
+
+        if ($normalizedGateway === 'paynow') {
+            return match ($status) {
+                'CONFIRMED' => 'paid',
+                'CANCELLED', 'CANCELED' => 'canceled',
+                'REJECTED', 'ERROR' => 'failed',
+                'EXPIRED' => 'expired',
+                'PENDING' => 'pending',
+                'NEW' => 'created',
+                default => 'unknown',
+            };
+        }
+
+        return 'unknown';
+    }
+
+    /**
+     * Normalizacja statusu modelu OnlinePaymentOrder na analityczny status (canceled).
+     */
+    public static function normalizeModelStatusToAnalytics(?string $modelStatus): ?string
+    {
+        if ($modelStatus === null || trim($modelStatus) === '') {
+            return null;
+        }
+
+        return match (strtolower(trim($modelStatus))) {
+            'paid' => 'paid',
+            'pending' => 'pending',
+            'created' => 'created',
+            'cancelled', 'canceled' => 'canceled',
+            'failed' => 'failed',
+            'expired' => 'expired',
+            default => 'unknown',
+        };
+    }
+
+    private function paymentStatusEventUuid(string $gateway, int $paymentOrderId, string $normalizedStatus): string
+    {
+        $base = sprintf('payment_status_changed|%s|%d|%s', $gateway, $paymentOrderId, $normalizedStatus);
+
+        return Uuid::uuid5(Uuid::NAMESPACE_URL, $base)->toString();
     }
 
     public function appendResponseCookies(Response $response, Request $request, ?int $orderFormCourseId = null): void

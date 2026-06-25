@@ -1847,6 +1847,8 @@ class CourseController extends Controller
                 'ip_address' => $request->ip(),
             ]);
 
+            $backendAnalyticsTracker->trackPaymentOrderCreated($request, $course, $formOrder, $onlineOrder, $buyerType);
+
             app(FormOrderCheckoutResumeService::class)->storeAfterSubmit(
                 (int) $course->id,
                 $formOrder,
