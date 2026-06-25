@@ -461,7 +461,7 @@
                 <input type="hidden" name="fb_source" value="{{ old('fb_source', $testData['fb_source'] ?? ($fbSourceDefault ?? '')) }}">
                 <input type="hidden" name="conversion_placement" value="{{ old('conversion_placement', $testData['conversion_placement'] ?? ($conversionPlacementDefault ?? '')) }}">
                 <div class="form-sections-grid">
-                <fieldset class="order-form-section">
+                <fieldset class="order-form-section" data-analytics-section="buyer_data">
                     <legend class="visually-hidden">DANE KONTAKTOWE ZAMAWIAJĄCEGO</legend>
                     <div class="section-heading">DANE KONTAKTOWE ZAMAWIAJĄCEGO</div>
                     <div class="mb-3">
@@ -559,7 +559,7 @@
                         </div>
                     </div>
                 </fieldset>
-                <fieldset class="order-form-section">
+                <fieldset class="order-form-section" data-analytics-section="buyer_data">
                     <legend class="visually-hidden">DANE DO FAKTURY</legend>
                     <div class="section-heading">DANE DO FAKTURY</div>
                     <h6 class="mb-3" style="font-weight: 700; font-size: 1.05rem; color: #1976d2;">NABYWCA</h6>
@@ -648,7 +648,7 @@
                             </button>
                         </div>
                     </div>
-                    <div class="recipient-wrapper">
+                    <div class="recipient-wrapper" data-analytics-section="recipient_data">
                         <hr class="my-3">
                         <h6 class="mb-3 mt-2" style="font-weight: 700; font-size: 1.05rem; color: #1976d2;">
                             ODBIORCA
@@ -704,7 +704,7 @@
                         </div>
                     </div>
                 </fieldset>
-                <fieldset class="order-form-section">
+                <fieldset class="order-form-section" data-analytics-section="participants">
                     <legend class="visually-hidden">DANE UCZESTNIKÓW SZKOLENIA</legend>
                     <div class="section-heading">DANE UCZESTNIKÓW SZKOLENIA</div>
                     <div class="form-info-text mt-2">
@@ -754,8 +754,8 @@
                         Zalecane jest podanie indywidualnego adresu e-mail uczestnika, a nie ogólnego adresu placówki – adres e-mail jest powiązany z danym uczestnikiem szkolenia; w przeciwnym razie mogą wystąpić błędy przy generowaniu zaświadczenia. Na podany adres zostanie utworzone konto na platformie z dostępem do zasobów szkolenia; jeśli konto już istnieje, zasoby zostaną do niego dodane.
                     </div>
                 </fieldset>
-                <div class="order-form-section form-section-full-width">
-                    <div class="mb-3">
+                <div class="order-form-section form-section-full-width" data-analytics-section="payment_method">
+                    <div class="mb-3" data-analytics-section="invoice">
                         <label for="invoice_notes" class="form-label">Uwagi do faktury (opcjonalnie)</label>
                         <textarea class="form-control @error('invoice_notes') is-invalid @enderror" id="invoice_notes" name="invoice_notes" rows="2">{{ $testData['invoice_notes'] ?? old('invoice_notes') }}</textarea>
                         @error('invoice_notes')
@@ -772,6 +772,7 @@
                                     name="payment_type"
                                     id="payment_type_deferred"
                                     value="deferred"
+                                    data-analytics-cta="select_deferred_invoice"
                                     {{ $prefillPaymentType === 'deferred' ? 'checked' : '' }}
                                 >
                                 <label class="form-check-label" for="payment_type_deferred">
@@ -785,6 +786,7 @@
                                     name="payment_type"
                                     id="payment_type_online"
                                     value="online"
+                                    data-analytics-cta="select_online_payment"
                                     {{ $prefillPaymentType === 'online' ? 'checked' : '' }}
                                 >
                                 <label class="form-check-label" for="payment_type_online">
@@ -870,8 +872,8 @@
                                 Wypełnij dane testowe
                             </button>
                         @endif
-                        <button type="submit" class="btn btn-primary flex-fill" id="order-form-submit-btn" data-submitting-text="{{ ($prefillPaymentType ?? 'deferred') === 'online' ? 'Przekierowanie do płatności…' : 'Wysyłanie…' }}">{{ ($prefillPaymentType ?? 'deferred') === 'online' ? 'Przejdź do płatności online' : 'Wyślij zamówienie' }}</button>
-                        <a href="{{ route('courses.show', $course->id) }}" class="btn btn-link flex-fill">Powrót do szczegółów szkolenia</a>
+                        <button type="submit" class="btn btn-primary flex-fill" id="order-form-submit-btn" data-analytics-cta="submit_order" data-submitting-text="{{ ($prefillPaymentType ?? 'deferred') === 'online' ? 'Przekierowanie do płatności…' : 'Wysyłanie…' }}">{{ ($prefillPaymentType ?? 'deferred') === 'online' ? 'Przejdź do płatności online' : 'Wyślij zamówienie' }}</button>
+                        <a href="{{ route('courses.show', $course->id) }}" class="btn btn-link flex-fill" data-analytics-cta="back_to_course">Powrót do szczegółów szkolenia</a>
                     </div>
                 </div>
                 </div>
@@ -1311,5 +1313,21 @@
 </script>
 @include('courses.partials.order-form-submit-guard')
 @include('courses.partials.marketing-ga-event', ['course' => $course, 'gaEvent' => 'order_form_view'])
+
+{{-- Etap B2 — lekki, fail-silent JS collector analityki formularza. Ładowany TYLKO tu (nie globalnie).
+     Backend (B1/B1a) wymusza tryby i RODO; JS wysyła wyłącznie techniczne klucze z whitelisty. --}}
+@if(config('analytics.enabled', true))
+    @php
+        $analyticsPriceVariantId = old('price_variant_id', $prefillPriceVariantId ?? ($testData['price_variant_id'] ?? null));
+        $analyticsPriceVariantId = is_numeric($analyticsPriceVariantId) ? (int) $analyticsPriceVariantId : null;
+    @endphp
+    <div id="order-form-analytics-config"
+        hidden
+        data-endpoint="{{ route('analytics.client-events.store') }}"
+        data-course-id="{{ (int) $course->id }}"
+        data-price-variant-id="{{ $analyticsPriceVariantId !== null ? $analyticsPriceVariantId : '' }}"
+        data-max-batch="{{ (int) config('analytics.client_events.max_events_per_batch', 20) }}"></div>
+    @include('courses.partials.order-form-client-tracking')
+@endif
 @endsection
 
