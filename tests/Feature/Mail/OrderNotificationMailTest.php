@@ -35,6 +35,8 @@ class OrderNotificationMailTest extends TestCase
         $this->assertStringContainsString('kontakt@pnedu.pl', $html);
         $this->assertStringContainsString('www.pnedu.pl', $html);
         $this->assertStringContainsString('https://pnedu.pl', $html);
+        $this->assertStringContainsString('Z wyrazami szacunku', $html);
+        $this->assertStringNotContainsString('All rights reserved.', $html);
 
         $pdfHtml = view('orders.pdf', [
             'order' => $this->order(),

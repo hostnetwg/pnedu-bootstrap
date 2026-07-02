@@ -34,6 +34,34 @@ class SystemMailConfigurationTest extends TestCase
         $this->assertSame('kontakt@pnedu.pl', $mail->replyTo[0]['address']);
     }
 
+    public function test_payment_notification_renders_polish_status_labels(): void
+    {
+        $order = $this->onlinePaymentOrder();
+        $order->status = OnlinePaymentOrder::STATUS_PENDING;
+        $order->payment_gateway = 'payu';
+        $order->buyer_type = 'person';
+
+        $html = (new PaymentNotificationMail($order))->render();
+
+        $this->assertStringContainsString('Oczekuje', $html);
+        $this->assertStringContainsString('PayU', $html);
+        $this->assertStringContainsString('Osoba fizyczna', $html);
+        $this->assertStringNotContainsString('Pending', $html);
+        $this->assertStringNotContainsString('All rights reserved.', $html);
+    }
+
+    public function test_contact_form_mail_is_polish(): void
+    {
+        $html = (new ContactFormMail([
+            'name' => 'Jan Kowalski',
+            'email' => 'jan@example.test',
+            'message' => 'Proszę o kontakt.',
+        ]))->render();
+
+        $this->assertStringContainsString('Nowa wiadomość z formularza kontaktowego', $html);
+        $this->assertStringNotContainsString('All rights reserved.', $html);
+    }
+
     public function test_contact_form_uses_system_sender_and_submitter_reply_to(): void
     {
         $mail = (new ContactFormMail([
@@ -54,6 +82,8 @@ class SystemMailConfigurationTest extends TestCase
 
         $this->assertSame(['info@system.pnedu.pl', 'Platforma Nowoczesnej Edukacji'], $message->from);
         $this->assertContains(['kontakt@pnedu.pl', 'Platforma Nowoczesnej Edukacji'], $message->replyTo);
+        $this->assertStringContainsString('Wszelkie prawa zastrzeżone.', $message->render());
+        $this->assertStringNotContainsString('All rights reserved.', $message->render());
     }
 
     public function test_breeze_verify_email_notification_uses_system_sender_and_reply_to(): void
@@ -62,6 +92,8 @@ class SystemMailConfigurationTest extends TestCase
 
         $this->assertSame(['info@system.pnedu.pl', 'Platforma Nowoczesnej Edukacji'], $message->from);
         $this->assertContains(['kontakt@pnedu.pl', 'Platforma Nowoczesnej Edukacji'], $message->replyTo);
+        $this->assertStringContainsString('Wszelkie prawa zastrzeżone.', $message->render());
+        $this->assertStringNotContainsString('All rights reserved.', $message->render());
     }
 
     private function onlinePaymentOrder(): OnlinePaymentOrder
@@ -70,6 +102,7 @@ class SystemMailConfigurationTest extends TestCase
             'ident' => 'PNEDU_TEST_1',
             'status' => OnlinePaymentOrder::STATUS_PAID,
         ]);
+        $order->created_at = now();
 
         $order->setRelation('course', new Course([
             'title' => 'Testowe szkolenie',

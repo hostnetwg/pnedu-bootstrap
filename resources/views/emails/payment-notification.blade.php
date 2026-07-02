@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="pl">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -85,22 +85,16 @@
                 <span class="info-label">Status:</span>
                 <span class="info-value">
                     @if($order->status === 'paid')
-                        <strong style="color: green;">Opłacone</strong>
+                        <strong style="color: green;">{{ $order->statusLabel() }}</strong>
                     @else
-                        {{ ucfirst($order->status) }}
+                        {{ $order->statusLabel() }}
                     @endif
                 </span>
             </div>
             <div class="info-row">
                 <span class="info-label">Bramka płatności:</span>
                 <span class="info-value">
-                    @if($order->payment_gateway === 'payu')
-                        <strong>PayU</strong>
-                    @elseif($order->payment_gateway === 'paynow')
-                        <strong>PayNow.pl</strong>
-                    @else
-                        {{ ucfirst($order->payment_gateway) }}
-                    @endif
+                    <strong>{{ $order->paymentGatewayLabel() }}</strong>
                 </span>
             </div>
             <div class="info-row">
@@ -129,17 +123,7 @@
             </div>
             <div class="info-row">
                 <span class="info-label">Typ zamawiającego:</span>
-                <span class="info-value">
-                    @if($order->buyer_type === 'person')
-                        Osoba fizyczna
-                    @elseif($order->buyer_type === 'company')
-                        Firma
-                    @elseif($order->buyer_type === 'organisation')
-                        Instytucja
-                    @else
-                        {{ ucfirst($order->buyer_type ?? 'Nie określono') }}
-                    @endif
-                </span>
+                <span class="info-value">{{ $order->buyerTypeLabel() }}</span>
             </div>
         </div>
 

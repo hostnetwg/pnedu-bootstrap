@@ -118,4 +118,35 @@ class OnlinePaymentOrder extends Model
     {
         return $this->status === self::STATUS_PAID;
     }
+
+    public function statusLabel(): string
+    {
+        return match ($this->status) {
+            self::STATUS_PAID => 'Opłacone',
+            self::STATUS_PENDING => 'Oczekuje',
+            self::STATUS_CREATED => 'Utworzone',
+            self::STATUS_CANCELLED => 'Anulowane',
+            self::STATUS_FAILED => 'Nieudane',
+            default => (string) ($this->status ?? 'Nieznany'),
+        };
+    }
+
+    public function paymentGatewayLabel(): string
+    {
+        return match ($this->payment_gateway) {
+            'payu' => 'PayU',
+            'paynow' => 'PayNow.pl',
+            default => (string) ($this->payment_gateway ?? 'Nieznana'),
+        };
+    }
+
+    public function buyerTypeLabel(): string
+    {
+        return match ($this->buyer_type) {
+            'person' => 'Osoba fizyczna',
+            'company' => 'Firma',
+            'organisation' => 'Instytucja',
+            default => 'Nie określono',
+        };
+    }
 }
