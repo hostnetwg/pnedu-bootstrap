@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -122,6 +123,42 @@ class FormOrder extends Model
         'publigo_sent' => 'boolean',
         'status_completed' => 'boolean',
     ];
+
+    /**
+     * Data zamówienia w strefie aplikacji (domyślnie Europe/Warsaw) — do wyświetlania.
+     * Wartość w bazie (order_date, TIMESTAMP) jest zawsze momentem UTC.
+     */
+    public function formatOrderDateLocal(?string $format = 'd.m.Y H:i'): ?string
+    {
+        $raw = $this->attributes['order_date'] ?? null;
+        if (! $raw) {
+            return null;
+        }
+
+        return Carbon::createFromFormat('Y-m-d H:i:s', $raw, 'UTC')
+            ->setTimezone(config('app.timezone', 'Europe/Warsaw'))
+            ->format($format);
+    }
+
+    /**
+     * Mutator — zapisuje datę w UTC (zgodnie z konwencją wspólnej bazy pneadm).
+     */
+    public function setOrderDateAttribute($value): void
+    {
+        if ($value instanceof \DateTimeInterface) {
+            $this->attributes['order_date'] = Carbon::instance($value)->utc()->format('Y-m-d H:i:s');
+
+            return;
+        }
+
+        if (is_numeric($value)) {
+            $this->attributes['order_date'] = Carbon::createFromTimestamp($value, 'UTC')->format('Y-m-d H:i:s');
+
+            return;
+        }
+
+        $this->attributes['order_date'] = Carbon::parse($value)->utc()->format('Y-m-d H:i:s');
+    }
 
     /**
      * Generate a unique order identifier.

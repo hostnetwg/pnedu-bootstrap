@@ -1,5 +1,8 @@
 # ⏰ Naprawa Strefy Czasowej - Przesunięcie o 2 godziny
 
+> **⚠️ DEPRECATED (2026-07-04):** Zalecenie `DB_TIMEZONE=+02:00` było błędne dla wspólnej bazy `pneadm`.
+> Obowiązuje: **[pneadm/docs/TIMEZONE_POLICY.md](../pneadm/docs/TIMEZONE_POLICY.md)** — `DB_TIMEZONE=+00:00` w obu serwisach.
+
 ## 🐛 Problem
 
 Na produkcji data/czas zapisywana w polu `order_date` tabeli `form_orders` była cofnięta o 2 godziny w stosunku do rzeczywistego czasu polskiego.

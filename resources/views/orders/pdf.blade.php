@@ -350,7 +350,7 @@
     <!-- Stopka -->
     <div class="footer">
         <div class="footer-info">
-            Zamówienie nr {{ $order->id }} | data zamówienia: {{ $order->order_date->format('Y-m-d H:i:s') }}@if($order->ip_address) | IP: {{ $order->ip_address }}@endif
+            Zamówienie nr {{ $order->id }} | data zamówienia: {{ $order->formatOrderDateLocal('Y-m-d H:i:s') }}@if($order->ip_address) | IP: {{ $order->ip_address }}@endif
         </div>
         <div class="footer-text">
             Po złożeniu zamówienia prosimy o wydrukowanie wygenerowanego zamówienia w celu ewentualnej weryfikacji.

@@ -89,7 +89,7 @@
         <h2><i class="bi bi-hash me-2"></i>Identyfikacja i status</h2>
         <div class="locked-row"><span class="locked-label">Numer zamówienia</span><span class="locked-value"><strong>{{ $order->id }}</strong></span></div>
         @if($order->order_date)
-        <div class="locked-row"><span class="locked-label">Data złożenia</span><span class="locked-value">{{ $order->order_date->format('d.m.Y H:i') }}</span></div>
+        <div class="locked-row"><span class="locked-label">Data złożenia</span><span class="locked-value">{{ $order->formatOrderDateLocal() }}</span></div>
         @endif
         <div class="locked-row"><span class="locked-label">Status zakończenia</span><span class="locked-value">{{ $yn($order->status_completed || $hasInvoice) }}</span></div>
         @if($order->trashed())

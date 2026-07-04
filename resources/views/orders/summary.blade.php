@@ -121,7 +121,7 @@
                     </div>
                     <div class="info-row">
                         <span class="info-label">Data złożenia:</span>
-                        <span class="info-value">{{ $order->order_date->format('d.m.Y H:i') }}</span>
+                        <span class="info-value">{{ $order->formatOrderDateLocal() }}</span>
                     </div>
                     <div class="info-row">
                         <span class="info-label">E-mail kontaktowy:</span>
