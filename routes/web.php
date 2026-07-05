@@ -16,6 +16,10 @@ Route::get('/media/pneadm/{path}', [App\Http\Controllers\PneadmMediaController::
     ->where('path', '.*')
     ->name('pneadm.media');
 
+Route::post('/api/internal/cache/upcoming-courses', [App\Http\Controllers\Internal\PneduCacheInvalidationController::class, 'forgetUpcomingCourses'])
+    ->middleware('internal.api')
+    ->name('internal.cache.upcoming-courses');
+
 Route::get('/l/{campaign_code}', App\Http\Controllers\MarketingCampaignShortLinkController::class)
     ->where('campaign_code', '[A-Za-z0-9._-]+')
     ->middleware('throttle:180,1')

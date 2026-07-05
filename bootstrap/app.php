@@ -15,6 +15,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->alias([
+            'internal.api' => \App\Http\Middleware\VerifyInternalApiToken::class,
+        ]);
+
         $middleware->web(prepend: [
             \App\Http\Middleware\ConfigureCertificateRegistrationSession::class,
             \App\Http\Middleware\CaptureFunnelSkipOptOut::class,
@@ -46,6 +50,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'certificate/*',             // podgląd/pobieranie zaświadczeń i formularz daty/miejsca urodzenia – token w URL jest wystarczającą ochroną (unika 419 przy wygasłej sesji)
             'webhooks/ses/*',
             'analytics/client-events',   // Etap B1 — beacon analityczny (sendBeacon nie ustawi tokenu CSRF); brak mutacji stanu, fail-silent, bez PII
+            'api/internal/*',            // pneadm → pnedu (Bearer token)
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

@@ -32,10 +32,8 @@ class UpcomingPneduCourses
      */
     public static function forSidebar(int $limit = self::SIDEBAR_LIMIT): Collection
     {
-        $cacheKey = self::SIDEBAR_CACHE_KEY.'.'.$limit;
-
         return Cache::remember(
-            $cacheKey,
+            self::cacheKey($limit),
             now()->addMinutes(self::SIDEBAR_CACHE_TTL_MINUTES),
             fn () => self::baseQuery()->limit($limit)->get()
         );
@@ -49,6 +47,23 @@ class UpcomingPneduCourses
     public static function forHomepage(int $limit = self::SIDEBAR_LIMIT): Collection
     {
         return self::forSidebar($limit);
+    }
+
+    public static function cacheKey(int $limit = self::SIDEBAR_LIMIT): string
+    {
+        return self::SIDEBAR_CACHE_KEY.'.'.$limit;
+    }
+
+    /** Po zmianie kursu w panelu adm — wywoływane przez wewnętrzne API pneadm → pnedu. */
+    public static function forgetCache(?int $limit = null): void
+    {
+        if ($limit !== null) {
+            Cache::forget(self::cacheKey($limit));
+
+            return;
+        }
+
+        Cache::forget(self::cacheKey(self::SIDEBAR_LIMIT));
     }
 
     /**

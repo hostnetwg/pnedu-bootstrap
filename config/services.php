@@ -50,7 +50,6 @@ return [
         'api_url' => env('PNEADM_API_URL'),
         'api_token' => env('PNEADM_API_TOKEN'),
         'timeout' => env('PNEADM_API_TIMEOUT', 30),
-        // Publiczny adres panelu pneadm widoczny dla przeglądarki
         // (do <img src="..."> z /storage). Lokalnie: PNEADM_PUBLIC_URL lub domyślnie adm.localhost:8083.
         'public_url' => rtrim(
             env('PNEADM_PUBLIC_URL') ?? (env('APP_ENV', 'production') === 'local'
@@ -112,6 +111,11 @@ return [
 
     'facebook_pixel' => [
         'id' => env('FACEBOOK_PIXEL_ID', '378657018971423'),
+    ],
+
+    // Wywołania server-to-server z panelu adm (pneadm) — invalidacja cache oferty na pnedu.
+    'internal_api' => [
+        'token' => env('PNEDU_INTERNAL_API_TOKEN', env('PNEADM_API_TOKEN')),
     ],
 
 ];
