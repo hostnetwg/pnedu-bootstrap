@@ -20,4 +20,6 @@ Na końcu zadawaj **kluczowe pytania**:
 
 Pełna struktura **tylko po znaczących krokach** (nie przy drobnych poprawkach).
 
+**UI:** potwierdzenia tylko modal Bootstrap — `pneadm/docs/UI_MODALS.md`.
+
 Pełny opis, kolejność i wyjątki: zob. `pneadm/docs/AI_HUMAN_COMMUNICATION.md`.

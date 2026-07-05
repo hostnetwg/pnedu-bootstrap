@@ -128,6 +128,7 @@ sail test --coverage
 - Maintain responsive design (mobile-first)
 - Use Bootstrap components consistently
 - Keep custom CSS minimal and organized
+- **Confirmations:** never use native `confirm()` / `alert()` / `prompt()` in the UI — always Bootstrap 5 modals (see `pneadm/docs/UI_MODALS.md`)
 
 ## 🔒 Environment Variables
 - Never commit `.env` file
