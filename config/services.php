@@ -65,6 +65,14 @@ return [
         ),
     ],
 
+    'gus_bir' => [
+        'user_key' => env('GUS_BIR_USER_KEY'),
+        'endpoint' => env('GUS_BIR_ENDPOINT', env('GUS_BIR_ENV', 'production') === 'test'
+            ? 'https://wyszukiwarkaregontest.stat.gov.pl/wsBIR/UslugaBIRzewnPubl.svc'
+            : 'https://wyszukiwarkaregon.stat.gov.pl/wsBIR/UslugaBIRzewnPubl.svc'),
+        'timeout' => (int) env('GUS_BIR_TIMEOUT', 10),
+    ],
+
     'payu' => [
         'sandbox' => filter_var(env('PAYU_SANDBOX', true), FILTER_VALIDATE_BOOLEAN),
         'pos_id' => env('PAYU_POS_ID'),

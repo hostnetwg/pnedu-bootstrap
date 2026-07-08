@@ -563,6 +563,24 @@
                     <legend class="visually-hidden">DANE DO FAKTURY</legend>
                     <div class="section-heading">DANE DO FAKTURY</div>
                     <h6 class="mb-3" style="font-weight: 700; font-size: 1.05rem; color: #1976d2;">NABYWCA</h6>
+                    <div class="row g-3 mb-3" id="buyer_nip_gus_row">
+                        <div class="col-12 col-lg-7">
+                            <label for="buyer_nip" class="form-label">NIP <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input type="text" class="form-control @error('buyer_nip') is-invalid @enderror" id="buyer_nip" name="buyer_nip" value="{{ $testData['buyer_nip'] ?? old('buyer_nip') }}" placeholder="np. 0001234562" inputmode="numeric" autocomplete="off" aria-describedby="buyer_nip_hint">
+                                <button type="button" class="btn btn-primary" id="buyer_gus_button">
+                                    Pobierz dane z GUS
+                                </button>
+                            </div>
+                            <div class="form-text" id="buyer_nip_hint">Wpisz NIP, kliknij obok, a dane poniżej uzupełnią się automatycznie.</div>
+                            @error('buyer_nip')
+                                <div class="invalid-feedback d-block">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="col-12">
+                            <div class="small mt-1" id="buyer_gus_message" aria-live="polite"></div>
+                        </div>
+                    </div>
                     <div class="mb-3" id="buyer_person_group" style="display:none;">
                         <div class="row">
                             <div class="col-md-6 mb-2">
@@ -634,29 +652,45 @@
                             @enderror
                         </div>
                     </div>
-                    <div class="row g-3 mb-3" id="buyer_nip_gus_row">
-                        <div class="col-12 col-md-4">
-                            <label for="buyer_nip" class="form-label">NIP <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control @error('buyer_nip') is-invalid @enderror" id="buyer_nip" name="buyer_nip" value="{{ $testData['buyer_nip'] ?? old('buyer_nip') }}">
-                            @error('buyer_nip')
-                                <div class="invalid-feedback d-block">{{ $message }}</div>
-                            @enderror
-                        </div>
-                        <div class="col-12 col-md-8 d-flex align-items-end d-none">
-                            <button type="button" class="btn btn-primary w-100" id="buyer_gus_button">
-                                Wpisz NIP i pobierz dane z GUS
-                            </button>
-                        </div>
-                    </div>
                     <div class="recipient-wrapper" data-analytics-section="recipient_data">
                         <hr class="my-3">
                         <h6 class="mb-3 mt-2" style="font-weight: 700; font-size: 1.05rem; color: #1976d2;">
                             ODBIORCA
                             <span class="text-danger" style="font-weight: 400; font-size: 0.9rem;">
-                                (uzupełnij jeżeli wymagane w Twojej organizacji)
+                                (uzupełnij tylko, jeżeli jest to wymagane w Twojej organizacji)
                             </span>
                         </h6>
                         <div class="recipient-block">
+                            <div class="row g-3 mb-3" id="recipient_nip_gus_row">
+                                <div class="col-12 col-lg-7">
+                                    <label for="recipient_nip" class="form-label">NIP</label>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control @error('recipient_nip') is-invalid @enderror" id="recipient_nip" name="recipient_nip" value="{{ $testData['recipient_nip'] ?? old('recipient_nip') }}" placeholder="np. 0009876544" inputmode="numeric" autocomplete="off" aria-describedby="recipient_nip_hint">
+                                        <button type="button" class="btn btn-primary" id="recipient_gus_button">
+                                            Pobierz dane z GUS
+                                        </button>
+                                    </div>
+                                    <div class="form-text" id="recipient_nip_hint">Wpisz NIP, kliknij obok, a dane odbiorcy uzupełnią się automatycznie.</div>
+                                    @error('recipient_nip')
+                                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                                <div class="col-12">
+                                    <div class="small mt-1" id="recipient_gus_message" aria-live="polite"></div>
+                                </div>
+                            </div>
+                            @if(config('order_form.show_recipient_internal_id'))
+                            <div class="row g-3 mb-3">
+                                <div class="col-12 col-lg-7">
+                                    <label for="recipient_internal_id" class="form-label">Identyfikator wewnętrzny (KSeF, opcjonalnie)</label>
+                                    <input type="text" class="form-control @error('recipient_internal_id') is-invalid @enderror" id="recipient_internal_id" name="recipient_internal_id" value="{{ $testData['recipient_internal_id'] ?? old('recipient_internal_id') }}" placeholder="np. 00001 lub 1234567890-00001" maxlength="20" inputmode="numeric" autocomplete="off" aria-describedby="recipient_internal_id_hint">
+                                    <div class="form-text" id="recipient_internal_id_hint">Dla oddziału lub jednostki wewnętrznej nabywcy — IDWew z Aplikacji Podatnika KSeF (NIP nabywcy + 5 cyfr, np. 1234567890-00001). Możesz wpisać sam suffix (00001).</div>
+                                    @error('recipient_internal_id')
+                                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                            @endif
                             <div class="mb-3">
                                 <label for="recipient_name" class="form-label">Nazwa odbiorcy</label>
                                 <input type="text" class="form-control @error('recipient_name') is-invalid @enderror" id="recipient_name" name="recipient_name" value="{{ $testData['recipient_name'] ?? old('recipient_name') }}">
@@ -685,20 +719,6 @@
                                     @error('recipient_address')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
-                                </div>
-                            </div>
-                            <div class="row g-3 mb-3" id="recipient_nip_gus_row">
-                                <div class="col-12 col-md-4">
-                                    <label for="recipient_nip" class="form-label">NIP</label>
-                                    <input type="text" class="form-control @error('recipient_nip') is-invalid @enderror" id="recipient_nip" name="recipient_nip" value="{{ $testData['recipient_nip'] ?? old('recipient_nip') }}">
-                                    @error('recipient_nip')
-                                        <div class="invalid-feedback d-block">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                                <div class="col-12 col-md-8 d-flex align-items-end d-none">
-                                    <button type="button" class="btn btn-primary w-100" id="recipient_gus_button">
-                                        Wpisz NIP i pobierz dane z GUS
-                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -903,6 +923,11 @@
     var buyerNipGroup = buyerNipGusRow;
     var buyerNameInput = document.getElementById('buyer_name');
     var buyerNipInput = document.getElementById('buyer_nip');
+    var buyerPostcodeInput = document.getElementById('buyer_postcode');
+    var buyerCityInput = document.getElementById('buyer_city');
+    var buyerAddressInput = document.getElementById('buyer_address');
+    var buyerGusButton = document.getElementById('buyer_gus_button');
+    var buyerGusMessage = document.getElementById('buyer_gus_message');
     var buyerAddressGroup = document.getElementById('buyer_address_group');
     var buyerPersonGroup = document.getElementById('buyer_person_group');
     var buyerPersonFirst = document.getElementById('buyer_person_first_name');
@@ -929,6 +954,9 @@
     var recipientAddress = document.getElementById('recipient_address');
     var recipientNip = document.getElementById('recipient_nip');
     var recipientNipLabel = document.querySelector('label[for="recipient_nip"]');
+    var recipientInternalId = document.getElementById('recipient_internal_id');
+    var recipientGusButton = document.getElementById('recipient_gus_button');
+    var recipientGusMessage = document.getElementById('recipient_gus_message');
 
     function normalizeSpaces(s) {
         return (s || '').replace(/\s+/g, ' ').trim();
@@ -1081,7 +1109,7 @@
     }
 
     function isRecipientBlockFilled() {
-        var fields = [recipientName, recipientPostcode, recipientCity, recipientAddress, recipientNip];
+        var fields = [recipientName, recipientPostcode, recipientCity, recipientAddress, recipientNip, recipientInternalId];
         return fields.some(function (el) {
             return el && String(el.value || '').trim() !== '';
         });
@@ -1099,6 +1127,118 @@
             recipientNipLabel.innerHTML = shouldRequire ? (base + ' <span class="text-danger">*</span>') : base;
         }
     }
+
+    function normalizeNipValue(value) {
+        return String(value || '').replace(/\D+/g, '');
+    }
+
+    function setGusMessage(target, message, isError) {
+        var el = target === 'recipient' ? recipientGusMessage : buyerGusMessage;
+        if (!el) return;
+
+        el.textContent = message || '';
+        el.classList.toggle('text-danger', !!isError);
+        el.classList.toggle('text-success', !!message && !isError);
+    }
+
+    function setGusLoading(target, isLoading) {
+        var button = target === 'recipient' ? recipientGusButton : buyerGusButton;
+        if (!button) return;
+
+        if (!button.dataset.defaultText) {
+            button.dataset.defaultText = button.textContent;
+        }
+
+        button.disabled = isLoading;
+        button.textContent = isLoading ? 'Pobieranie danych z GUS…' : button.dataset.defaultText;
+    }
+
+    function fillFieldsFromGus(target, data) {
+        if (!data) return;
+
+        if (target === 'recipient') {
+            if (recipientName && data.name) recipientName.value = data.name;
+            if (recipientPostcode && data.postcode) recipientPostcode.value = data.postcode;
+            if (recipientCity && data.city) recipientCity.value = data.city;
+            if (recipientAddress && data.address) recipientAddress.value = data.address;
+            if (recipientNip && data.nip) recipientNip.value = data.nip;
+            updateRecipientNipRequired();
+
+            return;
+        }
+
+        if (buyerNameInput && data.name) buyerNameInput.value = data.name;
+        if (buyerPostcodeInput && data.postcode) buyerPostcodeInput.value = data.postcode;
+        if (buyerCityInput && data.city) buyerCityInput.value = data.city;
+        if (buyerAddressInput && data.address) buyerAddressInput.value = data.address;
+        if (buyerNipInput && data.nip) buyerNipInput.value = data.nip;
+    }
+
+    function csrfToken() {
+        var tokenInput = document.querySelector('form[action*="order-form"] input[name="_token"]');
+
+        return tokenInput ? tokenInput.value : '';
+    }
+
+    function lookupGus(target) {
+        var nipInput = target === 'recipient' ? recipientNip : buyerNipInput;
+        var nip = normalizeNipValue(nipInput && nipInput.value);
+        var gusLookupPath = {!! json_encode(parse_url(route('courses.gus-lookup'), PHP_URL_PATH)) !!} || '/courses/gus-lookup-by-nip';
+
+        setGusMessage(target, '', false);
+
+        if (nip.length !== 10) {
+            setGusMessage(target, 'Wpisz poprawny NIP składający się z 10 cyfr.', true);
+            if (nipInput) nipInput.focus();
+            return;
+        }
+
+        setGusLoading(target, true);
+
+        fetch(gusLookupPath, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken(),
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify({
+                nip: nip,
+                target: target
+            })
+        })
+            .then(function (response) {
+                return response.json().catch(function () {
+                    return {};
+                }).then(function (data) {
+                    return { ok: response.ok, data: data };
+                });
+            })
+            .then(function (result) {
+                if (!result.ok || !result.data || result.data.success !== true) {
+                    setGusMessage(target, result.data && result.data.message ? result.data.message : 'Nie udało się pobrać danych z GUS.', true);
+                    return;
+                }
+
+                fillFieldsFromGus(target, result.data.data);
+                setGusMessage(target, 'Dane pobrane z GUS i wpisane do formularza.', false);
+            })
+            .catch(function () {
+                setGusMessage(target, 'Nie udało się połączyć z GUS. Wpisz dane ręcznie albo spróbuj ponownie.', true);
+            })
+            .finally(function () {
+                setGusLoading(target, false);
+            });
+    }
+
+    if (buyerGusButton) buyerGusButton.addEventListener('click', function () {
+        lookupGus('buyer');
+    });
+    if (recipientGusButton) recipientGusButton.addEventListener('click', function () {
+        lookupGus('recipient');
+    });
 
     if (buyerOrg) buyerOrg.addEventListener('change', function () {
         updateContactFieldsVisibility();
@@ -1123,7 +1263,7 @@
         updateRecipientNipRequired();
     });
 
-    [recipientName, recipientPostcode, recipientCity, recipientAddress, recipientNip].forEach(function (el) {
+    [recipientName, recipientPostcode, recipientCity, recipientAddress, recipientNip, recipientInternalId].forEach(function (el) {
         if (!el) return;
         el.addEventListener('input', updateRecipientNipRequired);
         el.addEventListener('blur', updateRecipientNipRequired);

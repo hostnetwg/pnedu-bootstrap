@@ -54,7 +54,9 @@
             {{ $order->recipient_name }}<br>
             @if($order->recipient_postal_code && $order->recipient_city){{ $order->recipient_postal_code }} {{ $order->recipient_city }}<br>@endif
             @if($order->recipient_address){{ $order->recipient_address }}<br>@endif
-            @if($order->recipient_nip)NIP: {{ $order->recipient_nip }}@endif
+            @if($order->recipient_nip)NIP: {{ $order->recipient_nip }}@if($order->ksef_additional_entity_id_type === 'IDWew' && $order->ksef_additional_entity_identifier)<br>@endif
+            @endif
+            @if($order->ksef_additional_entity_id_type === 'IDWew' && $order->ksef_additional_entity_identifier)Id. wewn.: {{ app(\App\Services\OrderFormRecipientIdentityService::class)->formatIdwewForDisplay($order->ksef_additional_entity_identifier) }}@endif
         </p>
         @endif
 

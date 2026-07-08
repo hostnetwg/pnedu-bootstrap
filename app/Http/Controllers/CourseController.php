@@ -10,6 +10,7 @@ use App\Models\FormOrderParticipant;
 use App\Models\Participant;
 use App\Services\Analytics\BackendAnalyticsTracker;
 use App\Services\FormOrderCheckoutResumeService;
+use App\Services\OrderFormRecipientIdentityService;
 use App\Services\SendyService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Exception;
@@ -1151,6 +1152,7 @@ class CourseController extends Controller
     {
         $participantPrefill = $this->participantPrefillFromFormOrder($existingOrder);
         $buyerType = $this->inferBuyerTypeFromFormOrder($existingOrder);
+        $recipientIdentity = app(OrderFormRecipientIdentityService::class)->prefillFromFormOrder($existingOrder);
 
         $orderData = [
             'buyer_type' => $buyerType,
@@ -1164,7 +1166,8 @@ class CourseController extends Controller
             'recipient_address' => $existingOrder->recipient_address,
             'recipient_postcode' => $existingOrder->recipient_postal_code,
             'recipient_city' => $existingOrder->recipient_city,
-            'recipient_nip' => $existingOrder->recipient_nip,
+            'recipient_nip' => $recipientIdentity['recipient_nip'] ?? $existingOrder->recipient_nip,
+            'recipient_internal_id' => $recipientIdentity['recipient_internal_id'],
             'contact_phone' => $existingOrder->orderer_phone,
             'contact_email' => $existingOrder->orderer_email,
             'participant_first_name' => $participantPrefill['participant_first_name'],
@@ -1485,6 +1488,7 @@ class CourseController extends Controller
             'recipient_postcode' => 'nullable|string|max:50',
             'recipient_city' => 'nullable|string|max:255',
             'recipient_nip' => 'nullable|string|max:50',
+            'recipient_internal_id' => 'nullable|string|max:20',
 
             'participant_first_name' => 'required|string|max:255',
             'participant_last_name' => 'required|string|max:255',
@@ -1530,28 +1534,23 @@ class CourseController extends Controller
             throw $e;
         }
 
-        // ODBIORCA: jeśli podano jakiekolwiek dane odbiorcy, NIP odbiorcy jest wymagany (tylko dla instytucji/firmy)
+        // ODBIORCA: jeśli podano dane odbiorcy, wymagany NIP lub identyfikator wewnętrzny (KSeF)
         if ($buyerType === 'organisation') {
-            $hasRecipientData = $request->filled('recipient_name')
-                || $request->filled('recipient_address')
-                || $request->filled('recipient_postcode')
-                || $request->filled('recipient_city')
-                || $request->filled('recipient_nip');
+            $buyerNipForRecipient = preg_replace('/\D+/', '', (string) ($validated['buyer_nip'] ?? ''));
+            $recipientIdentityError = app(OrderFormRecipientIdentityService::class)
+                ->validateRecipientIdentity($request, $buyerNipForRecipient !== '' ? $buyerNipForRecipient : null);
 
-            if ($hasRecipientData) {
-                $recipientNip = preg_replace('/[^0-9]/', '', (string) $request->input('recipient_nip', ''));
-                if ($recipientNip === '' || strlen($recipientNip) !== 10) {
-                    $backendAnalyticsTracker->trackOrderFormManualValidationFailed(
-                        request: $request,
-                        course: $course,
-                        fieldKeys: ['recipient_nip'],
-                        context: 'manual_recipient_nip'
-                    );
+            if ($recipientIdentityError !== null) {
+                $backendAnalyticsTracker->trackOrderFormManualValidationFailed(
+                    request: $request,
+                    course: $course,
+                    fieldKeys: [$recipientIdentityError['field']],
+                    context: 'manual_recipient_identity'
+                );
 
-                    return back()
-                        ->withErrors(['recipient_nip' => 'NIP odbiorcy jest wymagany (10 cyfr), jeśli podano dane odbiorcy.'])
-                        ->withInput();
-                }
+                return back()
+                    ->withErrors([$recipientIdentityError['field'] => $recipientIdentityError['message']])
+                    ->withInput();
             }
         }
 
@@ -1647,11 +1646,6 @@ class CourseController extends Controller
                 'buyer_postal_code' => $validated['buyer_postcode'],
                 'buyer_city' => $validated['buyer_city'],
                 'buyer_nip' => $buyerNip,
-                'recipient_name' => $buyerType === 'organisation' ? ($validated['recipient_name'] ?? null) : null,
-                'recipient_address' => $buyerType === 'organisation' ? ($validated['recipient_address'] ?? null) : null,
-                'recipient_postal_code' => $buyerType === 'organisation' ? ($validated['recipient_postcode'] ?? null) : null,
-                'recipient_city' => $buyerType === 'organisation' ? ($validated['recipient_city'] ?? null) : null,
-                'recipient_nip' => $buyerType === 'organisation' ? ($validated['recipient_nip'] ?? null) : null,
                 'invoice_notes' => $validated['invoice_notes'],
                 'invoice_payment_delay' => $validated['payment_terms'] ?? null,
                 'payment_mode' => FormOrder::PAYMENT_MODE_DEFERRED_INVOICE,
@@ -1661,6 +1655,13 @@ class CourseController extends Controller
                 'fb_source' => $this->resolveFbSourceForFormOrder($validated, $order),
                 'conversion_placement' => $this->resolveConversionPlacementForFormOrder($validated, (int) $id, $order),
             ];
+
+            $orderData = array_merge(
+                $orderData,
+                $buyerType === 'organisation'
+                    ? $this->recipientFieldsForOrganisationOrder($request, $buyerNip)
+                    : $this->clearRecipientFieldsForOrder()
+            );
 
             if ($order) {
                 $order->update($orderData);
@@ -1787,11 +1788,6 @@ class CourseController extends Controller
                 'buyer_postal_code' => $validated['buyer_postcode'],
                 'buyer_city' => $validated['buyer_city'],
                 'buyer_nip' => $buyerNip,
-                'recipient_name' => $buyerType === 'organisation' ? ($validated['recipient_name'] ?? null) : null,
-                'recipient_address' => $buyerType === 'organisation' ? ($validated['recipient_address'] ?? null) : null,
-                'recipient_postal_code' => $buyerType === 'organisation' ? ($validated['recipient_postcode'] ?? null) : null,
-                'recipient_city' => $buyerType === 'organisation' ? ($validated['recipient_city'] ?? null) : null,
-                'recipient_nip' => $buyerType === 'organisation' ? ($validated['recipient_nip'] ?? null) : null,
                 'invoice_notes' => $validated['invoice_notes'],
                 'invoice_payment_delay' => null,
                 'payment_mode' => FormOrder::PAYMENT_MODE_ONLINE_GATEWAY,
@@ -1801,6 +1797,13 @@ class CourseController extends Controller
                 'fb_source' => $this->resolveFbSourceForFormOrder($validated, $formOrder),
                 'conversion_placement' => $this->resolveConversionPlacementForFormOrder($validated, (int) $course->id, $formOrder),
             ];
+
+            $orderData = array_merge(
+                $orderData,
+                $buyerType === 'organisation'
+                    ? $this->recipientFieldsForOrganisationOrder($request, $buyerNip)
+                    : $this->clearRecipientFieldsForOrder()
+            );
 
             if ($formOrder) {
                 $formOrder->update($orderData);
@@ -1944,6 +1947,12 @@ class CourseController extends Controller
     protected function collectOrderFormAddressData(Request $request, string $buyerType): array
     {
         if ($buyerType === 'organisation') {
+            $buyerNip = preg_replace('/\D+/', '', (string) $request->input('buyer_nip', ''));
+            $identity = app(OrderFormRecipientIdentityService::class)->resolveStoragePayload(
+                $request,
+                $buyerNip !== '' ? $buyerNip : null
+            );
+
             return [
                 'buyer' => [
                     'nip' => $request->input('buyer_nip'),
@@ -1956,7 +1965,10 @@ class CourseController extends Controller
                     'city' => $request->input('buyer_city'),
                 ],
                 'recipient' => [
-                    'nip' => $request->input('recipient_nip'),
+                    'nip' => $identity['recipient_nip'],
+                    'internal_id' => $identity['ksef_additional_entity_id_type'] === OrderFormRecipientIdentityService::KSEF_ID_TYPE_IDWEW
+                        ? $identity['ksef_additional_entity_identifier']
+                        : null,
                     'country' => 'Polska',
                     'name' => $request->input('recipient_name'),
                     'street' => $request->input('recipient_address'),
@@ -2269,5 +2281,45 @@ class CourseController extends Controller
         }
 
         return 1;
+    }
+
+    /**
+     * Pola odbiorcy + metadane KSeF Podmiot3 dla zamówienia instytucji/firmy.
+     *
+     * @return array<string, mixed>
+     */
+    protected function recipientFieldsForOrganisationOrder(Request $request, ?string $buyerNip): array
+    {
+        $resolved = app(OrderFormRecipientIdentityService::class)->resolveStoragePayload($request, $buyerNip);
+
+        return [
+            'recipient_name' => $request->input('recipient_name'),
+            'recipient_address' => $request->input('recipient_address'),
+            'recipient_postal_code' => $request->input('recipient_postcode'),
+            'recipient_city' => $request->input('recipient_city'),
+            'recipient_nip' => $resolved['recipient_nip'],
+            'ksef_entity_source' => $resolved['ksef_entity_source'],
+            'ksef_additional_entity_role' => $resolved['ksef_additional_entity_role'],
+            'ksef_additional_entity_id_type' => $resolved['ksef_additional_entity_id_type'],
+            'ksef_additional_entity_identifier' => $resolved['ksef_additional_entity_identifier'],
+        ];
+    }
+
+    /**
+     * @return array<string, null|string>
+     */
+    protected function clearRecipientFieldsForOrder(): array
+    {
+        return [
+            'recipient_name' => null,
+            'recipient_address' => null,
+            'recipient_postal_code' => null,
+            'recipient_city' => null,
+            'recipient_nip' => null,
+            'ksef_entity_source' => OrderFormRecipientIdentityService::KSEF_SOURCE_NONE,
+            'ksef_additional_entity_role' => null,
+            'ksef_additional_entity_id_type' => null,
+            'ksef_additional_entity_identifier' => null,
+        ];
     }
 }
