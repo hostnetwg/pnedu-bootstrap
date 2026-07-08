@@ -150,6 +150,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->whereNumber('lesson')
         ->middleware('throttle:30,1')
         ->name('dashboard.online-courses.lesson-certificate.submit');
+
+    Route::get('/dashboard/kursy-online/{enrollment}/zaswiadczenie', [App\Http\Controllers\OnlineCourseCertificateController::class, 'show'])
+        ->name('dashboard.online-courses.certificate.show');
+    Route::post('/dashboard/kursy-online/{enrollment}/zaswiadczenie/profil', [App\Http\Controllers\OnlineCourseCertificateController::class, 'updateProfile'])
+        ->name('dashboard.online-courses.certificate.profile');
+    Route::get('/dashboard/kursy-online/{enrollment}/zaswiadczenie/pobierz', [App\Http\Controllers\OnlineCourseCertificateController::class, 'download'])
+        ->name('dashboard.online-courses.certificate.download');
 });
 
 Route::middleware('auth')->group(function () {

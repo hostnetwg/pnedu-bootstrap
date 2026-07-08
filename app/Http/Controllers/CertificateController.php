@@ -63,6 +63,8 @@ class CertificateController extends Controller
             // Generuj PDF używając API
             $apiClient = app(CertificateApiClient::class);
 
+            $apiClient->ensureCertificate($participant->id, 'pneadm');
+
             // Pobierz dane certyfikatu z API (zawiera numer certyfikatu - generowany przez pneadm-bootstrap)
             $data = $apiClient->getCertificateData($participant->id, 'pneadm');
             $certificateNumber = $data['certificate_number'] ?? null;
@@ -151,6 +153,8 @@ class CertificateController extends Controller
 
             // Generuj PDF używając API
             $apiClient = app(CertificateApiClient::class);
+
+            $apiClient->ensureCertificate($participant->id, 'pneadm');
 
             // Pobierz dane certyfikatu z API (zawiera numer certyfikatu - generowany przez pneadm-bootstrap)
             $data = $apiClient->getCertificateData($participant->id, 'pneadm');

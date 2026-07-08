@@ -7,6 +7,7 @@ use App\Models\OnlineCourseEnrollment;
 use App\Models\OnlineCourseLesson;
 use App\Models\OnlineCourseLessonCompletion;
 use App\Models\OnlineCourseLessonNote;
+use App\Services\OnlineCourseCertificateService;
 use App\Services\OnlineCourseLessonCertificateService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -16,11 +17,12 @@ use Illuminate\View\View;
 
 class DashboardOnlineCoursesController extends Controller
 {
-    public function index(): View
+    public function index(OnlineCourseCertificateService $certificateService): View
     {
         $email = OnlineCourseEnrollment::normalizeEmail(Auth::user()->email);
         $enrollments = collect();
         $lessonProgressByEnrollment = [];
+        $certificateContextByEnrollment = [];
         if ($email) {
             $enrollments = OnlineCourseEnrollment::query()
                 ->where('email', $email)
@@ -38,29 +40,36 @@ class DashboardOnlineCoursesController extends Controller
             foreach ($enrollments as $enrollment) {
                 $progress = $this->progressCounts($enrollment, $enrollment->onlineCourse);
                 $lessonProgressByEnrollment[$enrollment->id] = $progress;
+                $certificateContextByEnrollment[$enrollment->id] = $certificateService->contextForEnrollment($enrollment);
             }
         }
 
-        return view('dashboard.online-courses.index', compact('enrollments', 'lessonProgressByEnrollment'));
+        return view('dashboard.online-courses.index', compact(
+            'enrollments',
+            'lessonProgressByEnrollment',
+            'certificateContextByEnrollment'
+        ));
     }
 
-    public function show(OnlineCourseEnrollment $enrollment): View|RedirectResponse
+    public function show(OnlineCourseEnrollment $enrollment, OnlineCourseCertificateService $certificateService): View
     {
         $this->assertEnrollmentAccess($enrollment);
         $course = $enrollment->onlineCourse;
         abort_unless($course->is_active && $course->visible_in_dashboard, 404);
 
         $course->load('modulesWithPublishedLessons');
+        $enrollment->loadMissing('lessonCompletions');
 
-        foreach ($course->modulesWithPublishedLessons as $module) {
-            foreach ($module->lessons as $publishedLesson) {
-                return redirect()->route('dashboard.online-courses.lesson', [$enrollment, $publishedLesson]);
-            }
-        }
+        $lessonProgress = $this->progressCounts($enrollment, $course);
+        $firstLesson = $this->firstPublishedLesson($course);
+        $certificateContext = $certificateService->contextForEnrollment($enrollment);
 
         return view('dashboard.online-courses.show', [
             'enrollment' => $enrollment,
             'course' => $course,
+            'lessonProgress' => $lessonProgress,
+            'firstLesson' => $firstLesson,
+            'certificateContext' => $certificateContext,
         ]);
     }
 
@@ -222,6 +231,18 @@ class DashboardOnlineCoursesController extends Controller
         $next = $idx < $ordered->count() - 1 ? $ordered[$idx + 1] : null;
 
         return ['previous' => $previous, 'next' => $next];
+    }
+
+    private function firstPublishedLesson(OnlineCourse $course): ?OnlineCourseLesson
+    {
+        $course->loadMissing('modulesWithPublishedLessons');
+        foreach ($course->modulesWithPublishedLessons as $module) {
+            foreach ($module->lessons as $lesson) {
+                return $lesson;
+            }
+        }
+
+        return null;
     }
 
     private function progressCounts(OnlineCourseEnrollment $enrollment, OnlineCourse $course): array

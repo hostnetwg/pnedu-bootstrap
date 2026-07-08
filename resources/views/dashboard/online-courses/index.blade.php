@@ -21,10 +21,11 @@
                                 @php($p = $lessonProgressByEnrollment[$enrollment->id] ?? ['completed' => 0, 'total' => 0])
                                 @php($pctRow = (($p['total'] ?? 0) > 0) ? min(100, (int) round(100 * (int) ($p['completed'] ?? 0) / (int) $p['total'])) : 0)
                                 @php($imgUrl = $enrollment->onlineCourse->publicImageUrl())
+                                @php($certCtx = $certificateContextByEnrollment[$enrollment->id] ?? ['show' => false])
                                 <div class="col d-flex">
-                                    <a href="{{ route('dashboard.online-courses.show', $enrollment) }}"
-                                       class="card border-0 shadow-sm rounded-4 overflow-hidden h-100 w-100 d-flex flex-column online-course-tile text-decoration-none text-body">
-                                        <div class="online-course-tile-media bg-body-secondary border-bottom">
+                                    <div class="card border-0 shadow-sm rounded-4 overflow-hidden h-100 w-100 d-flex flex-column">
+                                        <a href="{{ route('dashboard.online-courses.show', $enrollment) }}"
+                                           class="online-course-tile-media bg-body-secondary border-bottom text-decoration-none d-block">
                                             @if($imgUrl)
                                                 <img src="{{ $imgUrl }}"
                                                      class="online-course-tile-img"
@@ -37,9 +38,13 @@
                                                     Brak okładki
                                                 </div>
                                             @endif
-                                        </div>
+                                        </a>
                                         <div class="card-body d-flex flex-column flex-grow-1 pt-3">
-                                            <h3 class="h6 mb-2">{{ $enrollment->onlineCourse->title }}</h3>
+                                            <h3 class="h6 mb-2">
+                                                <a href="{{ route('dashboard.online-courses.show', $enrollment) }}" class="text-body text-decoration-none stretched-link-title">
+                                                    {{ $enrollment->onlineCourse->title }}
+                                                </a>
+                                            </h3>
                                             @if($enrollment->onlineCourse->instructor)
                                                 <p class="small text-muted mb-2 mb-md-3">{{ $enrollment->onlineCourse->instructor->full_name_with_title }}</p>
                                             @endif
@@ -49,11 +54,16 @@
                                                     <div class="progress-bar bg-success" style="width: {{ $pctRow }}%;"></div>
                                                 </div>
                                             @endif
-                                            <div class="mt-auto pt-3">
-                                                <span class="btn btn-primary w-100">Przejdź do kursu</span>
+                                            <div class="mt-auto pt-3 position-relative" style="z-index: 2;">
+                                                @if(!empty($certCtx['show']))
+                                                    @include('dashboard.online-courses.partials.certificate-cta', ['context' => $certCtx])
+                                                @endif
+                                                <a href="{{ route('dashboard.online-courses.show', $enrollment) }}" class="btn btn-primary w-100">
+                                                    Przejdź do kursu
+                                                </a>
                                             </div>
                                         </div>
-                                    </a>
+                                    </div>
                                 </div>
                             @endforeach
                         </div>
@@ -68,15 +78,6 @@
 @push('styles')
 @include('dashboard.partials.minimal-sidebar-css')
 <style>
-    .online-course-tile {
-        transition: box-shadow 0.15s ease, transform 0.15s ease;
-    }
-    .online-course-tile:hover,
-    .online-course-tile:focus-visible {
-        box-shadow: 0 0.5rem 1.25rem rgba(0, 0, 0, 0.12) !important;
-        transform: translateY(-2px);
-        color: inherit;
-    }
     .online-course-tile-media {
         min-height: 10rem;
         display: flex;
@@ -100,6 +101,9 @@
         text-align: center;
         min-height: 8rem;
         padding: 1rem;
+    }
+    .stretched-link-title:hover {
+        text-decoration: underline !important;
     }
 </style>
 @endpush

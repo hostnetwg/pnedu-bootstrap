@@ -237,10 +237,6 @@ class CertificateApiClient
         }
     }
 
-    /**
-     * Oznacza pobranie certyfikatu w pneadm (token + kurs).
-     * Służy do statystyk i oznaczeń w panelu admina.
-     */
     public function markDownloaded(string $token, int $courseId): void
     {
         $url = rtrim($this->apiUrl, '/') . '/api/certificates/mark-downloaded';
@@ -269,6 +265,113 @@ class CertificateApiClient
             Log::warning('CertificateApiClient: markDownloaded exception', [
                 'url' => $url,
                 'course_id' => $courseId,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * @param  array{
+     *     email: string,
+     *     first_name: string,
+     *     last_name: string,
+     *     birth_date?: ?string,
+     *     birth_place?: ?string,
+     * }  $holder
+     * @return array<string, mixed>
+     */
+    public function ensureOnlineCourseCertificate(int $enrollmentId, array $holder, ?string $connection = null): array
+    {
+        $url = rtrim($this->apiUrl, '/').'/api/certificates/ensure';
+        $payload = [
+            'online_course_enrollment_id' => $enrollmentId,
+            'holder_email' => $holder['email'],
+            'holder_first_name' => $holder['first_name'],
+            'holder_last_name' => $holder['last_name'],
+            'holder_birth_date' => $holder['birth_date'] ?? null,
+            'holder_birth_place' => $holder['birth_place'] ?? null,
+        ];
+        if ($connection) {
+            $payload['connection'] = $connection;
+        }
+
+        $response = Http::timeout($this->timeout)
+            ->withToken($this->apiToken)
+            ->post($url, $payload);
+
+        if ($response->successful()) {
+            return $response->json();
+        }
+
+        $msg = $response->json()['message'] ?? 'Unknown error';
+        throw new Exception("Certificate ensure API error: {$msg}");
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function getOnlineCourseCertificateData(int $enrollmentId, ?string $connection = null): array
+    {
+        $url = rtrim($this->apiUrl, '/').'/api/certificates/data';
+        $payload = ['online_course_enrollment_id' => $enrollmentId];
+        if ($connection) {
+            $payload['connection'] = $connection;
+        }
+
+        $response = Http::timeout($this->timeout)
+            ->withToken($this->apiToken)
+            ->post($url, $payload);
+
+        if ($response->successful()) {
+            $data = $response->json();
+
+            return $data['data'] ?? [];
+        }
+
+        $msg = $response->json()['message'] ?? 'Unknown error';
+        throw new Exception("Certificate API error: {$msg}");
+    }
+
+    /**
+     * @param  array<string, mixed>  $options
+     */
+    public function generateOnlineCoursePdf(int $enrollmentId, array $options = []): string
+    {
+        $url = rtrim($this->apiUrl, '/').'/api/certificates/generate';
+        $payload = array_merge(['online_course_enrollment_id' => $enrollmentId], $options);
+
+        $response = Http::timeout($this->timeout)
+            ->withToken($this->apiToken)
+            ->post($url, $payload);
+
+        if ($response->successful()) {
+            return $response->body();
+        }
+
+        $msg = $response->json()['message'] ?? 'Unknown error';
+        throw new Exception("Certificate API error: {$msg}");
+    }
+
+    public function markOnlineDownloaded(int $enrollmentId): void
+    {
+        $url = rtrim($this->apiUrl, '/').'/api/certificates/mark-online-downloaded';
+
+        try {
+            $response = Http::timeout($this->timeout)
+                ->withToken($this->apiToken)
+                ->post($url, ['online_course_enrollment_id' => $enrollmentId]);
+
+            if ($response->successful()) {
+                return;
+            }
+
+            Log::warning('CertificateApiClient: markOnlineDownloaded failed', [
+                'enrollment_id' => $enrollmentId,
+                'status_code' => $response->status(),
+            ]);
+        } catch (Exception $e) {
+            Log::warning('CertificateApiClient: markOnlineDownloaded exception', [
+                'enrollment_id' => $enrollmentId,
                 'error' => $e->getMessage(),
             ]);
         }
