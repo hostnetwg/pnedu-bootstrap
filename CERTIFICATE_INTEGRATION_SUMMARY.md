@@ -1,5 +1,8 @@
 # ✅ Integracja systemu zaświadczeń w pnedu.pl - Podsumowanie
 
+> **Aktualna dokumentacja (lipiec 2026):** [docs/CERTIFICATES.md](docs/CERTIFICATES.md) (pnedu) oraz `pneadm/docs/CERTIFICATES.md` (kanon architektury).  
+> Poniższy plik opisuje wcześniejszą integrację z pakietem `pne-certificate-generator` — zachowany jako historia.
+
 ## 🎯 Cel
 
 Umożliwienie użytkownikom pobierania zaświadczeń PDF po kliknięciu w ikonę na stronie bezpłatnych kursów.
