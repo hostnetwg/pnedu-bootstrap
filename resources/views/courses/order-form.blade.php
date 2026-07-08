@@ -92,6 +92,30 @@
         border-radius: 4px;
         line-height: 1.5;
     }
+    /* NIP + GUS: na mobile pełna szerokość pola i przycisk pod spodem */
+    .gus-nip-stack {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    .gus-nip-stack .gus-nip-button {
+        width: 100%;
+    }
+    @media (min-width: 768px) {
+        .gus-nip-stack {
+            flex-direction: row;
+            align-items: stretch;
+        }
+        .gus-nip-stack .gus-nip-input {
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+        .gus-nip-stack .gus-nip-button {
+            width: auto;
+            flex: 0 0 auto;
+            white-space: nowrap;
+        }
+    }
     .order-form-section .row > .col-md-6 {
         margin-bottom: 0.5rem;
     }
@@ -566,13 +590,13 @@
                     <div class="row g-3 mb-3" id="buyer_nip_gus_row">
                         <div class="col-12 col-lg-7">
                             <label for="buyer_nip" class="form-label">NIP <span class="text-danger">*</span></label>
-                            <div class="input-group">
-                                <input type="text" class="form-control @error('buyer_nip') is-invalid @enderror" id="buyer_nip" name="buyer_nip" value="{{ $testData['buyer_nip'] ?? old('buyer_nip') }}" placeholder="np. 0001234562" inputmode="numeric" autocomplete="off" aria-describedby="buyer_nip_hint">
-                                <button type="button" class="btn btn-primary" id="buyer_gus_button">
+                            <div class="gus-nip-stack">
+                                <input type="text" class="form-control gus-nip-input @error('buyer_nip') is-invalid @enderror" id="buyer_nip" name="buyer_nip" value="{{ $testData['buyer_nip'] ?? old('buyer_nip') }}" placeholder="np. 0001234562" inputmode="numeric" autocomplete="off" aria-describedby="buyer_nip_hint">
+                                <button type="button" class="btn btn-primary gus-nip-button" id="buyer_gus_button">
                                     Pobierz dane z GUS
                                 </button>
                             </div>
-                            <div class="form-text" id="buyer_nip_hint">Wpisz NIP, kliknij obok, a dane poniżej uzupełnią się automatycznie.</div>
+                            <div class="form-text" id="buyer_nip_hint">Wpisz NIP i pobierz dane z GUS — pola poniżej uzupełnią się automatycznie.</div>
                             @error('buyer_nip')
                                 <div class="invalid-feedback d-block">{{ $message }}</div>
                             @enderror
@@ -664,13 +688,13 @@
                             <div class="row g-3 mb-3" id="recipient_nip_gus_row">
                                 <div class="col-12 col-lg-7">
                                     <label for="recipient_nip" class="form-label">NIP</label>
-                                    <div class="input-group">
-                                        <input type="text" class="form-control @error('recipient_nip') is-invalid @enderror" id="recipient_nip" name="recipient_nip" value="{{ $testData['recipient_nip'] ?? old('recipient_nip') }}" placeholder="np. 0009876544" inputmode="numeric" autocomplete="off" aria-describedby="recipient_nip_hint">
-                                        <button type="button" class="btn btn-primary" id="recipient_gus_button">
+                                    <div class="gus-nip-stack">
+                                        <input type="text" class="form-control gus-nip-input @error('recipient_nip') is-invalid @enderror" id="recipient_nip" name="recipient_nip" value="{{ $testData['recipient_nip'] ?? old('recipient_nip') }}" placeholder="np. 0009876544" inputmode="numeric" autocomplete="off" aria-describedby="recipient_nip_hint">
+                                        <button type="button" class="btn btn-primary gus-nip-button" id="recipient_gus_button">
                                             Pobierz dane z GUS
                                         </button>
                                     </div>
-                                    <div class="form-text" id="recipient_nip_hint">Wpisz NIP, kliknij obok, a dane odbiorcy uzupełnią się automatycznie.</div>
+                                    <div class="form-text" id="recipient_nip_hint">Wpisz NIP i pobierz dane z GUS — dane odbiorcy uzupełnią się automatycznie.</div>
                                     @error('recipient_nip')
                                         <div class="invalid-feedback d-block">{{ $message }}</div>
                                     @enderror
