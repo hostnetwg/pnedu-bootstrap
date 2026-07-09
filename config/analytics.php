@@ -38,4 +38,12 @@ return [
         'order_form_sessions' => (int) env('ANALYTICS_RETENTION_ORDER_FORM_SESSIONS_DAYS', 365),
         'ai_safe_exports' => (int) env('ANALYTICS_RETENTION_AI_SAFE_EXPORTS_DAYS', 365),
     ],
+
+    // Etap 2F — klasyfikacja kanałów ruchu i atrybucja sesji formularza.
+    'traffic' => [
+        'internal_hosts' => array_values(array_filter(array_map(
+            'trim',
+            explode(',', (string) env('ANALYTICS_TRAFFIC_INTERNAL_HOSTS', 'pnedu.pl,adm.pnedu.pl,localhost'))
+        ))),
+    ],
 ];

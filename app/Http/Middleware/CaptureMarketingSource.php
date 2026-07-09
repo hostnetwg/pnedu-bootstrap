@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Services\Analytics\BackendAnalyticsTracker;
+use App\Services\Analytics\OrderFormAttributionService;
 use App\Services\CoursePageViewTracker;
 use App\Services\MarketingAttributionService;
 use App\Services\MarketingCampaignLinkTracker;
@@ -19,6 +20,7 @@ class CaptureMarketingSource
         private readonly MarketingCampaignLinkTracker $campaignLinkTracker,
         private readonly CoursePageViewTracker $coursePageViewTracker,
         private readonly BackendAnalyticsTracker $analyticsTracker,
+        private readonly OrderFormAttributionService $formAttribution,
     ) {}
 
     /**
@@ -34,6 +36,7 @@ class CaptureMarketingSource
         }
 
         $this->placement->captureFromRequest($request);
+        $this->formAttribution->captureFromRequest($request);
 
         if (! empty($payload['campaign_code'])) {
             $this->campaignLinkTracker->trackCampaignCode($request, (string) $payload['campaign_code']);

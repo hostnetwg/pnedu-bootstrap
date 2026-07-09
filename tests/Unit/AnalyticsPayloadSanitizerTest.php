@@ -52,4 +52,42 @@ class AnalyticsPayloadSanitizerTest extends TestCase
             ],
         ]));
     }
+
+    public function test_it_keeps_schema_v2_technical_form_metadata_and_strips_pii(): void
+    {
+        $sanitized = (new AnalyticsPayloadSanitizer)->sanitize([
+            'event_name' => 'client_validation_failed',
+            'event_category' => 'validation',
+            'tracking_schema_version' => 2,
+            'metadata' => [
+                'form_session_id' => '5d3e7b2e-34b2-4b2f-a6d4-2e78d2932457',
+                'tracking_schema_version' => 2,
+                'section_key' => 'contact',
+                'field_key' => 'contact_email',
+                'field_type' => 'email',
+                'source' => 'manual',
+                'has_value' => true,
+                'seconds_from_page_load' => 12,
+                'errors_count' => 2,
+                'error_sections' => ['contact', 'payment'],
+                'error_fields' => ['contact_email', 'payment_type'],
+                'validation_error_codes' => ['required', 'email'],
+                'field_value' => 'secret@example.com',
+                'email' => 'secret@example.com',
+                'nip' => '1234567890',
+            ],
+        ]);
+
+        $metadata = $sanitized['metadata'];
+
+        $this->assertSame(2, $sanitized['tracking_schema_version']);
+        $this->assertSame('contact', $metadata['section_key']);
+        $this->assertSame('contact_email', $metadata['field_key']);
+        $this->assertSame(['contact', 'payment'], $metadata['error_sections']);
+        $this->assertSame(['contact_email', 'payment_type'], $metadata['error_fields']);
+        $this->assertSame(['required', 'email'], $metadata['validation_error_codes']);
+        $this->assertArrayNotHasKey('field_value', $metadata);
+        $this->assertArrayNotHasKey('email', $metadata);
+        $this->assertArrayNotHasKey('nip', $metadata);
+    }
 }

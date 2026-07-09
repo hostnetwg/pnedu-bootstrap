@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Course;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 /**
@@ -66,6 +67,9 @@ class AnalyticsOrderFormClientTrackingStageB2Test extends TestCase
         $this->assertStringContainsString('id="order-form-analytics-config"', $html);
         $this->assertStringContainsString('order_form_started', $html);
         $this->assertStringContainsString('order_form_submit_clicked', $html);
+        $this->assertStringContainsString('form_visible', $html);
+        $this->assertStringContainsString('form_first_interaction', $html);
+        $this->assertStringContainsString('form_submit_clicked', $html);
     }
 
     public function test_config_contains_endpoint_and_course_id(): void
@@ -76,6 +80,16 @@ class AnalyticsOrderFormClientTrackingStageB2Test extends TestCase
         $this->assertStringContainsString('data-endpoint="'.route('analytics.client-events.store').'"', $html);
         $this->assertStringContainsString('data-course-id="'.$courseId.'"', $html);
         $this->assertStringContainsString('data-max-batch="', $html);
+        $this->assertStringContainsString('data-form-session-id="', $html);
+        $this->assertStringContainsString('data-tracking-schema-version="2"', $html);
+    }
+
+    public function test_config_exposes_stable_form_session_uuid(): void
+    {
+        $html = $this->renderOrderForm();
+
+        $this->assertSame(1, preg_match('/data-form-session-id="([^"]+)"/', $html, $match));
+        $this->assertTrue(Str::isUuid($match[1]));
     }
 
     public function test_section_data_attributes_are_whitelisted(): void

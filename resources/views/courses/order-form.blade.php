@@ -485,7 +485,7 @@
                 <input type="hidden" name="fb_source" value="{{ old('fb_source', $testData['fb_source'] ?? ($fbSourceDefault ?? '')) }}">
                 <input type="hidden" name="conversion_placement" value="{{ old('conversion_placement', $testData['conversion_placement'] ?? ($conversionPlacementDefault ?? '')) }}">
                 <div class="form-sections-grid">
-                <fieldset class="order-form-section" data-analytics-section="buyer_data">
+                <fieldset class="order-form-section" data-analytics-section="buyer_data" data-analytics-section-v2="contact">
                     <legend class="visually-hidden">DANE KONTAKTOWE ZAMAWIAJĄCEGO</legend>
                     <div class="section-heading">DANE KONTAKTOWE ZAMAWIAJĄCEGO</div>
                     <div class="mb-3">
@@ -583,7 +583,7 @@
                         </div>
                     </div>
                 </fieldset>
-                <fieldset class="order-form-section" data-analytics-section="buyer_data">
+                <fieldset class="order-form-section" data-analytics-section="buyer_data" data-analytics-section-v2="invoice_buyer">
                     <legend class="visually-hidden">DANE DO FAKTURY</legend>
                     <div class="section-heading">DANE DO FAKTURY</div>
                     <h6 class="mb-3" style="font-weight: 700; font-size: 1.05rem; color: #1976d2;">NABYWCA</h6>
@@ -592,7 +592,7 @@
                             <label for="buyer_nip" class="form-label">NIP <span class="text-danger">*</span></label>
                             <div class="gus-nip-stack">
                                 <input type="text" class="form-control gus-nip-input @error('buyer_nip') is-invalid @enderror" id="buyer_nip" name="buyer_nip" value="{{ $testData['buyer_nip'] ?? old('buyer_nip') }}" placeholder="np. 0001234562" inputmode="numeric" autocomplete="off" aria-describedby="buyer_nip_hint">
-                                <button type="button" class="btn btn-primary gus-nip-button" id="buyer_gus_button">
+                                <button type="button" class="btn btn-primary gus-nip-button" id="buyer_gus_button" data-gus-target="buyer">
                                     Pobierz dane z GUS
                                 </button>
                             </div>
@@ -676,7 +676,7 @@
                             @enderror
                         </div>
                     </div>
-                    <div class="recipient-wrapper" data-analytics-section="recipient_data">
+                    <div class="recipient-wrapper" data-analytics-section="recipient_data" data-analytics-section-v2="invoice_recipient">
                         <hr class="my-3">
                         <h6 class="mb-3 mt-2" style="font-weight: 700; font-size: 1.05rem; color: #1976d2;">
                             ODBIORCA
@@ -690,7 +690,7 @@
                                     <label for="recipient_nip" class="form-label">NIP</label>
                                     <div class="gus-nip-stack">
                                         <input type="text" class="form-control gus-nip-input @error('recipient_nip') is-invalid @enderror" id="recipient_nip" name="recipient_nip" value="{{ $testData['recipient_nip'] ?? old('recipient_nip') }}" placeholder="np. 0009876544" inputmode="numeric" autocomplete="off" aria-describedby="recipient_nip_hint">
-                                        <button type="button" class="btn btn-primary gus-nip-button" id="recipient_gus_button">
+                                        <button type="button" class="btn btn-primary gus-nip-button" id="recipient_gus_button" data-gus-target="recipient">
                                             Pobierz dane z GUS
                                         </button>
                                     </div>
@@ -748,7 +748,7 @@
                         </div>
                     </div>
                 </fieldset>
-                <fieldset class="order-form-section" data-analytics-section="participants">
+                <fieldset class="order-form-section" data-analytics-section="participants" data-analytics-section-v2="participants">
                     <legend class="visually-hidden">DANE UCZESTNIKÓW SZKOLENIA</legend>
                     <div class="section-heading">DANE UCZESTNIKÓW SZKOLENIA</div>
                     <div class="form-info-text mt-2">
@@ -798,7 +798,7 @@
                         Zalecane jest podanie indywidualnego adresu e-mail uczestnika, a nie ogólnego adresu placówki – adres e-mail jest powiązany z danym uczestnikiem szkolenia; w przeciwnym razie mogą wystąpić błędy przy generowaniu zaświadczenia. Na podany adres zostanie utworzone konto na platformie z dostępem do zasobów szkolenia; jeśli konto już istnieje, zasoby zostaną do niego dodane.
                     </div>
                 </fieldset>
-                <div class="order-form-section form-section-full-width" data-analytics-section="payment_method">
+                <div class="order-form-section form-section-full-width" data-analytics-section="payment_method" data-analytics-section-v2="payment">
                     <div class="mb-3" data-analytics-section="invoice">
                         <label for="invoice_notes" class="form-label">Uwagi do faktury (opcjonalnie)</label>
                         <textarea class="form-control @error('invoice_notes') is-invalid @enderror" id="invoice_notes" name="invoice_notes" rows="2">{{ $testData['invoice_notes'] ?? old('invoice_notes') }}</textarea>
@@ -910,7 +910,8 @@
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
-                    <div class="d-flex flex-column flex-md-row gap-3 mt-3 flex-wrap">
+                    <div class="visually-hidden" data-analytics-section-v2="consents" aria-hidden="true"></div>
+                    <div class="d-flex flex-column flex-md-row gap-3 mt-3 flex-wrap" data-analytics-section-v2="submit">
                         @if($isTestMode)
                             <button type="button" class="btn btn-outline-secondary" id="fill-test-data-btn" title="Wypełnij formularz danymi testowymi (tylko w środowisku deweloperskim)">
                                 Wypełnij dane testowe
@@ -1177,25 +1178,89 @@
         button.textContent = isLoading ? 'Pobieranie danych z GUS…' : button.dataset.defaultText;
     }
 
+    function analyticsContextForGus() {
+        var cfg = document.getElementById('order-form-analytics-config');
+        if (!cfg) {
+            return {};
+        }
+
+        var courseId = parseInt(cfg.getAttribute('data-course-id') || '', 10);
+        var priceVariantId = parseInt(cfg.getAttribute('data-price-variant-id') || '', 10);
+        var formSessionId = cfg.getAttribute('data-form-session-id') || '';
+
+        return {
+            course_id: courseId > 0 ? courseId : undefined,
+            price_variant_id: priceVariantId > 0 ? priceVariantId : undefined,
+            form_session_id: formSessionId || undefined
+        };
+    }
+
+    function notifyGusAnalytics(method, payload) {
+        try {
+            if (window.pneOrderFormAnalytics && typeof window.pneOrderFormAnalytics[method] === 'function') {
+                window.pneOrderFormAnalytics[method](payload);
+            }
+        } catch (e) {}
+    }
+
+    function fieldHadValue(el) {
+        return !!(el && typeof el.value === 'string' && el.value.trim() !== '');
+    }
+
     function fillFieldsFromGus(target, data) {
         if (!data) return;
 
+        var applied = 0;
+        var overwritten = 0;
+        var appliedFieldKeys = [];
+
+        function applyField(el, dataKey, fieldKey) {
+            if (!data[dataKey] || !el) {
+                return;
+            }
+
+            if (fieldHadValue(el)) {
+                overwritten++;
+            }
+
+            el.value = data[dataKey];
+            applied++;
+
+            if (fieldKey) {
+                appliedFieldKeys.push(fieldKey);
+            }
+        }
+
         if (target === 'recipient') {
-            if (recipientName && data.name) recipientName.value = data.name;
-            if (recipientPostcode && data.postcode) recipientPostcode.value = data.postcode;
-            if (recipientCity && data.city) recipientCity.value = data.city;
-            if (recipientAddress && data.address) recipientAddress.value = data.address;
-            if (recipientNip && data.nip) recipientNip.value = data.nip;
+            applyField(recipientName, 'name', null);
+            applyField(recipientPostcode, 'postcode', 'recipient_postcode');
+            applyField(recipientCity, 'city', 'recipient_city');
+            applyField(recipientAddress, 'address', 'recipient_address');
+            applyField(recipientNip, 'nip', 'recipient_nip');
             updateRecipientNipRequired();
+
+            notifyGusAnalytics('onGusDataApplied', {
+                target: target,
+                fields_applied_count: applied,
+                overwritten_manual_fields_count: overwritten,
+                field_keys: appliedFieldKeys
+            });
 
             return;
         }
 
-        if (buyerNameInput && data.name) buyerNameInput.value = data.name;
-        if (buyerPostcodeInput && data.postcode) buyerPostcodeInput.value = data.postcode;
-        if (buyerCityInput && data.city) buyerCityInput.value = data.city;
-        if (buyerAddressInput && data.address) buyerAddressInput.value = data.address;
-        if (buyerNipInput && data.nip) buyerNipInput.value = data.nip;
+        applyField(buyerNameInput, 'name', null);
+        applyField(buyerPostcodeInput, 'postcode', 'buyer_postcode');
+        applyField(buyerCityInput, 'city', 'buyer_city');
+        applyField(buyerAddressInput, 'address', 'buyer_address');
+        applyField(buyerNipInput, 'nip', 'buyer_nip');
+
+        notifyGusAnalytics('onGusDataApplied', {
+            target: target,
+            fields_applied_count: applied,
+            overwritten_manual_fields_count: overwritten,
+            field_keys: appliedFieldKeys
+        });
     }
 
     function csrfToken() {
@@ -1219,6 +1284,8 @@
 
         setGusLoading(target, true);
 
+        var analyticsContext = analyticsContextForGus();
+
         fetch(gusLookupPath, {
             method: 'POST',
             headers: {
@@ -1228,10 +1295,10 @@
                 'X-Requested-With': 'XMLHttpRequest'
             },
             credentials: 'same-origin',
-            body: JSON.stringify({
+            body: JSON.stringify(Object.assign({
                 nip: nip,
                 target: target
-            })
+            }, analyticsContext))
         })
             .then(function (response) {
                 return response.json().catch(function () {
@@ -1243,14 +1310,17 @@
             .then(function (result) {
                 if (!result.ok || !result.data || result.data.success !== true) {
                     setGusMessage(target, result.data && result.data.message ? result.data.message : 'Nie udało się pobrać danych z GUS.', true);
+                    notifyGusAnalytics('onGusError', { target: target });
                     return;
                 }
 
+                notifyGusAnalytics('onGusSuccess', { target: target });
                 fillFieldsFromGus(target, result.data.data);
                 setGusMessage(target, 'Dane pobrane z GUS i wpisane do formularza.', false);
             })
             .catch(function () {
                 setGusMessage(target, 'Nie udało się połączyć z GUS. Wpisz dane ręcznie albo spróbuj ponownie.', true);
+                notifyGusAnalytics('onGusError', { target: target });
             })
             .finally(function () {
                 setGusLoading(target, false);
@@ -1484,12 +1554,15 @@
     @php
         $analyticsPriceVariantId = old('price_variant_id', $prefillPriceVariantId ?? ($testData['price_variant_id'] ?? null));
         $analyticsPriceVariantId = is_numeric($analyticsPriceVariantId) ? (int) $analyticsPriceVariantId : null;
+        $analyticsFormSessionId = app(\App\Services\Analytics\OrderFormSessionService::class)->id(request(), (int) $course->id);
     @endphp
     <div id="order-form-analytics-config"
         hidden
         data-endpoint="{{ route('analytics.client-events.store') }}"
         data-course-id="{{ (int) $course->id }}"
         data-price-variant-id="{{ $analyticsPriceVariantId !== null ? $analyticsPriceVariantId : '' }}"
+        data-form-session-id="{{ $analyticsFormSessionId ?? '' }}"
+        data-tracking-schema-version="2"
         data-max-batch="{{ (int) config('analytics.client_events.max_events_per_batch', 20) }}"></div>
     @include('courses.partials.order-form-client-tracking')
 @endif

@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Analytics;
 use App\Enums\Analytics\AnalyticsEventName;
 use App\Http\Controllers\Controller;
 use App\Services\Analytics\AnalyticsContextService;
+use App\Services\Analytics\AnalyticsEventContract;
 use App\Services\Analytics\AnalyticsService;
 use App\Services\Analytics\AnalyticsSessionService;
+use App\Services\Analytics\OrderFormAttributionService;
 use App\Services\Analytics\OrderFormSessionService;
 use App\Services\FunnelSkipService;
 use App\Services\MarketingBotDetector;
@@ -27,49 +29,6 @@ use Throwable;
  */
 class ClientEventController extends Controller
 {
-    /**
-     * Dozwolone wartości metadata.section_key (sekcje formularza). Tylko whitelist — nigdy tekst z DOM.
-     *
-     * @var list<string>
-     */
-    private const ALLOWED_SECTION_KEYS = [
-        'buyer_data',
-        'recipient_data',
-        'participants',
-        'payment_method',
-        'invoice',
-        'consents',
-        'summary',
-    ];
-
-    /**
-     * Dozwolone wartości metadata.cta_key (ważne akcje). Tylko whitelist.
-     *
-     * @var list<string>
-     */
-    private const ALLOWED_CTA_KEYS = [
-        'add_participant',
-        'remove_participant',
-        'select_online_payment',
-        'select_deferred_invoice',
-        'back_to_course',
-        'submit_order',
-    ];
-
-    /**
-     * Dozwolone wartości metadata.trigger (powód wysłania eventu).
-     *
-     * @var list<string>
-     */
-    private const ALLOWED_TRIGGERS = [
-        'first_interaction',
-        'field_change',
-        'section_click',
-        'payment_select',
-        'cta_click',
-        'page_focus',
-    ];
-
     public function __construct(
         private readonly AnalyticsService $analytics,
         private readonly AnalyticsContextService $context,
@@ -77,6 +36,7 @@ class ClientEventController extends Controller
         private readonly OrderFormSessionService $orderFormSessionService,
         private readonly FunnelSkipService $funnelSkip,
         private readonly MarketingBotDetector $botDetector,
+        private readonly OrderFormAttributionService $formAttribution,
     ) {}
 
     public function store(Request $request): Response
@@ -122,12 +82,14 @@ class ClientEventController extends Controller
             $events = array_slice(array_values($events), 0, $maxEvents);
 
             $analyticsSessionId = $this->sessionService->id($request);
-            $orderFormSessionId = $this->orderFormSessionService->id($request, $courseId);
+            $preferredFormSessionId = $this->clientUuidOrNull($request->input('form_session_id'));
+            $orderFormSessionId = $this->orderFormSessionService->id($request, $courseId, $preferredFormSessionId);
             $context = $this->context->fromRequest($request);
             $priceVariantId = $this->positiveInt($request->input('price_variant_id'));
 
             foreach ($events as $event) {
                 $this->trackSingleEvent(
+                    $request,
                     is_array($event) ? $event : [],
                     $courseId,
                     $priceVariantId,
@@ -149,6 +111,7 @@ class ClientEventController extends Controller
     }
 
     private function trackSingleEvent(
+        Request $request,
         array $event,
         int $courseId,
         ?int $priceVariantId,
@@ -158,14 +121,14 @@ class ClientEventController extends Controller
     ): void {
         $eventName = is_string($event['event_name'] ?? null) ? $event['event_name'] : null;
 
-        // Z przeglądarki akceptujemy tylko 4 jawnie dozwolone eventy JS.
-        if ($eventName === null || ! AnalyticsEventName::isClientJsEvent($eventName)) {
+        // Z przeglądarki akceptujemy wyłącznie jawnie dozwolone eventy z kontraktu.
+        if ($eventName === null || ! AnalyticsEventContract::isClientEvent($eventName)) {
             return;
         }
 
         $eventEnum = AnalyticsEventName::from($eventName);
 
-        $metadata = $this->buildMetadata($eventEnum, $event, $priceVariantId);
+        $metadata = $this->buildMetadata($request, $eventEnum, $event, $priceVariantId, $orderFormSessionId);
         if ($metadata === null) {
             // Event wymagał klucza spoza whitelisty (np. nieznana sekcja/CTA) — pomijamy.
             return;
@@ -196,37 +159,97 @@ class ClientEventController extends Controller
      *
      * @return array<string, mixed>|null
      */
-    private function buildMetadata(AnalyticsEventName $eventEnum, array $event, ?int $priceVariantId): ?array
+    private function buildMetadata(Request $request, AnalyticsEventName $eventEnum, array $event, ?int $priceVariantId, ?string $formSessionId): ?array
     {
-        $metadata = [];
+        $metadata = [
+            'tracking_schema_version' => AnalyticsEventContract::SCHEMA_VERSION,
+        ];
+
+        if ($formSessionId !== null) {
+            $metadata['form_session_id'] = $formSessionId;
+        }
 
         if ($priceVariantId !== null) {
             $metadata['price_variant_id'] = $priceVariantId;
             $metadata['has_price_variant'] = true;
         }
 
-        $trigger = $this->whitelisted($event['trigger'] ?? null, self::ALLOWED_TRIGGERS);
+        $metadata = array_merge($metadata, $this->formAttribution->reportingMetadata($request));
+
+        $trigger = $this->whitelisted($event['trigger'] ?? null, AnalyticsEventContract::TRIGGERS);
         if ($trigger !== null) {
             $metadata['trigger'] = $trigger;
         }
 
-        if ($eventEnum === AnalyticsEventName::OrderFormSectionInteracted) {
-            $section = $this->whitelisted($event['section_key'] ?? null, self::ALLOWED_SECTION_KEYS);
-            if ($section === null) {
-                return null;
-            }
-            $metadata['section_key'] = $section;
-        }
-
         if ($eventEnum === AnalyticsEventName::OrderFormCtaClicked) {
-            $cta = $this->whitelisted($event['cta_key'] ?? null, self::ALLOWED_CTA_KEYS);
+            $cta = $this->whitelisted($event['cta_key'] ?? null, AnalyticsEventContract::CTA_KEYS);
             if ($cta === null) {
                 return null;
             }
             $metadata['cta_key'] = $cta;
         }
 
+        foreach (AnalyticsEventContract::allowedPropertiesFor($eventEnum->value) as $property) {
+            $value = $this->safePropertyValue($property, $event[$property] ?? null);
+
+            if ($value !== null && $value !== []) {
+                $metadata[$property] = $value;
+            }
+        }
+
+        if (in_array($eventEnum, [
+            AnalyticsEventName::OrderFormSectionInteracted,
+            AnalyticsEventName::FormSectionViewed,
+            AnalyticsEventName::FormSectionStarted,
+            AnalyticsEventName::FormSectionCompleted,
+            AnalyticsEventName::GusLookupClicked,
+            AnalyticsEventName::GusDataApplied,
+            AnalyticsEventName::FormFieldEditedAfterGus,
+            AnalyticsEventName::GusManualFallbackStarted,
+        ], true) && ! isset($metadata['section_key'])) {
+            return null;
+        }
+
         return $metadata;
+    }
+
+    private function safePropertyValue(string $property, mixed $value): mixed
+    {
+        return match ($property) {
+            'section_key', 'first_section_key', 'first_error_section', 'last_section_key' => $this->whitelisted($value, AnalyticsEventContract::SECTION_KEYS),
+            'field_key', 'first_field_key', 'first_error_field', 'last_field_key' => $this->whitelisted($value, AnalyticsEventContract::FIELD_KEYS),
+            'field_type' => $this->whitelisted($value, AnalyticsEventContract::FIELD_TYPES),
+            'source' => $this->whitelisted($value, AnalyticsEventContract::FIELD_SOURCES),
+            'trigger' => $this->whitelisted($value, AnalyticsEventContract::TRIGGERS),
+            'has_value' => is_bool($value) ? $value : null,
+            'seconds_from_page_load',
+            'required_fields_count',
+            'completed_fields_count',
+            'completed_sections_count',
+            'visible_validation_errors_count',
+            'errors_count' => is_numeric($value) ? max(0, (int) $value) : null,
+            'error_sections' => $this->whitelistedList($value, AnalyticsEventContract::SECTION_KEYS),
+            'error_fields' => $this->whitelistedList($value, AnalyticsEventContract::FIELD_KEYS),
+            'validation_error_codes' => $this->technicalList($value),
+            'selected_payment_method' => $this->whitelisted($value, ['deferred_invoice', 'online_payment', 'deferred', 'online']),
+            'first_interaction_type' => $this->whitelisted($value, ['focus', 'click', 'change', 'input', 'unknown']),
+            'last_activity_type' => $this->whitelisted($value, AnalyticsEventContract::LAST_ACTIVITY_TYPES),
+            'last_event_name' => is_string($value) && AnalyticsEventContract::isClientEvent($value) ? $value : null,
+            'target', 'gus_target' => $this->whitelisted($value, AnalyticsEventContract::GUS_TARGETS),
+            'nip_present', 'nip_format_valid_client', 'retry_possible' => is_bool($value) ? $value : null,
+            'latency_ms',
+            'fields_returned_count',
+            'fields_applied_count',
+            'overwritten_manual_fields_count',
+            'http_status',
+            'seconds_after_gus_success',
+            'seconds_after_gus_error' => is_numeric($value) ? max(0, (int) $value) : null,
+            'response_source' => $this->whitelisted($value, AnalyticsEventContract::GUS_RESPONSE_SOURCES),
+            'result_type' => $this->whitelisted($value, AnalyticsEventContract::GUS_RESULT_TYPES),
+            'error_type' => $this->whitelisted($value, AnalyticsEventContract::GUS_ERROR_TYPES),
+            'started_at' => is_string($value) && preg_match('/^\d{4}-\d{2}-\d{2}T/', $value) === 1 ? $value : null,
+            default => null,
+        };
     }
 
     /**
@@ -241,6 +264,47 @@ class ClientEventController extends Controller
         $value = strtolower(trim($value));
 
         return in_array($value, $whitelist, true) ? $value : null;
+    }
+
+    /**
+     * @param  list<string>  $whitelist
+     * @return list<string>
+     */
+    private function whitelistedList(mixed $value, array $whitelist): array
+    {
+        if (! is_array($value)) {
+            return [];
+        }
+
+        return array_values(array_unique(array_filter(array_map(
+            fn (mixed $item): ?string => $this->whitelisted($item, $whitelist),
+            $value
+        ))));
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function technicalList(mixed $value): array
+    {
+        if (! is_array($value)) {
+            return [];
+        }
+
+        $values = [];
+
+        foreach ($value as $item) {
+            if (! is_string($item) && ! is_int($item)) {
+                continue;
+            }
+
+            $normalized = strtolower(trim((string) $item));
+            if ($normalized !== '' && preg_match('/^[a-z0-9_.:-]{1,80}$/', $normalized) === 1) {
+                $values[] = $normalized;
+            }
+        }
+
+        return array_values(array_unique($values));
     }
 
     private function clientUuidOrNull(mixed $value): ?string

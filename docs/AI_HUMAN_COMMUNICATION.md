@@ -1,25 +1,19 @@
-# Forma komunikacji: AI (Cursor) ↔ Człowiek ↔ ChatGPT
+# Forma komunikacji: Waldemar – ChatGPT – Cursor Agent AI
 
-Kanoniczna wersja tego dokumentu znajduje się w projekcie `pneadm`:
-`pneadm/docs/AI_HUMAN_COMMUNICATION.md`
+**Kanon (pełna treść):** `pneadm/docs/AI_HUMAN_COMMUNICATION.md`
 
-Zasada obowiązuje również w projekcie `pnedu` i na każdym komputerze deweloperskim.
+Zasada obowiązuje w projekcie `pnedu` i na każdym komputerze deweloperskim.
 
-## Skrót zasady
+## Skrót
 
-Po KAŻDEJ zakończonej akcji/kroku asystent AI (Cursor) przygotowuje **dwa podsumowania**:
+**Role:** Waldemar — decyzje; ChatGPT — konsultant i prompty; Cursor — kod, testy, fakty z repo.
 
-1. **Dla człowieka (proste)** — krótkie, prostym językiem, bez żargonu: co zrobiono, co to znaczy, co dalej.
-2. **Techniczne jako prompt do ChatGPT** — szczegółowe, w bloku kodu Markdown do skopiowania; samowystarczalne (ChatGPT nie zna historii czatu), bez sekretów.
+**Zasada główna:** najpierw pytania i decyzje, potem implementacja. Pytania decyzyjne **przed** kodowaniem, nie na końcu etapu.
 
-Na końcu zadawaj **kluczowe pytania**:
-- decyzyjne/biznesowe → do człowieka (to on decyduje),
-- techniczne/architektoniczne → do ChatGPT w prompcie.
+**Tryby:** A wdrażaj | B pytaj i zatrzymaj | C diagnozuj.
 
-**Następny rekomendowany krok** — jeden konkretny krok (bez wdrażania bez zgody).
+**Po znaczącym etapie:** raport 11-punktowy + podsumowanie dla Waldemara + prompt do ChatGPT (blok kodu, bez sekretów).
 
-Pełna struktura **tylko po znaczących krokach** (nie przy drobnych poprawkach).
+**Deploy analityki:** migracje `pneadm` → potem `pnedu` → test → backfill.
 
-**UI:** potwierdzenia tylko modal Bootstrap — `pneadm/docs/UI_MODALS.md`.
-
-Pełny opis, kolejność i wyjątki: zob. `pneadm/docs/AI_HUMAN_COMMUNICATION.md`.
+Pełny opis: `pneadm/docs/AI_HUMAN_COMMUNICATION.md`.

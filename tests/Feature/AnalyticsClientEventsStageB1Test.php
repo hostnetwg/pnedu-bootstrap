@@ -75,6 +75,60 @@ class AnalyticsClientEventsStageB1Test extends TestCase
         $this->assertCount(1, $this->pushedEvents('order_form_submit_clicked'));
     }
 
+    public function test_accepts_schema_v2_client_events_and_safe_properties(): void
+    {
+        $this->postEvents($this->validBatch([
+            'events' => [
+                [
+                    'event_name' => 'form_first_interaction',
+                    'first_interaction_type' => 'focus',
+                    'first_section_key' => 'contact',
+                    'first_field_key' => 'contact_email',
+                    'seconds_from_page_load' => 12,
+                ],
+                [
+                    'event_name' => 'form_section_completed',
+                    'section_key' => 'invoice_buyer',
+                    'required_fields_count' => 4,
+                    'completed_fields_count' => 4,
+                ],
+                [
+                    'event_name' => 'form_field_changed',
+                    'section_key' => 'invoice_buyer',
+                    'field_key' => 'buyer_nip',
+                    'field_type' => 'text',
+                    'source' => 'manual',
+                    'has_value' => true,
+                    'seconds_from_page_load' => 30,
+                ],
+                [
+                    'event_name' => 'client_validation_failed',
+                    'errors_count' => 2,
+                    'error_sections' => ['contact', 'payment', 'not_allowed'],
+                    'error_fields' => ['contact_email', 'payment_type', 'hacker_field'],
+                    'validation_error_codes' => ['required', 'email', 'DROP TABLE users;'],
+                ],
+            ],
+        ]))->assertNoContent();
+
+        $this->assertCount(1, $this->pushedEvents('form_first_interaction'));
+        $this->assertCount(1, $this->pushedEvents('form_section_completed'));
+        $this->assertCount(1, $this->pushedEvents('form_field_changed'));
+        $this->assertCount(1, $this->pushedEvents('client_validation_failed'));
+
+        $fieldChanged = $this->pushedEvents('form_field_changed')[0]->payload['metadata'] ?? [];
+        $this->assertSame('buyer_nip', $fieldChanged['field_key'] ?? null);
+        $this->assertSame(true, $fieldChanged['has_value'] ?? null);
+        $this->assertSame(30, $fieldChanged['seconds_from_page_load'] ?? null);
+
+        $validation = $this->pushedEvents('client_validation_failed')[0]->payload['metadata'] ?? [];
+        $this->assertSame(2, $validation['errors_count'] ?? null);
+        $this->assertSame(['contact', 'payment'], $validation['error_sections'] ?? []);
+        $this->assertSame(['contact_email', 'payment_type'], $validation['error_fields'] ?? []);
+        $this->assertSame(['required', 'email'], $validation['validation_error_codes'] ?? []);
+        $this->assertSame(2, $validation['tracking_schema_version'] ?? null);
+    }
+
     public function test_session_and_course_context_present_in_payload(): void
     {
         $this->postEvents($this->validBatch())->assertNoContent();
@@ -86,6 +140,25 @@ class AnalyticsClientEventsStageB1Test extends TestCase
         $this->assertTrue(Str::isUuid($job->payload['order_form_session_id'] ?? ''));
         $this->assertSame('order_form', $job->payload['event_category'] ?? null);
         $this->assertSame(self::PRICE_VARIANT_ID, $job->payload['metadata']['price_variant_id'] ?? null);
+        $this->assertSame($job->payload['order_form_session_id'], $job->payload['metadata']['form_session_id'] ?? null);
+        $this->assertSame(2, $job->payload['metadata']['tracking_schema_version'] ?? null);
+    }
+
+    public function test_client_form_session_id_is_reused_as_order_form_session_id(): void
+    {
+        $formSessionId = (string) Str::uuid();
+
+        $this->postEvents($this->validBatch([
+            'form_session_id' => $formSessionId,
+            'events' => [
+                ['event_name' => 'form_visible', 'seconds_from_page_load' => 3],
+            ],
+        ]))->assertNoContent();
+
+        $job = $this->pushedEvents('form_visible')[0];
+
+        $this->assertSame($formSessionId, $job->payload['order_form_session_id'] ?? null);
+        $this->assertSame($formSessionId, $job->payload['metadata']['form_session_id'] ?? null);
     }
 
     public function test_rejects_unknown_event_name_but_returns_204(): void

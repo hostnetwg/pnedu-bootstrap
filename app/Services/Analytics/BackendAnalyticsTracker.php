@@ -25,6 +25,7 @@ class BackendAnalyticsTracker
         private readonly MarketingAttributionService $attribution,
         private readonly FunnelSkipService $funnelSkip,
         private readonly MarketingBotDetector $botDetector,
+        private readonly OrderFormAttributionService $formAttribution,
     ) {}
 
     public function trackCampaignShortLinkVisit(Request $request, array $campaignContext): void
@@ -68,6 +69,16 @@ class BackendAnalyticsTracker
         $priceVariantId = $request->query('price_variant_id');
         if (is_numeric($priceVariantId)) {
             $metadata['price_variant_id'] = (int) $priceVariantId;
+        }
+
+        if (is_string($orderFormSessionId) && $orderFormSessionId !== '') {
+            $this->formAttribution->persistForFormSession(
+                $request,
+                $orderFormSessionId,
+                $courseId,
+                is_numeric($priceVariantId) ? (int) $priceVariantId : null,
+            );
+            $metadata = array_merge($metadata, $this->formAttribution->fullSnapshotMetadata($request));
         }
 
         $this->trackCoursePageViewed($request, $courseId, AnalyticsEventName::OrderFormViewed, [
@@ -128,6 +139,8 @@ class BackendAnalyticsTracker
             return;
         }
 
+        $orderFormSessionId = $this->orderFormSessions->id($request, (int) $course->id);
+
         $this->trackOrderFormPostEvent(
             $request,
             $course,
@@ -137,6 +150,10 @@ class BackendAnalyticsTracker
                 'landing_target' => 'form_order_created',
                 'metadata' => array_merge(
                     $this->orderFormSessionMetadata($request, (int) $course->id),
+                    $this->formAttribution->orderCreatedSnapshot(
+                        is_string($orderFormSessionId) ? $orderFormSessionId : null,
+                        $request,
+                    ),
                     [
                         'order_flow' => $context['order_flow'] ?? null,
                         'payment_type' => $formOrder->payment_mode,
@@ -360,6 +377,7 @@ class BackendAnalyticsTracker
             $campaignCode = $this->attribution->resolveCampaignCode($request);
             $metadata = array_merge(
                 $this->priceVariantMetadata($request),
+                $this->formAttribution->reportingMetadata($request),
                 is_array($extra['metadata'] ?? null) ? $extra['metadata'] : []
             );
             unset($extra['metadata']);

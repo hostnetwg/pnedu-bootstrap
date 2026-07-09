@@ -10,7 +10,7 @@ use Throwable;
 
 class OrderFormSessionService
 {
-    public function id(Request $request, int $courseId): ?string
+    public function id(Request $request, int $courseId, ?string $preferredSessionId = null): ?string
     {
         try {
             if (! config('analytics.enabled', true) || $courseId <= 0) {
@@ -28,6 +28,13 @@ class OrderFormSessionService
                 $request->attributes->set($attributeKey, $fromCookie);
 
                 return $fromCookie;
+            }
+
+            if (is_string($preferredSessionId) && Str::isUuid($preferredSessionId)) {
+                $request->attributes->set($attributeKey, $preferredSessionId);
+                $request->attributes->set($this->pendingCookieAttribute($courseId), true);
+
+                return $preferredSessionId;
             }
 
             $newId = (string) Str::uuid();

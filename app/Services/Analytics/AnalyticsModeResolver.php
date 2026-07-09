@@ -64,6 +64,10 @@ class AnalyticsModeResolver
             // (sekcje i CTA generują zbyt dużo szumu jak na tryb ograniczony).
             AnalyticsEventName::OrderFormStarted->value,
             AnalyticsEventName::OrderFormSubmitClicked->value,
+            AnalyticsEventName::FormFirstInteraction->value,
+            AnalyticsEventName::FormSubmitClicked->value,
+            AnalyticsEventName::ServerSubmitAttempted->value,
+            AnalyticsEventName::OrderCreated->value,
         ];
 
         if ($mode === AnalyticsMode::Light) {
@@ -75,6 +79,7 @@ class AnalyticsModeResolver
             AnalyticsEventName::CourseDescriptionViewed->value,
             AnalyticsEventName::OrderFormViewed->value,
             AnalyticsEventName::FormOrderCreated->value,
+            AnalyticsEventName::OrderCreated->value,
         ];
 
         return $mode === AnalyticsMode::AggregateOnly

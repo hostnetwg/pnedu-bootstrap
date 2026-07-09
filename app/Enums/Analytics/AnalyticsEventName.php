@@ -24,6 +24,30 @@ enum AnalyticsEventName: string
     case OrderFormCtaClicked = 'order_form_cta_clicked';
     case OrderFormSubmitClicked = 'order_form_submit_clicked';
 
+    // Etap 2A/2B — docelowa, wersjonowana taksonomia formularza (schema v2).
+    case FormVisible = 'form_visible';
+    case FormFirstInteraction = 'form_first_interaction';
+    case FormSectionViewed = 'form_section_viewed';
+    case FormSectionStarted = 'form_section_started';
+    case FormSectionCompleted = 'form_section_completed';
+    case FormFieldChanged = 'form_field_changed';
+    case FormSubmitClicked = 'form_submit_clicked';
+    case ClientValidationFailed = 'client_validation_failed';
+    case ServerSubmitAttempted = 'server_submit_attempted';
+    case ServerValidationFailed = 'server_validation_failed';
+    case OrderCreateFailed = 'order_create_failed';
+    case OrderCreated = 'order_created';
+    case FormLastActivity = 'form_last_activity';
+    case GusLookupClicked = 'gus_lookup_clicked';
+    case GusLookupStarted = 'gus_lookup_started';
+    case GusLookupSuccess = 'gus_lookup_success';
+    case GusLookupError = 'gus_lookup_error';
+    case GusDataApplied = 'gus_data_applied';
+    case GusManualFallbackStarted = 'gus_manual_fallback_started';
+    case FormFieldEditedAfterGus = 'form_field_edited_after_gus';
+    case InternalOfferImpression = 'internal_offer_impression';
+    case InternalOfferClicked = 'internal_offer_clicked';
+
     public function category(): AnalyticsCategory
     {
         return match ($this) {
@@ -36,9 +60,31 @@ enum AnalyticsEventName: string
             self::OrderFormStarted,
             self::OrderFormSectionInteracted,
             self::OrderFormCtaClicked,
-            self::OrderFormSubmitClicked => AnalyticsCategory::OrderForm,
-            self::OrderFormValidationFailed => AnalyticsCategory::Validation,
-            self::FormOrderCreated => AnalyticsCategory::Conversion,
+            self::OrderFormSubmitClicked,
+            self::FormVisible,
+            self::FormFirstInteraction,
+            self::FormSectionViewed,
+            self::FormSectionStarted,
+            self::FormSectionCompleted,
+            self::FormFieldChanged,
+            self::FormSubmitClicked,
+            self::ServerSubmitAttempted,
+            self::FormLastActivity,
+            self::InternalOfferImpression,
+            self::InternalOfferClicked => AnalyticsCategory::OrderForm,
+            self::OrderFormValidationFailed,
+            self::ClientValidationFailed,
+            self::ServerValidationFailed,
+            self::OrderCreateFailed,
+            self::GusLookupError => AnalyticsCategory::Validation,
+            self::FormOrderCreated,
+            self::OrderCreated => AnalyticsCategory::Conversion,
+            self::GusLookupClicked,
+            self::GusLookupStarted,
+            self::GusLookupSuccess,
+            self::GusDataApplied,
+            self::GusManualFallbackStarted,
+            self::FormFieldEditedAfterGus => AnalyticsCategory::OrderForm,
             self::OnlinePaymentSelected,
             self::PaymentOrderCreated,
             self::PaymentStatusChanged => AnalyticsCategory::Payment,
@@ -49,7 +95,7 @@ enum AnalyticsEventName: string
 
     /**
      * Eventy dozwolone z publicznego endpointu JS (POST /analytics/client-events).
-     * Tylko te 4 nazwy mogą pochodzić z przeglądarki — reszta wyłącznie z backendu.
+     * Obejmuje legacy B1 i docelową taksonomię v2 bez wartości pól.
      *
      * @return list<self>
      */
@@ -60,6 +106,19 @@ enum AnalyticsEventName: string
             self::OrderFormSectionInteracted,
             self::OrderFormCtaClicked,
             self::OrderFormSubmitClicked,
+            self::FormVisible,
+            self::FormFirstInteraction,
+            self::FormSectionViewed,
+            self::FormSectionStarted,
+            self::FormSectionCompleted,
+            self::FormFieldChanged,
+            self::FormSubmitClicked,
+            self::ClientValidationFailed,
+            self::FormLastActivity,
+            self::GusLookupClicked,
+            self::GusDataApplied,
+            self::FormFieldEditedAfterGus,
+            self::GusManualFallbackStarted,
         ];
     }
 
