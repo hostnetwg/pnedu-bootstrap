@@ -33,6 +33,7 @@ class PaymentDisplayOption extends Model
         'show_pay_online' => 'boolean',
         'show_deferred_order' => 'boolean',
         'show_order_form' => 'boolean',
+        'show_order_form_v2' => 'boolean',
         'show_order_form_alt' => 'boolean',
         'order_form_auto_fill_test_data' => 'boolean',
         'order_form_auto_fill_test_data_enabled_at' => 'datetime',
@@ -55,6 +56,10 @@ class PaymentDisplayOption extends Model
                     'show_pay_online' => (bool) $row->show_pay_online,
                     'show_deferred_order' => (bool) $row->show_deferred_order,
                     'show_order_form' => (bool) $row->show_order_form,
+                    'show_order_form_v2' => (bool) ($row->show_order_form_v2 ?? false),
+                    'default_signup_order_form_variant' => \App\Support\OrderFormVariant::normalize(
+                        $row->default_signup_order_form_variant ?? null
+                    ),
                     'show_order_form_alt' => (bool) $row->show_order_form_alt,
                     'order_form_auto_fill_test_data' => (bool) ($row->order_form_auto_fill_test_data ?? false),
                     'order_form_auto_fill_test_data_developers_only' => (bool) ($row->order_form_auto_fill_test_data_developers_only ?? false),
@@ -71,6 +76,8 @@ class PaymentDisplayOption extends Model
             'show_pay_online' => true,
             'show_deferred_order' => true,
             'show_order_form' => true,
+            'show_order_form_v2' => false,
+            'default_signup_order_form_variant' => \App\Support\OrderFormVariant::LEGACY,
             'show_order_form_alt' => true,
             'order_form_auto_fill_test_data' => false,
             'order_form_auto_fill_test_data_developers_only' => false,
@@ -120,8 +127,9 @@ class PaymentDisplayOption extends Model
     }
 
     /**
-     * Czy formularz zamówienia ma być w trybie testowym (przycisk wypełnienia danymi testowymi).
-     * Wymaga zalogowania i adresu z listy deweloperów, gdy włączona jest tylko opcja developers_only.
+     * Czy formularz zamówienia ma być w trybie testowym (przycisk „Wypełnij dane testowe”).
+     * Obie opcje w adm (developers_only i unrestricted) — tylko przycisk, bez auto-wypełnienia pól przy wejściu.
+     * Unrestricted: także dla niezalogowanych. Developers_only: wymaga zalogowania i adresu z listy.
      */
     public static function isOrderFormTestModeEnabled(array $options, ?\Illuminate\Contracts\Auth\Authenticatable $user): bool
     {

@@ -61,6 +61,7 @@ class AnalyticsPayloadSanitizerTest extends TestCase
             'tracking_schema_version' => 2,
             'metadata' => [
                 'form_session_id' => '5d3e7b2e-34b2-4b2f-a6d4-2e78d2932457',
+                'form_variant' => 'v2',
                 'tracking_schema_version' => 2,
                 'section_key' => 'contact',
                 'field_key' => 'contact_email',
@@ -81,6 +82,7 @@ class AnalyticsPayloadSanitizerTest extends TestCase
         $metadata = $sanitized['metadata'];
 
         $this->assertSame(2, $sanitized['tracking_schema_version']);
+        $this->assertSame('v2', $metadata['form_variant']);
         $this->assertSame('contact', $metadata['section_key']);
         $this->assertSame('contact_email', $metadata['field_key']);
         $this->assertSame(['contact', 'payment'], $metadata['error_sections']);

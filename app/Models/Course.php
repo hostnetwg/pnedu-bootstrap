@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\OrderFormVariant;
 use App\Support\PneadmMedia;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -176,7 +177,7 @@ class Course extends Model
             ->sortBy(fn ($v) => (int) $v->id)
             ->values();
 
-        $base = route('payment.order-form', $this->id);
+        $base = route(OrderFormVariant::publicRouteName(), $this->id);
         $first = $sorted->first();
         if ($first === null) {
             return $base;

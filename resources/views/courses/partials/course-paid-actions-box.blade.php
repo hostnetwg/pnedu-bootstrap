@@ -1,14 +1,19 @@
-{{--
-  $course, $paymentOptions, $activeCoursePriceVariants (Collection), $suffix (unikalny fragment id dla etykiet)
---}}
 @php
+    use App\Support\OrderFormVariant;
+
     $variantCount = $activeCoursePriceVariants->count();
     $priceInfo = $course->getCurrentPrice();
     $onlyVariant = $variantCount === 1 ? $activeCoursePriceVariants->first() : null;
     $marketingAttribution = app(\App\Services\MarketingAttributionService::class);
     $fbParam = trim((string) $marketingAttribution->resolveCampaignCode(request()));
     $marketingSuffix = $marketingAttribution->querySuffixForLinks(request());
-    $orderFormBase = route('payment.order-form', $course->id);
+    $activeOrderFormVariant = OrderFormVariant::resolveAvailable(
+        (string) ($paymentOptions['default_signup_order_form_variant'] ?? OrderFormVariant::LEGACY),
+        $paymentOptions,
+    );
+    $showOrderFormCta = ($activeOrderFormVariant === OrderFormVariant::LEGACY && ($paymentOptions['show_order_form'] ?? true))
+        || ($activeOrderFormVariant === OrderFormVariant::V2 && ($paymentOptions['show_order_form_v2'] ?? false));
+    $orderFormBase = route(OrderFormVariant::publicRouteName(), $course->id);
     $deferredBase = route('payment.deferred', $course->id);
     $orderFormHref = $onlyVariant
         ? ($orderFormBase.'?price_variant_id='.$onlyVariant->id.$marketingSuffix)
@@ -16,6 +21,9 @@
     $deferredHref = $onlyVariant
         ? ($deferredBase.'?price_variant_id='.$onlyVariant->id.$marketingSuffix)
         : ($deferredBase.($marketingSuffix !== '' ? '?'.ltrim($marketingSuffix, '&') : ''));
+    $orderFormCtaClass = $activeOrderFormVariant === OrderFormVariant::V2
+        ? 'btn btn-purchase-cta-v2 btn-lg fw-bold w-100'
+        : 'btn btn-purchase-cta btn-lg fw-bold w-100';
 @endphp
 <h3>Wybierz formę płatności i&nbsp;zarezerwuj miejsce!</h3>
 @if($variantCount > 1)
@@ -80,17 +88,18 @@
             <a href="{{ $deferredHref }}" class="btn btn-orange btn-lg fw-bold shadow-sm w-100">Formularz zamówienia z&nbsp;odroczonym terminem płatności</a>
         @endif
     @endif
-    @if($paymentOptions['show_order_form'] ?? true)
+    @if($showOrderFormCta)
         @if($variantCount > 1)
             <a href="#"
-               class="btn btn-purchase-cta btn-lg fw-bold w-100 js-cta-needs-variant disabled pe-none"
+               class="{{ $orderFormCtaClass }} js-cta-needs-variant disabled pe-none"
                data-href-base="{{ $orderFormBase }}"
                data-marketing-suffix="{{ $marketingSuffix }}"
+               @if($activeOrderFormVariant === OrderFormVariant::V2) data-order-form-variant="v2" @endif
                aria-disabled="true"
                title="Najpierw wybierz wariant cenowy powyżej"
             >Zamawiam szkolenie</a>
         @else
-            <a href="{{ $orderFormHref }}" class="btn btn-purchase-cta btn-lg fw-bold w-100">Zamawiam szkolenie</a>
+            <a href="{{ $orderFormHref }}" class="{{ $orderFormCtaClass }}" @if($activeOrderFormVariant === OrderFormVariant::V2) data-order-form-variant="v2" @endif>Zamawiam szkolenie</a>
         @endif
     @endif
     @if((($paymentOptions['show_order_form_alt'] ?? true) && !empty($course->id_old)))

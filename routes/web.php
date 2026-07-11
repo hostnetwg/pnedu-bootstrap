@@ -221,6 +221,11 @@ Route::get('/courses/{id}/order-form', [App\Http\Controllers\CourseController::c
     ->middleware(\App\Http\Middleware\TrackCoursePageView::class.':order_form')
     ->name('payment.order-form');
 Route::post('/courses/{id}/order-form', [App\Http\Controllers\CourseController::class, 'storeOrderForm'])->name('payment.order-form.store');
+Route::get('/courses/{id}/order-form-v2', [App\Http\Controllers\CourseController::class, 'orderFormV2'])
+    ->middleware(\App\Http\Middleware\TrackCoursePageView::class.':order_form')
+    ->name('payment.order-form-v2');
+Route::post('/courses/{id}/order-form-v2', [App\Http\Controllers\CourseController::class, 'storeOrderFormV2'])
+    ->name('payment.order-form-v2.store');
 
 // Etap B1 — publiczny endpoint JS analityki (batch eventów formularza). Fail-silent, zawsze 204.
 Route::post('/analytics/client-events', [App\Http\Controllers\Analytics\ClientEventController::class, 'store'])

@@ -75,6 +75,7 @@ class AnalyticsPaymentSelectionStage2A1Test extends TestCase
             ->assertRedirect();
 
         $this->assertPaymentSelectionQueued('deferred_invoice_selected', [
+            'form_variant' => 'legacy',
             'payment_type' => 'deferred_invoice',
             'order_flow' => 'deferred',
         ]);
@@ -93,6 +94,7 @@ class AnalyticsPaymentSelectionStage2A1Test extends TestCase
             ->assertRedirect('https://payu.test/redirect');
 
         $this->assertPaymentSelectionQueued('online_payment_selected', [
+            'form_variant' => 'legacy',
             'payment_type' => 'online',
             'payment_gateway' => 'payu',
             'order_flow' => 'online',

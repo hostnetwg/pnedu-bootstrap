@@ -6,6 +6,8 @@ use App\Enums\Analytics\AnalyticsEventName;
 use App\Models\Course;
 use App\Models\FormOrder;
 use App\Models\OnlinePaymentOrder;
+use App\Support\OrderFormGateway;
+use App\Support\OrderFormVariant;
 use App\Services\FunnelSkipService;
 use App\Services\MarketingAttributionService;
 use App\Services\MarketingBotDetector;
@@ -64,7 +66,9 @@ class BackendAnalyticsTracker
     public function trackOrderFormViewed(Request $request, int $courseId): void
     {
         $orderFormSessionId = $this->orderFormSessions->id($request, $courseId);
-        $metadata = [];
+        $metadata = [
+            'form_variant' => $this->resolveTrackedFormVariant($request),
+        ];
 
         $priceVariantId = $request->query('price_variant_id');
         if (is_numeric($priceVariantId)) {
@@ -177,6 +181,7 @@ class BackendAnalyticsTracker
             AnalyticsEventName::OnlinePaymentSelected,
             [
                 'metadata' => array_merge(
+                    $this->orderFormSessionMetadata($request, (int) $course->id),
                     [
                         'payment_type' => 'online',
                         'payment_gateway' => $this->normalizePaymentGateway($paymentGateway),
@@ -197,6 +202,7 @@ class BackendAnalyticsTracker
             AnalyticsEventName::DeferredInvoiceSelected,
             [
                 'metadata' => array_merge(
+                    $this->orderFormSessionMetadata($request, (int) $course->id),
                     [
                         'payment_type' => 'deferred_invoice',
                         'has_price_variant' => $request->filled('price_variant_id'),
@@ -228,6 +234,7 @@ class BackendAnalyticsTracker
                 'payment_order_id' => (int) $onlineOrder->id,
                 'amount_snapshot' => $onlineOrder->total_amount !== null ? (float) $onlineOrder->total_amount : null,
                 'metadata' => array_merge(
+                    $this->orderFormSessionMetadata($request, (int) $course->id),
                     [
                         'payment_gateway' => $this->normalizePaymentGateway($onlineOrder->payment_gateway),
                         'payment_type' => 'online',
@@ -538,6 +545,7 @@ class BackendAnalyticsTracker
 
         return [
             'order_form_session_created_on_submit' => ! is_string($fromCookie) || $fromCookie === '',
+            'form_variant' => $this->resolveTrackedFormVariant($request),
         ];
     }
 
@@ -607,6 +615,25 @@ class BackendAnalyticsTracker
         }
 
         return $codes === [] ? ['validation_failed'] : array_values(array_unique($codes));
+    }
+
+    private function resolveTrackedFormVariant(Request $request): string
+    {
+        if ($request->routeIs('payment.order-form-v2*')) {
+            return OrderFormVariant::V2;
+        }
+
+        $resolved = OrderFormGateway::resolvedVariantFromRequest($request);
+        if ($resolved !== null) {
+            return $resolved;
+        }
+
+        $fromInput = $request->input('form_variant');
+        if (is_string($fromInput) && $fromInput !== '') {
+            return OrderFormVariant::normalize($fromInput);
+        }
+
+        return OrderFormVariant::LEGACY;
     }
 
     private function participantCount(FormOrder $formOrder): int

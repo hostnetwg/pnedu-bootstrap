@@ -105,6 +105,7 @@ class AnalyticsPayloadSanitizer
         'first_interaction_type',
         'first_section_key',
         'fields_count',
+        'form_variant',
         'form_session_id',
         'gus_lookup_success',
         'gus_lookup_used',

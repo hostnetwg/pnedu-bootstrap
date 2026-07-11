@@ -1488,33 +1488,7 @@
 
     // Przycisk "Wypełnij dane testowe" (tylko w trybie testowym/local)
     var fillTestDataBtn = document.getElementById('fill-test-data-btn');
-    var testDataJson = {!! json_encode($isTestMode ? [
-        'buyer_type' => 'organisation',
-        'contact_name' => 'Waldemar Grabowski',
-        'contact_first_name' => 'Waldemar',
-        'contact_last_name' => 'Grabowski',
-        'contact_phone' => '501 654 274',
-        'contact_email' => 'waldemar.grabowski@zdalna-lekcja.pl',
-        'buyer_name' => 'Platforma Nowoczesnej Edukacji Waldemar Grabowski',
-        'buyer_address' => 'ul. Andrzeja Zamoyskiego 30/14',
-        'buyer_postcode' => '09-320',
-        'buyer_city' => 'Bieżuń',
-        'buyer_nip' => '7392137630',
-        'recipient_name' => 'NOWATORNIA Łukasz Grabowski',
-        'recipient_address' => 'UL. HANSA CHRISTIANA ANDERSENA 2/230',
-        'recipient_postcode' => '01-911',
-        'recipient_city' => 'WARSZAWA',
-        'recipient_nip' => '1182307502',
-        'buyer_person_first_name' => 'Waldemar',
-        'buyer_person_last_name' => 'Grabowski',
-        'participant_first_name' => 'Waldemar',
-        'participant_last_name' => 'Grabowski',
-        'participant_email' => 'waldemar.grabowski@hostnet.pl',
-        'invoice_notes' => 'Dane testowe - Waldek',
-        'payment_type' => 'deferred',
-        'payment_terms' => '14',
-        'payment_gateway' => 'payu',
-    ] : []) !!};
+    var testDataJson = {!! json_encode($isTestMode ? \App\Support\OrderFormTestData::defaults() : []) !!};
     if (fillTestDataBtn && Object.keys(testDataJson).length > 0) {
         fillTestDataBtn.addEventListener('click', function() {
             var form = document.querySelector('form[action*="order-form"]');

@@ -174,6 +174,20 @@
         transform: translateY(-2px) scale(1.02);
         box-shadow: 0 6px 20px rgba(25, 118, 210, 0.4);
     }
+    /* CTA formularza zamówienia V2 — ten sam napis, jaśniejszy zielony (odróżnienie od legacy) */
+    .btn-purchase-cta-v2 {
+        background: #22c55e;
+        color: #fff !important;
+        border: none;
+        box-shadow: 0 4px 14px rgba(34, 197, 94, 0.35);
+        transition: background 0.18s, color 0.18s, box-shadow 0.18s, transform 0.18s;
+    }
+    .btn-purchase-cta-v2:hover, .btn-purchase-cta-v2:focus {
+        background: #16a34a;
+        color: #fff !important;
+        transform: translateY(-2px) scale(1.02);
+        box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4);
+    }
     .pay-mobile {
         display: none;
     }

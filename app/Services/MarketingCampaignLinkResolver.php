@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Support\OrderFormVariant;
 use Illuminate\Support\Facades\DB;
 
 class MarketingCampaignLinkResolver
@@ -31,6 +32,7 @@ class MarketingCampaignLinkResolver
                 'mc.id as campaign_id',
                 'mc.course_id',
                 'mc.landing_target',
+                'mc.order_form_variant',
                 'mc.utm_medium',
                 'mc.utm_content',
                 'c.title as course_title',
@@ -47,8 +49,9 @@ class MarketingCampaignLinkResolver
         }
 
         $isOrderForm = ($row->landing_target ?? 'course_show') === 'order_form';
+        $variant = OrderFormVariant::storedCampaignVariant($row->order_form_variant ?? null);
         $path = $isOrderForm
-            ? '/courses/'.$row->course_id.'/order-form'
+            ? '/courses/'.$row->course_id.'/'.OrderFormVariant::pathSegment($variant)
             : '/courses/'.$row->course_id;
 
         $utmSource = $this->resolveUtmSource($row);
@@ -62,6 +65,10 @@ class MarketingCampaignLinkResolver
 
         if (filled($utmContent)) {
             $query['utm_content'] = $utmContent;
+        }
+
+        if ($isOrderForm && ! OrderFormVariant::usesGlobalGateway($variant)) {
+            $query = array_merge($query, OrderFormVariant::gatewayQuery($variant));
         }
 
         return [

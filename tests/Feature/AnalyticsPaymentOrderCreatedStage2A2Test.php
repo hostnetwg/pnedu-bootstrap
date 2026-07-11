@@ -145,6 +145,7 @@ class AnalyticsPaymentOrderCreatedStage2A2Test extends TestCase
             $this->assertIsFloat($job->payload['amount_snapshot'] ?? null);
             $this->assertGreaterThan(0, $job->payload['amount_snapshot']);
             $this->assertSame('payu', $metadata['payment_gateway'] ?? null);
+            $this->assertSame('legacy', $metadata['form_variant'] ?? null);
             $this->assertSame('online', $metadata['payment_type'] ?? null);
             $this->assertSame('online', $metadata['order_flow'] ?? null);
 
@@ -246,6 +247,7 @@ class AnalyticsPaymentOrderCreatedStage2A2Test extends TestCase
                 && ($job->payload['form_order_id'] ?? null) === $formOrderId
                 && ($job->payload['payment_order_id'] ?? null) === $paymentOrderId
                 && is_float($job->payload['amount_snapshot'] ?? null)
+                && ($metadata['form_variant'] ?? null) === 'legacy'
                 && ($metadata['payment_gateway'] ?? null) === $gateway
                 && ($metadata['payment_type'] ?? null) === 'online'
                 && ($metadata['order_flow'] ?? null) === 'online'

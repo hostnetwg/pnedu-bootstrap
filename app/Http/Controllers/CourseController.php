@@ -845,30 +845,7 @@ class CourseController extends Controller
         // Dane testowe (tylko jeśli nie ma danych z zamówienia)
         $testData = $orderData;
         if (empty($testData) && $isTestMode) {
-            $testData = [
-                'buyer_name' => 'Platforma Nowoczesnej Edukacji Waldemar Grabowski',
-                'buyer_address' => 'ul. Andrzeja Zamoyskiego 30/14',
-                'buyer_postcode' => '09-320',
-                'buyer_city' => 'Bieżuń',
-                'buyer_nip' => '7392137630',
-                'recipient_name' => 'NOWATORNIA Łukasz Grabowski',
-                'recipient_address' => 'UL. HANSA CHRISTIANA ANDERSENA 2/230',
-                'recipient_postcode' => '01-911',
-                'recipient_city' => 'WARSZAWA',
-                'recipient_nip' => '1182307502',
-                'contact_name' => 'Waldemar Grabowski',
-                'contact_first_name' => 'Waldemar',
-                'contact_last_name' => 'Grabowski',
-                'contact_phone' => '501 654 274',
-                'contact_email' => 'waldemar.grabowski@zdalna-lekcja.pl',
-                'buyer_person_first_name' => 'Waldemar',
-                'buyer_person_last_name' => 'Grabowski',
-                'participant_first_name' => 'Waldemar',
-                'participant_last_name' => 'Grabowski',
-                'participant_email' => 'waldemar.grabowski@hostnet.pl',
-                'invoice_notes' => 'Dane testowe - Waldek',
-                'payment_terms' => 14,
-            ];
+            $testData = \App\Support\OrderFormTestData::defaults();
         }
 
         [$testData, $checkoutResumeBanner] = $this->prepareOrderFormCheckoutResume(
@@ -892,13 +869,41 @@ class CourseController extends Controller
     /**
      * Wyświetl nowy formularz zamówienia (kopia, do dalszych zmian).
      */
+    /**
+     * Bramka GET /order-form — rozstrzyga legacy vs V2 (edycja zamówienia zawsze legacy).
+     */
     public function orderForm($id, $ident = null)
     {
         $course = \App\Models\Course::with('priceVariants')->findOrFail($id);
         $existingOrder = null;
 
-        // Tryb testowy: ?test=1 włącza, ?test=0 wyłącza. Bez parametru – ustawienie z panelu (Zakupy pnedu.pl).
         $displayOptions = \App\Models\PaymentDisplayOption::getForCoursePage();
+
+        if (! $ident) {
+            $gateway = app(\App\Support\OrderFormGateway::class);
+            $variant = $gateway->resolveVariant(request(), $displayOptions);
+            $gateway->markResolvedVariant(request(), $variant);
+
+            if ($variant === \App\Support\OrderFormVariant::V2) {
+                $course = \App\Models\Course::with(['priceVariants', 'instructor', 'onlineDetail'])->findOrFail($id);
+
+                return $this->renderNewOrderForm(
+                    course: $course,
+                    displayOptions: $displayOptions,
+                    viewName: 'courses.order-form-v2',
+                    routeName: \App\Support\OrderFormVariant::publicRouteName()
+                );
+            }
+
+            return $this->renderNewOrderForm(
+                course: $course,
+                displayOptions: $displayOptions,
+                viewName: 'courses.order-form',
+                routeName: \App\Support\OrderFormVariant::publicRouteName()
+            );
+        }
+
+        // Tryb testowy: ?test=1 włącza, ?test=0 wyłącza. Bez parametru – ustawienie z panelu (Zakupy pnedu.pl).
         $isTestMode = request()->has('test')
             ? (bool) request()->boolean('test')
             : \App\Models\PaymentDisplayOption::isOrderFormTestModeEnabled($displayOptions, auth()->user());
@@ -951,6 +956,61 @@ class CourseController extends Controller
         $conversionPlacementDefault = $this->resolveConversionPlacementDefaultForForm((int) $id, $existingOrder);
 
         return view('courses.order-form', compact('course', 'testData', 'isTestMode', 'isEditMode', 'user', 'prefillPriceVariantId', 'fbSourceDefault', 'conversionPlacementDefault', 'checkoutResumeBanner'));
+    }
+
+    /**
+     * Bezpośredni URL V2 (QA / stare linki /order-form-v2). Nowe linki używają bramy /order-form.
+     */
+    public function orderFormV2($id)
+    {
+        $displayOptions = \App\Models\PaymentDisplayOption::getForCoursePage();
+        abort_unless($displayOptions['show_order_form_v2'] ?? false, 404);
+
+        app(\App\Support\OrderFormGateway::class)->markResolvedVariant(request(), \App\Support\OrderFormVariant::V2);
+
+        $course = \App\Models\Course::with(['priceVariants', 'instructor', 'onlineDetail'])->findOrFail($id);
+
+        return $this->renderNewOrderForm(
+            course: $course,
+            displayOptions: $displayOptions,
+            viewName: 'courses.order-form-v2',
+            routeName: \App\Support\OrderFormVariant::publicRouteName()
+        );
+    }
+
+    /**
+     * Wspólne przygotowanie danych nowego zamówienia dla formularza stabilnego i V2.
+     */
+    protected function renderNewOrderForm(Course $course, array $displayOptions, string $viewName, string $routeName)
+    {
+        $isTestMode = request()->has('test')
+            ? (bool) request()->boolean('test')
+            : \App\Models\PaymentDisplayOption::isOrderFormTestModeEnabled($displayOptions, auth()->user());
+
+        $redirect = $this->enforcePriceVariantFromQueryOrRedirect($course, null);
+        if ($redirect) {
+            return $redirect;
+        }
+
+        $isEditMode = false;
+        $prefillPriceVariantId = $this->prefillPriceVariantIdForPublicOrderForm($course, null, []);
+
+        $testData = [];
+
+        [$testData, $checkoutResumeBanner] = $this->prepareOrderFormCheckoutResume(
+            (int) $course->id,
+            $testData,
+            false,
+            'payment.order-form.edit',
+            $routeName,
+            $this->orderFormResumeRouteParams($prefillPriceVariantId)
+        );
+
+        $user = auth()->user();
+        $fbSourceDefault = $this->resolveFbSourceDefaultForForm(null);
+        $conversionPlacementDefault = $this->resolveConversionPlacementDefaultForForm((int) $course->id, null);
+
+        return view($viewName, compact('course', 'testData', 'isTestMode', 'isEditMode', 'user', 'prefillPriceVariantId', 'fbSourceDefault', 'conversionPlacementDefault', 'checkoutResumeBanner'));
     }
 
     /**
@@ -1073,6 +1133,9 @@ class CourseController extends Controller
         }
         if (request()->filled('fb')) {
             $params['fb'] = request()->query('fb');
+        }
+        if (request()->filled(\App\Support\OrderFormGateway::QUERY_PARAM)) {
+            $params[\App\Support\OrderFormGateway::QUERY_PARAM] = request()->query(\App\Support\OrderFormGateway::QUERY_PARAM);
         }
 
         return $params;
@@ -1462,6 +1525,16 @@ class CourseController extends Controller
      * Zapisz zamówienie z nowego formularza (na razie deleguje do istniejącej logiki odroczonej).
      * Docelowo tu będzie rozgałęzienie: odroczone vs płatność online.
      */
+    public function storeOrderFormV2(Request $request, $id, BackendAnalyticsTracker $backendAnalyticsTracker)
+    {
+        $displayOptions = \App\Models\PaymentDisplayOption::getForCoursePage();
+        abort_unless($displayOptions['show_order_form_v2'] ?? false, 404);
+
+        $request->merge(['form_variant' => 'v2']);
+
+        return $this->storeOrderForm($request, $id, $backendAnalyticsTracker);
+    }
+
     public function storeOrderForm(Request $request, $id, BackendAnalyticsTracker $backendAnalyticsTracker)
     {
         $course = Course::with('priceVariants')->findOrFail($id);
@@ -1470,6 +1543,8 @@ class CourseController extends Controller
         if (! in_array($buyerType, ['organisation', 'person'], true)) {
             $buyerType = 'organisation';
         }
+
+        $paymentTermsMax = $request->routeIs('payment.order-form-v2.store') ? 30 : 31;
 
         $rules = [
             'buyer_type' => 'required|in:organisation,person',
@@ -1495,7 +1570,7 @@ class CourseController extends Controller
             'participant_email' => 'required|email|max:255',
 
             'invoice_notes' => 'nullable|string',
-            'payment_terms' => 'nullable|integer|min:0|max:31',
+            'payment_terms' => 'nullable|integer|min:0|max:'.$paymentTermsMax,
             'payment_gateway' => 'nullable|in:payu,paynow',
             'fb_source' => 'nullable|string|max:255',
             'conversion_placement' => 'nullable|string|max:50',
@@ -1522,6 +1597,7 @@ class CourseController extends Controller
                 'buyer_type.in' => 'Wybierz prawidłową opcję.',
                 'payment_type.required' => 'Wybierz sposób rozliczenia.',
                 'payment_type.in' => 'Wybierz prawidłowy sposób rozliczenia.',
+                'payment_terms.max' => sprintf('Termin płatności nie może przekraczać %d dni.', $paymentTermsMax),
             ]);
         } catch (ValidationException $e) {
             $backendAnalyticsTracker->trackOrderFormValidationFailed(
@@ -1564,7 +1640,10 @@ class CourseController extends Controller
             );
 
             return back()
-                ->withErrors(['payment_terms' => 'Podaj termin płatności dla faktury z odroczonym terminem (0–31 dni).'])
+                ->withErrors(['payment_terms' => sprintf(
+                    'Podaj termin płatności dla faktury z odroczonym terminem (0–%d dni).',
+                    $paymentTermsMax
+                )])
                 ->withInput();
         }
 

@@ -85,4 +85,22 @@ class PaymentDisplayOptionOrderFormTestModeTest extends TestCase
 
         Carbon::setTestNow();
     }
+
+    public function test_test_mode_never_auto_fills_form_fields_on_load(): void
+    {
+        $unrestricted = [
+            'order_form_auto_fill_test_data' => true,
+            'order_form_auto_fill_test_data_developers_only' => false,
+        ];
+        $developersOnly = [
+            'order_form_auto_fill_test_data' => false,
+            'order_form_auto_fill_test_data_developers_only' => true,
+        ];
+
+        $this->assertTrue(PaymentDisplayOption::isOrderFormTestModeEnabled($unrestricted, null));
+        $this->assertTrue(PaymentDisplayOption::isOrderFormTestModeEnabled(
+            $developersOnly,
+            new User(['email' => 'waldemar.grabowski@hostnet.pl'])
+        ));
+    }
 }
