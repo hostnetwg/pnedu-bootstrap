@@ -35,6 +35,20 @@ class HomepageOptimizationTest extends TestCase
         $response->assertOk();
         $cacheControl = (string) $response->headers->get('Cache-Control', '');
         $this->assertStringNotContainsString('max-age=60', $cacheControl);
+        $this->assertStringContainsString('no-cache', $cacheControl);
+    }
+
+    public function test_guest_homepage_cache_varies_by_cookie(): void
+    {
+        config([
+            'seo.homepage.page_cache_max_age' => 60,
+            'seo.homepage.page_cache_stale_while_revalidate' => 120,
+        ]);
+
+        $response = $this->get(route('home'));
+
+        $response->assertOk();
+        $this->assertSame('Cookie', $response->headers->get('Vary'));
     }
 
     public function test_homepage_carousel_uses_lazy_loading_for_secondary_slides(): void

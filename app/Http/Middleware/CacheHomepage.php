@@ -9,6 +9,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Krótki cache HTML strony głównej dla gości — odciąża origin i wspiera CDN (Faza 6).
+ * Vary: Cookie + private/no-cache dla zalogowanych — unika pokazywania menu gościa z cache przeglądarki.
  */
 class CacheHomepage
 {
@@ -16,12 +17,19 @@ class CacheHomepage
     {
         $response = $next($request);
 
-        if (! $request->isMethod('GET') || ! $request->routeIs('home') || Auth::check()) {
+        if (! $request->isMethod('GET') || ! $request->routeIs('home')) {
             return $response;
         }
 
         if ($response->isRedirect() || ! $response->isSuccessful()) {
             return $response;
+        }
+
+        if (Auth::check()) {
+            return $response->header(
+                'Cache-Control',
+                'private, no-cache, must-revalidate'
+            );
         }
 
         $maxAge = (int) config('seo.homepage.page_cache_max_age', 60);
@@ -31,9 +39,11 @@ class CacheHomepage
 
         $stale = (int) config('seo.homepage.page_cache_stale_while_revalidate', 120);
 
-        return $response->header(
-            'Cache-Control',
-            sprintf('public, max-age=%d, stale-while-revalidate=%d', $maxAge, max(0, $stale))
-        );
+        return $response
+            ->header(
+                'Cache-Control',
+                sprintf('public, max-age=%d, stale-while-revalidate=%d', $maxAge, max(0, $stale))
+            )
+            ->header('Vary', 'Cookie');
     }
 }
