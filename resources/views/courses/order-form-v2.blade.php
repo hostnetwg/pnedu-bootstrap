@@ -264,12 +264,13 @@
                 </div>
             </div>
 
-            <div class="form-check form-switch my-4" id="v2-optional-recipient-toggle">
-                <input class="form-check-input" type="checkbox" role="switch" id="has_optional_recipient" name="has_optional_recipient" value="1" @checked($hasOptionalRecipient)>
-                <label class="form-check-label fw-semibold" for="has_optional_recipient">Faktura ma mieć innego odbiorcę</label>
-            </div>
+            <div id="v2-recipient-section" @if($profile === 'person') hidden @endif>
+                <div class="form-check form-switch my-4" id="v2-optional-recipient-toggle">
+                    <input class="form-check-input" type="checkbox" role="switch" id="has_optional_recipient" name="has_optional_recipient" value="1" @checked($hasOptionalRecipient)>
+                    <label class="form-check-label fw-semibold" for="has_optional_recipient">Faktura ma mieć innego odbiorcę</label>
+                </div>
 
-            <div id="v2-recipient" data-analytics-section="recipient_data" data-analytics-section-v2="invoice_recipient">
+                <div id="v2-recipient" data-analytics-section="recipient_data" data-analytics-section-v2="invoice_recipient" @if($profile !== 'person' && ! $hasOptionalRecipient) hidden @endif>
                 <hr>
                 <h3 class="h6 text-uppercase text-success" id="v2-recipient-heading">Odbiorca</h3>
                 <div class="alert alert-light border small py-2 mb-3" id="v2-recipient-copy" role="note">
@@ -307,6 +308,7 @@
                         <input class="form-control" id="recipient_address" name="recipient_address" value="{{ $field('recipient_address') }}" autocomplete="street-address">
                     </div>
                 </div>
+            </div>
             </div>
         </section>
 
@@ -391,7 +393,7 @@
     var orgInvoice = document.getElementById('v2-organisation-invoice');
     var personInvoice = document.getElementById('v2-person-invoice');
     var recipient = document.getElementById('v2-recipient');
-    var recipientToggleWrap = document.getElementById('v2-optional-recipient-toggle');
+    var recipientSection = document.getElementById('v2-recipient-section');
     var csrf = form.querySelector('[name="_token"]').value;
     var testData = @json(($isTestMode ?? false) ? \App\Support\OrderFormTestData::defaults() : []);
 
@@ -486,14 +488,30 @@
     function participantDefaultForProfile(profile) {
         return profile === 'person';
     }
+    function clearRecipientFields() {
+        ['recipient_nip', 'recipient_name', 'recipient_postcode', 'recipient_city', 'recipient_address', 'recipient_internal_id'].forEach(function (id) {
+            var input = document.getElementById(id);
+            if (!input) return;
+            input.value = '';
+            input.classList.remove('is-invalid');
+        });
+        var recipientGusStatus = document.getElementById('recipient-gus-status');
+        if (recipientGusStatus) recipientGusStatus.textContent = '';
+    }
     function recipientDefaultForProfile(profile) {
         return profile === 'school';
     }
     function applyRecipientDefaultForProfile() {
-        if (!recipientToggle || selectedProfile() === 'person') {
+        if (!recipientToggle) {
             return;
         }
-        recipientToggle.checked = recipientDefaultForProfile(selectedProfile());
+        var profile = selectedProfile();
+        if (profile === 'person') {
+            recipientToggle.checked = false;
+            clearRecipientFields();
+            return;
+        }
+        recipientToggle.checked = recipientDefaultForProfile(profile);
     }
     function applyParticipantDefaultForProfile() {
         participantToggle.checked = participantDefaultForProfile(selectedProfile());
@@ -509,10 +527,21 @@
         setEnabled(personInvoice, person);
         setRequired(['buyer_nip', 'buyer_name'], !person);
         setRequired(['buyer_person_first_name', 'buyer_person_last_name'], person);
-        recipientToggleWrap.hidden = person;
-        var showRecipient = !person && recipientToggle.checked;
-        recipient.hidden = !showRecipient;
-        setEnabled(recipient, showRecipient);
+        if (recipientSection) {
+            recipientSection.hidden = person;
+            if (person) {
+                if (recipientToggle) recipientToggle.checked = false;
+                clearRecipientFields();
+                setEnabled(recipientSection, false);
+            } else {
+                setEnabled(recipientSection, true);
+            }
+        }
+        var showRecipient = !person && recipientToggle && recipientToggle.checked;
+        if (recipient) {
+            recipient.hidden = !showRecipient;
+            setEnabled(recipient, showRecipient);
+        }
         setRequired(['recipient_nip', 'recipient_name', 'recipient_postcode', 'recipient_city', 'recipient_address'], false);
         document.getElementById('v2-invoice-copy').textContent = person
             ? 'Podaj dane potrzebne do wystawienia faktury.'

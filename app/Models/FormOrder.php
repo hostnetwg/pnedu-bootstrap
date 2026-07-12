@@ -103,6 +103,7 @@ class FormOrder extends Model
         'payment_mode',
         'payment_status',
         'submission_source',
+        'order_form_variant',
         'status_completed',
         'notes',
         'updated_manually_at',

@@ -12,6 +12,7 @@ use App\Services\Analytics\BackendAnalyticsTracker;
 use App\Services\FormOrderCheckoutResumeService;
 use App\Services\OrderFormRecipientIdentityService;
 use App\Services\SendyService;
+use App\Support\OrderFormVariant;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Exception;
 use Illuminate\Http\Request;
@@ -1456,6 +1457,7 @@ class CourseController extends Controller
                 'payment_mode' => FormOrder::PAYMENT_MODE_DEFERRED_INVOICE,
                 'payment_status' => FormOrder::PAYMENT_STATUS_SUBMITTED,
                 'submission_source' => FormOrder::SUBMISSION_SOURCE_PNEDU_ORDER_FORM,
+                'order_form_variant' => $this->resolveOrderFormVariantForStorage($request),
                 'ip_address' => $request->ip(),
                 'fb_source' => $this->resolveFbSourceForFormOrder($validated, $order),
                 'conversion_placement' => $this->resolveConversionPlacementForFormOrder($validated, (int) $id, $order),
@@ -1727,6 +1729,7 @@ class CourseController extends Controller
                 'payment_mode' => FormOrder::PAYMENT_MODE_DEFERRED_INVOICE,
                 'payment_status' => FormOrder::PAYMENT_STATUS_SUBMITTED,
                 'submission_source' => FormOrder::SUBMISSION_SOURCE_PNEDU_ORDER_FORM,
+                'order_form_variant' => $this->resolveOrderFormVariantForStorage($request),
                 'ip_address' => $request->ip(),
                 'fb_source' => $this->resolveFbSourceForFormOrder($validated, $order),
                 'conversion_placement' => $this->resolveConversionPlacementForFormOrder($validated, (int) $id, $order),
@@ -1869,6 +1872,7 @@ class CourseController extends Controller
                 'payment_mode' => FormOrder::PAYMENT_MODE_ONLINE_GATEWAY,
                 'payment_status' => FormOrder::PAYMENT_STATUS_AWAITING_PAYMENT,
                 'submission_source' => FormOrder::SUBMISSION_SOURCE_PNEDU_ORDER_FORM,
+                'order_form_variant' => $this->resolveOrderFormVariantForStorage($request),
                 'ip_address' => $request->ip(),
                 'fb_source' => $this->resolveFbSourceForFormOrder($validated, $formOrder),
                 'conversion_placement' => $this->resolveConversionPlacementForFormOrder($validated, (int) $course->id, $formOrder),
@@ -2397,5 +2401,19 @@ class CourseController extends Controller
             'ksef_additional_entity_id_type' => null,
             'ksef_additional_entity_identifier' => null,
         ];
+    }
+
+    protected function resolveOrderFormVariantForStorage(Request $request): string
+    {
+        if ($request->routeIs('payment.order-form-v2.store')) {
+            return OrderFormVariant::V2;
+        }
+
+        $fromInput = $request->input('form_variant');
+        if (is_string($fromInput) && $fromInput !== '') {
+            return OrderFormVariant::normalize($fromInput);
+        }
+
+        return OrderFormVariant::LEGACY;
     }
 }
