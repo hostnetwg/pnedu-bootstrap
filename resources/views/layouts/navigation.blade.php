@@ -105,11 +105,24 @@
 </nav>
 
 <style>
+@media (min-width: 992px) {
+    #mainNavbar .navbar-nav .nav-link {
+        font-size: 0.875rem;
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+        white-space: nowrap;
+    }
+    .navbar .navbar-brand span {
+        font-size: 1.05rem;
+    }
+}
 .nav-moje-zasoby {
     margin: 0.2rem 0.35rem 0.2rem 0;
-    padding: 0.45rem 0.9rem !important;
+    padding: 0.4rem 0.75rem !important;
     border-radius: 0.5rem;
     font-weight: 600;
+    font-size: 0.875rem;
+    white-space: nowrap;
     color: #fff !important;
     background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 55%, #084298 100%);
     transition: background 0.15s ease;
