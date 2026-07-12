@@ -68,9 +68,16 @@
         'participant_is_contact',
         OrderFormV2ParticipantDefaults::isParticipantSameAsContactDefault($profile)
     );
-    $hasOptionalRecipient = (bool) old('has_optional_recipient', collect([
+    $hasRecipientFieldData = collect([
         $field('recipient_name'), $field('recipient_nip'), $field('recipient_address'),
-    ])->contains(fn ($value) => filled($value)));
+    ])->contains(fn ($value) => filled($value));
+    if ($errors->any()) {
+        $hasOptionalRecipient = (bool) old('has_optional_recipient');
+    } elseif ($hasRecipientFieldData) {
+        $hasOptionalRecipient = true;
+    } else {
+        $hasOptionalRecipient = $profile === 'school';
+    }
     $paymentType = old('payment_type', $testData['payment_type'] ?? ($profile === 'person' ? 'online' : 'deferred'));
     $rawVariantId = old('price_variant_id', $prefillPriceVariantId ?? ($testData['price_variant_id'] ?? null));
     $priceInfo = $course->getPriceInfoForOrderFormHeader(filled($rawVariantId) ? (int) $rawVariantId : null);
@@ -479,6 +486,15 @@
     function participantDefaultForProfile(profile) {
         return profile === 'person';
     }
+    function recipientDefaultForProfile(profile) {
+        return profile === 'school';
+    }
+    function applyRecipientDefaultForProfile() {
+        if (!recipientToggle || selectedProfile() === 'person') {
+            return;
+        }
+        recipientToggle.checked = recipientDefaultForProfile(selectedProfile());
+    }
     function applyParticipantDefaultForProfile() {
         participantToggle.checked = participantDefaultForProfile(selectedProfile());
         syncParticipant();
@@ -626,6 +642,7 @@
 
     profileInputs.forEach(function (input) {
         input.addEventListener('change', function () {
+            applyRecipientDefaultForProfile();
             syncProfile();
             applyParticipantDefaultForProfile();
             syncPaymentDefault(true);
@@ -678,8 +695,14 @@
         if (profileRadio) {
             profileRadio.checked = true;
         }
-        if (recipientToggle && (testData.recipient_name || testData.recipient_nip || testData.recipient_address)) {
-            recipientToggle.checked = true;
+        if (recipientToggle) {
+            if (profile === 'school') {
+                recipientToggle.checked = true;
+            } else if (profile === 'organisation') {
+                recipientToggle.checked = !!(testData.recipient_name || testData.recipient_nip || testData.recipient_address);
+            } else {
+                recipientToggle.checked = false;
+            }
         }
         if (contactNameDisplay) {
             contactNameDisplay.value = testData.contact_name || '';

@@ -100,6 +100,7 @@ class OrderFormV2Test extends TestCase
             ->assertSee('title="Przejdź do opisu szkolenia"', false)
             ->assertSee('Szkoła publiczna / JST')
             ->assertSee('Pola odbiorcy są opcjonalne')
+            ->assertSee('name="has_optional_recipient" value="1" checked', false)
             ->assertSee('id="v2-recipient-heading"', false)
             ->assertSee('>Odbiorca<', false)
             ->assertDontSee('Odbiorca — szkoła')
