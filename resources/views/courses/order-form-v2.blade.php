@@ -173,7 +173,7 @@
                 </div>
                 <div class="col-12 col-md-6" id="v2-contact-col-c">
                     <label class="form-label order-v2__required" for="contact_email">E-mail kontaktowy</label>
-                    <input type="email" class="form-control @error('contact_email') is-invalid @enderror" id="contact_email" name="contact_email" value="{{ $field('contact_email', auth()->user()?->email) }}" autocomplete="email" required>
+                    <input type="email" class="form-control @error('contact_email') is-invalid @enderror" id="contact_email" name="contact_email" value="{{ $field('contact_email') }}" autocomplete="{{ ($isTestMode ?? false) ? 'off' : 'email' }}" required>
                     @error('contact_email')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
                 <div class="col-12 col-md-6" id="v2-contact-col-d">
@@ -201,7 +201,7 @@
                     </div>
                     <div class="col-12 col-md-4">
                         <label class="form-label order-v2__required" for="participant_email">E-mail</label>
-                        <input type="email" class="form-control" id="participant_email" name="participant_email" value="{{ $field('participant_email') }}" autocomplete="email" required>
+                        <input type="email" class="form-control" id="participant_email" name="participant_email" value="{{ $field('participant_email') }}" autocomplete="{{ ($isTestMode ?? false) ? 'off' : 'email' }}" required>
                     </div>
                 </div>
             </div>

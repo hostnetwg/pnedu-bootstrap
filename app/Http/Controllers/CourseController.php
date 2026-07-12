@@ -842,11 +842,8 @@ class CourseController extends Controller
 
         $prefillPriceVariantId = $this->prefillPriceVariantIdForPublicOrderForm($course, $ident, $orderData);
 
-        // Dane testowe (tylko jeśli nie ma danych z zamówienia)
+        // Bez automatycznego uzupełniania danymi testowymi przy wejściu — tylko przycisk ręcznego wypełnienia.
         $testData = $orderData;
-        if (empty($testData) && $isTestMode) {
-            $testData = \App\Support\OrderFormTestData::defaults();
-        }
 
         [$testData, $checkoutResumeBanner] = $this->prepareOrderFormCheckoutResume(
             (int) $id,

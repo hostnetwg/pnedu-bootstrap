@@ -404,7 +404,7 @@
                     <legend>DANE UCZESTNIKÓW SZKOLENIA</legend>
                     <div class="mb-3">
                         <label for="participant_email" class="form-label">E-mail uczestnika <span class="text-danger">*</span></label>
-                        <input type="email" class="form-control @error('participant_email') is-invalid @enderror" id="participant_email" name="participant_email" value="{{ $testData['participant_email'] ?? old('participant_email', auth()->check() ? auth()->user()->email : '') }}" required placeholder="na ten adres zostaną przesłane dane dostępowe do szkolenia" autocomplete="email">
+                        <input type="email" class="form-control @error('participant_email') is-invalid @enderror" id="participant_email" name="participant_email" value="{{ $testData['participant_email'] ?? old('participant_email', ($isTestMode ?? false) ? '' : (auth()->check() ? auth()->user()->email : '')) }}" required placeholder="na ten adres zostaną przesłane dane dostępowe do szkolenia" autocomplete="{{ ($isTestMode ?? false) ? 'off' : 'email' }}">
                         @error('participant_email')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror

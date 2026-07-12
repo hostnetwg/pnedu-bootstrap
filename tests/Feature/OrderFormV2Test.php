@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Course;
 use App\Models\PaymentDisplayOption;
+use App\Models\User;
 use App\Support\OrderFormVariant;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
@@ -17,6 +18,10 @@ class OrderFormV2Test extends TestCase
     private string $originalVariant = 'legacy';
 
     private bool $originalShowLegacy = true;
+
+    private bool $originalAutoFillTestData = false;
+
+    private bool $originalAutoFillDevelopersOnly = false;
 
     protected function setUp(): void
     {
@@ -40,6 +45,8 @@ class OrderFormV2Test extends TestCase
         $this->originalFlag = (bool) $this->displayOptions->show_order_form_v2;
         $this->originalVariant = (string) ($this->displayOptions->default_signup_order_form_variant ?? 'legacy');
         $this->originalShowLegacy = (bool) $this->displayOptions->show_order_form;
+        $this->originalAutoFillTestData = (bool) $this->displayOptions->order_form_auto_fill_test_data;
+        $this->originalAutoFillDevelopersOnly = (bool) $this->displayOptions->order_form_auto_fill_test_data_developers_only;
     }
 
     protected function tearDown(): void
@@ -49,6 +56,8 @@ class OrderFormV2Test extends TestCase
                 'show_order_form_v2' => $this->originalFlag,
                 'default_signup_order_form_variant' => $this->originalVariant,
                 'show_order_form' => $this->originalShowLegacy,
+                'order_form_auto_fill_test_data' => $this->originalAutoFillTestData,
+                'order_form_auto_fill_test_data_developers_only' => $this->originalAutoFillDevelopersOnly,
             ])->save();
         }
 
@@ -196,6 +205,34 @@ class OrderFormV2Test extends TestCase
             ->assertOk()
             ->assertSee('action="'.route('payment.order-form.store', $course->id).'"', false)
             ->assertDontSee('id="order-form-v2"', false);
+    }
+
+    public function test_test_mode_does_not_prefill_contact_email_from_logged_in_user(): void
+    {
+        $course = $this->activeCourse();
+        $this->setFlag(true);
+
+        $developerEmail = 'waldemar.grabowski@hostnet.pl';
+        $this->displayOptions->forceFill([
+            'order_form_auto_fill_test_data' => false,
+            'order_form_auto_fill_test_data_developers_only' => true,
+        ])->save();
+        $this->displayOptions->refresh();
+
+        $user = new User(['email' => $developerEmail]);
+        $user->id = 1;
+
+        $response = $this->withoutMiddleware(\App\Http\Middleware\RecordPneduUserLoginSession::class)
+            ->actingAs($user)
+            ->get($this->orderFormUrl($course, 'payment.order-form-v2'))
+            ->assertOk()
+            ->assertSee('id="v2-fill-test"', false)
+            ->assertSee('Wypełnij dane testowe');
+
+        $html = $response->getContent();
+        $this->assertStringContainsString('id="contact_email"', $html);
+        $this->assertStringNotContainsString('value="'.$developerEmail.'"', $html);
+        $this->assertStringNotContainsString("value='".$developerEmail."'", $html);
     }
 
     private function setFlag(bool $enabled, string $variant = 'v2'): void
