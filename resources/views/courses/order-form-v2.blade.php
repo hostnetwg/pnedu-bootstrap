@@ -129,8 +129,8 @@
             <p class="text-muted">Najpierw dopasujemy formularz do sposobu rozliczenia.</p>
             <div class="row g-3">
                 @foreach([
-                    'school' => ['Szkoła publiczna / JST', 'Nabywcą jest organ prowadzący lub JST, a odbiorcą szkoła.', 'bi-building'],
-                    'organisation' => ['Placówka niepubliczna / firma', 'Faktura dla organizacji, opcjonalnie z innym odbiorcą.', 'bi-briefcase'],
+                    'school' => ['Szkoła publiczna / JST', 'Dane nabywcy oraz — jeśli wymaga tego faktura — dane odbiorcy. Wpisujesz je tak, jak przyjęte jest w Twojej placówce.', 'bi-building'],
+                    'organisation' => ['Placówka niepubliczna / firma', 'Dane nabywcy i — opcjonalnie — odbiorcy na fakturze.', 'bi-briefcase'],
                     'person' => ['Osoba prywatna', 'Proste dane nabywcy i płatność online.', 'bi-person'],
                 ] as $value => [$label, $description, $icon])
                     <div class="col-12 col-md-4">
@@ -209,13 +209,13 @@
 
         <section class="order-v2__panel p-3 mb-4" data-v2-step="3" data-analytics-section="buyer_data" data-analytics-section-v2="invoice_buyer" aria-labelledby="v2-step-3-title" hidden>
             <h2 class="h4 mb-2" id="v2-step-3-title">Dane do faktury</h2>
-            <p class="text-muted" id="v2-invoice-copy">Dane nabywcy i odbiorcy dokumentu.</p>
+            <p class="text-muted" id="v2-invoice-copy">Dane do wystawienia faktury.</p>
 
             <div id="v2-organisation-invoice">
                 <h3 class="h6 text-uppercase text-success" id="v2-buyer-heading">Nabywca</h3>
                 <div class="row g-3">
                     <div class="col-12 col-lg-7">
-                        <label class="form-label order-v2__required" for="buyer_nip">NIP nabywcy</label>
+                        <label class="form-label order-v2__required" for="buyer_nip">NIP</label>
                         <div class="input-group">
                             <input class="form-control @error('buyer_nip') is-invalid @enderror" id="buyer_nip" name="buyer_nip" value="{{ $field('buyer_nip') }}" inputmode="numeric" autocomplete="off">
                             <button class="btn btn-outline-success" type="button" data-gus-target="buyer">Pobierz z GUS</button>
@@ -223,7 +223,7 @@
                         <div class="form-text" id="buyer-gus-status" aria-live="polite"></div>
                     </div>
                     <div class="col-12">
-                        <label class="form-label order-v2__required" for="buyer_name">Nazwa nabywcy</label>
+                        <label class="form-label order-v2__required" for="buyer_name">Nazwa</label>
                         <input class="form-control" id="buyer_name" name="buyer_name" value="{{ $field('buyer_name') }}" autocomplete="organization">
                     </div>
                 </div>
@@ -232,11 +232,11 @@
             <div id="v2-person-invoice" hidden>
                 <div class="row g-3">
                     <div class="col-12 col-md-6">
-                        <label class="form-label order-v2__required" for="buyer_person_first_name">Imię nabywcy</label>
+                        <label class="form-label order-v2__required" for="buyer_person_first_name">Imię</label>
                         <input class="form-control" id="buyer_person_first_name" name="buyer_person_first_name" value="{{ $field('buyer_person_first_name') }}" autocomplete="given-name">
                     </div>
                     <div class="col-12 col-md-6">
-                        <label class="form-label order-v2__required" for="buyer_person_last_name">Nazwisko nabywcy</label>
+                        <label class="form-label order-v2__required" for="buyer_person_last_name">Nazwisko</label>
                         <input class="form-control" id="buyer_person_last_name" name="buyer_person_last_name" value="{{ $field('buyer_person_last_name') }}" autocomplete="family-name">
                     </div>
                 </div>
@@ -264,11 +264,13 @@
 
             <div id="v2-recipient" data-analytics-section="recipient_data" data-analytics-section-v2="invoice_recipient">
                 <hr>
-                <h3 class="h6 text-uppercase text-success" id="v2-recipient-heading">Odbiorca — szkoła</h3>
-                <p class="small text-muted" id="v2-recipient-copy">Wpisz dane szkoły, która otrzyma szkolenie.</p>
+                <h3 class="h6 text-uppercase text-success" id="v2-recipient-heading">Odbiorca</h3>
+                <div class="alert alert-light border small py-2 mb-3" id="v2-recipient-copy" role="note">
+                    Pola odbiorcy są opcjonalne. Uzupełnij je tylko wtedy, gdy na fakturze ma zostać wskazany inny podmiot niż nabywca.
+                </div>
                 <div class="row g-3">
                     <div class="col-12 col-lg-7">
-                        <label class="form-label" for="recipient_nip">NIP odbiorcy</label>
+                        <label class="form-label" for="recipient_nip">NIP</label>
                         <div class="input-group">
                             <input class="form-control" id="recipient_nip" name="recipient_nip" value="{{ $field('recipient_nip') }}" inputmode="numeric" autocomplete="off">
                             <button class="btn btn-outline-success" type="button" data-gus-target="recipient">Pobierz z GUS</button>
@@ -282,19 +284,19 @@
                         </div>
                     @endif
                     <div class="col-12">
-                        <label class="form-label order-v2__required" for="recipient_name">Nazwa odbiorcy</label>
+                        <label class="form-label" for="recipient_name">Nazwa</label>
                         <input class="form-control" id="recipient_name" name="recipient_name" value="{{ $field('recipient_name') }}" autocomplete="organization">
                     </div>
                     <div class="col-12 col-md-3">
-                        <label class="form-label order-v2__required" for="recipient_postcode">Kod pocztowy</label>
+                        <label class="form-label" for="recipient_postcode">Kod pocztowy</label>
                         <input class="form-control" id="recipient_postcode" name="recipient_postcode" value="{{ $field('recipient_postcode') }}" autocomplete="postal-code">
                     </div>
                     <div class="col-12 col-md-4">
-                        <label class="form-label order-v2__required" for="recipient_city">Miejscowość</label>
+                        <label class="form-label" for="recipient_city">Miejscowość</label>
                         <input class="form-control" id="recipient_city" name="recipient_city" value="{{ $field('recipient_city') }}" autocomplete="address-level2">
                     </div>
                     <div class="col-12 col-md-5">
-                        <label class="form-label order-v2__required" for="recipient_address">Ulica i numer</label>
+                        <label class="form-label" for="recipient_address">Ulica i numer</label>
                         <input class="form-control" id="recipient_address" name="recipient_address" value="{{ $field('recipient_address') }}" autocomplete="street-address">
                     </div>
                 </div>
@@ -484,7 +486,6 @@
     function syncProfile() {
         var profile = selectedProfile();
         var person = profile === 'person';
-        var school = profile === 'school';
         document.getElementById('v2-buyer-type').value = person ? 'person' : 'organisation';
         orgInvoice.hidden = person;
         personInvoice.hidden = !person;
@@ -492,15 +493,14 @@
         setEnabled(personInvoice, person);
         setRequired(['buyer_nip', 'buyer_name'], !person);
         setRequired(['buyer_person_first_name', 'buyer_person_last_name'], person);
-        recipientToggleWrap.hidden = school || person;
-        var showRecipient = school || (!person && recipientToggle.checked);
+        recipientToggleWrap.hidden = person;
+        var showRecipient = !person && recipientToggle.checked;
         recipient.hidden = !showRecipient;
         setEnabled(recipient, showRecipient);
-        setRequired(['recipient_nip', 'recipient_name', 'recipient_postcode', 'recipient_city', 'recipient_address'], showRecipient);
-        document.getElementById('v2-buyer-heading').textContent = school ? 'Nabywca — organ prowadzący / JST' : 'Nabywca — organizacja';
-        document.getElementById('v2-invoice-copy').textContent = school
-            ? 'Nabywcą faktury jest organ prowadzący lub JST, a odbiorcą szkoła.'
-            : (person ? 'Podaj podstawowe dane nabywcy.' : 'Podaj dane organizacji. Odbiorcę uzupełnij tylko wtedy, gdy jest inny.');
+        setRequired(['recipient_nip', 'recipient_name', 'recipient_postcode', 'recipient_city', 'recipient_address'], false);
+        document.getElementById('v2-invoice-copy').textContent = person
+            ? 'Podaj dane potrzebne do wystawienia faktury.'
+            : 'Dane do wystawienia faktury.';
         updateContactFieldsVisibility();
         syncParticipant();
         syncPaymentDefault(false);
@@ -677,6 +677,9 @@
         var profileRadio = form.querySelector('[name="customer_profile"][value="' + profile + '"]');
         if (profileRadio) {
             profileRadio.checked = true;
+        }
+        if (recipientToggle && (testData.recipient_name || testData.recipient_nip || testData.recipient_address)) {
+            recipientToggle.checked = true;
         }
         if (contactNameDisplay) {
             contactNameDisplay.value = testData.contact_name || '';
