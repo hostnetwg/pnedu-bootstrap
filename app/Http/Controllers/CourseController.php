@@ -8,10 +8,12 @@ use App\Models\CoursePriceVariant;
 use App\Models\FormOrder;
 use App\Models\FormOrderParticipant;
 use App\Models\Participant;
+use App\Models\PaymentDisplayOption;
 use App\Services\Analytics\BackendAnalyticsTracker;
 use App\Services\FormOrderCheckoutResumeService;
 use App\Services\OrderFormRecipientIdentityService;
 use App\Services\SendyService;
+use App\Support\DeveloperOnlinePaymentTest;
 use App\Support\OrderFormVariant;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Exception;
@@ -483,8 +485,10 @@ class CourseController extends Controller
     public function payOnline($id)
     {
         $course = \App\Models\Course::findOrFail($id);
+        $displayOptions = PaymentDisplayOption::getForCoursePage();
+        $developerSymbolicPayment = DeveloperOnlinePaymentTest::shouldApplySymbolicAmount($displayOptions, auth()->user());
 
-        return view('courses.pay-online', compact('course'));
+        return view('courses.pay-online', compact('course', 'developerSymbolicPayment'));
     }
 
     /**
@@ -607,7 +611,7 @@ class CourseController extends Controller
     protected function processPayUPayment(Request $request, $course)
     {
         $priceInfo = $course->getCurrentPrice();
-        $totalAmount = $priceInfo['price'] ?? 0;
+        $totalAmount = $this->resolveOnlineCheckoutAmount((float) ($priceInfo['price'] ?? 0));
 
         if ($totalAmount <= 0) {
             return redirect()->route('payment.online', $course->id)
@@ -636,7 +640,7 @@ class CourseController extends Controller
             'ip_address' => $request->ip(),
         ]);
 
-        $payuService = new \App\Services\PayUService;
+        $payuService = $this->makePayUService();
         $notifyUrl = route('payment.payu.notify');
         $continueUrl = route('payment.payu.return');
 
@@ -667,7 +671,7 @@ class CourseController extends Controller
     protected function processPayNowPayment(Request $request, $course)
     {
         $priceInfo = $course->getCurrentPrice();
-        $totalAmount = $priceInfo['price'] ?? 0;
+        $totalAmount = $this->resolveOnlineCheckoutAmount((float) ($priceInfo['price'] ?? 0));
 
         if ($totalAmount <= 0) {
             return redirect()->route('payment.online', $course->id)
@@ -696,7 +700,7 @@ class CourseController extends Controller
             'ip_address' => $request->ip(),
         ]);
 
-        $paynowService = new \App\Services\PayNowService;
+        $paynowService = $this->makePayNowService();
         $notifyUrl = route('payment.paynow.notify');
         $continueUrl = route('payment.paynow.return');
 
@@ -948,12 +952,11 @@ class CourseController extends Controller
         );
 
         $user = auth()->user();
-
-        // Źródło marketingowe (jak stary URL ?fb=1134) – domyślnie z query, potem z edycji zamówienia
         $fbSourceDefault = $this->resolveFbSourceDefaultForForm($existingOrder);
         $conversionPlacementDefault = $this->resolveConversionPlacementDefaultForForm((int) $id, $existingOrder);
+        $developerSymbolicPayment = DeveloperOnlinePaymentTest::shouldApplySymbolicAmount($displayOptions, $user);
 
-        return view('courses.order-form', compact('course', 'testData', 'isTestMode', 'isEditMode', 'user', 'prefillPriceVariantId', 'fbSourceDefault', 'conversionPlacementDefault', 'checkoutResumeBanner'));
+        return view('courses.order-form', compact('course', 'testData', 'isTestMode', 'isEditMode', 'user', 'prefillPriceVariantId', 'fbSourceDefault', 'conversionPlacementDefault', 'checkoutResumeBanner', 'developerSymbolicPayment'));
     }
 
     /**
@@ -1007,8 +1010,9 @@ class CourseController extends Controller
         $user = auth()->user();
         $fbSourceDefault = $this->resolveFbSourceDefaultForForm(null);
         $conversionPlacementDefault = $this->resolveConversionPlacementDefaultForForm((int) $course->id, null);
+        $developerSymbolicPayment = DeveloperOnlinePaymentTest::shouldApplySymbolicAmount($displayOptions, $user);
 
-        return view($viewName, compact('course', 'testData', 'isTestMode', 'isEditMode', 'user', 'prefillPriceVariantId', 'fbSourceDefault', 'conversionPlacementDefault', 'checkoutResumeBanner'));
+        return view($viewName, compact('course', 'testData', 'isTestMode', 'isEditMode', 'user', 'prefillPriceVariantId', 'fbSourceDefault', 'conversionPlacementDefault', 'checkoutResumeBanner', 'developerSymbolicPayment'));
     }
 
     /**
@@ -1798,7 +1802,9 @@ class CourseController extends Controller
      */
     protected function processOrderFormOnlinePayment(Request $request, Course $course, array $validated, string $buyerType, ?int $coursePriceVariantId, BackendAnalyticsTracker $backendAnalyticsTracker)
     {
-        $totalAmount = $this->productPriceForFormOrder($course, $coursePriceVariantId) ?? 0;
+        $totalAmount = $this->resolveOnlineCheckoutAmount(
+            (float) ($this->productPriceForFormOrder($course, $coursePriceVariantId) ?? 0)
+        );
 
         if ($totalAmount <= 0) {
             return redirect()->route('payment.order-form', $course->id)
@@ -1955,7 +1961,7 @@ class CourseController extends Controller
         }
 
         if ($paymentGateway === 'payu') {
-            $payuService = new \App\Services\PayUService;
+            $payuService = $this->makePayUService();
             $notifyUrl = route('payment.payu.notify');
             $continueUrl = route('payment.payu.return');
             $result = $payuService->createOrder($onlineOrder, $notifyUrl, $continueUrl);
@@ -1974,7 +1980,7 @@ class CourseController extends Controller
         }
 
         if ($paymentGateway === 'paynow') {
-            $paynowService = new \App\Services\PayNowService;
+            $paynowService = $this->makePayNowService();
             $notifyUrl = route('payment.paynow.notify');
             $continueUrl = route('payment.paynow.return');
             $result = $paynowService->createOrder($onlineOrder, $notifyUrl, $continueUrl);
@@ -2415,5 +2421,34 @@ class CourseController extends Controller
         }
 
         return OrderFormVariant::LEGACY;
+    }
+
+    protected function resolveOnlineCheckoutAmount(float $normalAmount): float
+    {
+        return DeveloperOnlinePaymentTest::resolveCheckoutAmount(
+            $normalAmount,
+            PaymentDisplayOption::getForCoursePage(),
+            auth()->user()
+        );
+    }
+
+    protected function makePayUService(): \App\Services\PayUService
+    {
+        return new \App\Services\PayUService(
+            DeveloperOnlinePaymentTest::sandboxGatewayOverride(
+                PaymentDisplayOption::getForCoursePage(),
+                auth()->user()
+            )
+        );
+    }
+
+    protected function makePayNowService(): \App\Services\PayNowService
+    {
+        return new \App\Services\PayNowService(
+            DeveloperOnlinePaymentTest::sandboxGatewayOverride(
+                PaymentDisplayOption::getForCoursePage(),
+                auth()->user()
+            )
+        );
     }
 }

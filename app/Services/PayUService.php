@@ -12,11 +12,30 @@ class PayUService
 {
     protected string $baseUrl;
 
+    protected bool $useSandbox;
+
     protected ?string $accessToken = null;
 
-    public function __construct()
+    public function __construct(?bool $forceSandbox = null)
     {
-        $this->baseUrl = config('services.payu.base_url', 'https://secure.snd.payu.com');
+        $this->useSandbox = $forceSandbox ?? (bool) config('services.payu.sandbox');
+        $this->baseUrl = $this->useSandbox
+            ? 'https://secure.snd.payu.com'
+            : 'https://secure.payu.com';
+    }
+
+    protected function configValue(string $key): ?string
+    {
+        if ($this->useSandbox) {
+            $sandboxValue = config('services.payu.sandbox_'.$key);
+            if (filled($sandboxValue)) {
+                return (string) $sandboxValue;
+            }
+        }
+
+        $value = config('services.payu.'.$key);
+
+        return filled($value) ? (string) $value : null;
     }
 
     /**
@@ -28,8 +47,8 @@ class PayUService
             return $this->accessToken;
         }
 
-        $clientId = config('services.payu.client_id');
-        $clientSecret = config('services.payu.client_secret');
+        $clientId = $this->configValue('client_id');
+        $clientSecret = $this->configValue('client_secret');
 
         if (empty($clientId) || empty($clientSecret)) {
             Log::error('PayU: brak client_id lub client_secret w konfiguracji. Sprawdź .env: PAYU_CLIENT_ID, PAYU_CLIENT_SECRET');
@@ -84,7 +103,7 @@ class PayUService
             return ['success' => false, 'error' => 'Nie udało się uzyskać tokenu PayU'];
         }
 
-        $posId = config('services.payu.pos_id');
+        $posId = $this->configValue('pos_id');
         if (empty($posId)) {
             return ['success' => false, 'error' => 'Brak POS ID PayU w konfiguracji'];
         }
@@ -94,8 +113,11 @@ class PayUService
             $course = Course::on('pneadm')->find($order->course_id);
         }
 
-        $priceInfo = $course?->getCurrentPrice();
-        $amountGross = $priceInfo['price'] ?? $order->total_amount;
+        $amountGross = (float) $order->total_amount;
+        if ($amountGross <= 0) {
+            $priceInfo = $course?->getCurrentPrice();
+            $amountGross = (float) ($priceInfo['price'] ?? 0);
+        }
         $amountGrosze = (int) round($amountGross * 100); // PayU wymaga groszy
 
         if ($amountGrosze <= 0) {

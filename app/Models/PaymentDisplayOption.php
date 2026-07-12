@@ -63,6 +63,8 @@ class PaymentDisplayOption extends Model
                     'show_order_form_alt' => (bool) $row->show_order_form_alt,
                     'order_form_auto_fill_test_data' => (bool) ($row->order_form_auto_fill_test_data ?? false),
                     'order_form_auto_fill_test_data_developers_only' => (bool) ($row->order_form_auto_fill_test_data_developers_only ?? false),
+                    'developer_online_payment_test_enabled' => (bool) ($row->developer_online_payment_test_enabled ?? false),
+                    'developer_online_payment_sandbox_gateway' => (bool) ($row->developer_online_payment_sandbox_gateway ?? true),
                     'default_post_end_access_duration_value' => (int) ($row->default_post_end_access_duration_value ?? 2),
                     'default_post_end_access_duration_unit' => (string) ($row->default_post_end_access_duration_unit ?? 'months'),
                 ];
@@ -81,6 +83,8 @@ class PaymentDisplayOption extends Model
             'show_order_form_alt' => true,
             'order_form_auto_fill_test_data' => false,
             'order_form_auto_fill_test_data_developers_only' => false,
+            'developer_online_payment_test_enabled' => false,
+            'developer_online_payment_sandbox_gateway' => true,
             'default_post_end_access_duration_value' => 2,
             'default_post_end_access_duration_unit' => 'months',
         ];

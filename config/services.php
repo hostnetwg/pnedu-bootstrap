@@ -79,6 +79,10 @@ return [
         'second_key' => env('PAYU_SECOND_KEY'),
         'client_id' => env('PAYU_CLIENT_ID'),
         'client_secret' => env('PAYU_CLIENT_SECRET'),
+        'sandbox_pos_id' => env('PAYU_SANDBOX_POS_ID'),
+        'sandbox_second_key' => env('PAYU_SANDBOX_SECOND_KEY'),
+        'sandbox_client_id' => env('PAYU_SANDBOX_CLIENT_ID'),
+        'sandbox_client_secret' => env('PAYU_SANDBOX_CLIENT_SECRET'),
         // Sandbox ma osobne POS – jeśli 4421299 nie działa w sandbox, użyj produkcji (PAYU_SANDBOX=false)
         'base_url' => filter_var(env('PAYU_SANDBOX', true), FILTER_VALIDATE_BOOLEAN) ? 'https://secure.snd.payu.com' : 'https://secure.payu.com',
     ],
@@ -87,6 +91,8 @@ return [
         'sandbox' => filter_var(env('PAYNOW_SANDBOX', true), FILTER_VALIDATE_BOOLEAN),
         'api_key' => env('PAYNOW_API_KEY'),
         'signature_key' => env('PAYNOW_SIGNATURE_KEY'),
+        'sandbox_api_key' => env('PAYNOW_SANDBOX_API_KEY'),
+        'sandbox_signature_key' => env('PAYNOW_SANDBOX_SIGNATURE_KEY'),
         'base_url' => filter_var(env('PAYNOW_SANDBOX', true), FILTER_VALIDATE_BOOLEAN) ? 'https://api.sandbox.paynow.pl' : 'https://api.paynow.pl',
     ],
 

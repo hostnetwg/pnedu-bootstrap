@@ -305,6 +305,7 @@
 
 @section('content')
 <div class="container py-5">
+    @include('courses.partials.developer-symbolic-payment-alert')
     <div class="row">
         <div class="col-12 col-lg-12">
             <h1 class="mb-4 text-center">Formularz zamówienia</h1>

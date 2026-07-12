@@ -92,6 +92,7 @@
 @endphp
 
 <main class="container py-4 py-lg-5 order-v2" id="order-form-v2-main">
+    @include('courses.partials.developer-symbolic-payment-alert')
     @include('courses.partials.order-form-v2-offer-summary', ['course' => $course, 'priceInfo' => $priceInfo])
 
     @if($errors->any())

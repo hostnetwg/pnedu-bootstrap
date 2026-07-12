@@ -17,11 +17,22 @@ class PayNowService
 
     protected string $signatureKey;
 
-    public function __construct()
+    protected bool $useSandbox;
+
+    public function __construct(?bool $forceSandbox = null)
     {
-        $this->baseUrl = config('services.paynow.base_url', 'https://api.sandbox.paynow.pl');
-        $this->apiKey = trim(config('services.paynow.api_key', ''));
-        $this->signatureKey = trim(config('services.paynow.signature_key', ''));
+        $this->useSandbox = $forceSandbox ?? (bool) config('services.paynow.sandbox');
+        $this->baseUrl = $this->useSandbox
+            ? 'https://api.sandbox.paynow.pl'
+            : 'https://api.paynow.pl';
+
+        if ($this->useSandbox) {
+            $this->apiKey = trim((string) (config('services.paynow.sandbox_api_key') ?: config('services.paynow.api_key', '')));
+            $this->signatureKey = trim((string) (config('services.paynow.sandbox_signature_key') ?: config('services.paynow.signature_key', '')));
+        } else {
+            $this->apiKey = trim((string) config('services.paynow.api_key', ''));
+            $this->signatureKey = trim((string) config('services.paynow.signature_key', ''));
+        }
 
         if (empty($this->apiKey) || empty($this->signatureKey)) {
             Log::warning('PayNow: brak konfiguracji API Key lub Signature Key. Sprawdź .env: PAYNOW_API_KEY, PAYNOW_SIGNATURE_KEY');
@@ -31,6 +42,7 @@ class PayNowService
             $sigKeyPreview = substr($this->signatureKey, 0, 8).'...'.substr($this->signatureKey, -4);
             Log::debug('PayNow: konfiguracja załadowana', [
                 'base_url' => $this->baseUrl,
+                'sandbox' => $this->useSandbox,
                 'api_key_preview' => $apiKeyPreview,
                 'signature_key_preview' => $sigKeyPreview,
             ]);
@@ -125,8 +137,11 @@ class PayNowService
             $course = Course::on('pneadm')->find($order->course_id);
         }
 
-        $priceInfo = $course?->getCurrentPrice();
-        $amountGross = $priceInfo['price'] ?? $order->total_amount;
+        $amountGross = (float) $order->total_amount;
+        if ($amountGross <= 0) {
+            $priceInfo = $course?->getCurrentPrice();
+            $amountGross = (float) ($priceInfo['price'] ?? 0);
+        }
         $amountGrosze = (int) round($amountGross * 100); // PayNow wymaga groszy
 
         if ($amountGrosze < 100) {

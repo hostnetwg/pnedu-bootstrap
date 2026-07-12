@@ -71,6 +71,8 @@
         <div class="col-lg-7">
             <h1 class="mb-4">Zapłać online za szkolenie</h1>
 
+            @include('courses.partials.developer-symbolic-payment-alert')
+
             <div class="course-title-section">
                 <strong>Szkolenie:</strong> {!! $course->title !!}<br>
                 <strong>Data:</strong> {{ \Carbon\Carbon::parse($course->start_date)->format('d.m.Y H:i') }}
