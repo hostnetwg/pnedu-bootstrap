@@ -11,6 +11,60 @@
         @endphp
         @if(!empty($gtmId) || !empty($gaId))
             <script>
+                // Chrome/Firefox can show a permission prompt ("Apps on device" / Local Network Access)
+                // when a page attempts to connect to localhost or private network ranges. Some third-party
+                // tags may probe local endpoints; blocking these avoids the prompt without disabling analytics.
+                (function () {
+                    function isPrivateOrLoopbackHost(hostname) {
+                        if (!hostname) { return false; }
+                        var h = String(hostname).toLowerCase();
+                        if (h === 'localhost') { return true; }
+                        if (h.endsWith('.local')) { return true; }
+                        // IPv4 private/loopback ranges
+                        if (/^127\./.test(h)) { return true; }
+                        if (/^10\./.test(h)) { return true; }
+                        if (/^192\.168\./.test(h)) { return true; }
+                        if (/^172\.(1[6-9]|2\d|3[0-1])\./.test(h)) { return true; }
+                        return false;
+                    }
+
+                    function shouldBlockUrl(input) {
+                        try {
+                            // Support Request objects + relative URLs.
+                            var urlString = (input && input.url) ? input.url : String(input);
+                            var u = new URL(urlString, window.location.href);
+                            if (u.protocol !== 'http:' && u.protocol !== 'https:') { return false; }
+                            return isPrivateOrLoopbackHost(u.hostname);
+                        } catch (e) {
+                            return false;
+                        }
+                    }
+
+                    // fetch()
+                    if (typeof window.fetch === 'function') {
+                        var _fetch = window.fetch.bind(window);
+                        window.fetch = function (input, init) {
+                            if (shouldBlockUrl(input)) {
+                                return Promise.reject(new Error('Blocked local network request'));
+                            }
+                            return _fetch(input, init);
+                        };
+                    }
+
+                    // XMLHttpRequest
+                    if (typeof window.XMLHttpRequest === 'function' && window.XMLHttpRequest.prototype) {
+                        var _open = window.XMLHttpRequest.prototype.open;
+                        window.XMLHttpRequest.prototype.open = function (method, url) {
+                            if (shouldBlockUrl(url)) {
+                                throw new Error('Blocked local network request');
+                            }
+                            return _open.apply(this, arguments);
+                        };
+                    }
+                })();
+            </script>
+
+            <script>
                 window.dataLayer = window.dataLayer || [];
                 function gtag(){dataLayer.push(arguments);}
 

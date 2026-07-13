@@ -31,6 +31,18 @@ class MarketingAnalyticsOptOutTest extends TestCase
         $this->assertStringContainsString('gtag/js', $html);
     }
 
+    public function test_analytics_head_includes_local_network_blocker_before_gtm(): void
+    {
+        $html = $this->renderAnalyticsHeadInProduction();
+
+        $blockerPos = strpos($html, 'Blocked local network request');
+        $gtmPos = strpos($html, 'GTM-TESTTAG');
+
+        $this->assertNotFalse($blockerPos, 'Brak skryptu blokującego Local Network Access.');
+        $this->assertNotFalse($gtmPos, 'Brak GTM w nagłówku analityki.');
+        $this->assertLessThan($gtmPos, $blockerPos, 'Blokada localhost musi być przed GTM.');
+    }
+
     public function test_analytics_head_omits_gtm_and_ga_with_analytics_opt_out_cookie(): void
     {
         $html = $this->renderAnalyticsHeadInProduction(['pne_skip_analytics' => '1']);
