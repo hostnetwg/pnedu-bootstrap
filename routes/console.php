@@ -12,10 +12,14 @@ Schedule::command('users:send-verification-reminders')->daily();
 Schedule::command('users:purge-unverified')->daily();
 
 /*
- * Kolejka zadań (np. zapis do Sendy po rejestracji zaświadczenia) – na hostingu
- * współdzielonym bez Supervisora: cron co minutę wywołuje schedule:run.
- * Zob. pneadm/docs/QUEUE_SEOHOST.md (ten sam schemat dla domeny pnedu.pl).
+ * Kolejka (analytics, Sendy, e-mail) — NIE przez schedule:run na produkcji.
+ *
+ * Prod SeoHost: osobny cron co minutę z flock:
+ *   queue:work database --queue=default,analytics --stop-when-empty --max-time=55 ...
+ * (musi obejmować kolejkę analytics — StoreAnalyticsEventJob).
+ *
+ * schedule:run na prod tylko dla komend daily() powyżej.
+ * Zob. pneadm/docs/deploy/PRODUCTION_QUEUE_OPS.md (sekcja „Cron pnedu.pl”).
+ *
+ * Lokalnie (Sail): sail artisan queue:work database --queue=default,analytics
  */
-Schedule::command('queue:work --stop-when-empty --max-time=300')
-    ->everyMinute()
-    ->withoutOverlapping(5);
