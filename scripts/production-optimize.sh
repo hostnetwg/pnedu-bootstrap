@@ -27,4 +27,13 @@ php artisan route:cache
 php artisan view:cache
 php artisan event:cache
 
+echo "==> Symlinki grafik pneadm (static /media/pneadm/, bez PHP)..."
+if [[ -x scripts/prod-link-pneadm-media.sh ]]; then
+    bash scripts/prod-link-pneadm-media.sh || echo "    UWAGA: symlinki mediów nie utworzone — uruchom ręcznie scripts/prod-link-pneadm-media.sh"
+elif [[ -f scripts/prod-link-pneadm-media.sh ]]; then
+    bash scripts/prod-link-pneadm-media.sh || echo "    UWAGA: symlinki mediów nie utworzone — uruchom ręcznie scripts/prod-link-pneadm-media.sh"
+else
+    echo "    Brak scripts/prod-link-pneadm-media.sh — pomijam."
+fi
+
 echo "==> Gotowe. Sprawdź: php artisan about"

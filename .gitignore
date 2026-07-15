@@ -12,6 +12,9 @@ public/hot                 # plik Hot Module Reload
 /public/robots.txt
 /public/sitemap.xml
 
+# Symlinki do storage pneadm (scripts/prod-link-pneadm-media.sh) — nie commitować
+/public/media
+
 # --- Laravel ---
 storage/*
 !storage/.gitignore        # zachowaj puste foldery
@@ -41,6 +44,7 @@ thumbs.db
 **/*Zone.Identifier
 **/*:Zone.Identifier
 
-storage/app/publicpublic/robots.txt
+storage/app/public
+public/robots.txt
 .env
 public/storage

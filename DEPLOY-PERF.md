@@ -24,6 +24,35 @@ bash scripts/production-optimize.sh
 | **5** | Filtry `?typ=` bez pełnego przeładowania strony | `pnedu` |
 | **6** | Cache strony głównej (goście), lazy-load obrazów, cache statycznych plików | `pnedu` |
 | **7** | Log wydajności `/dashboard/*`, skrypt TTFB | `pnedu` |
+| **8** | Statyczne grafiki kursów `/media/pneadm/` (symlinki, bez PHP) | `pnedu` + SSH |
+
+---
+
+## Faza 8 — `/media/pneadm/` bez Laravel (CPU / LVE)
+
+Na produkcji `PNEADM_MEDIA_PROXY=true` generuje URL-e `https://pnedu.pl/media/pneadm/…`. Bez symlinków każde zdjęcie kursu idzie przez `index.php` (proxy HTTP do adm) — przy liście szkoleń to **dziesiątki procesów lsphp** i limity LVE.
+
+**Rozwiązanie:** symlinki z `public/media/pneadm/…` do `pneadm/storage/app/public/…`. LiteSpeed serwuje plik statycznie (`RewriteCond … !-f`), kontroler proxy zostaje jako fallback.
+
+Po `git pull` na produkcji (raz; potem też w `production-optimize.sh`):
+
+```bash
+cd ~/domains/pnedu.pl/app
+bash scripts/prod-link-pneadm-media.sh
+```
+
+Weryfikacja:
+
+```bash
+# powinno wskazywać na storage pneadm
+ls -la public/media/pneadm/courses/images | head
+
+SAMPLE=$(ls ~/domains/adm.pnedu.pl/pneadm/storage/app/public/courses/images | head -1)
+curl -sI "https://pnedu.pl/media/pneadm/courses/images/$SAMPLE" | head -8
+# Oczekiwane: HTTP/1.1 200, Cache-Control z max-age=604800, brak Set-Cookie Laravel, szybki TTFB
+```
+
+`PNEADM_MEDIA_PROXY` zostaje `true` (te same URL-e, ten sam origin). Nie wyłączaj proxy tylko po to, by iść na `adm.pnedu.pl/storage/…`.
 
 ---
 
@@ -206,8 +235,10 @@ php artisan migrate --force
 
 ## Powiązane pliki
 
-- `scripts/production-optimize.sh` — cache po deployu
+- `scripts/production-optimize.sh` — cache po deployu + symlinki mediów
+- `scripts/prod-link-pneadm-media.sh` — Faza 8: static `/media/pneadm/`
 - `scripts/check-public-ttfb.sh` — szybki pomiar TTFB
 - `config/observability.php` — progi logów panelu (Faza 7)
 - `config/seo.php` — cache strony głównej (Faza 6)
 - `.env.example` — komentarze do zmiennych
+- `public/.htaccess` — cache Vite, obrazów publicznych i `/media/pneadm/`
