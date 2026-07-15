@@ -385,7 +385,9 @@ class CourseController extends Controller
         // Archiwalne szkolenia (zakończone):
         // - nowe: kursy oznaczone "Pokaż na stronie głównej pnedu.pl"
         // - legacy (wsteczna zgodność): certgen_Publigo + id_old
-        $archivedCourses = Course::with('priceVariants')
+        $archivedSearch = trim((string) $request->query('q', ''));
+
+        $archivedQuery = Course::with('priceVariants')
             ->where('is_active', true)
             ->where('type', 'online')
             ->whereNull('deleted_at')
@@ -406,11 +408,36 @@ class CourseController extends Controller
                     $q->whereNull('end_date')
                         ->where('start_date', '<', now()->subDays(30));
                 });
-            })
-            ->orderBy('start_date', 'desc')
-            ->get();
+            });
 
-        return view('courses.individual', compact('upcomingCourses', 'archivedCourses'));
+        $hasArchivedCourses = (clone $archivedQuery)->exists();
+
+        if ($archivedSearch !== '') {
+            $archivedQuery->where('title', 'like', '%'.$archivedSearch.'%');
+        }
+
+        $archivedCourses = $archivedQuery
+            ->orderBy('start_date', 'desc')
+            ->paginate(15)
+            ->withQueryString()
+            ->fragment('szkolenia-zakonczone');
+
+        $showArchivedSection = $hasArchivedCourses || $archivedSearch !== '';
+
+        if ($request->ajax() && $request->boolean('load_more')) {
+            return response()->json([
+                'html' => view('courses.partials.archived-courses-items', compact('archivedCourses'))->render(),
+                'next_page_url' => $archivedCourses->nextPageUrl(),
+                'has_more' => $archivedCourses->hasMorePages(),
+            ]);
+        }
+
+        return view('courses.individual', compact(
+            'upcomingCourses',
+            'archivedCourses',
+            'archivedSearch',
+            'showArchivedSection',
+        ));
     }
 
     /**

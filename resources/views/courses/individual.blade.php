@@ -128,62 +128,82 @@
             @endforelse
         </div>
 
-        @if($upcomingCourses->count() > 0 && $archivedCourses->count() > 0)
-            <!-- Pozioma linia z napisem -->
-            <div class="row my-5">
-                <div class="col-12">
+        @if($showArchivedSection)
+            <div id="szkolenia-zakonczone" class="mt-5">
+                @if($upcomingCourses->count() > 0)
                     <hr class="my-4" style="border-top: 2px solid #dee2e6;">
-                    <div class="text-center">
-                        <h3 class="fw-bold text-muted">Szkolenia zakończone</h3>
-                    </div>
-                    <hr class="my-4" style="border-top: 2px solid #dee2e6;">
+                @endif
+                <div class="text-center mb-4">
+                    <h3 class="fw-bold text-muted">Szkolenia zakończone</h3>
                 </div>
-            </div>
-        @endif
+                @if($upcomingCourses->count() > 0)
+                    <hr class="my-4 mb-5" style="border-top: 2px solid #dee2e6;">
+                @endif
 
-        <!-- Archiwalne szkolenia -->
-        @if($archivedCourses->count() > 0)
-            <div class="row row-cols-1 row-cols-md-3 g-4" data-aos="fade-up">
-                @foreach($archivedCourses as $course)
-                    <div class="col">
-                        <div class="card h-100 border-0 shadow-sm hover-lift course-card-archived">
-                            <div class="position-relative">
-                                <a href="{{ route('courses.show', $course->id) }}" class="d-block text-decoration-none course-card-archived-media" style="color: inherit;">
-                                    @if(!empty($course->image))
-                                        <img src="{{ $course->publicImageUrl() }}" class="card-img-top" alt="{{ $course->title }}">
-                                    @else
-                                        <div class="card-img-top d-flex align-items-center justify-content-center mb-2" style="width:100%; aspect-ratio:1/1; background:#e9ecef; border: 2px solid #dee2e6; border-radius: .5rem; border-style:dashed;">
-                                            <i class="bi bi-mortarboard" style="font-size: 4rem; color: #f8f9fa;"></i>
-                                        </div>
-                                    @endif
+                <div class="row justify-content-center mb-4">
+                    <div class="col-lg-8">
+                        <form method="GET"
+                              action="{{ route('courses.individual') }}#szkolenia-zakonczone"
+                              class="row g-2 align-items-end">
+                            <div class="col-md-9">
+                                <label for="archived-q" class="form-label form-label-sm mb-1">Szukaj w zakończonych szkoleniach</label>
+                                <input type="search"
+                                       name="q"
+                                       id="archived-q"
+                                       class="form-control"
+                                       value="{{ $archivedSearch }}"
+                                       placeholder="Fragment tytułu szkolenia..."
+                                       autocomplete="off">
+                            </div>
+                            <div class="col-md-3">
+                                <button type="submit" class="btn btn-outline-secondary w-100">
+                                    <i class="bi bi-search me-1"></i>Szukaj
+                                </button>
+                            </div>
+                        </form>
+                        @if($archivedSearch !== '')
+                            <div class="text-center mt-2">
+                                <a href="{{ route('courses.individual') }}#szkolenia-zakonczone" class="small text-muted">
+                                    Wyczyść wyszukiwanie
                                 </a>
                             </div>
-                            <div class="card-body d-flex flex-column p-4">
-                                <h5 class="card-title fw-bold mb-3">{!! $course->title !!}</h5>
-                                @php
-                                    $start = \Carbon\Carbon::parse($course->start_date)->locale('pl');
-                                    $end = $course->end_date ? \Carbon\Carbon::parse($course->end_date) : null;
-                                @endphp
-                                <ul class="list-unstyled mb-3">
-                                    <li><strong>Data:</strong> {{ $start->format('d.m.Y') }}</li>
-                                    <li><strong>Godzina:</strong> {{ $start->format('H:i') }}@if($end) ({{ $start->diffInMinutes($end) }} min)@endif</li>
-                                    <li><strong>Dzień tygodnia:</strong> {{ $start->translatedFormat('l') }}</li>
-                                </ul>
-                                <p class="card-text">
-                                    <strong>{{ $course->trainer_title }}:</strong> {{ $course->trainer }}
-                                </p>
-                                <div class="mt-auto pt-3">
-                                    <a href="{{ route('courses.show', $course->id) }}"
-                                       class="btn btn-outline-secondary w-100 fw-bold d-flex align-items-center justify-content-center gap-2 shadow-sm"
-                                       style="font-size:1.15rem; letter-spacing:0.5px;">
-                                        <span>Zobacz szczegóły</span>
-                                        <i class="bi bi-arrow-right-circle"></i>
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
+                        @endif
                     </div>
-                @endforeach
+                </div>
+
+                @if($archivedSearch !== '')
+                    <p class="text-center text-muted small mb-4">
+                        @if($archivedCourses->total() > 0)
+                            Znaleziono {{ $archivedCourses->total() }}
+                            {{ $archivedCourses->total() === 1 ? 'pasujące szkolenie' : 'pasujących szkoleń' }}
+                            dla „{{ $archivedSearch }}”
+                        @else
+                            Brak szkoleń pasujących do „{{ $archivedSearch }}”
+                        @endif
+                    </p>
+                @endif
+
+                @if($archivedCourses->count() > 0)
+            <div class="row row-cols-1 row-cols-md-3 g-4 js-archived-courses-grid" data-aos="fade-up">
+                @include('courses.partials.archived-courses-items', ['archivedCourses' => $archivedCourses])
+            </div>
+
+            @if($archivedCourses->hasMorePages())
+                <div class="d-flex justify-content-center mt-4 mb-2">
+                    <button type="button"
+                            class="btn btn-outline-primary px-4 js-archived-load-more"
+                            data-next-url="{{ $archivedCourses->nextPageUrl() }}">
+                        <span class="js-archived-load-more-label">Pokaż więcej</span>
+                        <span class="js-archived-load-more-spinner d-none spinner-border spinner-border-sm ms-2" role="status" aria-hidden="true"></span>
+                    </button>
+                </div>
+            @endif
+            @if($archivedCourses->hasPages())
+                <div class="d-flex justify-content-center mt-2 js-archived-courses-pagination">
+                    {{ $archivedCourses->links('pagination::bootstrap-4') }}
+                </div>
+            @endif
+                @endif
             </div>
         @endif
     </div>
@@ -256,12 +276,88 @@
 @push('scripts')
 <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
 <script>
-    // Initialize AOS
-    AOS.init({ 
-        duration: 800, 
+    AOS.init({
+        duration: 800,
         once: true,
         offset: 100
     });
+
+    (function () {
+        var button = document.querySelector('.js-archived-load-more');
+        var grid = document.querySelector('.js-archived-courses-grid');
+        if (!button || !grid) {
+            return;
+        }
+
+        var label = button.querySelector('.js-archived-load-more-label');
+        var spinner = button.querySelector('.js-archived-load-more-spinner');
+        var loading = false;
+
+        function setLoading(isLoading) {
+            loading = isLoading;
+            button.disabled = isLoading;
+            button.setAttribute('aria-busy', isLoading ? 'true' : 'false');
+            if (label) {
+                label.textContent = isLoading ? 'Ładowanie…' : 'Pokaż więcej';
+            }
+            if (spinner) {
+                spinner.classList.toggle('d-none', !isLoading);
+            }
+        }
+
+        button.addEventListener('click', function () {
+            if (loading) {
+                return;
+            }
+
+            var nextUrl = button.getAttribute('data-next-url');
+            if (!nextUrl) {
+                return;
+            }
+
+            var requestUrl = new URL(nextUrl, window.location.origin);
+            requestUrl.searchParams.set('load_more', '1');
+
+            setLoading(true);
+
+            fetch(requestUrl.toString(), {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    Accept: 'application/json',
+                },
+                credentials: 'same-origin',
+            })
+                .then(function (response) {
+                    if (!response.ok) {
+                        throw new Error('Archived courses load-more failed');
+                    }
+
+                    return response.json();
+                })
+                .then(function (data) {
+                    if (!data.html) {
+                        return;
+                    }
+
+                    grid.insertAdjacentHTML('beforeend', data.html);
+
+                    if (typeof AOS !== 'undefined') {
+                        AOS.refresh();
+                    }
+
+                    if (data.has_more && data.next_page_url) {
+                        button.setAttribute('data-next-url', data.next_page_url);
+                        setLoading(false);
+                        return;
+                    }
+
+                    button.closest('.d-flex')?.remove();
+                })
+                .catch(function () {
+                    setLoading(false);
+                });
+        });
+    })();
 </script>
 @endpush
 
