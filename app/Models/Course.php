@@ -233,18 +233,33 @@ class Course extends Model
     {
         $courseEnded = $this->hasEnded();
 
-        // Try to find price variant by course_id first
-        $priceVariant = CoursePriceVariant::where('course_id', $this->id)
-            ->where('is_active', 1)
-            ->orderBy('price', 'asc') // Get cheapest variant
-            ->get()
-            ->first(fn ($variant) => $variant->isAvailableForCourseEndState($courseEnded));
+        if ($this->relationLoaded('priceVariants')) {
+            $priceVariant = $this->priceVariants
+                ->filter(fn ($variant) => (bool) $variant->is_active)
+                ->sortBy(fn ($variant) => (float) $variant->price)
+                ->values()
+                ->first(fn ($variant) => $variant->isAvailableForCourseEndState($courseEnded));
+        } else {
+            // Try to find price variant by course_id first
+            $priceVariant = CoursePriceVariant::where('course_id', $this->id)
+                ->where('is_active', 1)
+                ->orderBy('price', 'asc') // Get cheapest variant
+                ->get()
+                ->first(fn ($variant) => $variant->isAvailableForCourseEndState($courseEnded));
+        }
 
         // If not found and we have publigo_price_id, try to find by it
         if (! $priceVariant && $this->publigo_price_id) {
-            $priceVariant = CoursePriceVariant::where('id', $this->publigo_price_id)
-                ->where('is_active', 1)
-                ->first();
+            if ($this->relationLoaded('priceVariants')) {
+                $priceVariant = $this->priceVariants
+                    ->first(fn ($variant) => (int) $variant->id === (int) $this->publigo_price_id
+                        && (bool) $variant->is_active);
+            } else {
+                $priceVariant = CoursePriceVariant::where('id', $this->publigo_price_id)
+                    ->where('is_active', 1)
+                    ->first();
+            }
+
             if ($priceVariant && ! $priceVariant->isAvailableForCourseEndState($courseEnded)) {
                 $priceVariant = null;
             }

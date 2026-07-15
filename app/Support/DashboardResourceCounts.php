@@ -5,9 +5,12 @@ namespace App\Support;
 use App\Models\OnlineCourseEnrollment;
 use App\Models\Participant;
 use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Support\Facades\Cache;
 
 class DashboardResourceCounts
 {
+    private const CACHE_TTL_SECONDS = 120;
+
     private static ?int $cachedUserId = null;
 
     /** @var array{szkolenia: int, online_courses: int, zaswiadczenia: int, total: int, twoje_zasoby_url: string}|null */
@@ -42,11 +45,21 @@ class DashboardResourceCounts
 
         self::$cachedUserId = $userId;
 
-        return self::$cachedCounts = self::computeForUser($user);
+        $cacheKey = 'dashboard.resource_counts.user.'.$userId;
+
+        return self::$cachedCounts = Cache::remember(
+            $cacheKey,
+            self::CACHE_TTL_SECONDS,
+            fn () => self::computeForUser($user)
+        );
     }
 
     public static function forgetForUser(?Authenticatable $user): void
     {
+        if ($user) {
+            Cache::forget('dashboard.resource_counts.user.'.$user->getAuthIdentifier());
+        }
+
         if (self::$cachedUserId === $user?->getAuthIdentifier()) {
             self::$cachedUserId = null;
             self::$cachedCounts = null;

@@ -93,9 +93,9 @@ class CourseController extends Controller
 
             if ($userEmail) {
                 try {
-                    $participants = DB::connection('pneadm')
-                        ->table('participants')
-                        ->whereRaw('LOWER(TRIM(email)) = ?', [strtolower(trim($userEmail))])
+                    $normalizedEmail = strtolower(trim($userEmail));
+                    $participants = \App\Models\Participant::query()
+                        ->forNormalizedEmail($normalizedEmail)
                         ->select('id', 'course_id')
                         ->get();
 
@@ -174,9 +174,9 @@ class CourseController extends Controller
 
             if ($userEmail) {
                 try {
-                    $participants = DB::connection('pneadm')
-                        ->table('participants')
-                        ->whereRaw('LOWER(TRIM(email)) = ?', [strtolower(trim($userEmail))])
+                    $normalizedEmail = strtolower(trim($userEmail));
+                    $participants = \App\Models\Participant::query()
+                        ->forNormalizedEmail($normalizedEmail)
                         ->select('id', 'course_id')
                         ->get();
 
@@ -253,9 +253,9 @@ class CourseController extends Controller
 
             if ($userEmail) {
                 try {
-                    $participants = DB::connection('pneadm')
-                        ->table('participants')
-                        ->whereRaw('LOWER(TRIM(email)) = ?', [strtolower(trim($userEmail))])
+                    $normalizedEmail = strtolower(trim($userEmail));
+                    $participants = \App\Models\Participant::query()
+                        ->forNormalizedEmail($normalizedEmail)
                         ->select('id', 'course_id')
                         ->get();
 
@@ -332,9 +332,9 @@ class CourseController extends Controller
 
             if ($userEmail) {
                 try {
-                    $participants = DB::connection('pneadm')
-                        ->table('participants')
-                        ->whereRaw('LOWER(TRIM(email)) = ?', [strtolower(trim($userEmail))])
+                    $normalizedEmail = strtolower(trim($userEmail));
+                    $participants = \App\Models\Participant::query()
+                        ->forNormalizedEmail($normalizedEmail)
                         ->select('id', 'course_id')
                         ->get();
 
@@ -366,28 +366,15 @@ class CourseController extends Controller
      */
     public function individualCourses(Request $request)
     {
-        // Nadchodzące szkolenia - zgodne z tym, co ma być widoczne na stronie głównej.
-        $upcomingCourses = Course::with('priceVariants')
-            ->where('is_active', true)
-            ->where('show_on_pnedu', true)
-            ->where('type', 'online')
-            ->where(function ($query) {
-                $query->where('end_date', '>', now())
-                    ->orWhere(function ($fallbackQuery) {
-                        $fallbackQuery->whereNull('end_date')
-                            ->where('start_date', '>', now());
-                    });
-            })
-            ->whereNull('deleted_at')
-            ->orderBy('start_date', 'asc')
-            ->get();
+        // Nadchodzące: ten sam zestaw co homepage/sidebar (instructor + priceVariants).
+        $upcomingCourses = \App\Support\UpcomingPneduCourses::query();
 
         // Archiwalne szkolenia (zakończone):
         // - nowe: kursy oznaczone "Pokaż na stronie głównej pnedu.pl"
         // - legacy (wsteczna zgodność): certgen_Publigo + id_old
         $archivedSearch = trim((string) $request->query('q', ''));
 
-        $archivedQuery = Course::with('priceVariants')
+        $archivedQuery = Course::with('instructor')
             ->where('is_active', true)
             ->where('type', 'online')
             ->whereNull('deleted_at')
@@ -410,7 +397,11 @@ class CourseController extends Controller
                 });
             });
 
-        $hasArchivedCourses = (clone $archivedQuery)->exists();
+        $hasArchivedCourses = \Illuminate\Support\Facades\Cache::remember(
+            'courses.individual.has_archived.v1',
+            now()->addMinutes(5),
+            fn () => (clone $archivedQuery)->exists()
+        );
 
         if ($archivedSearch !== '') {
             $archivedQuery->where('title', 'like', '%'.$archivedSearch.'%');

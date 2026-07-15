@@ -25,6 +25,7 @@ bash scripts/production-optimize.sh
 | **6** | Cache strony głównej (goście), lazy-load obrazów, cache statycznych plików | `pnedu` |
 | **7** | Log wydajności `/dashboard/*`, skrypt TTFB | `pnedu` |
 | **8** | Statyczne grafiki kursów `/media/pneadm/` (symlinki, bez PHP) | `pnedu` + SSH |
+| **9** | LVE Laravel: tańsze zapytania list, cache liczników, poll dashboardu 45 s | `pnedu` + `pneadm` |
 
 ---
 
@@ -53,6 +54,40 @@ curl -sI "https://pnedu.pl/media/pneadm/courses/images/$SAMPLE" | head -8
 ```
 
 `PNEADM_MEDIA_PROXY` zostaje `true` (te same URL-e, ten sam origin). Nie wyłączaj proxy tylko po to, by iść na `adm.pnedu.pl/storage/…`.
+
+---
+
+## Faza 9 — dalsze odciążenie LVE (Laravel)
+
+### pnedu
+
+- `getCurrentPrice()` / `publicOrderFormUrl()` korzystają z już załadowanych `priceVariants` (bez N+1).
+- Lista `/szkolenia-indywidualne`: nadchodzące z `UpcomingPneduCourses`; archiwum tylko z `instructor` (bez `priceVariants`); cache `has_archived` 5 min.
+- Listy darmowych: `Participant::forNormalizedEmail` zamiast `LOWER(TRIM(email))`.
+- Liczniki menu dashboardu: cache 120 s (`DashboardResourceCounts`).
+
+### pneadm
+
+- Poll dashboardu zamówień / „Aktywni teraz”: domyślnie **45 s**; pauza przy ukrytej karcie; cache snapshotu 20 s / live visitors 15 s.
+- Lista FORM: cache grupy duplikatów (60 s) i badge stats (30 s).
+- Lista kursów: `withCount` zamiast ładowania wszystkich uczestników.
+
+### Produkcja — `.env` (obu aplikacji)
+
+Upewnij się (Faza 3):
+
+```env
+SESSION_DRIVER=file
+CACHE_STORE=file
+```
+
+Potem: `php artisan config:cache` (lub `bash scripts/production-optimize.sh` w pnedu).
+
+Opcjonalnie w pneadm (jeśli w `.env` jest stary interwał 15):
+
+```env
+ANALYTICS_LIVE_VISITORS_POLL_INTERVAL_SECONDS=45
+```
 
 ---
 
@@ -87,6 +122,8 @@ CACHE_STORE=file
 APP_DEBUG=false
 LOG_LEVEL=warning
 ```
+
+Na produkcji ustaw to w `.env` i uruchom `php artisan config:cache` (lub `bash scripts/production-optimize.sh`).
 
 **Faza 6** — opcjonalnie cache HTML strony głównej dla gości:
 
