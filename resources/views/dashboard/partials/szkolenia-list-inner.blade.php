@@ -153,7 +153,7 @@
                                         <div>
                                             <p class="fw-semibold mb-1">Spotkanie online ({{ $liveAccessUi->platformLabel }})</p>
                                             <p class="small mb-0 lh-base">
-                                                Możesz wejść tuż przed startem lub w trakcie szkolenia.
+                                                Przycisk dołączenia aktywuje się 2 godziny przed startem; możesz też wejść w trakcie szkolenia.
                                             </p>
                                         </div>
                                     </div>
@@ -173,13 +173,7 @@
                                         </p>
                                     @endif
                                     <div>
-                                        <a href="{{ $liveAccessUi->joinUrl }}"
-                                           class="btn btn-success btn-sm"
-                                           target="_blank"
-                                           rel="noopener noreferrer">
-                                            <i class="bi bi-box-arrow-up-right me-1" aria-hidden="true"></i>
-                                            Dołącz do spotkania na żywo
-                                        </a>
+                                        @include('partials.live-join-button', ['live' => $liveAccessUi])
                                     </div>
                                 </div>
                             </div>

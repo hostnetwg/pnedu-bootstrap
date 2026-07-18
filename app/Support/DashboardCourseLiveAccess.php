@@ -3,7 +3,7 @@
 namespace App\Support;
 
 /**
- * Dane do sekcji „spotkanie na żywo” na liście szkoleń w panelu uczestnika.
+ * Dane do sekcji „spotkanie na żywo” (panel + homepage).
  */
 final class DashboardCourseLiveAccess
 {
@@ -15,6 +15,9 @@ final class DashboardCourseLiveAccess
         public readonly ?string $countdownPhase = null,
         public readonly ?string $countdownTargetIso = null,
         public readonly ?string $countdownLabel = null,
+        public readonly bool $joinUnlocked = false,
+        public readonly ?string $joinUnlockAtIso = null,
+        public readonly ?string $joinUnlockHint = null,
     ) {}
 
     public static function hidden(): self

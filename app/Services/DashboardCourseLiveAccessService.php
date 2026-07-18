@@ -11,6 +11,9 @@ use Carbon\CarbonInterface;
 
 class DashboardCourseLiveAccessService
 {
+    /** Przycisk „Dołącz” aktywny od tyle godzin przed start_date. */
+    public const JOIN_UNLOCK_HOURS_BEFORE_START = 2;
+
     public function forParticipant(Participant $participant): DashboardCourseLiveAccess
     {
         $course = $participant->course;
@@ -39,6 +42,7 @@ class DashboardCourseLiveAccessService
 
         $password = $meetingPassword !== '' ? $meetingPassword : null;
         $countdown = $this->resolveCountdown($course);
+        $joinGate = $this->resolveJoinGate($course);
 
         return new DashboardCourseLiveAccess(
             show: true,
@@ -48,6 +52,9 @@ class DashboardCourseLiveAccessService
             countdownPhase: $countdown['phase'],
             countdownTargetIso: $countdown['target_iso'],
             countdownLabel: $countdown['label'],
+            joinUnlocked: $joinGate['unlocked'],
+            joinUnlockAtIso: $joinGate['unlock_at_iso'],
+            joinUnlockHint: $joinGate['hint'],
         );
     }
 
@@ -74,6 +81,23 @@ class DashboardCourseLiveAccessService
         }
 
         return true;
+    }
+
+    /**
+     * @return array{unlocked: bool, unlock_at_iso: string, hint: string}
+     */
+    public function resolveJoinGate(Course $course): array
+    {
+        $tz = (string) config('app.timezone', 'Europe/Warsaw');
+        $now = Carbon::now($tz);
+        $start = Carbon::parse($course->start_date)->timezone($tz);
+        $unlockAt = $start->copy()->subHours(self::JOIN_UNLOCK_HOURS_BEFORE_START);
+
+        return [
+            'unlocked' => $now->greaterThanOrEqualTo($unlockAt),
+            'unlock_at_iso' => $unlockAt->toIso8601String(),
+            'hint' => 'Link do spotkania zostanie aktywowany 2 godziny przed rozpoczęciem szkolenia.',
+        ];
     }
 
     private function resolveJoinUrl(?ParticipantLiveAccess $liveAccess, string $meetingLinkFallback): ?string
@@ -114,7 +138,6 @@ class DashboardCourseLiveAccessService
     private function resolveCountdown(Course $course): array
     {
         $tz = (string) config('app.timezone', 'Europe/Warsaw');
-        $now = Carbon::now($tz);
         $start = Carbon::parse($course->start_date)->timezone($tz);
         $end = $course->end_date ? Carbon::parse($course->end_date)->timezone($tz) : null;
 

@@ -64,6 +64,7 @@ class DashboardCourseLiveAccessServiceTest extends TestCase
         $this->assertSame('https://pnedu.clickmeeting.com/wydarzenie/TOK123', $live->joinUrl);
         $this->assertSame('ClickMeeting', $live->platformLabel);
         $this->assertSame('until_start', $live->countdownPhase);
+        $this->assertFalse($live->joinUnlocked);
     }
 
     public function test_falls_back_to_meeting_link_without_live_access(): void
@@ -86,6 +87,50 @@ class DashboardCourseLiveAccessServiceTest extends TestCase
         $this->assertSame('https://meet.google.com/abc-defg-hij', $live->joinUrl);
         $this->assertSame('sekret123', $live->password);
         $this->assertSame('Google Meet', $live->platformLabel);
+        $this->assertFalse($live->joinUnlocked);
+    }
+
+    public function test_join_button_unlocks_two_hours_before_start(): void
+    {
+        if (! $this->pneadmTablesAvailable()) {
+            $this->markTestSkipped('Brak tabel pneadm w środowisku testowym.');
+        }
+
+        [$participant] = $this->seedCourseWithParticipant(
+            start: '2026-07-18 11:30:00',
+            end: '2026-07-18 13:00:00',
+            meetingLink: 'https://meet.example/soon',
+            platform: 'google meet',
+        );
+
+        $live = $this->service->forParticipant($participant->fresh(['course.onlineDetail', 'liveAccess']));
+
+        $this->assertTrue($live->show);
+        $this->assertTrue($live->joinUnlocked);
+        $this->assertSame(
+            Carbon::parse('2026-07-18 09:30:00', 'Europe/Warsaw')->toIso8601String(),
+            $live->joinUnlockAtIso
+        );
+    }
+
+    public function test_join_button_locked_more_than_two_hours_before_start(): void
+    {
+        if (! $this->pneadmTablesAvailable()) {
+            $this->markTestSkipped('Brak tabel pneadm w środowisku testowym.');
+        }
+
+        [$participant] = $this->seedCourseWithParticipant(
+            start: '2026-07-18 13:00:00',
+            end: '2026-07-18 15:00:00',
+            meetingLink: 'https://meet.example/later',
+            platform: 'google meet',
+        );
+
+        $live = $this->service->forParticipant($participant->fresh(['course.onlineDetail', 'liveAccess']));
+
+        $this->assertTrue($live->show);
+        $this->assertFalse($live->joinUnlocked);
+        $this->assertStringContainsString('2 godziny', (string) $live->joinUnlockHint);
     }
 
     public function test_shows_countdown_until_end_when_course_in_progress(): void
@@ -106,6 +151,7 @@ class DashboardCourseLiveAccessServiceTest extends TestCase
         $this->assertTrue($live->show);
         $this->assertSame('until_end', $live->countdownPhase);
         $this->assertSame('Do zakończenia szkolenia', $live->countdownLabel);
+        $this->assertTrue($live->joinUnlocked);
     }
 
     public function test_hides_when_course_ended(): void

@@ -32,6 +32,7 @@ Wspólna baza **pneadm** (bez nowego API):
 | Serwis | `app/Services/DashboardCourseLiveAccessService.php` |
 | Listing | `app/Support/DashboardParticipantsListing.php` |
 | UI | `resources/views/dashboard/partials/szkolenia-list-inner.blade.php` |
+| Przycisk | `resources/views/partials/live-join-button.blade.php` |
 | Licznik JS | `resources/views/dashboard/partials/szkolenia-live-countdown-script.blade.php` |
 
 ## Widoczność
@@ -40,6 +41,8 @@ Sekcja live pojawia się, gdy:
 
 1. okno czasowe otwarte (jak wyżej),
 2. jest `joinUrl` (live access success **lub** `meeting_link`).
+
+Przycisk **Dołącz** jest aktywny dopiero **2 godziny przed `start_date`** (i później, w trakcie). Wcześniej: nieaktywny + tooltip Bootstrap; JS odblokowuje bez przeładowania strony (`data-join-unlock-at`).
 
 Po zakończeniu szkolenia sekcja znika; zostaje informacja o nagraniach/materiałach/zaświadczeniu.
 
@@ -52,3 +55,7 @@ sail test --filter=DashboardCourseLiveAccessServiceTest
 ## Deploy
 
 Tylko **pnedu** (`git pull` + `view:clear` / `view:cache`). Bez migracji — tabele już istnieją w pneadm.
+
+## Powiązane
+
+Dyskretny pasek na stronie głównej (próba): [HOMEPAGE_LIVE_MEETING.md](./HOMEPAGE_LIVE_MEETING.md).

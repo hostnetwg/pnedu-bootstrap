@@ -54,7 +54,14 @@
 
 @section('banner')
     @include('layouts.hero-banner')
+    @include('layouts.homepage-live-meeting-notice')
 @endsection
+
+@if(! empty($homepageLiveNotice) && $homepageLiveNotice->live->show)
+    @push('scripts')
+        @include('dashboard.partials.szkolenia-live-countdown-script')
+    @endpush
+@endif
 
 @section('content')
 
