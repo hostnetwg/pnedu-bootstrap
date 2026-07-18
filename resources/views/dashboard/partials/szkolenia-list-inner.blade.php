@@ -130,6 +130,49 @@
                         </p>
                     @endif
                     @if($course && ! $certCourseEnded)
+                        @php
+                            /** @var \App\Support\DashboardCourseLiveAccess|null $liveAccessUi */
+                            $liveAccessUi = $participant->dashboard_live_access ?? null;
+                        @endphp
+                        @if($liveAccessUi && $liveAccessUi->show)
+                            <div class="training-live-access alert alert-primary border-0 mb-0 mt-2 py-3 px-3" role="region" aria-label="Spotkanie na żywo">
+                                <div class="d-flex flex-column gap-2">
+                                    <div class="d-flex gap-2 align-items-start">
+                                        <i class="bi bi-camera-video flex-shrink-0 mt-1" aria-hidden="true"></i>
+                                        <div>
+                                            <p class="fw-semibold mb-1">Spotkanie online ({{ $liveAccessUi->platformLabel }})</p>
+                                            <p class="small mb-0 lh-base">
+                                                Możesz wejść tuż przed startem lub w trakcie szkolenia.
+                                            </p>
+                                        </div>
+                                    </div>
+                                    @if($liveAccessUi->countdownTargetIso && $liveAccessUi->countdownLabel)
+                                        <div class="training-live-countdown small"
+                                             data-live-countdown
+                                             data-countdown-target="{{ $liveAccessUi->countdownTargetIso }}"
+                                             data-countdown-phase="{{ $liveAccessUi->countdownPhase }}">
+                                            <span class="text-body-secondary">{{ $liveAccessUi->countdownLabel }}:</span>
+                                            <strong class="js-live-countdown-value ms-1" aria-live="polite">—</strong>
+                                        </div>
+                                    @endif
+                                    @if($liveAccessUi->password)
+                                        <p class="small mb-0">
+                                            <span class="text-body-secondary">Hasło do spotkania:</span>
+                                            <code class="user-select-all">{{ $liveAccessUi->password }}</code>
+                                        </p>
+                                    @endif
+                                    <div>
+                                        <a href="{{ $liveAccessUi->joinUrl }}"
+                                           class="btn btn-success btn-sm"
+                                           target="_blank"
+                                           rel="noopener noreferrer">
+                                            <i class="bi bi-box-arrow-up-right me-1" aria-hidden="true"></i>
+                                            Dołącz do spotkania na żywo
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
                         <div class="training-pending-end-notice alert alert-light border mb-0 mt-2 py-2 px-3" role="status">
                             <div class="d-flex gap-2 align-items-start">
                                 <i class="bi bi-info-circle flex-shrink-0 text-primary" aria-hidden="true"></i>

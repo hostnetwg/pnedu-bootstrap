@@ -43,5 +43,6 @@
 @once
 @push('scripts')
 @include('dashboard.partials.szkolenia-list-ajax-script')
+@include('dashboard.partials.szkolenia-live-countdown-script')
 @endpush
 @endonce

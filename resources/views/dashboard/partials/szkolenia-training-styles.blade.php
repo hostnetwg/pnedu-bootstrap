@@ -209,3 +209,10 @@
         width: 200px;
     }
 }
+
+.training-live-access {
+    background: #e7f1ff;
+}
+.training-live-countdown {
+    font-variant-numeric: tabular-nums;
+}

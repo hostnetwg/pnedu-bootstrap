@@ -48,6 +48,11 @@ class Participant extends Model
         return $this->belongsTo(Course::class);
     }
 
+    public function liveAccess()
+    {
+        return $this->hasOne(ParticipantLiveAccess::class);
+    }
+
     /**
      * Normalizacja e-maila (zgodnie z kolumną email_normalized w pneadm).
      */

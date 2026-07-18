@@ -5,6 +5,7 @@ namespace App\Support;
 use App\Models\CourseFileLink;
 use App\Models\Participant;
 use App\Models\ParticipantTrainingVideoNote;
+use App\Services\DashboardCourseLiveAccessService;
 use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\Request;
@@ -39,11 +40,14 @@ class DashboardParticipantsListing
                         'start_date',
                         'end_date',
                         'is_paid',
+                        'type',
                         'instructor_id',
                         'certificate_download_status',
                     ])->withCount(['videos', 'fileLinks']);
                 },
                 'course.instructor:id,title,first_name,last_name,gender',
+                'course.onlineDetail:id,course_id,platform,meeting_link,meeting_password',
+                'liveAccess',
             ])
             ->orderByRaw('COALESCE(courses.start_date, participants.created_at) DESC')
             ->orderByDesc('participants.id');
@@ -57,12 +61,23 @@ class DashboardParticipantsListing
         $participants = $query->paginate(15)->withQueryString();
         self::hydrateEndedCourseFileLinksForListing($participants);
         self::hydrateTrainingVideoNotesCountsForListing($participants);
+        self::hydrateLiveAccessForListing($participants);
 
         return [
             'participants' => $participants,
             'szkoleniaTyp' => $typ,
             'szkoleniaCounts' => $szkoleniaCounts,
         ];
+    }
+
+    private static function hydrateLiveAccessForListing(LengthAwarePaginator $participants): void
+    {
+        $service = app(DashboardCourseLiveAccessService::class);
+
+        foreach ($participants->getCollection() as $participant) {
+            $live = $service->forParticipant($participant);
+            $participant->setAttribute('dashboard_live_access', $live);
+        }
     }
 
     private static function hydrateEndedCourseFileLinksForListing(LengthAwarePaginator $participants): void
