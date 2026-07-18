@@ -80,11 +80,20 @@
                         @endif
                     </h3>
                     @if($course)
+                        @php
+                            $startAt = $course->start_date
+                                ? \Carbon\Carbon::parse($course->start_date)->timezone(config('app.timezone'))->locale('pl')
+                                : null;
+                        @endphp
                         <div class="training-meta mb-2">
-                            <span class="training-date">
+                            <span class="training-date @if(! $certCourseEnded && $startAt) training-date--upcoming @endif">
                                 Data:
-                                @if($course->start_date)
-                                    {{ \Carbon\Carbon::parse($course->start_date)->timezone(config('app.timezone'))->format('d.m.Y G:i') }}
+                                @if($startAt)
+                                    @if(! $certCourseEnded)
+                                        <strong class="training-date__value">{{ $startAt->format('d.m.Y G:i') }} ({{ \Illuminate\Support\Str::ucfirst($startAt->isoFormat('dddd')) }})</strong>
+                                    @else
+                                        {{ $startAt->format('d.m.Y G:i') }}
+                                    @endif
                                 @else
                                     <span class="text-muted">Brak daty</span>
                                 @endif
@@ -100,17 +109,19 @@
                             </span>
                         </div>
                     @endif
-                    <p class="training-access-term small mb-0 @if($participant->access_expires_at && ! $accessActive) text-danger @elseif($accessActive) text-success @else text-muted @endif">
-                        @if($participant->access_expires_at)
-                            @if($accessActive)
-                                Dostęp wygaśnie {{ $accessExpiresFormatted }}
+                    @if($certCourseEnded)
+                        <p class="training-access-term small mb-0 @if($participant->access_expires_at && ! $accessActive) text-danger @elseif($accessActive) text-success @else text-muted @endif">
+                            @if($participant->access_expires_at)
+                                @if($accessActive)
+                                    Dostęp wygaśnie {{ $accessExpiresFormatted }}
+                                @else
+                                    Dostęp wygasł {{ $accessExpiresFormatted }}
+                                @endif
                             @else
-                                Dostęp wygasł {{ $accessExpiresFormatted }}
+                                Dostęp bezterminowy
                             @endif
-                        @else
-                            Dostęp bezterminowy
-                        @endif
-                    </p>
+                        </p>
+                    @endif
                     @if($trainingNotesCount > 0 && $hasVideos)
                         <p class="training-notes-indicator small mb-0 mt-2">
                             <a href="{{ route('dashboard.szkolenia.wideo', $participant) }}"

@@ -119,6 +119,10 @@
     gap: 0.5rem;
     align-items: center;
 }
+.training-date--upcoming .training-date__value {
+    color: #198754;
+    font-weight: 700;
+}
 .training-separator {
     color: #adb5bd;
 }
