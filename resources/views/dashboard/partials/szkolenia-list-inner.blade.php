@@ -177,7 +177,7 @@
                             <div class="d-flex gap-2 align-items-start">
                                 <i class="bi bi-info-circle flex-shrink-0 text-primary" aria-hidden="true"></i>
                                 <p class="small mb-0 lh-base text-body-secondary">
-                                    Dostęp do nagrania, materiałów do pobrania oraz możliwość pobrania zaświadczenia pojawią się dopiero po zakończeniu szkolenia (wg daty zakończenia w kursie).
+                                    Dostęp do nagrania, materiałów do pobrania oraz możliwość pobrania zaświadczenia pojawią się dopiero po zakończeniu szkolenia.
                                 </p>
                             </div>
                         </div>
