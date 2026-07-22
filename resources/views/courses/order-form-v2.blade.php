@@ -260,7 +260,7 @@
                     <input class="form-control" id="buyer_city" name="buyer_city" value="{{ $field('buyer_city') }}" autocomplete="address-level2" required>
                 </div>
                 <div class="col-12 col-md-5">
-                    <label class="form-label order-v2__required" for="buyer_address">Ulica i numer</label>
+                    <label class="form-label order-v2__required" for="buyer_address">Adres</label>
                     <input class="form-control" id="buyer_address" name="buyer_address" value="{{ $field('buyer_address') }}" autocomplete="street-address" required>
                 </div>
             </div>
@@ -305,7 +305,7 @@
                         <input class="form-control" id="recipient_city" name="recipient_city" value="{{ $field('recipient_city') }}" autocomplete="address-level2">
                     </div>
                     <div class="col-12 col-md-5">
-                        <label class="form-label" for="recipient_address">Ulica i numer</label>
+                        <label class="form-label" for="recipient_address">Adres</label>
                         <input class="form-control" id="recipient_address" name="recipient_address" value="{{ $field('recipient_address') }}" autocomplete="street-address">
                     </div>
                 </div>
