@@ -51,6 +51,31 @@
     .order-v2__summary { background: #f8fafc; border-left: 4px solid var(--v2-primary); }
     .order-v2__actions { position: sticky; bottom: 0; z-index: 5; background: rgba(255,255,255,.96); border-top: 1px solid #e5e7eb; }
     .order-v2 .btn-success { background-color: var(--v2-primary); border-color: var(--v2-primary); }
+    .order-v2 .gus-nip-button {
+        background-color: #43a047;
+        border-color: #43a047;
+        color: #fff;
+        font-weight: 600;
+        white-space: normal;
+        line-height: 1.25;
+    }
+    .order-v2 .gus-nip-button:hover,
+    .order-v2 .gus-nip-button:focus {
+        background-color: #2e7d32;
+        border-color: #2e7d32;
+        color: #fff;
+    }
+    .order-v2 .gus-nip-button:active {
+        background-color: #1b5e20;
+        border-color: #1b5e20;
+        color: #fff;
+    }
+    .order-v2 .gus-nip-button:disabled {
+        background-color: #81c784;
+        border-color: #81c784;
+        color: #fff;
+        opacity: 1;
+    }
     @media (min-width: 768px) {
         .order-v2__steps { font-size: .9rem; }
         .order-v2__panel { padding: 2rem !important; }
@@ -226,7 +251,7 @@
                         <label class="form-label order-v2__required" for="buyer_nip">NIP</label>
                         <div class="input-group">
                             <input class="form-control @error('buyer_nip') is-invalid @enderror" id="buyer_nip" name="buyer_nip" value="{{ $field('buyer_nip') }}" inputmode="numeric" autocomplete="off">
-                            <button class="btn btn-outline-success" type="button" data-gus-target="buyer">Pobierz z GUS</button>
+                            <button class="btn gus-nip-button" type="button" data-gus-target="buyer">Wpisz NIP i pobierz dane z GUS</button>
                         </div>
                         <div class="form-text" id="buyer-gus-status" aria-live="polite"></div>
                     </div>
@@ -282,7 +307,7 @@
                         <label class="form-label" for="recipient_nip">NIP</label>
                         <div class="input-group">
                             <input class="form-control" id="recipient_nip" name="recipient_nip" value="{{ $field('recipient_nip') }}" inputmode="numeric" autocomplete="off">
-                            <button class="btn btn-outline-success" type="button" data-gus-target="recipient">Pobierz z GUS</button>
+                            <button class="btn gus-nip-button" type="button" data-gus-target="recipient">Wpisz NIP i pobierz dane z GUS</button>
                         </div>
                         <div class="form-text" id="recipient-gus-status" aria-live="polite"></div>
                     </div>

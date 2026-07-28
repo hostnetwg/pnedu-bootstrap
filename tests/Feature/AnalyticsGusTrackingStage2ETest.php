@@ -67,7 +67,7 @@ class AnalyticsGusTrackingStage2ETest extends TestCase
 
         $this->assertStringContainsString('id="buyer_gus_button" data-gus-target="buyer"', $html);
         $this->assertStringContainsString('id="recipient_gus_button" data-gus-target="recipient"', $html);
-        $this->assertStringContainsString('Pobierz dane z GUS', $html);
+        $this->assertStringContainsString('Wpisz NIP i pobierz dane z GUS', $html);
     }
 
     public function test_collector_handles_gus_lookup_clicked_without_nip_value(): void
