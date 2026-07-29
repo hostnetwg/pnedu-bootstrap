@@ -156,12 +156,26 @@
                 </div>
             @endif
         @else
-            <div class="alert alert-info">
-                @if($search !== '')
+            @if($search !== '')
+                <div class="alert alert-info mb-4">
                     Nie znaleziono ofert pasujących do wyszukiwania.
-                @else
-                    Przygotowujemy katalog tematów szkoleń dla rad pedagogicznych. Jeśli chcesz ustalić szkolenie dla swojej szkoły lub placówki, skontaktuj się z nami - pomożemy dobrać temat i termin.
-                @endif
+                </div>
+            @endif
+
+            <div class="card border-primary mb-4">
+                <div class="card-body p-4">
+                    <h3 class="h5 fw-bold mb-3">Nie wiesz, który temat wybrać lub nie widzisz tematu, który Cię interesuje?</h3>
+                    <p class="text-muted mb-3">
+                        @if($search !== '')
+                            Opisz potrzeby swojej rady pedagogicznej albo zaproponuj temat. Możemy zorganizować szkolenie na miarę — wystarczy, że napiszesz co Cię interesuje.
+                        @else
+                            Katalog tematów jest w przygotowaniu, ale już teraz możesz napisać o potrzebach swojej placówki lub zaproponować temat szkolenia. Odpiszemy i ustalimy możliwe rozwiązanie.
+                        @endif
+                    </p>
+                    <a href="{{ route('training-offers.pedagogical-councils.inquiry.general') }}" class="btn btn-primary">
+                        Zapytaj o szkolenie dla placówki
+                    </a>
+                </div>
             </div>
         @endif
     </div>
