@@ -7,6 +7,8 @@ use App\Http\Controllers\NewsletterController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SeoController;
 use App\Http\Controllers\SesNotificationWebhookController;
+use App\Http\Controllers\TrainingOfferController;
+use App\Http\Controllers\TrainingOfferInquiryController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/robots.txt', [SeoController::class, 'robots'])->name('seo.robots');
@@ -64,6 +66,23 @@ Route::get('/szkolenia-online-live', [App\Http\Controllers\CourseController::cla
 // Szkolenia indywidualne
 Route::get('/szkolenia-indywidualne', [App\Http\Controllers\CourseController::class, 'individualCourses'])
     ->name('courses.individual');
+
+// Szkolenia rad pedagogicznych - oferty bez ustalonego terminu
+Route::get('/szkolenia-rad-pedagogicznych', [TrainingOfferController::class, 'pedagogicalCouncils'])
+    ->name('training-offers.pedagogical-councils.index');
+// Ogólne zapytanie PRZED trasą {slug}, żeby "zapytanie" nie było traktowane jako slug.
+Route::get('/szkolenia-rad-pedagogicznych/zapytanie', [TrainingOfferInquiryController::class, 'create'])
+    ->name('training-offers.pedagogical-councils.inquiry.general');
+Route::post('/szkolenia-rad-pedagogicznych/zapytanie', [TrainingOfferInquiryController::class, 'storeGeneral'])
+    ->middleware('throttle:5,1')
+    ->name('training-offers.pedagogical-councils.inquiry.general.store');
+Route::get('/szkolenia-rad-pedagogicznych/{slug}', [TrainingOfferController::class, 'showPedagogicalCouncilOffer'])
+    ->where('slug', '[A-Za-z0-9-]+')
+    ->name('training-offers.pedagogical-councils.show');
+Route::post('/szkolenia-rad-pedagogicznych/{slug}/zapytanie', [TrainingOfferInquiryController::class, 'store'])
+    ->where('slug', '[A-Za-z0-9-]+')
+    ->middleware('throttle:5,1')
+    ->name('training-offers.pedagogical-councils.inquiry.store');
 
 // Bezpłatne szkolenia (TIK w pracy NAUCZYCIELA)
 Route::get('/bezplatne/tik-w-pracy-nauczyciela', [App\Http\Controllers\CourseController::class, 'freeCourses'])

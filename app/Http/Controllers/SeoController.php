@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Course;
+use App\Models\TrainingOffer;
 use Illuminate\Http\Response;
 
 class SeoController extends Controller
@@ -28,7 +29,7 @@ class SeoController extends Controller
             abort(404);
         }
 
-        $urls = array_merge($this->staticUrls(), $this->courseUrls());
+        $urls = array_merge($this->staticUrls(), $this->courseUrls(), $this->trainingOfferUrls());
 
         return response()
             ->view('seo.sitemap', ['urls' => $urls])
@@ -55,6 +56,7 @@ class SeoController extends Controller
             ['route' => 'about.accreditation', 'changefreq' => 'yearly', 'priority' => '0.5'],
             ['route' => 'courses.online-live', 'changefreq' => 'daily', 'priority' => '0.9'],
             ['route' => 'courses.individual', 'changefreq' => 'weekly', 'priority' => '0.8'],
+            ['route' => 'training-offers.pedagogical-councils.index', 'changefreq' => 'weekly', 'priority' => '0.8'],
             ['route' => 'courses.free', 'changefreq' => 'weekly', 'priority' => '0.8'],
             ['route' => 'courses.office365', 'changefreq' => 'weekly', 'priority' => '0.8'],
             ['route' => 'courses.parent-academy', 'changefreq' => 'weekly', 'priority' => '0.8'],
@@ -93,6 +95,28 @@ class SeoController extends Controller
                 'lastmod' => $lastmod,
                 'changefreq' => 'weekly',
                 'priority' => '0.8',
+            ];
+        })->all();
+    }
+
+    /**
+     * @return array<int, array{loc: string, lastmod: string, changefreq: string, priority: string}>
+     */
+    private function trainingOfferUrls(): array
+    {
+        $offers = TrainingOffer::query()
+            ->publiclyVisible()
+            ->orderBy('slug')
+            ->get(['slug', 'updated_at']);
+
+        return $offers->map(function (TrainingOffer $offer) {
+            $lastmod = $offer->updated_at?->toAtomString() ?? now()->toAtomString();
+
+            return [
+                'loc' => route('training-offers.pedagogical-councils.show', $offer->slug),
+                'lastmod' => $lastmod,
+                'changefreq' => 'monthly',
+                'priority' => '0.7',
             ];
         })->all();
     }

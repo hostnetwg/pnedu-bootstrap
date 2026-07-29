@@ -18,11 +18,11 @@
             <div class="col-md-2 col-6">
                 <h5 class="text-uppercase fw-bold mb-4">Nawigacja</h5>
                 <ul class="list-unstyled mb-0">
-                    <li class="mb-2"><a href="#" class="text-light opacity-75 text-decoration-none hover-lift">Strona główna</a></li>
-                    <li class="mb-2"><a href="#courses" class="text-light opacity-75 text-decoration-none hover-lift">Oferta szkoleń</a></li>
-                    <li class="mb-2"><a href="#" class="text-light opacity-75 text-decoration-none hover-lift">O nas</a></li>
-                    <li class="mb-2"><a href="#" class="text-light opacity-75 text-decoration-none hover-lift">Blog</a></li>
-                    <li class="mb-2"><a href="#kontakt" class="text-light opacity-75 text-decoration-none hover-lift">Kontakt</a></li>
+                    <li class="mb-2"><a href="{{ route('home') }}" class="text-light opacity-75 text-decoration-none hover-lift">Strona główna</a></li>
+                    <li class="mb-2"><a href="{{ route('courses.individual') }}" class="text-light opacity-75 text-decoration-none hover-lift">Oferta szkoleń</a></li>
+                    <li class="mb-2"><a href="{{ route('about.team') }}" class="text-light opacity-75 text-decoration-none hover-lift">O nas</a></li>
+                    <li class="mb-2"><a href="{{ route('blog.index') }}" class="text-light opacity-75 text-decoration-none hover-lift">Blog</a></li>
+                    <li class="mb-2"><a href="{{ route('home') }}#kontakt" class="text-light opacity-75 text-decoration-none hover-lift">Kontakt</a></li>
                 </ul>
             </div>
             
@@ -30,11 +30,11 @@
             <div class="col-md-2 col-6">
                 <h5 class="text-uppercase fw-bold mb-4">Szkolenia</h5>
                 <ul class="list-unstyled mb-0">
-                    <li class="mb-2"><a href="#" class="text-light opacity-75 text-decoration-none hover-lift">Dla nauczycieli</a></li>
-                    <li class="mb-2"><a href="#" class="text-light opacity-75 text-decoration-none hover-lift">Dla dyrektorów</a></li>
-                    <li class="mb-2"><a href="#" class="text-light opacity-75 text-decoration-none hover-lift">Rady pedagogiczne</a></li>
-                    <li class="mb-2"><a href="#" class="text-light opacity-75 text-decoration-none hover-lift">Webinary</a></li>
-                    <li class="mb-2"><a href="#" class="text-light opacity-75 text-decoration-none hover-lift">Kursy online</a></li>
+                    <li class="mb-2"><a href="{{ route('courses.individual') }}" class="text-light opacity-75 text-decoration-none hover-lift">Dla nauczycieli</a></li>
+                    <li class="mb-2"><a href="{{ route('courses.director-academy') }}" class="text-light opacity-75 text-decoration-none hover-lift">Dla dyrektorów</a></li>
+                    <li class="mb-2"><a href="{{ route('training-offers.pedagogical-councils.index') }}" class="text-light opacity-75 text-decoration-none hover-lift">Rady pedagogiczne</a></li>
+                    <li class="mb-2"><a href="{{ route('courses.free') }}" class="text-light opacity-75 text-decoration-none hover-lift">Webinary</a></li>
+                    <li class="mb-2"><a href="{{ route('dashboard.online-courses.index') }}" class="text-light opacity-75 text-decoration-none hover-lift">Kursy online</a></li>
                 </ul>
             </div>
             

@@ -8,7 +8,7 @@ class PneadmMedia
     public static function isAllowedPath(string $path): bool
     {
         return (bool) preg_match(
-            '#^(courses/images|course_series|online-courses/images|instructors)/#',
+            '#^(courses/images|course_series|online-courses/images|training-offers/images|instructors)/#',
             ltrim($path, '/')
         );
     }

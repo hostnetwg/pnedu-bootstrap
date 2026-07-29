@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\PneadmMedia;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -49,7 +50,7 @@ class Instructor extends Model
      */
     public function getFullNameAttribute()
     {
-        return $this->first_name . ' ' . $this->last_name;
+        return $this->first_name.' '.$this->last_name;
     }
 
     /**
@@ -59,11 +60,17 @@ class Instructor extends Model
      */
     public function getFullNameWithTitleAttribute()
     {
-        $name = $this->first_name . ' ' . $this->last_name;
-        if (!empty($this->title)) {
-            $name = $this->title . ' ' . $name;
+        $name = $this->first_name.' '.$this->last_name;
+        if (! empty($this->title)) {
+            $name = $this->title.' '.$name;
         }
+
         return $name;
+    }
+
+    public function publicPhotoUrl(): ?string
+    {
+        return PneadmMedia::url($this->photo);
     }
 
     /**

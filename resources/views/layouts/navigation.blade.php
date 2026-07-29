@@ -37,7 +37,7 @@
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="openTrainingDropdown">
                         <li><a class="dropdown-item" href="{{ route('courses.individual') }}">Szkolenia indywidualne</a></li>
-                        <li><a class="dropdown-item" href="#">Szkolenia rad pedagogicznych</a></li>
+                        <li><a class="dropdown-item {{ request()->routeIs('training-offers.pedagogical-councils.*') ? 'active' : '' }}" href="{{ route('training-offers.pedagogical-councils.index') }}">Szkolenia rad pedagogicznych</a></li>
                     </ul>
                 </li>
 
