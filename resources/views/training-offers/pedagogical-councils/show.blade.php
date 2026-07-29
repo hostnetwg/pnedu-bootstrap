@@ -128,15 +128,6 @@
                     </div>
                 @endif
 
-                @if($offer->scope)
-                    <div class="card border-0 bg-light mb-4">
-                        <div class="card-body p-4">
-                            <h2 class="h4 fw-bold mb-3">Proponowany zakres szkolenia</h2>
-                            <div style="white-space: pre-line;">{{ $offer->scope }}</div>
-                        </div>
-                    </div>
-                @endif
-
                 <div class="card border-0 shadow-sm mb-4">
                     <div class="card-body p-4">
                         <h2 class="h4 fw-bold mb-3">Jak możemy zrealizować szkolenie?</h2>
