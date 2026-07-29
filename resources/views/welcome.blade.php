@@ -302,6 +302,87 @@
     </div>
 </section>
 
+@if($featuredTrainingOffers->isNotEmpty())
+<!-- ===== FEATURED TRAINING OFFERS ======================================= -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="row align-items-end mb-4">
+            <div class="col-lg-8">
+                <div class="badge bg-primary text-white mb-2">Dla szkół i przedszkoli</div>
+                <h2 class="fw-bold mb-2">Zamów szkolenie dla rady pedagogicznej</h2>
+                <p class="text-muted mb-0">
+                    Wybierz temat szkolenia dla swojej placówki. Termin, formę i szczegółowy zakres ustalimy wspólnie.
+                </p>
+            </div>
+            <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+                <a href="{{ route('training-offers.pedagogical-councils.index') }}" class="btn btn-outline-primary rounded-pill px-4">
+                    Zobacz wszystkie propozycje
+                </a>
+            </div>
+        </div>
+
+        <div class="row row-cols-1 row-cols-md-3 g-4">
+            @foreach($featuredTrainingOffers as $offer)
+                <div class="col">
+                    <article class="card h-100 border-0 shadow-sm hover-lift">
+                        @if($offer->publicImageUrl())
+                            <a href="{{ route('training-offers.pedagogical-councils.show', $offer->slug) }}" class="text-decoration-none">
+                                <img src="{{ $offer->publicImageUrl() }}"
+                                     class="card-img-top"
+                                     alt="{{ $offer->title }}"
+                                     loading="lazy"
+                                     decoding="async"
+                                     style="aspect-ratio: 16 / 9; object-fit: cover;">
+                            </a>
+                        @endif
+
+                        <div class="card-body d-flex flex-column p-4">
+                            <div class="d-flex flex-wrap gap-2 mb-3">
+                                <span class="badge bg-primary-subtle text-primary-emphasis">Rada pedagogiczna</span>
+                                <span class="badge bg-light text-dark border">Termin do ustalenia</span>
+                            </div>
+
+                            <h3 class="h5 fw-bold mb-3">
+                                <a href="{{ route('training-offers.pedagogical-councils.show', $offer->slug) }}" class="text-decoration-none text-dark">
+                                    {{ $offer->title }}
+                                </a>
+                            </h3>
+
+                            <p class="text-muted">
+                                {{ $offer->summary ?: 'Szkolenie zamknięte dopasowane do potrzeb szkoły, przedszkola lub placówki oświatowej.' }}
+                            </p>
+
+                            <div class="small text-muted mb-3">
+                                @if($offer->instructor)
+                                    <div class="mb-1">
+                                        <i class="bi bi-person me-2 text-primary"></i>{{ $offer->instructor->full_name_with_title }}
+                                    </div>
+                                @endif
+                                <div>
+                                    <i class="bi bi-cash-coin me-2 text-primary"></i>{{ $offer->formattedPrice() }}
+                                </div>
+                            </div>
+
+                            <div class="mt-auto pt-2">
+                                <a href="{{ route('training-offers.pedagogical-councils.show', $offer->slug) }}" class="btn btn-primary w-100">
+                                    Zobacz ofertę
+                                </a>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+            @endforeach
+        </div>
+
+        <div class="text-center mt-4">
+            <a href="{{ route('training-offers.pedagogical-councils.inquiry.general') }}" class="btn btn-warning fw-semibold px-4">
+                Zapytaj o szkolenie dla placówki
+            </a>
+        </div>
+    </div>
+</section>
+@endif
+
 <!-- ===== IMPROVED CAROUSEL ======================================= -->
 <div id="heroCarousel" class="carousel slide carousel-fade" data-bs-ride="carousel">
     <div class="carousel-indicators">

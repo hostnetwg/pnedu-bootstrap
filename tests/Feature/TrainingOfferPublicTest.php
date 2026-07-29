@@ -189,4 +189,45 @@ class TrainingOfferPublicTest extends TestCase
 
         Mail::assertNothingSent();
     }
+
+    public function test_homepage_displays_only_featured_training_offers(): void
+    {
+        $this->publicSlug = 'test-wyrozniona-oferta-'.Str::lower(Str::random(8));
+        $this->hiddenSlug = 'test-niewyrozniona-oferta-'.Str::lower(Str::random(8));
+
+        DB::connection('pneadm')->table('training_offers')->insert([
+            [
+                'title' => 'Wyróżniona oferta rady pedagogicznej',
+                'slug' => $this->publicSlug,
+                'summary' => 'Oferta widoczna na stronie głównej.',
+                'price_mode' => 'individual',
+                'default_course_category' => 'closed',
+                'is_active' => true,
+                'show_on_pnedu' => true,
+                'featured_on_homepage' => true,
+                'sort_order' => 0,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'title' => 'Niewyróżniona oferta rady pedagogicznej',
+                'slug' => $this->hiddenSlug,
+                'summary' => 'Oferta nie powinna być na stronie głównej.',
+                'price_mode' => 'individual',
+                'default_course_category' => 'closed',
+                'is_active' => true,
+                'show_on_pnedu' => true,
+                'featured_on_homepage' => false,
+                'sort_order' => 1,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+        ]);
+
+        $this->get(route('home'))
+            ->assertOk()
+            ->assertSee('Zamów szkolenie dla rady pedagogicznej')
+            ->assertSee('Wyróżniona oferta rady pedagogicznej')
+            ->assertDontSee('Niewyróżniona oferta rady pedagogicznej');
+    }
 }
