@@ -1,11 +1,7 @@
 @extends('layouts.app')
 
 @php
-    $courseDisplayTitle = trim(str_replace(
-        ['&nbsp;', "\xc2\xa0"],
-        ' ',
-        strip_tags(html_entity_decode((string) $course->title, ENT_QUOTES | ENT_HTML5, 'UTF-8'))
-    ));
+    $courseDisplayTitle = $course->plainTitle();
 @endphp
 
 @section('title', ($selectedVideo ? 'Nagranie: ' : 'Materiały: ') . $courseDisplayTitle . ' - Platforma Nowoczesnej Edukacji')
