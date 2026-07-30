@@ -302,7 +302,7 @@
     </div>
 </section>
 
-@if($featuredTrainingOffers->isNotEmpty())
+@if(($featuredTrainingOffersTotal ?? $featuredTrainingOffers->count()) > 0)
 <!-- ===== FEATURED TRAINING OFFERS ======================================= -->
 <section class="py-5 bg-light">
     <div class="container">
@@ -321,66 +321,31 @@
             </div>
         </div>
 
-        <div class="row row-cols-1 row-cols-md-3 g-4">
-            @foreach($featuredTrainingOffers as $offer)
-                @php
-                    $offerSummary = $offer->summary
-                        ?: 'Szkolenie zamknięte dopasowane do potrzeb szkoły, przedszkola lub placówki oświatowej.';
-                @endphp
-                <div class="col">
-                    <article class="card h-100 border-0 shadow-sm hover-lift featured-training-offer-card">
-                        @if($offer->publicImageUrl())
-                            <a href="{{ route('training-offers.pedagogical-councils.show', $offer->slug) }}" class="text-decoration-none">
-                                <img src="{{ $offer->publicImageUrl() }}"
-                                     class="card-img-top"
-                                     alt="{{ $offer->title }}"
-                                     loading="lazy"
-                                     decoding="async"
-                                     style="aspect-ratio: 16 / 9; object-fit: cover;">
-                            </a>
-                        @endif
+        <div class="featured-offers-carousel"
+             data-featured-offers-carousel
+             data-total="{{ $featuredTrainingOffersTotal ?? $featuredTrainingOffers->count() }}"
+             data-loaded="{{ $featuredTrainingOffers->count() }}"
+             data-batch-size="{{ \App\Support\FeaturedHomepageTrainingOffers::BATCH_LIMIT }}"
+             data-load-url="{{ route('fragments.featured-training-offers') }}">
+            <button type="button"
+                    class="featured-offers-carousel__nav featured-offers-carousel__nav--prev d-none"
+                    data-featured-offers-prev
+                    aria-label="Poprzednie szkolenia">
+                <i class="bi bi-chevron-left" aria-hidden="true"></i>
+            </button>
 
-                        <div class="card-body d-flex flex-column p-4">
-                            <div class="d-flex flex-wrap gap-2 mb-3">
-                                <span class="badge bg-primary-subtle text-primary-emphasis">Rada pedagogiczna</span>
-                                <span class="badge bg-light text-dark border">Termin do ustalenia</span>
-                            </div>
-
-                            <h3 class="h5 fw-bold mb-3">
-                                <a href="{{ route('training-offers.pedagogical-councils.show', $offer->slug) }}" class="text-decoration-none text-dark">
-                                    {{ $offer->title }}
-                                </a>
-                            </h3>
-
-                            <div class="featured-offer-summary-block mb-3">
-                                <p class="text-muted featured-offer-summary mb-0 is-clamped" data-featured-offer-summary>
-                                    {{ $offerSummary }}
-                                </p>
-                                <button type="button"
-                                        class="btn btn-link btn-sm p-0 mt-1 featured-offer-summary-toggle d-none"
-                                        data-featured-offer-summary-toggle
-                                        aria-expanded="false"
-                                        aria-label="Pokaż pełny opis szkolenia">
-                                    <i class="bi bi-chevron-down" aria-hidden="true"></i>
-                                    <span class="visually-hidden">Rozwiń opis</span>
-                                </button>
-                            </div>
-
-                            <div class="mt-auto pt-2">
-                                @if($offer->instructor)
-                                    <div class="small text-muted mb-3 text-end">
-                                        <i class="bi bi-person me-2 text-primary"></i>{{ $offer->instructor->full_name_with_title }}
-                                    </div>
-                                @endif
-
-                                <a href="{{ route('training-offers.pedagogical-councils.show', $offer->slug) }}" class="btn btn-primary w-100">
-                                    Zobacz ofertę
-                                </a>
-                            </div>
-                        </div>
-                    </article>
+            <div class="featured-offers-carousel__viewport">
+                <div class="featured-offers-carousel__track" data-featured-offers-track>
+                    @include('training-offers.partials.featured-homepage-slides', ['offers' => $featuredTrainingOffers])
                 </div>
-            @endforeach
+            </div>
+
+            <button type="button"
+                    class="featured-offers-carousel__nav featured-offers-carousel__nav--next d-none"
+                    data-featured-offers-next
+                    aria-label="Następne szkolenia">
+                <i class="bi bi-chevron-right" aria-hidden="true"></i>
+            </button>
         </div>
 
         <div class="text-center mt-4">
@@ -946,6 +911,89 @@
         font-size: 1.15rem;
     }
 
+    .featured-offers-carousel {
+        position: relative;
+        padding: 0 2.75rem;
+    }
+
+    .featured-offers-carousel__viewport {
+        overflow: hidden;
+    }
+
+    .featured-offers-carousel__track {
+        display: flex;
+        align-items: stretch;
+        gap: 1.5rem;
+        transition: transform 0.35s ease;
+        will-change: transform;
+    }
+
+    .featured-offers-carousel__slide {
+        flex: 0 0 100%;
+        min-width: 0;
+        display: flex;
+    }
+
+    .featured-offers-carousel__slide > .card {
+        width: 100%;
+    }
+
+    @media (min-width: 768px) {
+        .featured-offers-carousel__slide {
+            flex-basis: calc((100% - 1.5rem) / 2);
+        }
+    }
+
+    @media (min-width: 992px) {
+        .featured-offers-carousel__slide {
+            flex-basis: calc((100% - 3rem) / 3);
+        }
+    }
+
+    .featured-offers-carousel__nav {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 2;
+        width: 2.5rem;
+        height: 2.5rem;
+        border: 1px solid #dee2e6;
+        border-radius: 999px;
+        background: #fff;
+        color: var(--primary-color);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.08);
+        transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+    }
+
+    .featured-offers-carousel__nav:hover,
+    .featured-offers-carousel__nav:focus-visible {
+        background: var(--primary-color);
+        border-color: var(--primary-color);
+        color: #fff;
+    }
+
+    .featured-offers-carousel__nav--prev {
+        left: 0;
+    }
+
+    .featured-offers-carousel__nav--next {
+        right: 0;
+    }
+
+    .featured-offers-carousel__nav .bi {
+        font-size: 1.25rem;
+        line-height: 1;
+    }
+
+    @media (max-width: 575.98px) {
+        .featured-offers-carousel {
+            padding: 0 2.25rem;
+        }
+    }
+
     .carousel-item {
         overflow: hidden;
     }
@@ -1104,43 +1152,181 @@
 
         counters.forEach(counter => observer.observe(counter));
 
-        document.querySelectorAll('[data-featured-offer-summary]').forEach((summary) => {
-            const toggle = summary.parentElement?.querySelector('[data-featured-offer-summary-toggle]');
-            if (!toggle) {
+        const initFeaturedOfferSummaries = (root = document) => {
+            root.querySelectorAll('[data-featured-offer-summary]').forEach((summary) => {
+                if (summary.dataset.summaryBound === '1') {
+                    return;
+                }
+                summary.dataset.summaryBound = '1';
+
+                const toggle = summary.parentElement?.querySelector('[data-featured-offer-summary-toggle]');
+                if (!toggle) {
+                    return;
+                }
+
+                const syncToggleVisibility = () => {
+                    if (summary.classList.contains('is-clamped') && summary.scrollHeight > summary.clientHeight + 1) {
+                        toggle.classList.remove('d-none');
+                    } else if (summary.classList.contains('is-clamped')) {
+                        toggle.classList.add('d-none');
+                    }
+                };
+
+                syncToggleVisibility();
+                window.addEventListener('resize', syncToggleVisibility);
+
+                toggle.addEventListener('click', () => {
+                    const expanded = summary.classList.toggle('is-clamped') === false;
+                    toggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+                    toggle.setAttribute(
+                        'aria-label',
+                        expanded ? 'Zwiń opis szkolenia' : 'Pokaż pełny opis szkolenia'
+                    );
+                    const icon = toggle.querySelector('.bi');
+                    if (icon) {
+                        icon.classList.toggle('bi-chevron-down', !expanded);
+                        icon.classList.toggle('bi-chevron-up', expanded);
+                    }
+                    const sr = toggle.querySelector('.visually-hidden');
+                    if (sr) {
+                        sr.textContent = expanded ? 'Zwiń opis' : 'Rozwiń opis';
+                    }
+                    if (!expanded) {
+                        syncToggleVisibility();
+                    }
+                });
+            });
+        };
+
+        initFeaturedOfferSummaries();
+
+        document.querySelectorAll('[data-featured-offers-carousel]').forEach((carousel) => {
+            const track = carousel.querySelector('[data-featured-offers-track]');
+            const prevBtn = carousel.querySelector('[data-featured-offers-prev]');
+            const nextBtn = carousel.querySelector('[data-featured-offers-next]');
+            if (!track || !prevBtn || !nextBtn) {
                 return;
             }
 
-            const syncToggleVisibility = () => {
-                if (summary.classList.contains('is-clamped') && summary.scrollHeight > summary.clientHeight + 1) {
-                    toggle.classList.remove('d-none');
-                } else if (summary.classList.contains('is-clamped')) {
-                    toggle.classList.add('d-none');
+            let index = 0;
+            let total = parseInt(carousel.dataset.total || '0', 10);
+            let loaded = parseInt(carousel.dataset.loaded || '0', 10);
+            const batchSize = parseInt(carousel.dataset.batchSize || '6', 10);
+            const loadUrl = carousel.dataset.loadUrl || '';
+            let loading = false;
+
+            const slides = () => Array.from(track.querySelectorAll('.featured-offers-carousel__slide'));
+
+            const visibleCount = () => {
+                if (window.matchMedia('(min-width: 992px)').matches) {
+                    return 3;
+                }
+                if (window.matchMedia('(min-width: 768px)').matches) {
+                    return 2;
+                }
+                return 1;
+            };
+
+            const maxIndex = () => Math.max(0, slides().length - visibleCount());
+
+            const update = () => {
+                const currentSlides = slides();
+                if (currentSlides.length === 0) {
+                    prevBtn.classList.add('d-none');
+                    nextBtn.classList.add('d-none');
+                    return;
+                }
+
+                index = Math.min(index, maxIndex());
+                const gap = parseFloat(getComputedStyle(track).gap) || 0;
+                const slideWidth = currentSlides[0].getBoundingClientRect().width;
+                const offset = index * (slideWidth + gap);
+                track.style.transform = `translateX(-${offset}px)`;
+
+                const canPrev = index > 0;
+                const canNext = index < maxIndex() || loaded < total;
+                prevBtn.classList.toggle('d-none', !canPrev);
+                nextBtn.classList.toggle('d-none', !canNext);
+                prevBtn.disabled = !canPrev || loading;
+                nextBtn.disabled = !canNext || loading;
+            };
+
+            const loadMore = async () => {
+                if (!loadUrl || loading || loaded >= total) {
+                    return false;
+                }
+
+                loading = true;
+                nextBtn.disabled = true;
+                nextBtn.setAttribute('aria-busy', 'true');
+
+                try {
+                    const url = new URL(loadUrl, window.location.origin);
+                    url.searchParams.set('offset', String(loaded));
+                    url.searchParams.set('limit', String(batchSize));
+
+                    const response = await fetch(url.toString(), {
+                        headers: { 'Accept': 'text/html', 'X-Requested-With': 'XMLHttpRequest' },
+                    });
+                    if (!response.ok) {
+                        throw new Error('Nie udało się dociągnąć ofert.');
+                    }
+
+                    const headerTotal = response.headers.get('X-Featured-Offers-Total');
+                    if (headerTotal !== null) {
+                        total = parseInt(headerTotal, 10) || total;
+                        carousel.dataset.total = String(total);
+                    }
+
+                    const html = await response.text();
+                    const wrapper = document.createElement('div');
+                    wrapper.innerHTML = html.trim();
+                    const newSlides = Array.from(wrapper.querySelectorAll('.featured-offers-carousel__slide'));
+                    if (newSlides.length === 0) {
+                        loaded = total;
+                        carousel.dataset.loaded = String(loaded);
+                        return false;
+                    }
+
+                    newSlides.forEach((slide) => track.appendChild(slide));
+                    loaded += newSlides.length;
+                    carousel.dataset.loaded = String(loaded);
+                    initFeaturedOfferSummaries(track);
+
+                    return true;
+                } catch (error) {
+                    console.error(error);
+                    return false;
+                } finally {
+                    loading = false;
+                    nextBtn.removeAttribute('aria-busy');
+                    update();
                 }
             };
 
-            syncToggleVisibility();
-            window.addEventListener('resize', syncToggleVisibility);
+            prevBtn.addEventListener('click', () => {
+                index = Math.max(0, index - 1);
+                update();
+            });
 
-            toggle.addEventListener('click', () => {
-                const expanded = summary.classList.toggle('is-clamped') === false;
-                toggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
-                toggle.setAttribute(
-                    'aria-label',
-                    expanded ? 'Zwiń opis szkolenia' : 'Pokaż pełny opis szkolenia'
-                );
-                const icon = toggle.querySelector('.bi');
-                if (icon) {
-                    icon.classList.toggle('bi-chevron-down', !expanded);
-                    icon.classList.toggle('bi-chevron-up', expanded);
+            nextBtn.addEventListener('click', async () => {
+                if (index < maxIndex()) {
+                    index += 1;
+                    update();
+                    return;
                 }
-                const sr = toggle.querySelector('.visually-hidden');
-                if (sr) {
-                    sr.textContent = expanded ? 'Zwiń opis' : 'Rozwiń opis';
-                }
-                if (!expanded) {
-                    syncToggleVisibility();
+
+                if (loaded < total) {
+                    const fetched = await loadMore();
+                    if (fetched || slides().length > visibleCount()) {
+                        index = Math.min(index + 1, maxIndex());
+                        update();
+                    }
                 }
             });
+
+            window.addEventListener('resize', update);
+            update();
         });
 
         // Initialize Bootstrap tooltips

@@ -29,6 +29,10 @@ Route::get('/l/{campaign_code}', App\Http\Controllers\MarketingCampaignShortLink
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
+Route::get('/fragments/featured-training-offers', [App\Http\Controllers\HomepageFragmentController::class, 'featuredTrainingOffers'])
+    ->middleware('throttle:60,1')
+    ->name('fragments.featured-training-offers');
+
 // Bramka ankiet (link dla uczestników bez ujawniania adresu panelu administratora).
 Route::get('/ankieta/{token}', [ExternalSurveyGateController::class, 'visit'])
     ->middleware('throttle:120,1')

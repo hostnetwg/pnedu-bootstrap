@@ -15,6 +15,9 @@ class TrainingOfferPublicTest extends TestCase
 
     private ?string $hiddenSlug = null;
 
+    /** @var list<string> */
+    private array $extraSlugs = [];
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -30,7 +33,7 @@ class TrainingOfferPublicTest extends TestCase
 
     protected function tearDown(): void
     {
-        foreach (array_filter([$this->publicSlug, $this->hiddenSlug]) as $slug) {
+        foreach (array_filter([$this->publicSlug, $this->hiddenSlug, ...$this->extraSlugs]) as $slug) {
             DB::connection('pneadm')
                 ->table('training_offers')
                 ->where('slug', $slug)
@@ -194,6 +197,8 @@ class TrainingOfferPublicTest extends TestCase
     {
         $this->publicSlug = 'test-wyrozniona-oferta-'.Str::lower(Str::random(8));
         $this->hiddenSlug = 'test-niewyrozniona-oferta-'.Str::lower(Str::random(8));
+        $this->extraSlugs[] = 'test-wyrozniona-oferta-extra-'.Str::lower(Str::random(8));
+        $extraSlug = $this->extraSlugs[0];
 
         DB::connection('pneadm')->table('training_offers')->insert([
             [
@@ -210,6 +215,19 @@ class TrainingOfferPublicTest extends TestCase
                 'updated_at' => now(),
             ],
             [
+                'title' => 'Druga wyróżniona oferta RP',
+                'slug' => $extraSlug,
+                'summary' => 'Kolejna oferta w karuzeli na stronie głównej.',
+                'price_mode' => 'individual',
+                'default_course_category' => 'closed',
+                'is_active' => true,
+                'show_on_pnedu' => true,
+                'featured_on_homepage' => true,
+                'sort_order' => 1,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
                 'title' => 'Niewyróżniona oferta rady pedagogicznej',
                 'slug' => $this->hiddenSlug,
                 'summary' => 'Oferta nie powinna być na stronie głównej.',
@@ -218,7 +236,7 @@ class TrainingOfferPublicTest extends TestCase
                 'is_active' => true,
                 'show_on_pnedu' => true,
                 'featured_on_homepage' => false,
-                'sort_order' => 1,
+                'sort_order' => 2,
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
@@ -228,6 +246,69 @@ class TrainingOfferPublicTest extends TestCase
             ->assertOk()
             ->assertSee('Zamów szkolenie dla rady pedagogicznej')
             ->assertSee('Wyróżniona oferta rady pedagogicznej')
+            ->assertSee('Druga wyróżniona oferta RP')
+            ->assertSee('data-featured-offers-carousel', false)
+            ->assertSee('data-load-url="'.route('fragments.featured-training-offers').'"', false)
             ->assertDontSee('Niewyróżniona oferta rady pedagogicznej');
+    }
+
+    public function test_featured_training_offers_fragment_loads_next_batch(): void
+    {
+        $prefix = 'Oferta batch '.Str::upper(Str::random(4));
+        $slugs = [];
+        $rows = [];
+        for ($i = 1; $i <= 7; $i++) {
+            $slug = 'test-featured-batch-'.$i.'-'.Str::lower(Str::random(6));
+            $slugs[] = $slug;
+            $rows[] = [
+                'title' => "{$prefix} {$i}",
+                'slug' => $slug,
+                'summary' => "Podsumowanie batch {$i}",
+                'price_mode' => 'individual',
+                'default_course_category' => 'closed',
+                'is_active' => true,
+                'show_on_pnedu' => true,
+                'featured_on_homepage' => true,
+                'sort_order' => 9000 + $i,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ];
+        }
+        $this->extraSlugs = $slugs;
+
+        DB::connection('pneadm')->table('training_offers')->insert($rows);
+
+        $initial = \App\Support\FeaturedHomepageTrainingOffers::page(
+            0,
+            \App\Support\FeaturedHomepageTrainingOffers::INITIAL_LIMIT
+        );
+        $remainder = \App\Support\FeaturedHomepageTrainingOffers::page(
+            \App\Support\FeaturedHomepageTrainingOffers::INITIAL_LIMIT,
+            \App\Support\FeaturedHomepageTrainingOffers::BATCH_LIMIT
+        );
+
+        $home = $this->get(route('home'))->assertOk();
+        $home->assertSee('data-load-url="'.route('fragments.featured-training-offers').'"', false)
+            ->assertSee('data-batch-size="'.\App\Support\FeaturedHomepageTrainingOffers::BATCH_LIMIT.'"', false);
+
+        foreach ($initial as $offer) {
+            $home->assertSee($offer->title);
+        }
+        foreach ($remainder->where(fn ($offer) => str_starts_with($offer->title, $prefix)) as $offer) {
+            $home->assertDontSee($offer->title);
+        }
+
+        $fragment = $this->get(route('fragments.featured-training-offers', [
+            'offset' => \App\Support\FeaturedHomepageTrainingOffers::INITIAL_LIMIT,
+            'limit' => \App\Support\FeaturedHomepageTrainingOffers::BATCH_LIMIT,
+        ]));
+
+        $fragment->assertOk()
+            ->assertHeader('X-Featured-Offers-Count', (string) $remainder->count());
+
+        foreach ($remainder as $offer) {
+            $fragment->assertSee($offer->title);
+        }
+        $this->assertGreaterThanOrEqual(7, (int) $fragment->headers->get('X-Featured-Offers-Total'));
     }
 }
