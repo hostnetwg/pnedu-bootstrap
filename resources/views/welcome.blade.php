@@ -323,8 +323,12 @@
 
         <div class="row row-cols-1 row-cols-md-3 g-4">
             @foreach($featuredTrainingOffers as $offer)
+                @php
+                    $offerSummary = $offer->summary
+                        ?: 'Szkolenie zamknięte dopasowane do potrzeb szkoły, przedszkola lub placówki oświatowej.';
+                @endphp
                 <div class="col">
-                    <article class="card h-100 border-0 shadow-sm hover-lift">
+                    <article class="card h-100 border-0 shadow-sm hover-lift featured-training-offer-card">
                         @if($offer->publicImageUrl())
                             <a href="{{ route('training-offers.pedagogical-councils.show', $offer->slug) }}" class="text-decoration-none">
                                 <img src="{{ $offer->publicImageUrl() }}"
@@ -348,22 +352,27 @@
                                 </a>
                             </h3>
 
-                            <p class="text-muted">
-                                {{ $offer->summary ?: 'Szkolenie zamknięte dopasowane do potrzeb szkoły, przedszkola lub placówki oświatowej.' }}
-                            </p>
-
-                            <div class="small text-muted mb-3">
-                                @if($offer->instructor)
-                                    <div class="mb-1">
-                                        <i class="bi bi-person me-2 text-primary"></i>{{ $offer->instructor->full_name_with_title }}
-                                    </div>
-                                @endif
-                                <div>
-                                    <i class="bi bi-cash-coin me-2 text-primary"></i>{{ $offer->formattedPrice() }}
-                                </div>
+                            <div class="featured-offer-summary-block mb-3">
+                                <p class="text-muted featured-offer-summary mb-0 is-clamped" data-featured-offer-summary>
+                                    {{ $offerSummary }}
+                                </p>
+                                <button type="button"
+                                        class="btn btn-link btn-sm p-0 mt-1 featured-offer-summary-toggle d-none"
+                                        data-featured-offer-summary-toggle
+                                        aria-expanded="false"
+                                        aria-label="Pokaż pełny opis szkolenia">
+                                    <i class="bi bi-chevron-down" aria-hidden="true"></i>
+                                    <span class="visually-hidden">Rozwiń opis</span>
+                                </button>
                             </div>
 
                             <div class="mt-auto pt-2">
+                                @if($offer->instructor)
+                                    <div class="small text-muted mb-3">
+                                        <i class="bi bi-person me-2 text-primary"></i>{{ $offer->instructor->full_name_with_title }}
+                                    </div>
+                                @endif
+
                                 <a href="{{ route('training-offers.pedagogical-councils.show', $offer->slug) }}" class="btn btn-primary w-100">
                                     Zobacz ofertę
                                 </a>
@@ -914,6 +923,29 @@
         box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15) !important;
     }
 
+    .featured-offer-summary.is-clamped {
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 3;
+        line-clamp: 3;
+        overflow: hidden;
+    }
+
+    .featured-offer-summary-toggle {
+        color: var(--primary-color);
+        text-decoration: none;
+        line-height: 1;
+    }
+
+    .featured-offer-summary-toggle:hover,
+    .featured-offer-summary-toggle:focus-visible {
+        color: var(--primary-dark);
+    }
+
+    .featured-offer-summary-toggle .bi {
+        font-size: 1.15rem;
+    }
+
     .carousel-item {
         overflow: hidden;
     }
@@ -1071,6 +1103,45 @@
         }, { threshold: 0.1 });
 
         counters.forEach(counter => observer.observe(counter));
+
+        document.querySelectorAll('[data-featured-offer-summary]').forEach((summary) => {
+            const toggle = summary.parentElement?.querySelector('[data-featured-offer-summary-toggle]');
+            if (!toggle) {
+                return;
+            }
+
+            const syncToggleVisibility = () => {
+                if (summary.classList.contains('is-clamped') && summary.scrollHeight > summary.clientHeight + 1) {
+                    toggle.classList.remove('d-none');
+                } else if (summary.classList.contains('is-clamped')) {
+                    toggle.classList.add('d-none');
+                }
+            };
+
+            syncToggleVisibility();
+            window.addEventListener('resize', syncToggleVisibility);
+
+            toggle.addEventListener('click', () => {
+                const expanded = summary.classList.toggle('is-clamped') === false;
+                toggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+                toggle.setAttribute(
+                    'aria-label',
+                    expanded ? 'Zwiń opis szkolenia' : 'Pokaż pełny opis szkolenia'
+                );
+                const icon = toggle.querySelector('.bi');
+                if (icon) {
+                    icon.classList.toggle('bi-chevron-down', !expanded);
+                    icon.classList.toggle('bi-chevron-up', expanded);
+                }
+                const sr = toggle.querySelector('.visually-hidden');
+                if (sr) {
+                    sr.textContent = expanded ? 'Zwiń opis' : 'Rozwiń opis';
+                }
+                if (!expanded) {
+                    syncToggleVisibility();
+                }
+            });
+        });
 
         // Initialize Bootstrap tooltips
         const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
