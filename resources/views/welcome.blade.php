@@ -368,7 +368,7 @@
 
                             <div class="mt-auto pt-2">
                                 @if($offer->instructor)
-                                    <div class="small text-muted mb-3">
+                                    <div class="small text-muted mb-3 text-end">
                                         <i class="bi bi-person me-2 text-primary"></i>{{ $offer->instructor->full_name_with_title }}
                                     </div>
                                 @endif
