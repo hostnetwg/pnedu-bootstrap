@@ -10,7 +10,7 @@
         @forelse($dashboardUpcomingCourses ?? [] as $course)
             @php
                 $start = \Carbon\Carbon::parse($course->start_date)->locale('pl');
-                $titlePlain = \Illuminate\Support\Str::limit(strip_tags((string) $course->title), 90);
+                $titlePlain = \Illuminate\Support\Str::limit($course->plainTitle(), 90);
                 $priceInfo = $course->is_paid ? $course->getCurrentPrice() : null;
             @endphp
             <a href="{{ route('courses.show', ['id' => $course->id, 'entry' => 'dashboard_sidebar']) }}"

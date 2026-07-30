@@ -17,24 +17,26 @@ class PneduCacheInvalidationTest extends TestCase
 
     public function test_forgets_upcoming_courses_cache_with_valid_token(): void
     {
-        Cache::put(UpcomingPneduCourses::cacheKey(), collect(['stale']), now()->addMinutes(10));
+        Cache::put(UpcomingPneduCourses::cacheKey(null), collect(['stale-sidebar']), now()->addMinutes(10));
+        Cache::put(UpcomingPneduCourses::cacheKey(UpcomingPneduCourses::HOMEPAGE_LIMIT), collect(['stale-home']), now()->addMinutes(10));
 
         $response = $this->postJson('/api/internal/cache/upcoming-courses', [], [
             'Authorization' => 'Bearer test-internal-token',
         ]);
 
         $response->assertOk()->assertJson(['ok' => true]);
-        $this->assertNull(Cache::get(UpcomingPneduCourses::cacheKey()));
+        $this->assertNull(Cache::get(UpcomingPneduCourses::cacheKey(null)));
+        $this->assertNull(Cache::get(UpcomingPneduCourses::cacheKey(UpcomingPneduCourses::HOMEPAGE_LIMIT)));
     }
 
     public function test_rejects_invalid_token(): void
     {
-        Cache::put(UpcomingPneduCourses::cacheKey(), collect(['stale']), now()->addMinutes(10));
+        Cache::put(UpcomingPneduCourses::cacheKey(null), collect(['stale']), now()->addMinutes(10));
 
         $this->postJson('/api/internal/cache/upcoming-courses', [], [
             'Authorization' => 'Bearer wrong-token',
         ])->assertUnauthorized();
 
-        $this->assertNotNull(Cache::get(UpcomingPneduCourses::cacheKey()));
+        $this->assertNotNull(Cache::get(UpcomingPneduCourses::cacheKey(null)));
     }
 }

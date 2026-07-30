@@ -9,9 +9,13 @@ use Illuminate\Support\Facades\Cache;
 
 class UpcomingPneduCourses
 {
-    public const SIDEBAR_LIMIT = 6;
+    /** Limit listy na stronie głównej (sidebar dashboardu pokazuje wszystkie). */
+    public const HOMEPAGE_LIMIT = 6;
 
-    public const SIDEBAR_CACHE_KEY = 'dashboard.upcoming-offer.sidebar.v1';
+    /** @deprecated Używaj HOMEPAGE_LIMIT — zachowane dla kompatybilności cache/API. */
+    public const SIDEBAR_LIMIT = self::HOMEPAGE_LIMIT;
+
+    public const SIDEBAR_CACHE_KEY = 'dashboard.upcoming-offer.sidebar.v2';
 
     public const SIDEBAR_CACHE_TTL_MINUTES = 10;
 
@@ -26,32 +30,39 @@ class UpcomingPneduCourses
     }
 
     /**
-     * Ograniczona lista nadchodzących szkoleń do sidebara dashboardu (cache globalny).
+     * Wszystkie nadchodzące / trwające szkolenia do sidebara „Aktualna oferta” (cache globalny).
      *
      * @return Collection<int, Course>
      */
-    public static function forSidebar(int $limit = self::SIDEBAR_LIMIT): Collection
+    public static function forSidebar(?int $limit = null): Collection
     {
         return Cache::remember(
             self::cacheKey($limit),
             now()->addMinutes(self::SIDEBAR_CACHE_TTL_MINUTES),
-            fn () => self::baseQuery()->limit($limit)->get()
+            function () use ($limit) {
+                $query = self::baseQuery();
+                if ($limit !== null) {
+                    $query->limit($limit);
+                }
+
+                return $query->get();
+            }
         );
     }
 
     /**
-     * Nadchodzące szkolenia na stronie głównej (ten sam cache co sidebar dashboardu).
+     * Nadchodzące szkolenia na stronie głównej (ograniczona lista).
      *
      * @return Collection<int, Course>
      */
-    public static function forHomepage(int $limit = self::SIDEBAR_LIMIT): Collection
+    public static function forHomepage(int $limit = self::HOMEPAGE_LIMIT): Collection
     {
         return self::forSidebar($limit);
     }
 
-    public static function cacheKey(int $limit = self::SIDEBAR_LIMIT): string
+    public static function cacheKey(?int $limit = null): string
     {
-        return self::SIDEBAR_CACHE_KEY.'.'.$limit;
+        return self::SIDEBAR_CACHE_KEY.'.'.($limit === null ? 'all' : (string) $limit);
     }
 
     /** Po zmianie kursu w panelu adm — wywoływane przez wewnętrzne API pneadm → pnedu. */
@@ -63,7 +74,11 @@ class UpcomingPneduCourses
             return;
         }
 
-        Cache::forget(self::cacheKey(self::SIDEBAR_LIMIT));
+        Cache::forget(self::cacheKey(null));
+        Cache::forget(self::cacheKey(self::HOMEPAGE_LIMIT));
+        // legacy keys (v1 + limit 6 współdzielony ze sidebarem)
+        Cache::forget('dashboard.upcoming-offer.sidebar.v1.'.self::HOMEPAGE_LIMIT);
+        Cache::forget('dashboard.upcoming-offer.sidebar.v1.6');
     }
 
     /**
