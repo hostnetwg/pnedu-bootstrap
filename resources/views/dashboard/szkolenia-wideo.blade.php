@@ -1,6 +1,14 @@
 @extends('layouts.app')
 
-@section('title', ($selectedVideo ? 'Nagranie: ' : 'Materiały: ') . $course->title . ' - Platforma Nowoczesnej Edukacji')
+@php
+    $courseDisplayTitle = trim(str_replace(
+        ['&nbsp;', "\xc2\xa0"],
+        ' ',
+        strip_tags(html_entity_decode((string) $course->title, ENT_QUOTES | ENT_HTML5, 'UTF-8'))
+    ));
+@endphp
+
+@section('title', ($selectedVideo ? 'Nagranie: ' : 'Materiały: ') . $courseDisplayTitle . ' - Platforma Nowoczesnej Edukacji')
 
 @section('content')
 <div class="container py-4">
@@ -21,7 +29,7 @@
                             <i class="bi bi-arrow-left me-1"></i> Powrót do listy szkoleń
                         </a>
                     </div>
-                    <h2 class="h4 mb-2">{{ $course->title }}</h2>
+                    <h2 class="h4 mb-2">{{ $courseDisplayTitle }}</h2>
                     @if($course->instructor)
                         <p class="text-muted mb-3">
                             <small>{{ $course->trainer_title }}: {{ $course->instructor->full_name_with_title }}</small>
