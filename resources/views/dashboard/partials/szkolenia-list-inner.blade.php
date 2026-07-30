@@ -47,7 +47,7 @@
                     ? $participant->access_expires_at->timezone(config('app.timezone'))->format('Y-m-d H:i')
                     : null;
                 $courseDisplayTitle = $course
-                    ? trim(str_replace(['&nbsp;', "\xc2\xa0"], ' ', strip_tags(html_entity_decode((string) $course->title, ENT_QUOTES | ENT_HTML5, 'UTF-8'))))
+                    ? $course->plainTitle()
                     : 'Szkolenie niedostępne w katalogu';
                 $trainingNotesCount = (int) ($participant->training_video_notes_count ?? 0);
             @endphp
