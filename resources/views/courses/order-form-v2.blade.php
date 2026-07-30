@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Zamów szkolenie – formularz dla szkół i instytucji | ' . strip_tags($course->title))
+@section('title', 'Zamów szkolenie – formularz dla szkół i instytucji | ' . $course->plainTitle())
 @section('meta_description', 'Zamów szkolenie online dla szkoły, placówki, firmy lub osoby prywatnej. Wybierz dane do faktury i wygodny sposób płatności.')
 
 @push('styles')
@@ -386,7 +386,7 @@
             </div>
             <div class="order-v2__summary rounded p-3 mt-4" aria-live="polite">
                 <h3 class="h6">Podsumowanie</h3>
-                <p class="mb-1"><strong>Szkolenie:</strong> {{ strip_tags($course->title) }}</p>
+                <p class="mb-1"><strong>Szkolenie:</strong> {{ $course->plainTitle() }}</p>
                 <p class="mb-1"><strong>Zamawiający:</strong> <span id="v2-review-profile"></span></p>
                 <p class="mb-0"><strong>Płatność:</strong> <span id="v2-review-payment"></span></p>
             </div>

@@ -159,6 +159,21 @@ class Course extends Model
     }
 
     /**
+     * Tytuł bez tagów HTML, z zdekodowanymi encjami (&nbsp; → twarda spacja Unicode).
+     * Zachowuje twarde spacje do kontroli łamania wierszy w UI / <title>.
+     */
+    public function plainTitle(string $fallback = ''): string
+    {
+        $plain = trim(strip_tags(html_entity_decode(
+            (string) ($this->title ?? ''),
+            ENT_QUOTES | ENT_HTML5,
+            'UTF-8'
+        )));
+
+        return $plain !== '' ? $plain : $fallback;
+    }
+
+    /**
      * Publiczny URL zapisu z listy (start): płatne → formularz zamówienia z domyślnym wariantem (najniższe aktywne ID, jak na stronie kursu);
      * bezpłatne → szczegóły (formularz e-mailowy Sendy).
      */

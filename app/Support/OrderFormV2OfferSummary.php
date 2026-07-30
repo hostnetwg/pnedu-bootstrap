@@ -58,7 +58,7 @@ final class OrderFormV2OfferSummary
         }
 
         return [
-            'title' => trim(strip_tags((string) $course->title)),
+            'title' => $course->plainTitle(),
             'date_line' => $dateLine,
             'duration' => $duration,
             'trainer_label' => $course->trainer_title ?? null,

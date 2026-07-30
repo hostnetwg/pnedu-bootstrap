@@ -62,6 +62,26 @@ class OrderFormV2OfferSummaryTest extends TestCase
     }
 
     #[Test]
+    public function it_decodes_nbsp_in_title_while_keeping_non_breaking_spaces(): void
+    {
+        $course = new Course([
+            'title' => 'Nowe przepisy w szkole i&nbsp;przedszkolu, od 1&nbsp;września 2026&nbsp;r.',
+            'is_paid' => true,
+        ]);
+        $course->id = 545;
+        $course->setRelation('priceVariants', collect());
+
+        $summary = OrderFormV2OfferSummary::fromCourse($course, null);
+        $nbsp = html_entity_decode('&nbsp;', ENT_HTML5, 'UTF-8');
+
+        $this->assertStringNotContainsString('&nbsp;', $summary['title']);
+        $this->assertSame(
+            'Nowe przepisy w szkole i'.$nbsp.'przedszkolu, od 1'.$nbsp.'września 2026'.$nbsp.'r.',
+            $summary['title']
+        );
+    }
+
+    #[Test]
     public function it_shows_variant_label_only_when_multiple_active_variants_exist(): void
     {
         $course = new Course(['title' => 'Test', 'is_paid' => true]);
