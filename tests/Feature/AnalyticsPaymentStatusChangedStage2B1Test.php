@@ -160,6 +160,48 @@ class AnalyticsPaymentStatusChangedStage2B1Test extends TestCase
         $this->assertPayloadHasNoPiiNorServerSideSessionFields($payload);
     }
 
+    public function test_late_cancelled_webhook_from_older_attempt_does_not_downgrade_paid_form_order(): void
+    {
+        Queue::fake();
+        [, $olderAttempt] = $this->submitOnlineOrder();
+
+        $newerAttempt = $this->createRetryPaymentAttempt($olderAttempt);
+
+        $this->postJson(route('payment.payu.notify'), [
+            'order' => [
+                'orderId' => $newerAttempt->payu_order_id,
+                'extOrderId' => $newerAttempt->ident,
+                'status' => 'COMPLETED',
+            ],
+        ])->assertStatus(200);
+
+        $this->assertDatabaseHas('form_orders', [
+            'id' => $olderAttempt->form_order_id,
+            'payment_status' => FormOrder::PAYMENT_STATUS_PAID,
+        ], 'pneadm');
+
+        $this->postJson(route('payment.payu.notify'), [
+            'order' => [
+                'orderId' => $olderAttempt->payu_order_id,
+                'extOrderId' => $olderAttempt->ident,
+                'status' => 'CANCELED',
+            ],
+        ])->assertStatus(200);
+
+        $this->assertDatabaseHas('online_payment_orders', [
+            'id' => $olderAttempt->id,
+            'status' => OnlinePaymentOrder::STATUS_CANCELLED,
+        ], 'pneadm');
+        $this->assertDatabaseHas('online_payment_orders', [
+            'id' => $newerAttempt->id,
+            'status' => OnlinePaymentOrder::STATUS_PAID,
+        ], 'pneadm');
+        $this->assertDatabaseHas('form_orders', [
+            'id' => $olderAttempt->form_order_id,
+            'payment_status' => FormOrder::PAYMENT_STATUS_PAID,
+        ], 'pneadm');
+    }
+
     public function test_webhook_without_form_order_id_does_not_dispatch(): void
     {
         Queue::fake();
@@ -475,6 +517,29 @@ class AnalyticsPaymentStatusChangedStage2B1Test extends TestCase
         Queue::fake();
 
         return $this->submitOnlineOrder();
+    }
+
+    private function createRetryPaymentAttempt(OnlinePaymentOrder $previousAttempt): OnlinePaymentOrder
+    {
+        return OnlinePaymentOrder::create([
+            'form_order_id' => $previousAttempt->form_order_id,
+            'ident' => 'ANALYTICS_RACE_'.Str::upper(Str::random(8)),
+            'course_id' => $previousAttempt->course_id,
+            'payment_gateway' => 'payu',
+            'payu_order_id' => 'payu-race-newer-'.Str::lower(Str::random(8)),
+            'status' => OnlinePaymentOrder::STATUS_CREATED,
+            'total_amount' => $previousAttempt->total_amount,
+            'currency' => $previousAttempt->currency,
+            'buyer_type' => $previousAttempt->buyer_type,
+            'email' => $previousAttempt->email,
+            'first_name' => $previousAttempt->first_name,
+            'last_name' => $previousAttempt->last_name,
+            'phone' => $previousAttempt->phone,
+            'order_comment' => $previousAttempt->order_comment,
+            'address_data' => $previousAttempt->address_data,
+            'form_data' => $previousAttempt->form_data,
+            'ip_address' => $previousAttempt->ip_address,
+        ]);
     }
 
     private function pushedPaymentStatusUuids(): array

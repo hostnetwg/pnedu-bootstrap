@@ -570,16 +570,34 @@ class PaymentController extends Controller
             return;
         }
 
-        $map = [
-            OnlinePaymentOrder::STATUS_PAID => FormOrder::PAYMENT_STATUS_PAID,
-            OnlinePaymentOrder::STATUS_CANCELLED => FormOrder::PAYMENT_STATUS_CANCELLED,
-            OnlinePaymentOrder::STATUS_FAILED => FormOrder::PAYMENT_STATUS_FAILED,
-            OnlinePaymentOrder::STATUS_PENDING => FormOrder::PAYMENT_STATUS_AWAITING_PAYMENT,
-            OnlinePaymentOrder::STATUS_CREATED => FormOrder::PAYMENT_STATUS_AWAITING_PAYMENT,
-        ];
+        $paidAttempt = OnlinePaymentOrder::query()
+            ->where('form_order_id', $formOrder->id)
+            ->where('status', OnlinePaymentOrder::STATUS_PAID)
+            ->orderByDesc('id')
+            ->first();
 
-        $paymentStatus = $map[$order->status] ?? FormOrder::PAYMENT_STATUS_AWAITING_PAYMENT;
-        $formOrder->update(['payment_status' => $paymentStatus]);
+        $sourceAttempt = $paidAttempt ?? OnlinePaymentOrder::query()
+            ->where('form_order_id', $formOrder->id)
+            ->orderByDesc('id')
+            ->first();
+
+        if (! $sourceAttempt) {
+            $sourceAttempt = $order;
+        }
+
+        if ($paidAttempt && $order->status !== OnlinePaymentOrder::STATUS_PAID) {
+            Log::warning('PaymentController: pominięto degradację statusu form_order, bo istnieje opłacona próba płatności', [
+                'form_order_id' => $formOrder->id,
+                'incoming_online_payment_order_id' => $order->id,
+                'incoming_status' => $order->status,
+                'paid_online_payment_order_id' => $paidAttempt->id,
+            ]);
+        }
+
+        $paymentStatus = $this->mapOnlinePaymentStatusToFormOrder($sourceAttempt->status);
+        if ($formOrder->payment_status !== $paymentStatus) {
+            $formOrder->update(['payment_status' => $paymentStatus]);
+        }
 
         if ($paymentStatus === FormOrder::PAYMENT_STATUS_PAID) {
             $resumeService = app(FormOrderCheckoutResumeService::class);
@@ -592,6 +610,18 @@ class PaymentController extends Controller
                 $resumeService->clearResume();
             }
         }
+    }
+
+    protected function mapOnlinePaymentStatusToFormOrder(?string $status): string
+    {
+        return match ($status) {
+            OnlinePaymentOrder::STATUS_PAID => FormOrder::PAYMENT_STATUS_PAID,
+            OnlinePaymentOrder::STATUS_CANCELLED => FormOrder::PAYMENT_STATUS_CANCELLED,
+            OnlinePaymentOrder::STATUS_FAILED => FormOrder::PAYMENT_STATUS_FAILED,
+            OnlinePaymentOrder::STATUS_PENDING,
+            OnlinePaymentOrder::STATUS_CREATED => FormOrder::PAYMENT_STATUS_AWAITING_PAYMENT,
+            default => FormOrder::PAYMENT_STATUS_AWAITING_PAYMENT,
+        };
     }
 
     /**
