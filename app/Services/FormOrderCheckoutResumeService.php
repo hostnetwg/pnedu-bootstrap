@@ -9,8 +9,8 @@ use Illuminate\Support\Facades\Log;
 /**
  * Wznawianie checkoutu formularza zamówienia (sesja + idempotencja zapisu).
  *
- * Zapobiega duplikatom przy double-click i „wstecz + wyślij ponownie”, ale pozwala
- * złożyć kolejne zamówienie na ten sam kurs z innym uczestnikiem (inny e-mail).
+ * Zapobiega duplikatom przy double-click i „wstecz + wyślij ponownie”. Jawna edycja
+ * zamówienia z linku w podsumowaniu/e-mailu może też poprawić e-mail uczestnika.
  */
 class FormOrderCheckoutResumeService
 {
@@ -123,19 +123,33 @@ class FormOrderCheckoutResumeService
     }
 
     /**
-     * Rozstrzyga, czy POST ma zaktualizować istniejące zamówienie (z lockiem na email uczestnika + kurs).
+     * Rozstrzyga, czy POST ma zaktualizować istniejące zamówienie.
+     *
+     * @param  bool  $allowParticipantEmailChange  true tylko dla jawnej edycji z linku /edit/{ident}
      */
-    public function resolveForSubmit(int $courseId, ?string $requestOrderIdent, string $participantEmail): ?FormOrder
+    public function resolveForSubmit(int $courseId, ?string $requestOrderIdent, string $participantEmail, bool $allowParticipantEmailChange = false): ?FormOrder
     {
         $normalizedEmail = $this->normalizeParticipantEmail($participantEmail);
         if ($normalizedEmail === '') {
             return null;
         }
 
-        $lockKey = sprintf('form_order_submit:%d:%s', $courseId, hash('sha256', $normalizedEmail));
+        $requestIdent = trim((string) $requestOrderIdent);
+        $lockKey = ($allowParticipantEmailChange && $requestIdent !== '')
+            ? sprintf('form_order_submit_ident:%d:%s', $courseId, hash('sha256', $requestIdent))
+            : sprintf('form_order_submit:%d:%s', $courseId, hash('sha256', $normalizedEmail));
 
-        return Cache::lock($lockKey, 15)->block(10, function () use ($courseId, $requestOrderIdent, $normalizedEmail) {
-            foreach ($this->candidateIdentsForSubmit($courseId, $requestOrderIdent, $normalizedEmail) as $ident) {
+        return Cache::lock($lockKey, 15)->block(10, function () use ($courseId, $requestIdent, $normalizedEmail, $allowParticipantEmailChange) {
+            if ($allowParticipantEmailChange && $requestIdent !== '') {
+                $order = $this->loadOrderForUpdateCandidate($requestIdent, $courseId);
+                if ($order !== null) {
+                    $this->restoreTrashedOrderIfNeeded($order);
+
+                    return $order;
+                }
+            }
+
+            foreach ($this->candidateIdentsForSubmit($courseId, $requestIdent, $normalizedEmail) as $ident) {
                 $order = $this->loadOrderForUpdateCandidate($ident, $courseId);
                 if ($order === null) {
                     continue;
@@ -156,6 +170,11 @@ class FormOrderCheckoutResumeService
 
             return null;
         });
+    }
+
+    public function canUpdateFromFormSubmit(FormOrder $order): bool
+    {
+        return $this->isOrderResumableForFormSubmit($order);
     }
 
     /**

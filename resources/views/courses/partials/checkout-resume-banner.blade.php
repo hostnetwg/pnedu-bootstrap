@@ -5,7 +5,9 @@
         </h5>
         <p class="mb-2">
             Numer: <strong>{{ $checkoutResumeBanner['ident'] }}</strong>.
-            Ponowne wysłanie formularza z tym samym e-mailem uczestnika
+            Jeśli chcesz poprawić dane w tym zamówieniu, użyj przycisku
+            <strong>Edytuj ostatnie zamówienie</strong>.
+            Ponowne wysłanie zwykłego formularza z tym samym e-mailem uczestnika
             @if(!empty($checkoutResumeBanner['participant_email']))
                 (<strong>{{ $checkoutResumeBanner['participant_email'] }}</strong>)
             @endif
@@ -13,7 +15,7 @@
         </p>
         <p class="mb-3 small text-muted">
             Chcesz zamówić szkolenie dla <strong>innego nauczyciela</strong>?
-            Zmień dane uczestnika (imię, nazwisko, e-mail) albo użyj przycisku poniżej — wtedy powstanie osobne zamówienie, a dane adresowe możesz zostawić bez zmian.
+            Użyj przycisku poniżej — wtedy powstanie osobne zamówienie, a dane adresowe możesz zostawić bez zmian.
         </p>
         <div class="d-flex flex-column flex-sm-row gap-2 flex-wrap">
             <a href="{{ $checkoutResumeBanner['edit_url'] }}" class="btn btn-sm btn-outline-primary">

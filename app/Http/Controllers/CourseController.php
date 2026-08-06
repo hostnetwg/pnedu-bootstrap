@@ -1439,10 +1439,11 @@ class CourseController extends Controller
             $order = $checkoutResume->resolveForSubmit(
                 (int) $id,
                 $request->order_ident,
-                $validated['participant_email']
+                $validated['participant_email'],
+                $request->boolean('order_edit_intent')
             );
 
-            if ($order && $order->isEditLocked()) {
+            if ($order && ! $checkoutResume->canUpdateFromFormSubmit($order)) {
                 return redirect()
                     ->route('payment.deferred.edit', ['id' => $course->id, 'ident' => $order->ident])
                     ->with('error', 'To zamówienie zostało już zakończone lub zafakturowane. Zmiany nie zostały zapisane.');
@@ -1710,10 +1711,11 @@ class CourseController extends Controller
             $order = $checkoutResume->resolveForSubmit(
                 (int) $id,
                 $request->order_ident,
-                $validated['participant_email']
+                $validated['participant_email'],
+                $request->boolean('order_edit_intent')
             );
 
-            if ($order && $order->isEditLocked()) {
+            if ($order && ! $checkoutResume->canUpdateFromFormSubmit($order)) {
                 return redirect()
                     ->route('payment.order-form.edit', ['id' => $course->id, 'ident' => $order->ident])
                     ->with('error', 'To zamówienie zostało już zakończone lub zafakturowane. Zmiany nie zostały zapisane.');
@@ -1855,10 +1857,11 @@ class CourseController extends Controller
             $formOrder = $checkoutResume->resolveForSubmit(
                 (int) $course->id,
                 $request->order_ident,
-                $validated['participant_email']
+                $validated['participant_email'],
+                $request->boolean('order_edit_intent')
             );
 
-            if ($formOrder && $formOrder->isEditLocked()) {
+            if ($formOrder && ! $checkoutResume->canUpdateFromFormSubmit($formOrder)) {
                 return redirect()
                     ->route('payment.order-form.edit', ['id' => $course->id, 'ident' => $formOrder->ident])
                     ->with('error', 'To zamówienie zostało już zakończone lub zafakturowane. Zmiany nie zostały zapisane.');

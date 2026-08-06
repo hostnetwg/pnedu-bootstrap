@@ -275,6 +275,9 @@
                 @if($orderIdentForForm !== '')
                     <input type="hidden" name="order_ident" value="{{ $orderIdentForForm }}">
                 @endif
+                @if($isEditMode ?? false)
+                    <input type="hidden" name="order_edit_intent" value="1">
+                @endif
                 <input type="hidden" name="price_variant_id" value="{{ old('price_variant_id', $prefillPriceVariantId ?? $testData['price_variant_id'] ?? '') }}">
                 <input type="hidden" name="fb_source" value="{{ old('fb_source', $testData['fb_source'] ?? ($fbSourceDefault ?? '')) }}">
                 <input type="hidden" name="conversion_placement" value="{{ old('conversion_placement', $testData['conversion_placement'] ?? ($conversionPlacementDefault ?? '')) }}">

@@ -504,6 +504,9 @@
                 @if($orderIdentForForm !== '')
                     <input type="hidden" name="order_ident" value="{{ $orderIdentForForm }}">
                 @endif
+                @if($isEditMode ?? false)
+                    <input type="hidden" name="order_edit_intent" value="1">
+                @endif
                 {{-- Wariant wybrany na stronie kursu (?price_variant_id=) lub jedyny aktywny; przy edycji zamówienia z testData --}}
                 <input type="hidden" name="price_variant_id" value="{{ old('price_variant_id', $prefillPriceVariantId ?? $testData['price_variant_id'] ?? '') }}">
                 {{-- Źródło marketingowe (jak stary ?fb=1134) – przekazywane w fb_source do form_orders --}}

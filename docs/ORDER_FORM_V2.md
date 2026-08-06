@@ -71,6 +71,12 @@ Named routes: `payment.order-form`, `payment.order-form.edit`, `payment.order-fo
 
 **Listy kursów / „Zapisz się”:** `Course::publicOrderFormUrl()` → brama `/order-form` (+ opcjonalnie `price_variant_id`), bez jawnego `form_variant` — stosuje domyślny wariant z adm.
 
+### Edycja zamówienia i e-mail uczestnika
+
+Link `/order-form/edit/{ident}` z podsumowania zamówienia lub e-maila oznacza poprawę tego samego zamówienia. POST z formularza edycji wysyła `order_edit_intent=1`; wtedy `FormOrderCheckoutResumeService` aktualizuje wskazane `FormOrder` także wtedy, gdy użytkownik poprawi e-mail uczestnika.
+
+Automatyczne wznowienie checkoutu z sesji nadal działa ostrożnie: bez `order_edit_intent=1` aktualizacja ostatniego zamówienia wymaga tego samego e-maila uczestnika. Dla innego uczestnika użytkownik powinien użyć akcji „Zamówienie dla innego uczestnika”.
+
 ---
 
 ## Kampanie marketingowe

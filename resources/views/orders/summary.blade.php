@@ -154,16 +154,14 @@
                             $courseDate = \Carbon\Carbon::parse($course->start_date);
                             $isCoursePassed = $courseDate->isPast();
                         }
+                        $participantEmail = $order->display_participant_email ?: $order->orderer_email;
                     @endphp
                     @if($isCoursePassed)
-                        <p class="mb-2">Wkrótce prześlemy na podany adres e-mail (<strong>{{ $order->orderer_email }}</strong>):</p>
+                        <p class="mb-2">Wkrótce prześlemy dane dostępowe do szkolenia na adres e-mail uczestnika (<strong>{{ $participantEmail }}</strong>).</p>
                     @else
-                        <p class="mb-2">Dzień przed terminem szkolenia prześlemy na podany adres e-mail (<strong>{{ $order->orderer_email }}</strong>):</p>
+                        <p class="mb-2">Dzień przed terminem szkolenia prześlemy dane dostępowe do szkolenia na adres e-mail uczestnika (<strong>{{ $participantEmail }}</strong>).</p>
                     @endif
-                    <ul class="mb-2">
-                        <li>Dane dostępowe do szkolenia</li>
-                        <li>Fakturę z odroczonym terminem płatności</li>
-                    </ul>
+                    <p class="mb-2">Fakturę lub informacje dotyczące rozliczenia prześlemy na adres e-mail kontaktowy (<strong>{{ $order->orderer_email }}</strong>).</p>
                     <p class="mb-0"><strong>Prosimy o zapisanie lub wydrukowanie poniższego dokumentu.</strong></p>
                 </div>
 
