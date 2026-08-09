@@ -28,7 +28,9 @@ class SurveyResponse extends Model
         'survey_id',
         'response_data',
         'submitted_at',
-        'respondent_id'
+        'respondent_id',
+        'participant_id',
+        'respondent_email',
     ];
 
     protected $casts = [

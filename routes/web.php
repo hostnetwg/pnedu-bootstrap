@@ -38,6 +38,26 @@ Route::get('/ankieta/{token}', [ExternalSurveyGateController::class, 'visit'])
     ->middleware('throttle:120,1')
     ->where('token', '[a-z0-9]+')
     ->name('survey.gate.visit');
+Route::post('/ankieta/{token}', [ExternalSurveyGateController::class, 'submit'])
+    ->middleware('throttle:30,1')
+    ->where('token', '[a-z0-9]+')
+    ->name('survey.gate.submit');
+Route::get('/ankieta/{token}/rekomendacja', [ExternalSurveyGateController::class, 'recommend'])
+    ->middleware('throttle:60,1')
+    ->where('token', '[a-z0-9]+')
+    ->name('survey.gate.recommend');
+Route::post('/ankieta/{token}/rekomendacja', [ExternalSurveyGateController::class, 'submitRecommendation'])
+    ->middleware('throttle:20,1')
+    ->where('token', '[a-z0-9]+')
+    ->name('survey.gate.recommend.submit');
+Route::get('/ankieta/{token}/rekomendacja/pomin', [ExternalSurveyGateController::class, 'skipRecommendation'])
+    ->middleware('throttle:60,1')
+    ->where('token', '[a-z0-9]+')
+    ->name('survey.gate.recommend.skip');
+Route::get('/ankieta/{token}/dziekujemy', [ExternalSurveyGateController::class, 'thanks'])
+    ->middleware('throttle:60,1')
+    ->where('token', '[a-z0-9]+')
+    ->name('survey.gate.thanks');
 
 Route::get('/rodo', function () {
     return view('rodo');

@@ -27,10 +27,21 @@ class PneadmCourseSurveyLink extends Model
 
     protected $casts = [
         'is_active' => 'boolean',
+        'is_anonymous' => 'boolean',
         'opens_at' => 'datetime',
         'closes_at' => 'datetime',
         'order' => 'integer',
     ];
+
+    public function survey()
+    {
+        return $this->belongsTo(Survey::class, 'survey_id');
+    }
+
+    public function isNative(): bool
+    {
+        return ($this->channel ?? 'external') === 'native';
+    }
 
     public function isAvailableNow(): bool
     {

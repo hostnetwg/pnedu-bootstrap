@@ -27,19 +27,23 @@ class Survey extends Model
     protected $fillable = [
         'course_id',
         'instructor_id',
+        'survey_template_id',
         'title',
         'description',
         'imported_at',
         'imported_by',
         'source',
+        'channel',
+        'is_anonymous',
         'total_responses',
         'original_file_path',
-        'metadata'
+        'metadata',
     ];
 
     protected $casts = [
         'imported_at' => 'datetime',
-        'metadata' => 'array'
+        'metadata' => 'array',
+        'is_anonymous' => 'boolean',
     ];
 
     /**
