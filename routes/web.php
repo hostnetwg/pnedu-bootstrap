@@ -58,6 +58,10 @@ Route::get('/ankieta/{token}/dziekujemy', [ExternalSurveyGateController::class, 
     ->middleware('throttle:60,1')
     ->where('token', '[a-z0-9]+')
     ->name('survey.gate.thanks');
+Route::get('/ankieta/{token}/juz-wypelniona', [ExternalSurveyGateController::class, 'already'])
+    ->middleware('throttle:60,1')
+    ->where('token', '[a-z0-9]+')
+    ->name('survey.gate.already');
 
 Route::get('/rodo', function () {
     return view('rodo');

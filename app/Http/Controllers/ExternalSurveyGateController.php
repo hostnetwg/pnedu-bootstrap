@@ -6,6 +6,7 @@ use App\Models\Course;
 use App\Models\PneadmCourseSurveyLink;
 use App\Models\Participant;
 use App\Models\SurveyResponse;
+use App\Services\NativeSurveyDuplicateGuard;
 use App\Services\NativeSurveySubmissionService;
 use App\Support\SurveyAvatarPresets;
 use Illuminate\Http\RedirectResponse;
@@ -19,10 +20,14 @@ class ExternalSurveyGateController extends Controller
 {
     private const REC_SESSION_PREFIX = 'native_survey_recommendation.';
 
+    public function __construct(
+        private readonly NativeSurveyDuplicateGuard $duplicateGuard,
+    ) {}
+
     /**
      * Bramka ankiet — external redirect albo formularz natywny.
      */
-    public function visit(string $token): RedirectResponse|View
+    public function visit(Request $request, string $token): RedirectResponse|View
     {
         $link = $this->findLink($token);
 
@@ -36,7 +41,7 @@ class ExternalSurveyGateController extends Controller
         }
 
         if ($link->isNative()) {
-            return $this->showNativeForm($link);
+            return $this->showNativeForm($request, $link);
         }
 
         $destination = trim((string) ($link->url ?? ''));
@@ -72,15 +77,36 @@ class ExternalSurveyGateController extends Controller
             ]);
         }
 
+        if ($this->duplicateGuard->shouldBlockSubmit($request, $survey, (bool) $link->is_anonymous, $identity)) {
+            if (! $link->is_anonymous && $this->duplicateGuard->hasHardDuplicate($survey, $identity)) {
+                throw ValidationException::withMessages([
+                    'respondent_email' => 'Dla tego adresu e-mail / konta ankieta została już wypełniona.',
+                ]);
+            }
+
+            return redirect()->route('survey.gate.already', ['token' => $token]);
+        }
+
         $response = $submissionService->submit(
             $survey,
             (array) $request->input('answers', []),
             $identity,
         );
 
+        $this->duplicateGuard->queueSoftCookie((int) $survey->id);
         $this->putRecommendationSession($token, $response);
 
         return redirect()->route('survey.gate.recommend', ['token' => $token]);
+    }
+
+    public function already(string $token): View
+    {
+        $link = $this->findLink($token);
+
+        return view('survey-already-submitted', [
+            'surveyTitle' => $link->title ?: 'Ankieta',
+            'isAnonymous' => (bool) $link->is_anonymous,
+        ]);
     }
 
     public function recommend(string $token): RedirectResponse|View
@@ -213,11 +239,19 @@ class ExternalSurveyGateController extends Controller
         return $link;
     }
 
-    private function showNativeForm(PneadmCourseSurveyLink $link): View
+    private function showNativeForm(Request $request, PneadmCourseSurveyLink $link): View
     {
         $survey = $link->survey()->with('questions')->first();
         if (! $survey || $survey->questions->isEmpty()) {
             abort(503, 'Ankieta natywna nie jest jeszcze przygotowana. Spróbuj później lub skontaktuj się z organizatorem.');
+        }
+
+        $identityHint = $this->resolveIdentity($request, $link);
+        if ($this->duplicateGuard->shouldBlockForm($request, $survey, (bool) $link->is_anonymous, $identityHint)) {
+            return view('survey-already-submitted', [
+                'surveyTitle' => $link->title ?: ($survey->title ?? 'Ankieta'),
+                'isAnonymous' => (bool) $link->is_anonymous,
+            ]);
         }
 
         $user = Auth::user();
