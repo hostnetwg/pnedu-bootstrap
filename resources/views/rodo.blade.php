@@ -61,6 +61,11 @@
                 <td>e‑mail (zaszyfrowany hash), cookies, identyfikatory reklamowe</td>
             </tr>
             <tr>
+                <td>Publikacja rekomendacji / opinii po szkoleniu na stronie Serwisu (po moderacji)</td>
+                <td>art.&nbsp;6 ust.&nbsp;1 lit.&nbsp;a) RODO – zgoda</td>
+                <td>treść opinii, ocena, imię i&nbsp;nazwisko, stanowisko/rola, miasto (opcjonalnie), zdjęcie lub awatar (opcjonalnie)</td>
+            </tr>
+            <tr>
                 <td>Ustalenie, dochodzenie lub obrona roszczeń</td>
                 <td>art.&nbsp;6 ust.&nbsp;1 lit.&nbsp;f) RODO – prawnie uzasadniony interes</td>
                 <td>wszystkie wyżej wymienione dane konieczne do wykazania roszczenia</td>
@@ -91,6 +96,7 @@
         <li>dane związane z&nbsp;umową szkoleniową – przez okres trwania umowy, a&nbsp;następnie do&nbsp;6&nbsp;lat (przedawnienie roszczeń);</li>
         <li>dokumenty księgowe – 5&nbsp;lat od końca roku podatkowego, w&nbsp;którym wystawiono fakturę;</li>
         <li>dane newsletterowe – do czasu wycofania zgody;</li>
+        <li>dane z&nbsp;rekomendacji (w&nbsp;tym opcjonalne zdjęcie lub awatar) – do czasu wycofania zgody albo usunięcia opinii przez Administratora;</li>
         <li>dane wykorzystywane w&nbsp;marketingu – do skutecznego wniesienia sprzeciwu;</li>
         <li>dane niezbędne do obrony przed roszczeniami – do czasu ich prawomocnego zakończenia.</li>
     </ul>
@@ -112,21 +118,23 @@
 
     <h2>9. Prawo do cofnięcia zgody</h2>
     <p>Zgodę na otrzymywanie newslettera możesz wycofać w&nbsp;każdej chwili, klikając link <em>„wypisz się”</em> w&nbsp;stopce każdej wiadomości lub pisząc na adres <a href="mailto:kontakt@pnedu.pl">kontakt@pnedu.pl</a>.</p>
+    <p>Zgodę na publikację rekomendacji możesz wycofać, pisząc na <a href="mailto:kontakt@pnedu.pl">kontakt@pnedu.pl</a> — wówczas usuniemy lub zaprzestaniemy publikacji opinii (oraz zdjęcia, jeśli było).</p>
 
     <h2>10. Obowiązek / dobrowolność podania danych</h2>
     <p>Podanie danych jest <strong>dobrowolne</strong>, lecz niezbędne do zawarcia umowy szkoleniowej lub otrzymywania newslettera. Konsekwencją niepodania danych będzie brak możliwości wzięcia udziału w&nbsp;szkoleniu lub otrzymywania materiałów marketingowych.</p>
+    <p>Podanie danych w&nbsp;formularzu rekomendacji jest <strong>dobrowolne</strong>; brak rekomendacji nie wpływa na udział w&nbsp;szkoleniu ani na wypełnienie ankiety.</p>
 
     <h2>11. Prawo wniesienia skargi</h2>
     <p>Jeżeli uważasz, że przetwarzamy Twoje dane niezgodnie z&nbsp;prawem, przysługuje Ci prawo złożenia skargi do Prezesa Urzędu Ochrony Danych Osobowych (ul.&nbsp;Stawki&nbsp;2, 00‑193&nbsp;Warszawa, <a href="https://uodo.gov.pl" target="_blank" rel="noopener">uodo.gov.pl</a>).</p>
 
     <h2>12. Źródło danych</h2>
-    <p>Dane pozyskujemy bezpośrednio od Ciebie poprzez formularze rejestracyjne, zapisu na newsletter lub w&nbsp;ramach komunikacji e‑mailowej.</p>
+    <p>Dane pozyskujemy bezpośrednio od Ciebie poprzez formularze rejestracyjne, zapisu na newsletter, formularz rekomendacji po ankiecie szkoleniowej lub w&nbsp;ramach komunikacji e‑mailowej.</p>
 
     <h2>13. Zmiany dokumentu</h2>
     <p>Administrator może aktualizować niniejszą informację. Aktualna wersja będzie zawsze dostępna na stronie, a&nbsp;o&nbsp;istotnych zmianach poinformujemy e‑mailowo.</p>
 
     <h2>14. Data obowiązywania</h2>
-    <p>Niniejszy dokument obowiązuje od <strong>18&nbsp;maja&nbsp;2025&nbsp;r.</strong></p>
+    <p>Niniejszy dokument obowiązuje od <strong>9&nbsp;sierpnia&nbsp;2026&nbsp;r.</strong> (aktualizacja m.in. o&nbsp;rekomendacje po szkoleniu).</p>
                 </div>
             </div>
         </div>

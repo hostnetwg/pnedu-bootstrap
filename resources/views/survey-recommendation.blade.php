@@ -440,8 +440,15 @@
             </div>
 
             <p class="rec-help text-center mb-3" data-aos="fade-up">
-                Wysyłając rekomendację, wyrażasz zgodę na publikację tej opinii
-                (wraz z imieniem, stanowiskiem i miastem) na stronie pnedu.pl — po akceptacji organizatora.
+                Wysyłając rekomendację, wyrażasz zgodę na przetwarzanie podanych danych
+                (treść opinii, ocena, imię i nazwisko, stanowisko, miasto oraz — jeśli je dodasz — zdjęcie lub awatar)
+                i na publikację tej opinii na stronie pnedu.pl po akceptacji organizatora.
+                Zgodę możesz wycofać, pisząc na
+                <a href="mailto:kontakt@pnedu.pl">kontakt@pnedu.pl</a>.
+                Szczegóły:
+                <a href="{{ route('rodo') }}" target="_blank" rel="noopener">klauzula RODO</a>
+                oraz
+                <a href="{{ route('polityka-prywatnosci') }}" target="_blank" rel="noopener">Polityka prywatności</a>.
             </p>
 
             <div class="rec-actions">

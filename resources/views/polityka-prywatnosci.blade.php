@@ -10,12 +10,12 @@
             <div class="card">
                 <div class="card-header">
                     <h1 class="mb-0">Polityka prywatności</h1>
-                    <p class="small text-muted mb-0">Obowiązuje od 18&nbsp;maja&nbsp;2025&nbsp;r.</p>
+                    <p class="small text-muted mb-0">Obowiązuje od 9&nbsp;sierpnia&nbsp;2026&nbsp;r.</p>
                 </div>
                 <div class="card-body">
 
     <h2>1. Informacje ogólne</h2>
-    <p>Niniejszy dokument określa zasady przetwarzania danych osobowych oraz wykorzystywania plików cookies i&nbsp;podobnych technologii w&nbsp;serwisie <strong>nowoczesna-edukacja.pl</strong> (dalej: „Serwis”), prowadzonym przez <em>Platforma Nowoczesnej Edukacji Waldemar Grabowski</em>, ul.&nbsp;Andrzeja&nbsp;Zamoyskiego&nbsp;30/14, 09‑320&nbsp;Bieżuń, NIP&nbsp;7392137630 (dalej: „Administrator”).</p>
+    <p>Niniejszy dokument określa zasady przetwarzania danych osobowych oraz wykorzystywania plików cookies i&nbsp;podobnych technologii w&nbsp;serwisie <strong>pnedu.pl</strong> (dalej: „Serwis”), prowadzonym przez <em>Platforma Nowoczesnej Edukacji Waldemar Grabowski</em>, ul.&nbsp;Andrzeja&nbsp;Zamoyskiego&nbsp;30/14, 09‑320&nbsp;Bieżuń, NIP&nbsp;7392137630 (dalej: „Administrator”).</p>
 
     <h2>2. Definicje</h2>
     <ul>
@@ -33,9 +33,9 @@
     </ul>
 
     <h2>4. Zakres i&nbsp;źródło danych</h2>
-    <p>Administrator przetwarza dane pozyskiwane bezpośrednio od Użytkowników poprzez formularze (rejestracja na szkolenie, newsletter, kontakt) oraz automatycznie za pośrednictwem plików cookies i&nbsp;narzędzi analitycznych.</p>
-    <p>Przetwarzane mogą być w&nbsp;szczególności: imię, nazwisko, e‑mail, telefon<sup>*</sup>, data i&nbsp;miejsce urodzenia (do certyfikatów), dane do faktury (nazwa, NIP, adres), adres IP, identyfikatory urządzeń, dane o&nbsp;aktywności w&nbsp;Serwisie.</p>
-    <p class="small"><sup>*</sup> Numer telefonu jest dobrowolny, ale ułatwia kontakt organizacyjny.</p>
+    <p>Administrator przetwarza dane pozyskiwane bezpośrednio od Użytkowników poprzez formularze (rejestracja na szkolenie, newsletter, kontakt, rekomendacja po ankiecie szkoleniowej) oraz automatycznie za pośrednictwem plików cookies i&nbsp;narzędzi analitycznych.</p>
+    <p>Przetwarzane mogą być w&nbsp;szczególności: imię, nazwisko, e‑mail, telefon<sup>*</sup>, data i&nbsp;miejsce urodzenia (do certyfikatów), dane do faktury (nazwa, NIP, adres), treść rekomendacji / opinii, ocena szkolenia, stanowisko/rola, miasto oraz opcjonalne zdjęcie lub awatar przekazane w&nbsp;formularzu rekomendacji, adres IP, identyfikatory urządzeń, dane o&nbsp;aktywności w&nbsp;Serwisie.</p>
+    <p class="small"><sup>*</sup> Numer telefonu jest dobrowolny, ale ułatwia kontakt organizacyjny. Zdjęcie lub awatar w&nbsp;rekomendacji również są dobrowolne.</p>
 
     <h2>5. Cele i&nbsp;podstawy prawne przetwarzania</h2>
     <table class="table table-bordered align-middle small">
@@ -45,6 +45,7 @@
             <tr><td>Wystawianie certyfikatów/zaświadczeń</td><td>art.&nbsp;6 ust.&nbsp;1 lit.&nbsp;c) RODO</td></tr>
             <tr><td>Rozliczenia księgowe</td><td>art.&nbsp;6 ust.&nbsp;1 lit.&nbsp;c) RODO</td></tr>
             <tr><td>Wysyłka newslettera</td><td>art.&nbsp;6 ust.&nbsp;1 lit.&nbsp;a) RODO</td></tr>
+            <tr><td>Publikacja rekomendacji uczestników na stronie Serwisu (po moderacji)</td><td>art.&nbsp;6 ust.&nbsp;1 lit.&nbsp;a) RODO</td></tr>
             <tr><td>Marketing własny (remarketing, segmentacja)</td><td>art.&nbsp;6 ust.&nbsp;1 lit.&nbsp;f) RODO</td></tr>
             <tr><td>Analiza ruchu i&nbsp;statystyk Serwisu</td><td>art.&nbsp;6 ust.&nbsp;1 lit.&nbsp;f) RODO</td></tr>
         </tbody>
@@ -74,7 +75,7 @@
     <p>Korzystanie z&nbsp;Serwisu wiąże się z&nbsp;przesyłaniem zapytań do serwera, które zapisywane są w&nbsp;logach (adres&nbsp;IP, data, nagłówek HTTP itp.). Dane te są wykorzystywane wyłącznie w&nbsp;celu administrowania Serwisem oraz w&nbsp;celach statystycznych.</p>
 
     <h2>11. Uprawnienia Użytkownika</h2>
-    <p>Osobom, których dane dotyczą, przysługuje prawo dostępu do danych, ich sprostowania, usunięcia, ograniczenia przetwarzania, przenoszenia, sprzeciwu oraz prawo cofnięcia zgody (newsletter) w&nbsp;dowolnym momencie.</p>
+    <p>Osobom, których dane dotyczą, przysługuje prawo dostępu do danych, ich sprostowania, usunięcia, ograniczenia przetwarzania, przenoszenia, sprzeciwu oraz prawo cofnięcia zgody (newsletter, publikacja rekomendacji) w&nbsp;dowolnym momencie — w&nbsp;sprawie rekomendacji pisząc na <a href="mailto:kontakt@pnedu.pl">kontakt@pnedu.pl</a>.</p>
 
     <h2>12. Prawo do skargi</h2>
     <p>Przysługuje Ci prawo wniesienia skargi do Prezesa Urzędu Ochrony Danych Osobowych (ul.&nbsp;Stawki&nbsp;2, 00-193&nbsp;Warszawa).</p>
