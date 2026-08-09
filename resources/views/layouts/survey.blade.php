@@ -32,34 +32,11 @@
             margin: 0;
             background: #eef2f6;
         }
-        .survey-layout-brand {
-            display: flex;
-            justify-content: center;
-            padding: 1.1rem 1rem 0;
-        }
-        .survey-layout-brand img {
-            height: 40px;
-            width: auto;
-            object-fit: contain;
-        }
-        .survey-layout-brand span {
-            font-weight: 700;
-            font-size: .95rem;
-            color: #1a2332;
-            line-height: 1.2;
-        }
     </style>
     @stack('styles')
 </head>
 <body class="survey-layout d-flex flex-column">
     @include('layouts.google-tag-manager-body')
-
-    <div class="survey-layout-brand">
-        <div class="d-flex align-items-center gap-2">
-            <img src="{{ asset('images/Logo_PNG.svg') }}" alt="Platforma Nowoczesnej Edukacji" width="40" height="40">
-            <span>Platforma Nowoczesnej Edukacji</span>
-        </div>
-    </div>
 
     <main class="flex-grow-1">
         @yield('content')

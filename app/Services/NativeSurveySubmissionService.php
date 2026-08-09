@@ -135,7 +135,25 @@ class NativeSurveySubmissionService
     {
         $mode = (string) ($payload['avatar_mode'] ?? 'preset');
 
-        if ($mode === 'none' || ($payload['avatar_preset'] ?? null) === SurveyAvatarPresets::NONE) {
+        // Najpierw upload — w formularzu nadal może iść ukryte avatar_preset=none.
+        if ($mode === 'upload') {
+            if ($avatarFile instanceof UploadedFile && $avatarFile->isValid()) {
+                $dir = public_path('images/avatars/uploads');
+                File::ensureDirectoryExists($dir);
+                $ext = strtolower($avatarFile->getClientOriginalExtension() ?: 'jpg');
+                if (! in_array($ext, ['jpg', 'jpeg', 'png', 'webp'], true)) {
+                    $ext = 'jpg';
+                }
+                $filename = Str::uuid()->toString().'.'.$ext;
+                $avatarFile->move($dir, $filename);
+
+                return [
+                    'type' => 'upload',
+                    'preset' => null,
+                    'path' => 'images/avatars/uploads/'.$filename,
+                ];
+            }
+
             return [
                 'type' => 'none',
                 'preset' => null,
@@ -143,20 +161,7 @@ class NativeSurveySubmissionService
             ];
         }
 
-        if ($mode === 'upload' && $avatarFile instanceof UploadedFile && $avatarFile->isValid()) {
-            $dir = public_path('images/avatars/uploads');
-            File::ensureDirectoryExists($dir);
-            $filename = Str::uuid()->toString().'.'.strtolower($avatarFile->getClientOriginalExtension() ?: 'jpg');
-            $avatarFile->move($dir, $filename);
-
-            return [
-                'type' => 'upload',
-                'preset' => null,
-                'path' => 'images/avatars/uploads/'.$filename,
-            ];
-        }
-
-        if ($mode === 'upload') {
+        if ($mode === 'none' || ($payload['avatar_preset'] ?? null) === SurveyAvatarPresets::NONE) {
             return [
                 'type' => 'none',
                 'preset' => null,

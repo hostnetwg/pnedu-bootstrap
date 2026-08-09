@@ -11,6 +11,8 @@ use Illuminate\Support\Collection;
 
 class HomeController extends Controller
 {
+    public const HOMEPAGE_TESTIMONIALS_LIMIT = 6;
+
     public function __construct(
         protected StatisticsService $statisticsService,
     ) {}
@@ -25,7 +27,7 @@ class HomeController extends Controller
             0,
             FeaturedHomepageTrainingOffers::INITIAL_LIMIT
         );
-        $homepageTestimonials = $this->publishedTestimonials();
+        [$homepageTestimonials, $homepageTestimonialsTotal] = $this->publishedTestimonials();
 
         return view('welcome', compact(
             'courses',
@@ -34,18 +36,29 @@ class HomeController extends Controller
             'featuredTrainingOffers',
             'featuredTrainingOffersTotal',
             'homepageTestimonials',
+            'homepageTestimonialsTotal',
         ));
     }
 
     /**
-     * @return Collection<int, SurveyTestimonial>
+     * @return array{0: Collection<int, SurveyTestimonial>, 1: int}
      */
-    private function publishedTestimonials(): Collection
+    private function publishedTestimonials(): array
     {
         try {
-            return SurveyTestimonial::query()->published()->limit(6)->get();
+            $base = SurveyTestimonial::query()
+                ->where('is_published', true)
+                ->where('publish_consent', true);
+
+            $total = (clone $base)->count();
+            $items = (clone $base)
+                ->inRandomOrder()
+                ->limit(self::HOMEPAGE_TESTIMONIALS_LIMIT)
+                ->get();
+
+            return [$items, $total];
         } catch (\Throwable) {
-            return collect();
+            return [collect(), 0];
         }
     }
 }

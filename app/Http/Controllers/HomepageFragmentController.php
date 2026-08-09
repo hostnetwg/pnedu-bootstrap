@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\SurveyTestimonial;
 use App\Support\FeaturedHomepageTrainingOffers;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -30,5 +31,53 @@ class HomepageFragmentController extends Controller
             ->header('X-Featured-Offers-Total', (string) $total)
             ->header('X-Featured-Offers-Count', (string) $offers->count())
             ->header('X-Featured-Offers-Offset', (string) $offset);
+    }
+
+    /**
+     * Kolejne opublikowane rekomendacje na homepage (poza już pokazanymi).
+     */
+    public function homepageTestimonials(Request $request): Response
+    {
+        $exclude = collect(explode(',', (string) $request->query('exclude', '')))
+            ->map(fn ($id) => (int) $id)
+            ->filter(fn (int $id) => $id > 0)
+            ->unique()
+            ->values()
+            ->all();
+
+        $limit = max(1, min(
+            24,
+            (int) $request->query('limit', HomeController::HOMEPAGE_TESTIMONIALS_LIMIT)
+        ));
+
+        try {
+            $query = SurveyTestimonial::query()
+                ->where('is_published', true)
+                ->where('publish_consent', true);
+
+            $total = (clone $query)->count();
+
+            if ($exclude !== []) {
+                $query->whereNotIn('id', $exclude);
+            }
+
+            $testimonials = $query
+                ->inRandomOrder()
+                ->limit($limit)
+                ->get();
+        } catch (\Throwable) {
+            $total = 0;
+            $testimonials = collect();
+        }
+
+        $loaded = count($exclude) + $testimonials->count();
+
+        return response()
+            ->view('partials.homepage-testimonial-cards', [
+                'testimonials' => $testimonials,
+            ])
+            ->header('X-Testimonials-Total', (string) $total)
+            ->header('X-Testimonials-Count', (string) $testimonials->count())
+            ->header('X-Testimonials-Loaded', (string) $loaded);
     }
 }

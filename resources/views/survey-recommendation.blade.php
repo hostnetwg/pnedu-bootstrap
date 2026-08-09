@@ -286,6 +286,18 @@
             </div>
 
             <div class="rec-card">
+                <div class="rec-card-label">Ocena ogólna <span class="text-danger">*</span></div>
+                <p class="rec-help">Ile gwiazdek wystawiasz szkoleniu?</p>
+                <div class="rec-stars" role="radiogroup" aria-label="Ocena ogólna" aria-required="true">
+                    @for($i = 5; $i >= 1; $i--)
+                        <input type="radio" name="rating" id="t_rating_{{ $i }}" value="{{ $i }}" required
+                            @checked((string) old('rating') === (string) $i)>
+                        <label for="t_rating_{{ $i }}" title="{{ $i }}/5"><i class="bi bi-star-fill"></i></label>
+                    @endfor
+                </div>
+            </div>
+
+            <div class="rec-card">
                 <div class="rec-card-label">Treść rekomendacji <span class="text-danger">*</span></div>
                 <p class="rec-help">2–4 zdania wystarczą. Napisz, co było najbardziej wartościowe.</p>
                 <textarea class="form-control" name="quote" id="quote" rows="4" maxlength="1000" required
@@ -297,7 +309,7 @@
                     <div class="col-md-4">
                         <label class="form-label fw-semibold" for="author_name">Imię i nazwisko <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="author_name" name="author_name" required maxlength="120"
-                               value="{{ old('author_name', $prefillName) }}" placeholder="Anna Nowak">
+                               value="{{ old('author_name') }}" placeholder="Anna Nowak" autocomplete="name">
                     </div>
                     <div class="col-md-4">
                         <label class="form-label fw-semibold" for="author_role">Stanowisko / rola</label>
@@ -313,10 +325,10 @@
             </div>
 
             <div class="rec-card">
-                <div class="rec-card-label">Zdjęcie / awatar</div>
+                <div class="rec-card-label">Zdjęcie / awatar <span class="text-muted fw-normal">(opcjonalnie)</span></div>
                 <p class="rec-help">
-                    Wybierz awatar albo wgraj zdjęcie. Klocek <strong>BRAK</strong> = bez awatara;
-                    ponowne kliknięcie wybranego awatara też go odznacza.
+                    Nie musisz wybierać awatara — pole jest opcjonalne. Klocek <strong>BRAK</strong> = bez zdjęcia
+                    (na stronie pojawią się inicjały). Ponowne kliknięcie awatara też go odznacza.
                 </p>
 
                 <div class="survey-avatar-mode btn-group mb-3" role="group">
@@ -374,23 +386,10 @@
                 </div>
             </div>
 
-            <div class="rec-card">
-                <div class="rec-card-label">Ocena ogólna</div>
-                <div class="rec-stars mb-3" role="radiogroup" aria-label="Ocena ogólna">
-                    @for($i = 5; $i >= 1; $i--)
-                        <input type="radio" name="rating" id="t_rating_{{ $i }}" value="{{ $i }}"
-                            @checked((string) old('rating') === (string) $i)>
-                        <label for="t_rating_{{ $i }}" title="{{ $i }}/5"><i class="bi bi-star-fill"></i></label>
-                    @endfor
-                </div>
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" name="publish_consent" id="publish_consent" value="1"
-                           @checked(old('publish_consent'))>
-                    <label class="form-check-label" for="publish_consent">
-                        Wyrażam zgodę na publikację tej opinii (wraz z imieniem, stanowiskiem i miastem) na stronie pnedu.pl.
-                    </label>
-                </div>
-            </div>
+            <p class="rec-help text-center mb-3" data-aos="fade-up">
+                Wysyłając rekomendację, wyrażasz zgodę na publikację tej opinii
+                (wraz z imieniem, stanowiskiem i miastem) na stronie pnedu.pl — po akceptacji organizatora.
+            </p>
 
             <div class="rec-actions">
                 <a href="{{ route('survey.gate.recommend.skip', ['token' => $token]) }}" class="rec-skip">
@@ -424,6 +423,10 @@
         const upload = modeUpload && modeUpload.checked;
         if (presetPanel) presetPanel.style.display = upload ? 'none' : '';
         if (uploadPanel) uploadPanel.style.display = upload ? '' : 'none';
+        // Wyłącz radio presetów w trybie upload, żeby nie poszło avatar_preset=none w POST.
+        form.querySelectorAll('input[name="avatar_preset"]').forEach(function (radio) {
+            radio.disabled = !!upload;
+        });
         if (fileInput) {
             fileInput.required = !!upload;
             if (!upload) fileInput.value = '';

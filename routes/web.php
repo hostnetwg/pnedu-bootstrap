@@ -33,6 +33,10 @@ Route::get('/fragments/featured-training-offers', [App\Http\Controllers\Homepage
     ->middleware('throttle:60,1')
     ->name('fragments.featured-training-offers');
 
+Route::get('/fragments/homepage-testimonials', [App\Http\Controllers\HomepageFragmentController::class, 'homepageTestimonials'])
+    ->middleware('throttle:60,1')
+    ->name('fragments.homepage-testimonials');
+
 // Bramka ankiet (link dla uczestników bez ujawniania adresu panelu administratora).
 Route::get('/ankieta/{token}', [ExternalSurveyGateController::class, 'visit'])
     ->middleware('throttle:120,1')

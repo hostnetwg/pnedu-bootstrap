@@ -695,7 +695,7 @@
 
 <!-- ===== TESTIMONIALS ============================================ -->
 @if(isset($homepageTestimonials) && $homepageTestimonials->isNotEmpty())
-<section class="py-5 bg-light">
+<section class="py-5 bg-light" id="opinie-uczestnikow">
     <div class="container">
         <div class="row mb-5">
             <div class="col-lg-6 mx-auto text-center">
@@ -705,40 +705,22 @@
             </div>
         </div>
 
-        <div class="row g-4 justify-content-center" data-aos="fade-up">
-            @foreach($homepageTestimonials as $testimonial)
-                <div class="col-md-5">
-                    <div class="card border-0 shadow h-100 p-4">
-                        <div class="d-flex mb-4">
-                            @php $stars = max(1, min(5, (int) ($testimonial->rating ?? 5))); @endphp
-                            @for($i = 1; $i <= 5; $i++)
-                                <i class="bi bi-star{{ $i <= $stars ? '-fill' : '' }} text-warning{{ $i < 5 ? ' me-1' : '' }}"></i>
-                            @endfor
-                        </div>
-                        <p class="fs-5 mb-4">„{{ $testimonial->quote }}”</p>
-                        <div class="d-flex align-items-center mt-auto">
-                            @if($testimonial->hasAvatar())
-                                <img src="{{ $testimonial->avatarUrl() }}" alt="{{ $testimonial->author_name }}"
-                                     class="rounded-circle me-3" width="70" height="70" style="object-fit:cover;background:#eef2f6;">
-                            @else
-                                <div class="rounded-circle me-3 d-flex align-items-center justify-content-center text-white fw-bold"
-                                     style="width:70px;height:70px;background:#6c757d;font-size:.95rem;"
-                                     aria-hidden="true">{{ $testimonial->initials() }}</div>
-                            @endif
-                            <div>
-                                <h6 class="fw-bold mb-1">{{ $testimonial->author_name }}</h6>
-                                @if($testimonial->subtitle() !== '')
-                                    <small class="text-muted">{{ $testimonial->subtitle() }}</small>
-                                @endif
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            @endforeach
+        <div class="row g-4 justify-content-center" id="homepageTestimonialsGrid" data-aos="fade-up"
+             data-total="{{ (int) ($homepageTestimonialsTotal ?? $homepageTestimonials->count()) }}"
+             data-fragment-url="{{ route('fragments.homepage-testimonials') }}">
+            @include('partials.homepage-testimonial-cards', ['testimonials' => $homepageTestimonials])
         </div>
+
+        @if(($homepageTestimonialsTotal ?? 0) > $homepageTestimonials->count())
+            <div class="text-center mt-4" id="homepageTestimonialsMoreWrap">
+                <button type="button" class="btn btn-outline-primary btn-lg px-4" id="homepageTestimonialsMoreBtn">
+                    Pokaż więcej
+                </button>
+            </div>
+        @endif
     </div>
 </section>
-@endif    
+@endif
 
 <!-- ===== NEWSLETTER STRIP ======================================== -->
 <section id="newsletter" class="py-5 bg-primary bg-gradient">
@@ -1355,5 +1337,64 @@
             });
         });
     });
+
+    // Opinie uczestników — dociąganie kolejnych kart
+    (function () {
+        const grid = document.getElementById('homepageTestimonialsGrid');
+        const btn = document.getElementById('homepageTestimonialsMoreBtn');
+        const wrap = document.getElementById('homepageTestimonialsMoreWrap');
+        if (!grid || !btn || !wrap) return;
+
+        const fragmentUrl = grid.dataset.fragmentUrl || '';
+        let total = parseInt(grid.dataset.total || '0', 10) || 0;
+        let loading = false;
+
+        function shownIds() {
+            return Array.from(grid.querySelectorAll('[data-testimonial-id]'))
+                .map((el) => el.getAttribute('data-testimonial-id'))
+                .filter(Boolean);
+        }
+
+        function syncButton() {
+            if (shownIds().length >= total) {
+                wrap.classList.add('d-none');
+            }
+        }
+
+        btn.addEventListener('click', async function () {
+            if (loading || !fragmentUrl) return;
+            loading = true;
+            btn.disabled = true;
+            const prevLabel = btn.textContent;
+            btn.textContent = 'Ładowanie…';
+
+            try {
+                const url = new URL(fragmentUrl, window.location.origin);
+                url.searchParams.set('exclude', shownIds().join(','));
+                url.searchParams.set('limit', '6');
+                const res = await fetch(url.toString(), {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'text/html' },
+                });
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                const html = await res.text();
+                const headerTotal = res.headers.get('X-Testimonials-Total');
+                if (headerTotal) total = parseInt(headerTotal, 10) || total;
+                if (html.trim() !== '') {
+                    grid.insertAdjacentHTML('beforeend', html);
+                }
+                syncButton();
+            } catch (e) {
+                btn.textContent = prevLabel;
+                btn.disabled = false;
+                loading = false;
+                return;
+            }
+
+            btn.textContent = prevLabel;
+            btn.disabled = false;
+            loading = false;
+            syncButton();
+        });
+    })();
 </script>
 @endpush

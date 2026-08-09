@@ -28,6 +28,7 @@ class PneadmCourseSurveyLink extends Model
     protected $casts = [
         'is_active' => 'boolean',
         'is_anonymous' => 'boolean',
+        'allow_multiple_responses' => 'boolean',
         'opens_at' => 'datetime',
         'closes_at' => 'datetime',
         'order' => 'integer',

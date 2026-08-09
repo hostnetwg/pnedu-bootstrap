@@ -6,6 +6,7 @@ use App\Models\CourseVideo;
 use App\Models\Participant;
 use App\Models\ParticipantTrainingVideoNote;
 use App\Models\PneadmCourseSurveyLink;
+use App\Services\NativeSurveyDuplicateGuard;
 use App\Support\DashboardParticipantsListing;
 use App\Support\DashboardResourceCounts;
 use Carbon\Carbon;
@@ -88,27 +89,7 @@ class DashboardController extends Controller
         $videoNotesForList = $this->trainingVideoNotesBodiesForList($participant, $course->videos);
 
         $accessibleSurveyLinks = $materialsAccessActive
-            ? PneadmCourseSurveyLink::query()
-                ->where('course_id', $course->id)
-                ->orderBy('order')
-                ->orderBy('id')
-                ->get()
-                ->filter(fn (PneadmCourseSurveyLink $link) => $link->isAvailableNow())
-                ->map(function (PneadmCourseSurveyLink $link) {
-                    $gateUrl = $link->gateAbsoluteUrl();
-                    if ($gateUrl === null) {
-                        return null;
-                    }
-
-                    $title = trim((string) ($link->title ?? ''));
-
-                    return [
-                        'title' => $title !== '' ? $title : 'Ankieta poszkoleniowa',
-                        'url' => $gateUrl,
-                    ];
-                })
-                ->filter()
-                ->values()
+            ? $this->accessibleSurveyLinksForParticipant($request, $participant)
             : collect();
 
         return view('dashboard.szkolenia-wideo', [
@@ -254,6 +235,45 @@ class DashboardController extends Controller
         }
 
         return $out;
+    }
+
+    /**
+     * Aktywne linki ankiet do pokazania na stronie wideo — bez już wypełnionych (natywne).
+     *
+     * @return \Illuminate\Support\Collection<int, array{title: string, url: string}>
+     */
+    private function accessibleSurveyLinksForParticipant(Request $request, Participant $participant)
+    {
+        $guard = app(NativeSurveyDuplicateGuard::class);
+        $email = strtolower(trim((string) ($participant->email ?? '')));
+        $identity = [
+            'respondent_email' => $email !== '' ? $email : null,
+            'respondent_id' => $email !== '' ? $email : (Auth::id() ? 'user:'.Auth::id() : null),
+            'participant_id' => (int) $participant->id,
+        ];
+
+        return PneadmCourseSurveyLink::query()
+            ->where('course_id', $participant->course_id)
+            ->orderBy('order')
+            ->orderBy('id')
+            ->get()
+            ->filter(fn (PneadmCourseSurveyLink $link) => $link->isAvailableNow())
+            ->reject(fn (PneadmCourseSurveyLink $link) => $guard->shouldHideFromDashboard($request, $link, $identity))
+            ->map(function (PneadmCourseSurveyLink $link) {
+                $gateUrl = $link->gateAbsoluteUrl();
+                if ($gateUrl === null) {
+                    return null;
+                }
+
+                $title = trim((string) ($link->title ?? ''));
+
+                return [
+                    'title' => $title !== '' ? $title : 'Ankieta poszkoleniowa',
+                    'url' => $gateUrl,
+                ];
+            })
+            ->filter()
+            ->values();
     }
 
     private function markTrainingPageOpened(Participant $participant): void

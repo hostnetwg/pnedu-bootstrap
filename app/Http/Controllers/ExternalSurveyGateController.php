@@ -77,7 +77,7 @@ class ExternalSurveyGateController extends Controller
             ]);
         }
 
-        if ($this->duplicateGuard->shouldBlockSubmit($request, $survey, (bool) $link->is_anonymous, $identity)) {
+        if ($this->duplicateGuard->shouldBlockSubmit($request, $link, $survey, $identity)) {
             if (! $link->is_anonymous && $this->duplicateGuard->hasHardDuplicate($survey, $identity)) {
                 throw ValidationException::withMessages([
                     'respondent_email' => 'Dla tego adresu e-mail / konta ankieta została już wypełniona.',
@@ -169,14 +169,14 @@ class ExternalSurveyGateController extends Controller
             'author_name' => ['required', 'string', 'max:120'],
             'author_role' => ['nullable', 'string', 'max:120'],
             'author_city' => ['nullable', 'string', 'max:80'],
-            'rating' => ['nullable', 'integer', 'min:1', 'max:5'],
-            'publish_consent' => ['nullable', 'boolean'],
+            'rating' => ['required', 'integer', 'min:1', 'max:5'],
             'avatar_mode' => ['nullable', Rule::in(['preset', 'upload'])],
             'avatar_preset' => ['nullable', 'string', Rule::in(array_merge(SurveyAvatarPresets::keys(), [SurveyAvatarPresets::NONE]))],
             'avatar' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
         ], [
             'quote.required' => 'Napisz krótką rekomendację — to najważniejsze pole.',
             'author_name.required' => 'Podaj imię i nazwisko (lub imię), które możemy pokazać przy opinii.',
+            'rating.required' => 'Wybierz ocenę ogólną (liczbę gwiazdek).',
             'avatar.image' => 'Awatar musi być obrazem (JPG, PNG lub WebP).',
             'avatar.max' => 'Awatar może mieć maksymalnie 2 MB.',
         ]);
@@ -187,6 +187,7 @@ class ExternalSurveyGateController extends Controller
             ]);
         }
 
+        // Wariant B: wysłanie formularza = zgoda na publikację (po moderacji w adm).
         $submissionService->storeTestimonial(
             $survey,
             $response,
@@ -196,7 +197,7 @@ class ExternalSurveyGateController extends Controller
                 'author_role' => $request->input('author_role'),
                 'author_city' => $request->input('author_city'),
                 'rating' => $request->input('rating'),
-                'publish_consent' => $request->boolean('publish_consent'),
+                'publish_consent' => true,
                 'avatar_mode' => $request->input('avatar_mode', 'preset'),
                 'avatar_preset' => $request->input('avatar_preset', SurveyAvatarPresets::NONE),
             ],
@@ -247,7 +248,7 @@ class ExternalSurveyGateController extends Controller
         }
 
         $identityHint = $this->resolveIdentity($request, $link);
-        if ($this->duplicateGuard->shouldBlockForm($request, $survey, (bool) $link->is_anonymous, $identityHint)) {
+        if ($this->duplicateGuard->shouldBlockForm($request, $link, $survey, $identityHint)) {
             return view('survey-already-submitted', [
                 'surveyTitle' => $link->title ?: ($survey->title ?? 'Ankieta'),
                 'isAnonymous' => (bool) $link->is_anonymous,
