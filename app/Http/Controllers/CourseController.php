@@ -2240,24 +2240,23 @@ class CourseController extends Controller
             $rules['price_variant_id'] = [
                 'required',
                 'integer',
-                function (string $attribute, mixed $value, \Closure $fail) use ($variantExistsOnPneadm): void {
-                    if (! $variantExistsOnPneadm($value)) {
-                        $fail('Wybierz prawidłowy wariant cenowy dla tego szkolenia.');
+                function (string $attribute, mixed $value, \Closure $fail) use ($course, $variantExistsOnPneadm): void {
+                    if ($variantExistsOnPneadm($value)) {
+                        return;
                     }
+                    // Po zmianie szkolenia w adm może przyjść stare ID — spróbuj rematchu (nazwa / pierwszy).
+                    $preferred = is_numeric($value) ? (int) $value : null;
+                    if ($this->coercePriceVariantIdForCourse($course, $preferred) !== null) {
+                        return;
+                    }
+                    $fail('Wybierz prawidłowy wariant cenowy dla tego szkolenia.');
                 },
             ];
         } elseif ($count === 1) {
+            // Jedyny wariant: nie blokuj zapisu przy starym ID z poprzedniego szkolenia (rematch w resolved*).
             $rules['price_variant_id'] = [
                 'nullable',
                 'integer',
-                function (string $attribute, mixed $value, \Closure $fail) use ($variantExistsOnPneadm): void {
-                    if ($value === null || $value === '') {
-                        return;
-                    }
-                    if (! $variantExistsOnPneadm($value)) {
-                        $fail('Wybierz prawidłowy wariant cenowy dla tego szkolenia.');
-                    }
-                },
             ];
         }
     }
@@ -2267,19 +2266,10 @@ class CourseController extends Controller
      */
     protected function resolvedCoursePriceVariantId(Course $course, array $validated): ?int
     {
-        $variants = $this->activePriceVariantsOrdered($course);
-        if ($variants->isEmpty()) {
-            return null;
-        }
         $raw = $validated['price_variant_id'] ?? null;
-        if ($raw !== null && $raw !== '') {
-            return (int) $raw;
-        }
-        if ($variants->count() === 1) {
-            return (int) $variants->first()->id;
-        }
+        $preferred = ($raw !== null && $raw !== '' && is_numeric($raw)) ? (int) $raw : null;
 
-        return null;
+        return $this->coercePriceVariantIdForCourse($course, $preferred);
     }
 
     /**
@@ -2347,17 +2337,15 @@ class CourseController extends Controller
     }
 
     /**
-     * ID wariantu do ukrytego pola formularza (nowe zamówienie lub null przy edycji — wtedy testData).
+     * ID wariantu do ukrytego pola formularza (nowe zamówienie lub edycja z rematchiem po zmianie szkolenia).
      */
     protected function prefillPriceVariantIdForPublicOrderForm(Course $course, ?string $ident, array $orderData): ?int
     {
         if ($ident) {
             $v = $orderData['price_variant_id'] ?? null;
-            if ($v === null || $v === '') {
-                return null;
-            }
+            $preferred = ($v !== null && $v !== '' && is_numeric($v)) ? (int) $v : null;
 
-            return (int) $v;
+            return $this->coercePriceVariantIdForCourse($course, $preferred);
         }
         $variants = $this->activePriceVariantsOrdered($course);
         if ($variants->isEmpty()) {
@@ -2367,7 +2355,48 @@ class CourseController extends Controller
             return (int) $variants->first()->id;
         }
 
-        return (int) request()->query('price_variant_id');
+        $qv = request()->query('price_variant_id');
+
+        return ($qv !== null && $qv !== '' && is_numeric($qv)) ? (int) $qv : null;
+    }
+
+    /**
+     * Dopasuj price_variant_id do aktualnego szkolenia (ważne po zmianie kursu w adm).
+     *
+     * Kolejność: poprawne ID → ten sam name na nowym kursie → pierwszy aktywny (gdy było stare ID)
+     * → jedyny aktywny → null przy wielu wariantach bez preferencji.
+     */
+    protected function coercePriceVariantIdForCourse(Course $course, ?int $preferredId): ?int
+    {
+        $variants = $this->activePriceVariantsOrdered($course);
+        if ($variants->isEmpty()) {
+            return null;
+        }
+
+        if ($preferredId !== null && $this->priceVariantExistsActiveForCourse($course, $preferredId)) {
+            return $preferredId;
+        }
+
+        if ($preferredId !== null) {
+            $old = CoursePriceVariant::query()->find($preferredId);
+            if ($old && filled($old->name)) {
+                $needle = mb_strtolower(trim((string) $old->name));
+                $byName = $variants->first(
+                    fn ($v) => mb_strtolower(trim((string) $v->name)) === $needle
+                );
+                if ($byName) {
+                    return (int) $byName->id;
+                }
+            }
+
+            return (int) $variants->first()->id;
+        }
+
+        if ($variants->count() === 1) {
+            return (int) $variants->first()->id;
+        }
+
+        return null;
     }
 
     /**
