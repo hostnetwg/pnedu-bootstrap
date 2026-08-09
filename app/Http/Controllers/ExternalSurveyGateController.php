@@ -6,6 +6,7 @@ use App\Models\Course;
 use App\Models\PneadmCourseSurveyLink;
 use App\Models\Participant;
 use App\Models\SurveyResponse;
+use App\Models\SurveySetting;
 use App\Services\NativeSurveyDuplicateGuard;
 use App\Services\NativeSurveySubmissionService;
 use App\Support\SurveyAvatarPresets;
@@ -123,6 +124,7 @@ class ExternalSurveyGateController extends Controller
             ?: trim(collect([$user?->first_name ?? null, $user?->last_name ?? null])->filter()->implode(' '));
 
         $course = Course::query()->find($link->course_id);
+        $enabledAvatars = SurveySetting::getSettings()->enabledAvatarPresets();
 
         return view('survey-recommendation', [
             'link' => $link,
@@ -132,8 +134,8 @@ class ExternalSurveyGateController extends Controller
                 ? strip_tags(html_entity_decode($course->title, ENT_QUOTES | ENT_HTML5, 'UTF-8'))
                 : null,
             'prefillName' => $prefillName,
-            'avatarPresetsByGroup' => SurveyAvatarPresets::optionsByGroup(),
-            'defaultAvatarPreset' => SurveyAvatarPresets::defaultKey(),
+            'avatarPresetsByGroup' => SurveyAvatarPresets::optionsByGroup($enabledAvatars),
+            'defaultAvatarPreset' => SurveyAvatarPresets::defaultKeyAmong($enabledAvatars),
         ]);
     }
 
@@ -164,6 +166,8 @@ class ExternalSurveyGateController extends Controller
             return redirect()->route('survey.gate.thanks', ['token' => $token, 'rec' => 1]);
         }
 
+        $enabledAvatars = SurveySetting::getSettings()->enabledAvatarPresets();
+
         $request->validate([
             'quote' => ['required', 'string', 'max:1000'],
             'author_name' => ['required', 'string', 'max:120'],
@@ -171,7 +175,7 @@ class ExternalSurveyGateController extends Controller
             'author_city' => ['nullable', 'string', 'max:80'],
             'rating' => ['required', 'integer', 'min:1', 'max:5'],
             'avatar_mode' => ['nullable', Rule::in(['preset', 'upload'])],
-            'avatar_preset' => ['nullable', 'string', Rule::in(array_merge(SurveyAvatarPresets::keys(), [SurveyAvatarPresets::NONE]))],
+            'avatar_preset' => ['nullable', 'string', Rule::in(array_merge($enabledAvatars, [SurveyAvatarPresets::NONE]))],
             'avatar' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
         ], [
             'quote.required' => 'Napisz krótką rekomendację — to najważniejsze pole.',
@@ -183,7 +187,7 @@ class ExternalSurveyGateController extends Controller
 
         if ($request->input('avatar_mode') === 'upload' && ! $request->hasFile('avatar')) {
             throw ValidationException::withMessages([
-                'avatar' => 'Wybierz zdjęcie albo wróć do przykładowych awatarów (w tym BRAK).',
+                'avatar' => 'Wybierz zdjęcie albo wróć do przykładowych awatarów (albo „Tylko inicjały”).',
             ]);
         }
 

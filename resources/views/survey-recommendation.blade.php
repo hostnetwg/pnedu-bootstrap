@@ -161,18 +161,18 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        border: 2px dashed #adb5bd;
-        background: #f8f9fa;
-        color: #6c757d;
-        font-size: .72rem;
-        font-weight: 800;
-        letter-spacing: .04em;
+        background: #6c757d;
+        color: #fff;
+        font-size: .95rem;
+        font-weight: 700;
+        letter-spacing: .02em;
+        line-height: 1;
+        user-select: none;
     }
 
     .survey-avatar-grid input:checked + label .survey-avatar-none-icon {
-        border-color: var(--rec-accent);
-        color: var(--rec-accent);
-        background: #fff;
+        background: var(--rec-accent);
+        color: #fff;
     }
 
     .survey-avatar-grid label span {
@@ -200,6 +200,55 @@
         object-fit: cover;
         border: 2px solid var(--rec-line);
         background: #eef2f6;
+        flex-shrink: 0;
+    }
+
+    .survey-avatar-upload-row {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        flex-wrap: nowrap;
+    }
+
+    @media (max-width: 575.98px) {
+        .survey-avatar-upload-row {
+            flex-wrap: wrap;
+        }
+    }
+
+    .survey-avatar-upload-row .survey-avatar-upload-fields {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    .survey-avatar-preview-empty {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-style: dashed;
+        color: #adb5bd;
+        font-size: 1.6rem;
+        background: #f8f9fa;
+        cursor: pointer;
+        padding: 0;
+        margin: 0;
+        appearance: none;
+        -webkit-appearance: none;
+    }
+
+    .survey-avatar-preview-empty:hover {
+        border-color: #9ec5fe;
+        color: var(--rec-accent);
+        background: var(--rec-accent-soft);
+    }
+
+    .survey-avatar-preview[role="button"] {
+        cursor: pointer;
+    }
+
+    .survey-avatar-preview-empty.is-hidden,
+    .survey-avatar-preview.is-hidden {
+        display: none !important;
     }
 
     .survey-avatar-mode .btn-check:checked + .btn {
@@ -327,8 +376,8 @@
             <div class="rec-card">
                 <div class="rec-card-label">Zdjęcie / awatar <span class="text-muted fw-normal">(opcjonalnie)</span></div>
                 <p class="rec-help">
-                    Nie musisz wybierać awatara — pole jest opcjonalne. Klocek <strong>BRAK</strong> = bez zdjęcia
-                    (na stronie pojawią się inicjały). Ponowne kliknięcie awatara też go odznacza.
+                    Nie musisz wybierać awatara — pole jest opcjonalne. Opcja z inicjałami = bez zdjęcia
+                    (tak wygląda opinia na stronie). Ponowne kliknięcie awatara też go odznacza.
                 </p>
 
                 <div class="survey-avatar-mode btn-group mb-3" role="group">
@@ -337,7 +386,7 @@
                     <label class="btn btn-outline-primary btn-sm" for="avatar_mode_preset">Przykładowe awatary</label>
                     <input type="radio" class="btn-check" name="avatar_mode" id="avatar_mode_upload" value="upload"
                            @checked($avatarMode === 'upload') autocomplete="off">
-                    <label class="btn btn-outline-primary btn-sm" for="avatar_mode_upload">Własne zdjęcie</label>
+                    <label class="btn btn-outline-primary btn-sm" for="avatar_mode_upload">Prześlij własne zdjęcie</label>
                 </div>
 
                 <div id="avatarPresetPanel" @style(['display:none' => $avatarMode === 'upload'])>
@@ -345,9 +394,9 @@
                         <div>
                             <input type="radio" name="avatar_preset" id="avatar_preset_none"
                                    value="none" class="js-avatar-preset" @checked($avatarPreset === 'none' || $avatarPreset === '')>
-                            <label for="avatar_preset_none" title="Bez awatara">
-                                <span class="survey-avatar-none-icon">BRAK</span>
-                                <span>Bez awatara</span>
+                            <label for="avatar_preset_none" title="Tylko inicjały (bez zdjęcia)">
+                                <span class="survey-avatar-none-icon" aria-hidden="true">AN</span>
+                                <span>Tylko inicjały</span>
                             </label>
                         </div>
                     </div>
@@ -374,13 +423,17 @@
                 </div>
 
                 <div id="avatarUploadPanel" @style(['display:none' => $avatarMode !== 'upload'])>
-                    <div class="d-flex align-items-center gap-3 flex-wrap">
-                        <img src="{{ asset('images/avatars/'.($defaultAvatarPreset ?? 'woman-straight-brown').'.svg') }}"
-                             alt="Podgląd awatara" class="survey-avatar-preview" id="avatarUploadPreview">
-                        <div class="flex-grow-1">
+                    <div class="survey-avatar-upload-row">
+                        <button type="button" class="survey-avatar-preview survey-avatar-preview-empty"
+                                id="avatarUploadPlaceholder" title="Wybierz zdjęcie" aria-label="Wybierz zdjęcie">
+                            <i class="bi bi-camera" aria-hidden="true"></i>
+                        </button>
+                        <img src="" alt="Podgląd wybranego zdjęcia — kliknij, aby zmienić" class="survey-avatar-preview is-hidden"
+                             id="avatarUploadPreview" role="button" tabindex="0" title="Zmień zdjęcie">
+                        <div class="survey-avatar-upload-fields">
                             <input type="file" class="form-control" name="avatar" id="testimonial_avatar"
                                    accept="image/jpeg,image/png,image/webp">
-                            <div class="form-text">JPG, PNG lub WebP. Najlepiej kwadratowe zdjęcie twarzy.</div>
+                            <div class="form-text">JPG, PNG lub WebP. Najlepiej kwadratowe zdjęcie twarzy. Podgląd pojawi się po wyborze pliku.</div>
                         </div>
                     </div>
                 </div>
@@ -417,7 +470,21 @@
     const modeUpload = document.getElementById('avatar_mode_upload');
     const fileInput = document.getElementById('testimonial_avatar');
     const preview = document.getElementById('avatarUploadPreview');
+    const placeholder = document.getElementById('avatarUploadPlaceholder');
     const noneRadio = document.getElementById('avatar_preset_none');
+
+    function resetUploadPreview() {
+        if (preview) {
+            if (preview.src && preview.src.indexOf('blob:') === 0) {
+                URL.revokeObjectURL(preview.src);
+            }
+            preview.removeAttribute('src');
+            preview.classList.add('is-hidden');
+        }
+        if (placeholder) {
+            placeholder.classList.remove('is-hidden');
+        }
+    }
 
     function syncAvatarMode() {
         const upload = modeUpload && modeUpload.checked;
@@ -429,7 +496,10 @@
         });
         if (fileInput) {
             fileInput.required = !!upload;
-            if (!upload) fileInput.value = '';
+            if (!upload) {
+                fileInput.value = '';
+                resetUploadPreview();
+            }
         }
     }
 
@@ -437,7 +507,7 @@
     modeUpload && modeUpload.addEventListener('change', syncAvatarMode);
     syncAvatarMode();
 
-    // Ponowne kliknięcie wybranego awatara → BRAK.
+    // Ponowne kliknięcie wybranego awatara → tylko inicjały (none).
     // Listener na label (input ma pointer-events: none — click na radio jest niewiarygodny).
     form.querySelectorAll('.js-avatar-preset').forEach(function (radio) {
         if (radio.value === 'none') return;
@@ -454,11 +524,36 @@
         });
     });
 
+    function openFilePicker() {
+        if (fileInput) fileInput.click();
+    }
+
+    if (placeholder) {
+        placeholder.addEventListener('click', openFilePicker);
+    }
+    if (preview) {
+        preview.addEventListener('click', openFilePicker);
+        preview.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                openFilePicker();
+            }
+        });
+    }
+
     if (fileInput && preview) {
         fileInput.addEventListener('change', function () {
             const file = fileInput.files && fileInput.files[0];
-            if (!file) return;
+            if (!file) {
+                resetUploadPreview();
+                return;
+            }
+            if (preview.src && preview.src.indexOf('blob:') === 0) {
+                URL.revokeObjectURL(preview.src);
+            }
             preview.src = URL.createObjectURL(file);
+            preview.classList.remove('is-hidden');
+            if (placeholder) placeholder.classList.add('is-hidden');
         });
     }
 })();

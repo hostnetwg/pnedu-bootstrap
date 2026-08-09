@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\SurveyAvatarPresets;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
 
@@ -27,7 +28,13 @@ class SurveySetting extends Model
         'auto_close_after_days' => 'integer',
         'default_is_anonymous' => 'boolean',
         'allow_multiple_responses' => 'boolean',
+        'enabled_avatar_presets' => 'array',
     ];
+
+    public static function forgetSettingsCache(): void
+    {
+        Cache::forget(self::SETTINGS_CACHE_KEY);
+    }
 
     public static function getSettings(): self
     {
@@ -47,6 +54,7 @@ class SurveySetting extends Model
                 $fallback = new self([
                     'allow_multiple_responses' => false,
                     'default_is_anonymous' => true,
+                    'enabled_avatar_presets' => SurveyAvatarPresets::defaultEnabledKeys(),
                 ]);
                 $fallback->id = self::SINGLETON_ID;
 
@@ -58,5 +66,18 @@ class SurveySetting extends Model
     public function allowsMultipleResponses(): bool
     {
         return (bool) ($this->attributes['allow_multiple_responses'] ?? false);
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function enabledAvatarPresets(): array
+    {
+        $raw = $this->enabled_avatar_presets ?? null;
+        if (! is_array($raw)) {
+            return SurveyAvatarPresets::defaultEnabledKeys();
+        }
+
+        return array_values(array_unique(array_intersect($raw, SurveyAvatarPresets::keys())));
     }
 }

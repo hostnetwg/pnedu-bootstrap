@@ -169,8 +169,14 @@ class NativeSurveySubmissionService
             ];
         }
 
-        $preset = SurveyAvatarPresets::migrateLegacyKey((string) ($payload['avatar_preset'] ?? ''))
-            ?? SurveyAvatarPresets::defaultKey();
+        $preset = SurveyAvatarPresets::migrateLegacyKey((string) ($payload['avatar_preset'] ?? ''));
+        if ($preset === null || ! SurveyAvatarPresets::isValid($preset)) {
+            return [
+                'type' => 'none',
+                'preset' => null,
+                'path' => null,
+            ];
+        }
 
         return [
             'type' => 'preset',

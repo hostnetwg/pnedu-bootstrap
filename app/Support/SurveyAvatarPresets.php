@@ -5,7 +5,9 @@ namespace App\Support;
 /**
  * Przykładowe awatary rekomendacji (DiceBear Avataaars, self-hosted SVG).
  *
- * Źródło stylu: Avataaars (Pablo Stanley) przez DiceBear — darmowe do użytku komercyjnego.
+ * Zestaw „nauczycielski” (16 szt.) — wygenerowany z jawnymi opcjami płci/fryzury,
+ * nie pełna biblioteka DiceBear.
+ *
  * @see https://www.dicebear.com/styles/avataaars/
  * @see https://avataaars.com/
  */
@@ -19,6 +21,33 @@ final class SurveyAvatarPresets
     public static function keys(): array
     {
         return array_column(self::definitions(), 'key');
+    }
+
+    /**
+     * Domyślnie włączone w formularzu (rdzeń 16). Reszta katalogu — do włączenia w ustawieniach.
+     *
+     * @return list<string>
+     */
+    public static function defaultEnabledKeys(): array
+    {
+        return [
+            'woman-straight-brown',
+            'woman-straight-blonde',
+            'woman-bob-dark',
+            'woman-bob-glasses',
+            'woman-long-glasses',
+            'woman-curly-brown',
+            'woman-short-waved',
+            'woman-hijab',
+            'man-short-flat',
+            'man-short-round',
+            'man-caesar',
+            'man-glasses',
+            'man-beard',
+            'man-beard-glasses',
+            'man-gray',
+            'man-bald-beard',
+        ];
     }
 
     public static function isValid(?string $key): bool
@@ -47,46 +76,85 @@ final class SurveyAvatarPresets
     }
 
     /**
-     * Mapowanie starych kluczy (proste silhouetty) → nowe DiceBear.
+     * @param  list<string>  $enabledKeys
+     */
+    public static function defaultKeyAmong(array $enabledKeys): string
+    {
+        if ($enabledKeys === []) {
+            return self::defaultKey();
+        }
+
+        $preferred = self::defaultKey();
+        if (in_array($preferred, $enabledKeys, true)) {
+            return $preferred;
+        }
+
+        return $enabledKeys[0];
+    }
+
+    /**
+     * Mapowanie starych kluczy (poprzednie zestawy) → aktualne pliki.
      */
     public static function migrateLegacyKey(?string $key): ?string
     {
         return match ($key) {
+            // stary prosty zestaw
             'teacher-f-1' => 'woman-straight-brown',
-            'teacher-f-2' => 'woman-bob-black',
+            'teacher-f-2' => 'woman-bob-dark',
             'teacher-m-1' => 'man-short-flat',
             'teacher-m-2' => 'man-beard',
             'director-f-1' => 'woman-long-glasses',
             'director-m-1' => 'man-beard-glasses',
-            'neutral-1' => 'man-bald',
+            'neutral-1' => 'man-caesar',
             'neutral-2' => 'woman-short-waved',
+            // zestaw DiceBear sprzed regeneracji (2026-08)
+            'woman-bob-black' => 'woman-bob-dark',
+            'woman-curly-auburn' => 'woman-curly-brown',
+            'woman-bun-red' => 'woman-bob-dark',
+            'woman-big-hair' => 'woman-curly-brown',
+            'woman-mia' => 'woman-long-glasses',
+            'woman-fro' => 'woman-curly-brown',
+            'man-blonde-sides' => 'man-caesar',
+            'man-shaggy' => 'man-glasses',
+            'man-gray-beard' => 'man-gray',
+            'man-moustache' => 'man-beard',
+            'man-dreads' => 'man-short-flat',
             default => self::isValid($key) ? $key : null,
         };
     }
 
     /**
+     * @param  list<string>|null  $onlyKeys
      * @return list<array{key: string, url: string, label: string, group: string}>
      */
-    public static function options(): array
+    public static function options(?array $onlyKeys = null): array
     {
-        return array_map(
-            fn (array $def) => [
+        $allowed = $onlyKeys === null ? null : array_fill_keys($onlyKeys, true);
+
+        $out = [];
+        foreach (self::definitions() as $def) {
+            if ($allowed !== null && ! isset($allowed[$def['key']])) {
+                continue;
+            }
+            $out[] = [
                 'key' => $def['key'],
                 'url' => self::url($def['key']),
                 'label' => $def['label'],
                 'group' => $def['group'],
-            ],
-            self::definitions()
-        );
+            ];
+        }
+
+        return $out;
     }
 
     /**
+     * @param  list<string>|null  $onlyKeys
      * @return array<string, list<array{key: string, url: string, label: string, group: string}>>
      */
-    public static function optionsByGroup(): array
+    public static function optionsByGroup(?array $onlyKeys = null): array
     {
         $grouped = [];
-        foreach (self::options() as $option) {
+        foreach (self::options($onlyKeys) as $option) {
             $grouped[$option['group']][] = $option;
         }
 
@@ -99,30 +167,38 @@ final class SurveyAvatarPresets
     private static function definitions(): array
     {
         return [
-            // Kobiety
+            // Kobiety — rdzeń
             ['key' => 'woman-straight-brown', 'label' => 'Długie, brązowe', 'group' => 'Kobiety'],
             ['key' => 'woman-straight-blonde', 'label' => 'Długie, blond', 'group' => 'Kobiety'],
-            ['key' => 'woman-bob-black', 'label' => 'Bob, czarne', 'group' => 'Kobiety'],
-            ['key' => 'woman-curly-auburn', 'label' => 'Kręcone', 'group' => 'Kobiety'],
-            ['key' => 'woman-bun-red', 'label' => 'Kok, rude', 'group' => 'Kobiety'],
-            ['key' => 'woman-big-hair', 'label' => 'Obfite włosy', 'group' => 'Kobiety'],
-            ['key' => 'woman-short-waved', 'label' => 'Krótkie, falowane', 'group' => 'Kobiety'],
+            ['key' => 'woman-straight-auburn', 'label' => 'Długie, rude', 'group' => 'Kobiety'],
+            ['key' => 'woman-long-dark', 'label' => 'Półdługie, ciemne', 'group' => 'Kobiety'],
             ['key' => 'woman-long-glasses', 'label' => 'Długie + okulary', 'group' => 'Kobiety'],
+            ['key' => 'woman-long-glasses-blonde', 'label' => 'Blond + okulary', 'group' => 'Kobiety'],
+            ['key' => 'woman-bob-dark', 'label' => 'Bob, ciemne', 'group' => 'Kobiety'],
+            ['key' => 'woman-bob-blonde', 'label' => 'Bob, blond', 'group' => 'Kobiety'],
             ['key' => 'woman-bob-glasses', 'label' => 'Bob + okulary', 'group' => 'Kobiety'],
-            ['key' => 'woman-mia', 'label' => 'Ciemne + okulary', 'group' => 'Kobiety'],
-            ['key' => 'woman-fro', 'label' => 'Afro', 'group' => 'Kobiety'],
+            ['key' => 'woman-bob-gray', 'label' => 'Bob, siwe + okulary', 'group' => 'Kobiety'],
+            ['key' => 'woman-curly-brown', 'label' => 'Kręcone, brązowe', 'group' => 'Kobiety'],
+            ['key' => 'woman-curly-glasses', 'label' => 'Kręcone + okulary', 'group' => 'Kobiety'],
+            ['key' => 'woman-short-waved', 'label' => 'Krótkie, falowane', 'group' => 'Kobiety'],
+            ['key' => 'woman-short-curly', 'label' => 'Krótkie, kręcone', 'group' => 'Kobiety'],
+            ['key' => 'woman-bun-brown', 'label' => 'Kok, brązowe', 'group' => 'Kobiety'],
             ['key' => 'woman-hijab', 'label' => 'Hijab', 'group' => 'Kobiety'],
-            // Mężczyźni
+            // Mężczyźni — rdzeń + rozszerzenie
             ['key' => 'man-short-flat', 'label' => 'Krótkie, gładkie', 'group' => 'Mężczyźni'],
             ['key' => 'man-short-round', 'label' => 'Krótkie, czarne', 'group' => 'Mężczyźni'],
-            ['key' => 'man-blonde-sides', 'label' => 'Boki, blond', 'group' => 'Mężczyźni'],
-            ['key' => 'man-shaggy', 'label' => 'Dłuższe + okulary', 'group' => 'Mężczyźni'],
-            ['key' => 'man-glasses', 'label' => 'Kręcone + okulary', 'group' => 'Mężczyźni'],
+            ['key' => 'man-short-curly', 'label' => 'Krótkie, kręcone', 'group' => 'Mężczyźni'],
+            ['key' => 'man-short-light', 'label' => 'Krótkie, jasne', 'group' => 'Mężczyźni'],
+            ['key' => 'man-caesar', 'label' => 'Krótka fryzura', 'group' => 'Mężczyźni'],
+            ['key' => 'man-caesar-side', 'label' => 'Krótka z przedziałkiem', 'group' => 'Mężczyźni'],
+            ['key' => 'man-sides', 'label' => 'Krótko po bokach', 'group' => 'Mężczyźni'],
+            ['key' => 'man-glasses', 'label' => 'Krótkie + okulary', 'group' => 'Mężczyźni'],
+            ['key' => 'man-glasses-round', 'label' => 'Okulary okrągłe', 'group' => 'Mężczyźni'],
             ['key' => 'man-beard', 'label' => 'Broda', 'group' => 'Mężczyźni'],
             ['key' => 'man-beard-glasses', 'label' => 'Broda + okulary', 'group' => 'Mężczyźni'],
-            ['key' => 'man-gray-beard', 'label' => 'Siwa broda', 'group' => 'Mężczyźni'],
-            ['key' => 'man-moustache', 'label' => 'Wąsy', 'group' => 'Mężczyźni'],
-            ['key' => 'man-dreads', 'label' => 'Dready + wąsy', 'group' => 'Mężczyźni'],
+            ['key' => 'man-beard-full', 'label' => 'Pełna broda', 'group' => 'Mężczyźni'],
+            ['key' => 'man-gray', 'label' => 'Siwe włosy', 'group' => 'Mężczyźni'],
+            ['key' => 'man-gray-beard', 'label' => 'Siwe + broda', 'group' => 'Mężczyźni'],
             ['key' => 'man-bald', 'label' => 'Łysy', 'group' => 'Mężczyźni'],
             ['key' => 'man-bald-beard', 'label' => 'Łysy + broda', 'group' => 'Mężczyźni'],
         ];

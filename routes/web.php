@@ -22,6 +22,10 @@ Route::post('/api/internal/cache/upcoming-courses', [App\Http\Controllers\Intern
     ->middleware('internal.api')
     ->name('internal.cache.upcoming-courses');
 
+Route::post('/api/internal/cache/survey-settings', [App\Http\Controllers\Internal\PneduCacheInvalidationController::class, 'forgetSurveySettings'])
+    ->middleware('internal.api')
+    ->name('internal.cache.survey-settings');
+
 Route::get('/l/{campaign_code}', App\Http\Controllers\MarketingCampaignShortLinkController::class)
     ->where('campaign_code', '[A-Za-z0-9._-]+')
     ->middleware('throttle:180,1')
