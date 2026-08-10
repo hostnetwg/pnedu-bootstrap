@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\SurveySetting;
 use App\Models\SurveyTestimonial;
 use App\Support\FeaturedHomepageTrainingOffers;
 use Illuminate\Http\Request;
@@ -72,9 +73,12 @@ class HomepageFragmentController extends Controller
 
         $loaded = count($exclude) + $testimonials->count();
 
+        $showTestimonialDate = (bool) (SurveySetting::getSettings()->show_testimonial_date_on_homepage ?? false);
+
         return response()
             ->view('partials.homepage-testimonial-cards', [
                 'testimonials' => $testimonials,
+                'showTestimonialDate' => $showTestimonialDate,
             ])
             ->header('X-Testimonials-Total', (string) $total)
             ->header('X-Testimonials-Count', (string) $testimonials->count())

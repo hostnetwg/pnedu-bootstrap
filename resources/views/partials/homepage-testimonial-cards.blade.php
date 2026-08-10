@@ -1,3 +1,6 @@
+@php
+    $showTestimonialDate = (bool) ($showTestimonialDate ?? false);
+@endphp
 @foreach($testimonials as $testimonial)
     <div class="col-md-5" data-testimonial-id="{{ $testimonial->id }}">
         <div class="card border-0 shadow h-100 p-4">
@@ -20,7 +23,10 @@
                 <div>
                     <h6 class="fw-bold mb-1">{{ $testimonial->author_name }}</h6>
                     @if($testimonial->subtitle() !== '')
-                        <small class="text-muted">{{ $testimonial->subtitle() }}</small>
+                        <small class="text-muted d-block">{{ $testimonial->subtitle() }}</small>
+                    @endif
+                    @if($showTestimonialDate && $testimonial->created_at)
+                        <small class="text-muted">{{ $testimonial->created_at->timezone('Europe/Warsaw')->format('d.m.Y') }}</small>
                     @endif
                 </div>
             </div>

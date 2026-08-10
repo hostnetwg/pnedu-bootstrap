@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\SurveySetting;
 use App\Models\SurveyTestimonial;
 use App\Services\StatisticsService;
 use App\Support\FeaturedHomepageTrainingOffers;
@@ -28,6 +29,7 @@ class HomeController extends Controller
             FeaturedHomepageTrainingOffers::INITIAL_LIMIT
         );
         [$homepageTestimonials, $homepageTestimonialsTotal] = $this->publishedTestimonials();
+        $showTestimonialDate = (bool) (SurveySetting::getSettings()->show_testimonial_date_on_homepage ?? false);
 
         return view('welcome', compact(
             'courses',
@@ -37,6 +39,7 @@ class HomeController extends Controller
             'featuredTrainingOffersTotal',
             'homepageTestimonials',
             'homepageTestimonialsTotal',
+            'showTestimonialDate',
         ));
     }
 

@@ -708,7 +708,10 @@
         <div class="row g-4 justify-content-center" id="homepageTestimonialsGrid" data-aos="fade-up"
              data-total="{{ (int) ($homepageTestimonialsTotal ?? $homepageTestimonials->count()) }}"
              data-fragment-url="{{ route('fragments.homepage-testimonials') }}">
-            @include('partials.homepage-testimonial-cards', ['testimonials' => $homepageTestimonials])
+            @include('partials.homepage-testimonial-cards', [
+                'testimonials' => $homepageTestimonials,
+                'showTestimonialDate' => $showTestimonialDate ?? false,
+            ])
         </div>
 
         @if(($homepageTestimonialsTotal ?? 0) > $homepageTestimonials->count())

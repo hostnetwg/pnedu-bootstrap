@@ -29,6 +29,7 @@ class SurveySetting extends Model
         'default_is_anonymous' => 'boolean',
         'allow_multiple_responses' => 'boolean',
         'enabled_avatar_presets' => 'array',
+        'show_testimonial_date_on_homepage' => 'boolean',
     ];
 
     public static function forgetSettingsCache(): void
@@ -55,6 +56,7 @@ class SurveySetting extends Model
                     'allow_multiple_responses' => false,
                     'default_is_anonymous' => true,
                     'enabled_avatar_presets' => SurveyAvatarPresets::defaultEnabledKeys(),
+                    'show_testimonial_date_on_homepage' => false,
                 ]);
                 $fallback->id = self::SINGLETON_ID;
 
