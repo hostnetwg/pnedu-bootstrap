@@ -85,6 +85,54 @@ class HomepageLiveMeetingNoticeTest extends TestCase
         $response->assertSee('Wszystkie szkolenia', false);
     }
 
+    public function test_authenticated_user_sees_all_live_courses_from_nearest_day(): void
+    {
+        if (! $this->pneadmTablesAvailable()) {
+            $this->markTestSkipped('Brak tabel pneadm w środowisku testowym.');
+        }
+
+        $email = 'homepage.same.day.'.uniqid('', true).'@example.test';
+
+        $this->seedLiveCourse(
+            email: $email,
+            title: 'Szkolenie poranne',
+            start: '2026-07-20 09:00:00',
+            end: '2026-07-20 13:00:00',
+            meetingLink: 'https://meet.example/poranne',
+        );
+
+        $this->seedLiveCourse(
+            email: $email,
+            title: 'Szkolenie popołudniowe',
+            start: '2026-07-20 14:00:00',
+            end: '2026-07-20 18:00:00',
+            meetingLink: 'https://meet.example/popoludniowe',
+        );
+
+        $this->seedLiveCourse(
+            email: $email,
+            title: 'Szkolenie kolejnego dnia',
+            start: '2026-07-21 10:00:00',
+            end: '2026-07-21 14:00:00',
+            meetingLink: 'https://meet.example/jutro',
+        );
+
+        $user = User::factory()->create([
+            'email' => $email,
+            'email_verified_at' => now(),
+        ]);
+
+        $response = $this->actingAs($user)->get(route('home'));
+
+        $response->assertOk();
+        $response->assertSee('Szkolenie poranne', false);
+        $response->assertSee('Szkolenie popołudniowe', false);
+        $response->assertDontSee('Szkolenie kolejnego dnia', false);
+        $response->assertSee('data-join-url="https://meet.example/poranne"', false);
+        $response->assertSee('data-join-url="https://meet.example/popoludniowe"', false);
+        $response->assertSee('Wszystkie szkolenia', false);
+    }
+
     public function test_authenticated_user_without_live_course_sees_no_notice(): void
     {
         if (! $this->pneadmTablesAvailable()) {

@@ -57,7 +57,7 @@
     @include('layouts.homepage-live-meeting-notice')
 @endsection
 
-@if(! empty($homepageLiveNotice) && $homepageLiveNotice->live->show)
+@if(! empty($homepageLiveNotice) && count($homepageLiveNotice->items) > 0)
     @push('scripts')
         @include('dashboard.partials.szkolenia-live-countdown-script')
     @endpush
