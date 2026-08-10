@@ -55,6 +55,8 @@ class HomeController extends Controller
 
             $total = (clone $base)->count();
             $items = (clone $base)
+                ->orderByDesc('is_featured')
+                ->orderBy('display_order')
                 ->orderByDesc('created_at')
                 ->limit(self::HOMEPAGE_TESTIMONIALS_LIMIT)
                 ->get();

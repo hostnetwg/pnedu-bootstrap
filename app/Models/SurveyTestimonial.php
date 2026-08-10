@@ -18,6 +18,7 @@ class SurveyTestimonial extends Model
         'rating' => 'integer',
         'publish_consent' => 'boolean',
         'is_published' => 'boolean',
+        'is_featured' => 'boolean',
         'published_at' => 'datetime',
         'display_order' => 'integer',
     ];
@@ -27,6 +28,8 @@ class SurveyTestimonial extends Model
         return $query
             ->where('is_published', true)
             ->where('publish_consent', true)
+            ->orderByDesc('is_featured')
+            ->orderBy('display_order')
             ->orderByDesc('created_at');
     }
 
