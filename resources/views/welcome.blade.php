@@ -652,8 +652,8 @@
             </div>
         </div>
         
-        <div class="row g-4" data-aos="fade-up">
-            <div class="col-md-3 col-6">
+        <div class="row row-cols-2 row-cols-md-4 g-4" data-aos="fade-up">
+            <div class="col">
                 <div class="card h-100 border-0 shadow-sm hover-lift">
                     <div class="card-body p-4 text-center">
                         <div class="display-4 mb-3 text-primary">📄</div>
@@ -662,30 +662,30 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-3 col-6">
+            <div class="col">
                 <div class="card h-100 border-0 shadow-sm hover-lift">
                     <div class="card-body p-4 text-center">
                         <div class="display-4 mb-3 text-primary">🎓</div>
                         <h5 class="fw-bold mb-2">Akredytacja MEN</h5>
-                        <p class="text-muted small mb-0">Uznanie zawodowe i rozwój kariery</p>
+                        <p class="text-muted small mb-0">Potwierdzona jakość szkoleń,<br>pewne finansowanie z organu prowadzącego</p>
                     </div>
                 </div>
             </div>
-            <div class="col-md-3 col-6">
+            <div class="col">
                 <div class="card h-100 border-0 shadow-sm hover-lift">
                     <div class="card-body p-4 text-center">
                         <div class="display-4 mb-3 text-primary">💳</div>
                         <h5 class="fw-bold mb-2">Elastyczne płatności</h5>
-                        <p class="text-muted small mb-0">Raty i faktury dla szkół</p>
+                        <p class="text-muted small mb-0">Błyskawiczne płatności online lub faktury z odroczonym terminem dla szkół</p>
                     </div>
                 </div>
             </div>
-            <div class="col-md-3 col-6">
+            <div class="col">
                 <div class="card h-100 border-0 shadow-sm hover-lift">
                     <div class="card-body p-4 text-center">
-                        <div class="display-4 mb-3 text-primary">💡</div>
-                        <h5 class="fw-bold mb-2">Wsparcie TIK</h5>
-                        <p class="text-muted small mb-0">Praktyczne narzędzia i konsultacje</p>
+                        <div class="display-4 mb-3 text-primary">🎥</div>
+                        <h5 class="fw-bold mb-2">Nagranie i materiały</h5>
+                        <p class="text-muted small mb-0">Dostęp do nagrania oraz bogaty pakiet przydatnych materiałów</p>
                     </div>
                 </div>
             </div>
