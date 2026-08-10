@@ -41,7 +41,7 @@
                                 @endif
                             </div>
                         </div>
-                        <div class="d-flex flex-column align-items-stretch gap-2 w-100 w-lg-auto ms-lg-auto homepage-live-notice__actions">
+                        <div class="d-inline-flex flex-column align-items-stretch gap-2 align-self-end ms-lg-auto homepage-live-notice__actions">
                             @include('partials.live-join-button', [
                                 'live' => $live,
                                 'joinLabel' => 'Dołącz do spotkania',
