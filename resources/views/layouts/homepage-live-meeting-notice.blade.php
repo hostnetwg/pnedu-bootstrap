@@ -41,13 +41,16 @@
                                 @endif
                             </div>
                         </div>
-                        <div class="d-flex flex-wrap align-items-center gap-2">
+                        <div class="d-flex flex-column align-items-stretch gap-2 w-100 w-lg-auto ms-lg-auto homepage-live-notice__actions">
                             @include('partials.live-join-button', [
                                 'live' => $live,
                                 'joinLabel' => 'Dołącz do spotkania',
+                                'wrapperClass' => 'w-100',
+                                'buttonClass' => 'w-100 text-nowrap',
                             ])
                             @if($loop->last)
-                                <a href="{{ route('dashboard.szkolenia') }}" class="btn btn-outline-success btn-sm">
+                                <a href="{{ route('dashboard.szkolenia') }}"
+                                   class="btn btn-outline-success btn-sm w-100 text-nowrap">
                                     {{ $homepageLiveNotice->hasMoreLiveCourses || count($homepageLiveNotice->items) > 1 ? 'Wszystkie szkolenia' : 'Moje szkolenia' }}
                                 </a>
                             @endif

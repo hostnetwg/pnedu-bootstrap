@@ -3,8 +3,10 @@
     /** @var \App\Support\DashboardCourseLiveAccess $live */
     $joinLabel = $joinLabel ?? 'Dołącz do spotkania na żywo';
     $joinUnlocked = $live->joinUnlocked;
+    $wrapperClass = trim('d-inline-block '.($wrapperClass ?? ''));
+    $buttonClass = trim('btn btn-success btn-sm'.($joinUnlocked ? '' : ' disabled pe-none').' '.($buttonClass ?? ''));
 @endphp
-<span class="d-inline-block"
+<span class="{{ $wrapperClass }}"
       @unless($joinUnlocked)
           tabindex="0"
           data-bs-toggle="tooltip"
@@ -21,7 +23,7 @@
            aria-disabled="true"
            tabindex="-1"
        @endif
-       class="btn btn-success btn-sm{{ $joinUnlocked ? '' : ' disabled pe-none' }}"
+       class="{{ $buttonClass }}"
        data-live-join-btn
        data-join-url="{{ $live->joinUrl }}"
        data-join-unlock-at="{{ $live->joinUnlockAtIso }}"
