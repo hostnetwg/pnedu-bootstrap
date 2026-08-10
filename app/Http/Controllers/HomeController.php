@@ -55,7 +55,7 @@ class HomeController extends Controller
 
             $total = (clone $base)->count();
             $items = (clone $base)
-                ->inRandomOrder()
+                ->orderByDesc('created_at')
                 ->limit(self::HOMEPAGE_TESTIMONIALS_LIMIT)
                 ->get();
 

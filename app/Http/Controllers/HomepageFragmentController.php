@@ -63,7 +63,7 @@ class HomepageFragmentController extends Controller
             }
 
             $testimonials = $query
-                ->inRandomOrder()
+                ->orderByDesc('created_at')
                 ->limit($limit)
                 ->get();
         } catch (\Throwable) {
