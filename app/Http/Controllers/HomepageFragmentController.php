@@ -64,7 +64,6 @@ class HomepageFragmentController extends Controller
 
             $testimonials = $query
                 ->orderByDesc('is_featured')
-                ->orderBy('display_order')
                 ->orderByDesc('created_at')
                 ->limit($limit)
                 ->get();

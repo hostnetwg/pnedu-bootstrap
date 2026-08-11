@@ -29,7 +29,6 @@ class SurveyTestimonial extends Model
             ->where('is_published', true)
             ->where('publish_consent', true)
             ->orderByDesc('is_featured')
-            ->orderBy('display_order')
             ->orderByDesc('created_at');
     }
 

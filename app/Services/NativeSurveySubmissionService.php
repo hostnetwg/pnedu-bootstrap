@@ -133,33 +133,25 @@ class NativeSurveySubmissionService
      */
     private function resolveAvatar(array $payload, ?UploadedFile $avatarFile): array
     {
-        $mode = (string) ($payload['avatar_mode'] ?? 'preset');
-
-        // Najpierw upload — w formularzu nadal może iść ukryte avatar_preset=none.
-        if ($mode === 'upload') {
-            if ($avatarFile instanceof UploadedFile && $avatarFile->isValid()) {
-                $dir = public_path('images/avatars/uploads');
-                File::ensureDirectoryExists($dir);
-                $ext = strtolower($avatarFile->getClientOriginalExtension() ?: 'jpg');
-                if (! in_array($ext, ['jpg', 'jpeg', 'png', 'webp'], true)) {
-                    $ext = 'jpg';
-                }
-                $filename = Str::uuid()->toString().'.'.$ext;
-                $avatarFile->move($dir, $filename);
-
-                return [
-                    'type' => 'upload',
-                    'preset' => null,
-                    'path' => 'images/avatars/uploads/'.$filename,
-                ];
+        // Własne zdjęcie ma pierwszeństwo — formularz pokazuje awatary i upload jednocześnie.
+        if ($avatarFile instanceof UploadedFile && $avatarFile->isValid()) {
+            $dir = public_path('images/avatars/uploads');
+            File::ensureDirectoryExists($dir);
+            $ext = strtolower($avatarFile->getClientOriginalExtension() ?: 'jpg');
+            if (! in_array($ext, ['jpg', 'jpeg', 'png', 'webp'], true)) {
+                $ext = 'jpg';
             }
+            $filename = Str::uuid()->toString().'.'.$ext;
+            $avatarFile->move($dir, $filename);
 
             return [
-                'type' => 'none',
+                'type' => 'upload',
                 'preset' => null,
-                'path' => null,
+                'path' => 'images/avatars/uploads/'.$filename,
             ];
         }
+
+        $mode = (string) ($payload['avatar_mode'] ?? 'preset');
 
         if ($mode === 'none' || ($payload['avatar_preset'] ?? null) === SurveyAvatarPresets::NONE) {
             return [

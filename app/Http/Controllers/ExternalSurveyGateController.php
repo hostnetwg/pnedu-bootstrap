@@ -168,6 +168,10 @@ class ExternalSurveyGateController extends Controller
 
         $enabledAvatars = SurveySetting::getSettings()->enabledAvatarPresets();
 
+        $request->merge([
+            'avatar_mode' => $request->hasFile('avatar') ? 'upload' : 'preset',
+        ]);
+
         $request->validate([
             'quote' => ['required', 'string', 'max:1000'],
             'author_name' => ['required', 'string', 'max:120'],
@@ -184,12 +188,6 @@ class ExternalSurveyGateController extends Controller
             'avatar.image' => 'Awatar musi być obrazem (JPG, PNG lub WebP).',
             'avatar.max' => 'Awatar może mieć maksymalnie 2 MB.',
         ]);
-
-        if ($request->input('avatar_mode') === 'upload' && ! $request->hasFile('avatar')) {
-            throw ValidationException::withMessages([
-                'avatar' => 'Wybierz zdjęcie albo wróć do przykładowych awatarów (albo „Tylko inicjały”).',
-            ]);
-        }
 
         // Wariant B: wysłanie formularza = zgoda na publikację (po moderacji w adm).
         $submissionService->storeTestimonial(

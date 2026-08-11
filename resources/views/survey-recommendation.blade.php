@@ -136,14 +136,13 @@
 
     .survey-avatar-grid label {
         display: flex;
-        flex-direction: column;
         align-items: center;
-        gap: .35rem;
+        justify-content: center;
         margin: 0;
         cursor: pointer;
         border: 2px solid var(--rec-line);
         border-radius: .85rem;
-        padding: .55rem .35rem;
+        padding: .45rem;
         background: #fff;
         transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease;
     }
@@ -173,13 +172,6 @@
     .survey-avatar-grid input:checked + label .survey-avatar-none-icon {
         background: var(--rec-accent);
         color: #fff;
-    }
-
-    .survey-avatar-grid label span {
-        font-size: .68rem;
-        color: var(--rec-muted);
-        text-align: center;
-        line-height: 1.2;
     }
 
     .survey-avatar-grid label:hover {
@@ -251,10 +243,19 @@
         display: none !important;
     }
 
-    .survey-avatar-mode .btn-check:checked + .btn {
-        background: var(--rec-accent);
-        border-color: var(--rec-accent);
-        color: #fff;
+    .survey-avatar-upload-block {
+        margin-bottom: 1.1rem;
+        padding-bottom: 1.1rem;
+        border-bottom: 1px dashed var(--rec-line);
+    }
+
+    .survey-avatar-upload-block .survey-avatar-upload-label {
+        font-size: .78rem;
+        font-weight: 700;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+        color: var(--rec-muted);
+        margin: 0 0 .55rem;
     }
 
     .rec-actions {
@@ -291,10 +292,6 @@
 
 @section('content')
 @php
-    $avatarMode = old('avatar_mode', 'preset');
-    if ($avatarMode === 'none') {
-        $avatarMode = 'preset';
-    }
     $avatarPreset = old('avatar_preset', 'none');
     $groupedAvatars = $avatarPresetsByGroup ?? [];
 @endphp
@@ -376,53 +373,12 @@
             <div class="rec-card">
                 <div class="rec-card-label">Zdjęcie / awatar <span class="text-muted fw-normal">(opcjonalnie)</span></div>
                 <p class="rec-help">
-                    Nie musisz wybierać awatara — pole jest opcjonalne. Opcja z inicjałami = bez zdjęcia
-                    (tak wygląda opinia na stronie). Ponowne kliknięcie awatara też go odznacza.
+                    Opcjonalnie dodaj własne zdjęcie. Jeśli go nie wgrasz, możesz skorzystać z gotowego awatara poniżej —
+                    albo nic nie wybierać (przy opinii pokażemy same inicjały).
                 </p>
 
-                <div class="survey-avatar-mode btn-group mb-3" role="group">
-                    <input type="radio" class="btn-check" name="avatar_mode" id="avatar_mode_preset" value="preset"
-                           @checked($avatarMode !== 'upload') autocomplete="off">
-                    <label class="btn btn-outline-primary btn-sm" for="avatar_mode_preset">Przykładowe awatary</label>
-                    <input type="radio" class="btn-check" name="avatar_mode" id="avatar_mode_upload" value="upload"
-                           @checked($avatarMode === 'upload') autocomplete="off">
-                    <label class="btn btn-outline-primary btn-sm" for="avatar_mode_upload">Prześlij własne zdjęcie</label>
-                </div>
-
-                <div id="avatarPresetPanel" @style(['display:none' => $avatarMode === 'upload'])>
-                    <div class="survey-avatar-grid mb-3">
-                        <div>
-                            <input type="radio" name="avatar_preset" id="avatar_preset_none"
-                                   value="none" class="js-avatar-preset" @checked($avatarPreset === 'none' || $avatarPreset === '')>
-                            <label for="avatar_preset_none" title="Tylko inicjały (bez zdjęcia)">
-                                <span class="survey-avatar-none-icon" aria-hidden="true">AN</span>
-                                <span>Tylko inicjały</span>
-                            </label>
-                        </div>
-                    </div>
-                    @foreach($groupedAvatars as $groupName => $presets)
-                        <div class="survey-avatar-group-title">{{ $groupName }}</div>
-                        <div class="survey-avatar-grid mb-2">
-                            @foreach($presets as $preset)
-                                <div>
-                                    <input type="radio" name="avatar_preset" id="avatar_preset_{{ $preset['key'] }}"
-                                           value="{{ $preset['key'] }}" class="js-avatar-preset"
-                                           @checked($avatarPreset === $preset['key'])>
-                                    <label for="avatar_preset_{{ $preset['key'] }}">
-                                        <img src="{{ $preset['url'] }}" alt="{{ $preset['label'] }}">
-                                        <span>{{ $preset['label'] }}</span>
-                                    </label>
-                                </div>
-                            @endforeach
-                        </div>
-                    @endforeach
-                    <p class="form-text mb-0">
-                        Awatary: styl <a href="https://www.dicebear.com/styles/avataaars/" target="_blank" rel="noopener">DiceBear Avataaars</a>
-                        (Pablo Stanley) — darmowe do użytku.
-                    </p>
-                </div>
-
-                <div id="avatarUploadPanel" @style(['display:none' => $avatarMode !== 'upload'])>
+                <div class="survey-avatar-upload-block">
+                    <div class="survey-avatar-upload-label">Własne zdjęcie</div>
                     <div class="survey-avatar-upload-row">
                         <button type="button" class="survey-avatar-preview survey-avatar-preview-empty"
                                 id="avatarUploadPlaceholder" title="Wybierz zdjęcie" aria-label="Wybierz zdjęcie">
@@ -433,10 +389,39 @@
                         <div class="survey-avatar-upload-fields">
                             <input type="file" class="form-control" name="avatar" id="testimonial_avatar"
                                    accept="image/jpeg,image/png,image/webp">
-                            <div class="form-text">JPG, PNG lub WebP. Najlepiej kwadratowe zdjęcie twarzy. Podgląd pojawi się po wyborze pliku.</div>
+                            <div class="form-text mb-0">JPG, PNG lub WebP, max 2&nbsp;MB. Najlepiej kwadratowe zdjęcie twarzy.</div>
                         </div>
                     </div>
                 </div>
+
+                {{-- Ukryte „brak awatara” — wybór kasowany drugim kliknięciem w awatar --}}
+                <input type="radio" name="avatar_preset" id="avatar_preset_none" value="none"
+                       class="visually-hidden" tabindex="-1" aria-hidden="true"
+                       @checked($avatarPreset === 'none' || $avatarPreset === '')>
+
+                <p class="rec-help mb-2">
+                    Nie chcesz własnego zdjęcia? Wybierz jeden z gotowych awatarów poniżej.
+                    Ponowne kliknięcie w wybrany awatar go odznacza.
+                </p>
+                @foreach($groupedAvatars as $groupName => $presets)
+                    <div class="survey-avatar-group-title">{{ $groupName }}</div>
+                    <div class="survey-avatar-grid mb-2">
+                        @foreach($presets as $preset)
+                            <div>
+                                <input type="radio" name="avatar_preset" id="avatar_preset_{{ $preset['key'] }}"
+                                       value="{{ $preset['key'] }}" class="js-avatar-preset"
+                                       @checked($avatarPreset === $preset['key'])>
+                                <label for="avatar_preset_{{ $preset['key'] }}" title="{{ $preset['label'] }}">
+                                    <img src="{{ $preset['url'] }}" alt="{{ $preset['label'] }}">
+                                </label>
+                            </div>
+                        @endforeach
+                    </div>
+                @endforeach
+                <p class="form-text mb-0">
+                    Awatary: styl <a href="https://www.dicebear.com/styles/avataaars/" target="_blank" rel="noopener">DiceBear Avataaars</a>
+                    (Pablo Stanley) — darmowe do użytku.
+                </p>
             </div>
 
             <p class="rec-help text-center mb-3" data-aos="fade-up">
@@ -471,10 +456,6 @@
     const form = document.getElementById('surveyRecommendationForm');
     if (!form) return;
 
-    const presetPanel = document.getElementById('avatarPresetPanel');
-    const uploadPanel = document.getElementById('avatarUploadPanel');
-    const modePreset = document.getElementById('avatar_mode_preset');
-    const modeUpload = document.getElementById('avatar_mode_upload');
     const fileInput = document.getElementById('testimonial_avatar');
     const preview = document.getElementById('avatarUploadPreview');
     const placeholder = document.getElementById('avatarUploadPlaceholder');
@@ -493,40 +474,40 @@
         }
     }
 
-    function syncAvatarMode() {
-        const upload = modeUpload && modeUpload.checked;
-        if (presetPanel) presetPanel.style.display = upload ? 'none' : '';
-        if (uploadPanel) uploadPanel.style.display = upload ? '' : 'none';
-        // Wyłącz radio presetów w trybie upload, żeby nie poszło avatar_preset=none w POST.
-        form.querySelectorAll('input[name="avatar_preset"]').forEach(function (radio) {
-            radio.disabled = !!upload;
-        });
+    function clearFileSelection() {
         if (fileInput) {
-            fileInput.required = !!upload;
-            if (!upload) {
-                fileInput.value = '';
-                resetUploadPreview();
-            }
+            fileInput.value = '';
+        }
+        resetUploadPreview();
+    }
+
+    function selectNonePreset() {
+        if (noneRadio) {
+            noneRadio.checked = true;
         }
     }
 
-    modePreset && modePreset.addEventListener('change', syncAvatarMode);
-    modeUpload && modeUpload.addEventListener('change', syncAvatarMode);
-    syncAvatarMode();
-
-    // Ponowne kliknięcie wybranego awatara → tylko inicjały (none).
-    // Listener na label (input ma pointer-events: none — click na radio jest niewiarygodny).
+    // Ponowne kliknięcie wybranego awatara → odznaczenie (same inicjały przy opinii).
     form.querySelectorAll('.js-avatar-preset').forEach(function (radio) {
-        if (radio.value === 'none') return;
         const label = form.querySelector('label[for="' + radio.id + '"]');
         if (!label) return;
 
         label.addEventListener('click', function (e) {
-            if (!radio.checked) return; // pierwsze wybranie — zostaw domyślne zachowanie
+            if (!radio.checked) {
+                clearFileSelection();
+                return;
+            }
             e.preventDefault();
             radio.checked = false;
-            if (noneRadio) {
-                noneRadio.checked = true;
+            selectNonePreset();
+            clearFileSelection();
+        });
+    });
+
+    form.querySelectorAll('.js-avatar-preset').forEach(function (radio) {
+        radio.addEventListener('change', function () {
+            if (radio.checked) {
+                clearFileSelection();
             }
         });
     });
@@ -561,6 +542,7 @@
             preview.src = URL.createObjectURL(file);
             preview.classList.remove('is-hidden');
             if (placeholder) placeholder.classList.add('is-hidden');
+            selectNonePreset();
         });
     }
 })();
