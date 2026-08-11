@@ -520,8 +520,8 @@
 <!-- ===== STATS SECTION WITH COUNTER (CLEAN & LOW HEIGHT) ============================= -->
 <section class="py-3" style="background: #f6f8fa;">
     <div class="container">
-        <!-- Badge "Dane na żywo" -->
-        <div class="text-center mb-3">
+        <!-- Badge "Dane na żywo" — kotwica przy rozwijaniu metodologii (sticky navbar) -->
+        <div class="text-center mb-3" id="homepage-statistics" style="scroll-margin-top: 5rem;">
             <span class="badge bg-success px-3 py-2" style="font-size: 0.85rem;">
                 <span class="spinner-grow spinner-grow-sm me-1" role="status" aria-hidden="true"></span>
                 Dane na żywo
@@ -577,13 +577,14 @@
                     {{ now()->format('d.m.Y, H:i') }}
                 @endif
             </small>
-            <a href="#statistics-methodology" 
-               class="text-decoration-none small text-primary" 
-               data-bs-toggle="collapse" 
-               role="button" 
-               aria-expanded="false" 
+            <a href="#homepage-statistics"
+               class="text-decoration-none small text-primary"
+               data-bs-toggle="collapse"
+               data-bs-target="#statistics-methodology"
+               role="button"
+               aria-expanded="false"
                aria-controls="statistics-methodology">
-                Jak obliczamy nasze statystyki? 
+                Jak obliczamy nasze statystyki?
                 <i class="bi bi-chevron-down"></i>
             </a>
         </div>
