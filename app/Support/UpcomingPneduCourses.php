@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Cache;
 class UpcomingPneduCourses
 {
     /** Limit listy na stronie głównej (sidebar dashboardu pokazuje wszystkie). */
-    public const HOMEPAGE_LIMIT = 6;
+    public const HOMEPAGE_LIMIT = 9;
 
     /** @deprecated Używaj HOMEPAGE_LIMIT — zachowane dla kompatybilności cache/API. */
     public const SIDEBAR_LIMIT = self::HOMEPAGE_LIMIT;
@@ -76,9 +76,11 @@ class UpcomingPneduCourses
 
         Cache::forget(self::cacheKey(null));
         Cache::forget(self::cacheKey(self::HOMEPAGE_LIMIT));
-        // legacy keys (v1 + limit 6 współdzielony ze sidebarem)
+        // legacy keys (v1 + poprzedni limit 6 współdzielony ze sidebarem / homepage)
+        Cache::forget(self::cacheKey(6));
         Cache::forget('dashboard.upcoming-offer.sidebar.v1.'.self::HOMEPAGE_LIMIT);
         Cache::forget('dashboard.upcoming-offer.sidebar.v1.6');
+        Cache::forget('dashboard.upcoming-offer.sidebar.v1.9');
     }
 
     /**

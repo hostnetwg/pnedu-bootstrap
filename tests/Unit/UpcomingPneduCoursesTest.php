@@ -16,7 +16,7 @@ class UpcomingPneduCoursesTest extends TestCase
     public function test_homepage_cache_key_includes_limit(): void
     {
         $this->assertSame(
-            'dashboard.upcoming-offer.sidebar.v2.6',
+            'dashboard.upcoming-offer.sidebar.v2.9',
             UpcomingPneduCourses::cacheKey(UpcomingPneduCourses::HOMEPAGE_LIMIT)
         );
     }
