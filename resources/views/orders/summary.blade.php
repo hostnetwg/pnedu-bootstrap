@@ -146,6 +146,36 @@
                     @endif
                 </div>
 
+                @php
+                    $summaryParticipants = $order->relationLoaded('participants')
+                        ? $order->participants->sortBy('id')->values()
+                        : $order->participants()->orderBy('id')->get();
+                    if ($summaryParticipants->isEmpty() && $order->primaryParticipant) {
+                        $summaryParticipants = collect([$order->primaryParticipant]);
+                    }
+                    $participantEmails = $summaryParticipants
+                        ->map(fn ($p) => trim((string) ($p->participant_email ?? '')))
+                        ->filter()
+                        ->unique()
+                        ->values();
+                @endphp
+                @if($summaryParticipants->isNotEmpty())
+                <div class="order-info-box mt-3">
+                    <h3><i class="bi bi-people me-2"></i>Uczestnik{{ $summaryParticipants->count() > 1 ? 'cy' : '' }} szkolenia</h3>
+                    @foreach($summaryParticipants as $p)
+                        <div class="info-row">
+                            <span class="info-label">{{ $summaryParticipants->count() > 1 ? 'Uczestnik '.$loop->iteration.':' : 'Uczestnik:' }}</span>
+                            <span class="info-value">
+                                <strong>{{ trim(($p->participant_firstname ?? '').' '.($p->participant_lastname ?? '')) ?: '—' }}</strong>
+                                @if(trim((string) ($p->participant_email ?? '')) !== '')
+                                    — {{ $p->participant_email }}
+                                @endif
+                            </span>
+                        </div>
+                    @endforeach
+                </div>
+                @endif
+
                 <div class="alert-info-custom">
                     <h5 class="mb-3"><i class="bi bi-envelope-check me-2"></i>Dalsze kroki</h5>
                     @php
@@ -154,12 +184,14 @@
                             $courseDate = \Carbon\Carbon::parse($course->start_date);
                             $isCoursePassed = $courseDate->isPast();
                         }
-                        $participantEmail = $order->display_participant_email ?: $order->orderer_email;
+                        $participantEmailsLabel = $participantEmails->isNotEmpty()
+                            ? $participantEmails->implode(', ')
+                            : ($order->display_participant_email ?: $order->orderer_email);
                     @endphp
                     @if($isCoursePassed)
-                        <p class="mb-2">Wkrótce prześlemy dane dostępowe do szkolenia na adres e-mail uczestnika (<strong>{{ $participantEmail }}</strong>).</p>
+                        <p class="mb-2">Wkrótce prześlemy dane dostępowe do szkolenia na adres{{ $participantEmails->count() > 1 ? 'y' : '' }} e-mail uczestnik{{ $participantEmails->count() > 1 ? 'ów' : 'a' }} (<strong>{{ $participantEmailsLabel }}</strong>).</p>
                     @else
-                        <p class="mb-2">Dzień przed terminem szkolenia prześlemy dane dostępowe do szkolenia na adres e-mail uczestnika (<strong>{{ $participantEmail }}</strong>).</p>
+                        <p class="mb-2">Dzień przed terminem szkolenia prześlemy dane dostępowe do szkolenia na adres{{ $participantEmails->count() > 1 ? 'y' : '' }} e-mail uczestnik{{ $participantEmails->count() > 1 ? 'ów' : 'a' }} (<strong>{{ $participantEmailsLabel }}</strong>).</p>
                     @endif
                     <p class="mb-2">Fakturę lub informacje dotyczące rozliczenia prześlemy na adres e-mail kontaktowy (<strong>{{ $order->orderer_email }}</strong>).</p>
                     <p class="mb-0"><strong>Prosimy o zapisanie lub wydrukowanie poniższego dokumentu.</strong></p>

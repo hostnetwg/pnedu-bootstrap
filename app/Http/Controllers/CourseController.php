@@ -11,6 +11,7 @@ use App\Models\Participant;
 use App\Models\PaymentDisplayOption;
 use App\Services\Analytics\BackendAnalyticsTracker;
 use App\Services\FormOrderCheckoutResumeService;
+use App\Services\OrderFormParticipantService;
 use App\Services\OrderFormRecipientIdentityService;
 use App\Services\SendyService;
 use App\Support\DeveloperOnlinePaymentTest;
@@ -1062,35 +1063,86 @@ class CourseController extends Controller
     }
 
     /**
+     * Czy e-mail może być użyty jako uczestnik tego szkolenia (unikalność na kursie).
+     */
+    public function participantEmailAvailability(Request $request, $id)
+    {
+        $email = trim((string) $request->query('email', ''));
+        $exceptIdent = trim((string) $request->query('except_ident', ''));
+        $exceptOrderId = null;
+        if ($exceptIdent !== '') {
+            $exceptOrderId = FormOrder::query()
+                ->where('ident', $exceptIdent)
+                ->where('product_id', (int) $id)
+                ->value('id');
+            $exceptOrderId = $exceptOrderId ? (int) $exceptOrderId : null;
+        }
+
+        $result = app(OrderFormParticipantService::class)
+            ->emailAvailability((int) $id, $email, $exceptOrderId);
+
+        return response()->json($result, 200, ['Content-Type' => 'application/json']);
+    }
+
+    /**
      * Dane uczestnika do ponownego wypełnienia formularza (edycja zamówienia) – z form_order_participants, z fallbackiem.
      *
-     * @return array{participant_first_name: string, participant_last_name: string, participant_email: string}
+     * @return array{participant_first_name: string, participant_last_name: string, participant_email: string, participants: list<array{first_name: string, last_name: string, email: string}>}
      */
     protected function participantPrefillFromFormOrder(FormOrder $order): array
     {
-        $order->loadMissing('primaryParticipant');
-        $p = $order->primaryParticipant;
-        if ($p) {
-            return [
-                'participant_first_name' => (string) ($p->participant_firstname ?? ''),
-                'participant_last_name' => (string) ($p->participant_lastname ?? ''),
-                'participant_email' => (string) ($p->participant_email ?? ''),
+        $order->loadMissing(['participants' => fn ($q) => $q->orderBy('id')]);
+        $rows = [];
+        foreach ($order->participants as $p) {
+            $rows[] = [
+                'first_name' => (string) ($p->participant_firstname ?? ''),
+                'last_name' => (string) ($p->participant_lastname ?? ''),
+                'email' => (string) ($p->participant_email ?? ''),
             ];
         }
 
-        $displayName = trim($order->display_participant_name);
-        $first = '';
-        $last = '';
-        if ($displayName !== '') {
-            $segments = preg_split('/\s+/', $displayName, 2);
-            $first = $segments[0] ?? '';
-            $last = $segments[1] ?? '';
+        if ($rows === []) {
+            $p = $order->primaryParticipant;
+            if ($p) {
+                $rows[] = [
+                    'first_name' => (string) ($p->participant_firstname ?? ''),
+                    'last_name' => (string) ($p->participant_lastname ?? ''),
+                    'email' => (string) ($p->participant_email ?? ''),
+                ];
+            }
+        }
+
+        $primary = $rows[0] ?? [
+            'first_name' => '',
+            'last_name' => '',
+            'email' => '',
+        ];
+
+        if (($primary['first_name'] === '' && $primary['last_name'] === '') && trim($order->display_participant_name) !== '') {
+            $segments = preg_split('/\s+/', trim($order->display_participant_name), 2);
+            $primary['first_name'] = $segments[0] ?? '';
+            $primary['last_name'] = $segments[1] ?? '';
+            if ($rows === []) {
+                $rows[] = $primary;
+            } else {
+                $rows[0] = $primary;
+            }
+        }
+
+        if (($primary['email'] === '') && filled($order->display_participant_email)) {
+            $primary['email'] = (string) $order->display_participant_email;
+            if ($rows === []) {
+                $rows[] = $primary;
+            } else {
+                $rows[0] = $primary;
+            }
         }
 
         return [
-            'participant_first_name' => $first,
-            'participant_last_name' => $last,
-            'participant_email' => (string) ($order->display_participant_email ?? ''),
+            'participant_first_name' => $primary['first_name'],
+            'participant_last_name' => $primary['last_name'],
+            'participant_email' => $primary['email'],
+            'participants' => $rows !== [] ? $rows : [$primary],
         ];
     }
 
@@ -1256,6 +1308,7 @@ class CourseController extends Controller
             'participant_first_name' => $participantPrefill['participant_first_name'],
             'participant_last_name' => $participantPrefill['participant_last_name'],
             'participant_email' => $participantPrefill['participant_email'],
+            'participants' => $participantPrefill['participants'],
             'invoice_notes' => $existingOrder->invoice_notes,
             'payment_terms' => $existingOrder->invoice_payment_delay ?? $existingOrder->ptw,
             'order_id' => $existingOrder->id,
@@ -1390,18 +1443,16 @@ class CourseController extends Controller
             'contact_name' => 'required|string|max:255',
             'contact_phone' => 'required|string|max:50',
             'contact_email' => 'required|email|max:255',
-            'participant_first_name' => 'required|string|max:255',
-            'participant_last_name' => 'required|string|max:255',
-            'participant_email' => 'required|email|max:255',
             'invoice_notes' => 'nullable|string',
             'payment_terms' => 'required|integer|min:0|max:31',
             'fb_source' => 'nullable|string|max:255',
             'conversion_placement' => 'nullable|string|max:50',
         ];
         $this->addPriceVariantValidationRules($course, $rules);
+        $this->mergeOrderFormParticipantValidationRules($rules, 'organisation');
 
         // Walidacja danych
-        $validated = $request->validate($rules, [
+        $validated = $request->validate($rules, array_merge([
             'buyer_name.required' => 'Nazwa nabywcy jest wymagana.',
             'buyer_address.required' => 'Adres jest wymagany.',
             'buyer_postcode.required' => 'Kod pocztowy jest wymagany.',
@@ -1411,14 +1462,10 @@ class CourseController extends Controller
             'contact_phone.required' => 'Telefon kontaktowy jest wymagany.',
             'contact_email.required' => 'E-mail jest wymagany.',
             'contact_email.email' => 'Podaj prawidłowy adres e-mail.',
-            'participant_first_name.required' => 'Imię uczestnika jest wymagane.',
-            'participant_last_name.required' => 'Nazwisko uczestnika jest wymagane.',
-            'participant_email.required' => 'E-mail uczestnika jest wymagany.',
-            'participant_email.email' => 'Podaj prawidłowy adres e-mail uczestnika.',
             'payment_terms.required' => 'Termin płatności jest wymagany.',
             'payment_terms.min' => 'Termin płatności musi być od 0 do 31 dni.',
             'payment_terms.max' => 'Termin płatności musi być od 0 do 31 dni.',
-        ]);
+        ], $this->orderFormParticipantValidationMessages()));
 
         try {
             // Określ publigo_product_id - dla kursów z Publigo użyj id_old
@@ -1432,14 +1479,15 @@ class CourseController extends Controller
             $publigoPriceId = $this->resolvePubligoPriceIdForFormOrder($course, $publicoProductId);
 
             $coursePriceVariantId = $this->resolvedCoursePriceVariantId($course, $validated);
-            $currentPrice = $this->productPriceForFormOrder($course, $coursePriceVariantId);
 
             // Sprawdź czy to edycja istniejącego zamówienia (w tym soft delete → restore przy zapisie)
             $checkoutResume = app(FormOrderCheckoutResumeService::class);
+            $participantRows = $this->parseOrderFormParticipants($request, 'organisation');
+            $primaryParticipant = $participantRows[0];
             $order = $checkoutResume->resolveForSubmit(
                 (int) $id,
                 $request->order_ident,
-                $validated['participant_email'],
+                $primaryParticipant['email'],
                 $request->boolean('order_edit_intent')
             );
 
@@ -1448,6 +1496,10 @@ class CourseController extends Controller
                     ->route('payment.deferred.edit', ['id' => $course->id, 'ident' => $order->ident])
                     ->with('error', 'To zamówienie zostało już zakończone lub zafakturowane. Zmiany nie zostały zapisane.');
             }
+
+            $this->assertOrderFormParticipantEmails((int) $course->id, $participantRows, $order?->id);
+            $this->applyPrimaryParticipantToValidated($validated, $primaryParticipant);
+            $currentPrice = $this->orderFormTotalPrice($course, $coursePriceVariantId, count($participantRows));
 
             // Dane do zapisania (uczestnik wyłącznie w form_order_participants)
             $orderData = [
@@ -1509,20 +1561,15 @@ class CourseController extends Controller
                 ]);
             }
 
-            // Zapisz uczestnika w form_order_participants (dla przyszłej obsługi wielu uczestników)
-            FormOrderParticipant::syncFromFormOrder(
-                $order,
-                $validated['participant_first_name'],
-                $validated['participant_last_name'],
-                $validated['participant_email']
-            );
+            // Zapisz uczestników w form_order_participants
+            app(OrderFormParticipantService::class)->sync($order, $participantRows);
 
             app(\App\Services\OrderEntryPlacementService::class)->clear($request);
 
             app(FormOrderCheckoutResumeService::class)->storeAfterSubmit(
                 (int) $id,
                 $order,
-                $validated['participant_email']
+                $primaryParticipant['email']
             );
 
             // Przekierowanie do strony podsumowania z PDF
@@ -1587,10 +1634,6 @@ class CourseController extends Controller
             'recipient_nip' => 'nullable|string|max:50',
             'recipient_internal_id' => 'nullable|string|max:20',
 
-            'participant_first_name' => 'required|string|max:255',
-            'participant_last_name' => 'required|string|max:255',
-            'participant_email' => 'required|email|max:255',
-
             'invoice_notes' => 'nullable|string',
             'payment_terms' => 'nullable|integer|min:0|max:'.$paymentTermsMax,
             'payment_gateway' => 'nullable|in:payu,paynow',
@@ -1610,17 +1653,18 @@ class CourseController extends Controller
         }
 
         $this->addPriceVariantValidationRules($course, $rules);
+        $this->mergeOrderFormParticipantValidationRules($rules, $buyerType);
 
         $backendAnalyticsTracker->trackOrderFormSubmitAttempted($request, $course);
 
         try {
-            $validated = $request->validate($rules, [
+            $validated = $request->validate($rules, array_merge([
                 'buyer_type.required' => 'Wybierz, jako kto zamawiasz.',
                 'buyer_type.in' => 'Wybierz prawidłową opcję.',
                 'payment_type.required' => 'Wybierz sposób rozliczenia.',
                 'payment_type.in' => 'Wybierz prawidłowy sposób rozliczenia.',
                 'payment_terms.max' => sprintf('Termin płatności nie może przekraczać %d dni.', $paymentTermsMax),
-            ]);
+            ], $this->orderFormParticipantValidationMessages()));
         } catch (ValidationException $e) {
             $backendAnalyticsTracker->trackOrderFormValidationFailed(
                 request: $request,
@@ -1682,13 +1726,16 @@ class CourseController extends Controller
                 ->withInput();
         }
 
+        $participantRows = $this->parseOrderFormParticipants($request, $buyerType);
+        $this->applyPrimaryParticipantToValidated($validated, $participantRows[0]);
+
         $coursePriceVariantId = $this->resolvedCoursePriceVariantId($course, $validated);
 
         // Płatność online – utwórz OnlinePaymentOrder i przekieruj do bramki
         if (($validated['payment_type'] ?? null) === 'online') {
             $backendAnalyticsTracker->trackOnlinePaymentSelected($request, $course, $validated['payment_gateway'] ?? null, $buyerType);
 
-            return $this->processOrderFormOnlinePayment($request, $course, $validated, $buyerType, $coursePriceVariantId, $backendAnalyticsTracker);
+            return $this->processOrderFormOnlinePayment($request, $course, $validated, $buyerType, $coursePriceVariantId, $backendAnalyticsTracker, $participantRows);
         }
 
         $backendAnalyticsTracker->trackDeferredInvoiceSelected($request, $course, $buyerType);
@@ -1704,8 +1751,6 @@ class CourseController extends Controller
 
             $publigoPriceId = $this->resolvePubligoPriceIdForFormOrder($course, $publicoProductId);
 
-            $currentPrice = $this->productPriceForFormOrder($course, $coursePriceVariantId);
-
             // Sprawdź czy to edycja istniejącego zamówienia (w tym soft delete → restore przy zapisie)
             $checkoutResume = app(FormOrderCheckoutResumeService::class);
             $order = $checkoutResume->resolveForSubmit(
@@ -1720,6 +1765,9 @@ class CourseController extends Controller
                     ->route('payment.order-form.edit', ['id' => $course->id, 'ident' => $order->ident])
                     ->with('error', 'To zamówienie zostało już zakończone lub zafakturowane. Zmiany nie zostały zapisane.');
             }
+
+            $this->assertOrderFormParticipantEmails((int) $course->id, $participantRows, $order?->id);
+            $currentPrice = $this->orderFormTotalPrice($course, $coursePriceVariantId, count($participantRows));
 
             $buyerName = $validated['buyer_name'] ?? null;
             $buyerNip = $buyerType === 'organisation' ? ($validated['buyer_nip'] ?? null) : null;
@@ -1776,15 +1824,10 @@ class CourseController extends Controller
                 $order = FormOrder::create($orderData);
             }
 
-            // Zapisz uczestnika w form_order_participants (dla przyszłej obsługi wielu uczestników)
-            FormOrderParticipant::syncFromFormOrder(
-                $order,
-                $validated['participant_first_name'],
-                $validated['participant_last_name'],
-                $validated['participant_email']
-            );
+            // Zapisz uczestników w form_order_participants
+            app(OrderFormParticipantService::class)->sync($order, $participantRows);
 
-            $this->subscribeOrderFormContactsToSendyIfConfigured($course, $validated);
+            $this->subscribeOrderFormContactsToSendyIfConfigured($course, $validated, $participantRows);
 
             app(\App\Services\OrderEntryPlacementService::class)->clear($request);
 
@@ -1820,10 +1863,15 @@ class CourseController extends Controller
      * Przetwórz płatność online z formularza order-form – zapis FormOrder + uczestnicy,
      * OnlinePaymentOrder (powiązanie) i przekierowanie do bramki.
      */
-    protected function processOrderFormOnlinePayment(Request $request, Course $course, array $validated, string $buyerType, ?int $coursePriceVariantId, BackendAnalyticsTracker $backendAnalyticsTracker)
+    protected function processOrderFormOnlinePayment(Request $request, Course $course, array $validated, string $buyerType, ?int $coursePriceVariantId, BackendAnalyticsTracker $backendAnalyticsTracker, array $participantRows = [])
     {
+        if ($participantRows === []) {
+            $participantRows = $this->parseOrderFormParticipants($request, $buyerType);
+            $this->applyPrimaryParticipantToValidated($validated, $participantRows[0]);
+        }
+
         $totalAmount = $this->resolveOnlineCheckoutAmount(
-            (float) ($this->productPriceForFormOrder($course, $coursePriceVariantId) ?? 0)
+            (float) ($this->orderFormTotalPrice($course, $coursePriceVariantId, count($participantRows)) ?? 0)
         );
 
         if ($totalAmount <= 0) {
@@ -1866,6 +1914,8 @@ class CourseController extends Controller
                     ->route('payment.order-form.edit', ['id' => $course->id, 'ident' => $formOrder->ident])
                     ->with('error', 'To zamówienie zostało już zakończone lub zafakturowane. Zmiany nie zostały zapisane.');
             }
+
+            $this->assertOrderFormParticipantEmails((int) $course->id, $participantRows, $formOrder?->id);
 
             $buyerName = $validated['buyer_name'] ?? null;
             $buyerNip = $buyerType === 'organisation' ? ($validated['buyer_nip'] ?? null) : null;
@@ -1922,14 +1972,9 @@ class CourseController extends Controller
                 $formOrder = FormOrder::create($orderData);
             }
 
-            FormOrderParticipant::syncFromFormOrder(
-                $formOrder,
-                $validated['participant_first_name'],
-                $validated['participant_last_name'],
-                $validated['participant_email']
-            );
+            app(OrderFormParticipantService::class)->sync($formOrder, $participantRows);
 
-            $this->subscribeOrderFormContactsToSendyIfConfigured($course, $validated);
+            $this->subscribeOrderFormContactsToSendyIfConfigured($course, $validated, $participantRows);
 
             app(\App\Services\OrderEntryPlacementService::class)->clear($request);
 
@@ -2025,7 +2070,7 @@ class CourseController extends Controller
     /**
      * Zapis zamawiającego i (jeśli inny e-mail) uczestnika na listę Sendy przypisaną do kursu.
      */
-    protected function subscribeOrderFormContactsToSendyIfConfigured(Course $course, array $validated): void
+    protected function subscribeOrderFormContactsToSendyIfConfigured(Course $course, array $validated, array $participantRows = []): void
     {
         if (trim((string) ($course->sendy_suppression_list_id ?? '')) === '') {
             return;
@@ -2109,7 +2154,9 @@ class CourseController extends Controller
      */
     public function orderSummary($ident)
     {
-        $order = FormOrder::with('primaryParticipant')->where('ident', $ident)->firstOrFail();
+        $order = FormOrder::with(['primaryParticipant', 'participants' => fn ($q) => $q->orderBy('id')])
+            ->where('ident', $ident)
+            ->firstOrFail();
         $course = $order->course;
 
         // Wyślij e-mail z załączonym PDF tylko bezpośrednio po przesłaniu/edycji formularza (nie przy odświeżeniu strony)
@@ -2129,11 +2176,14 @@ class CourseController extends Controller
                     $emailsToSend[] = strtolower(trim($ordererEmail));
                 }
 
-                // 2. Uczestnik – jeśli inny niż zamawiający
-                $participantEmail = $order->display_participant_email;
-                if ($participantEmail) {
-                    $normalizedParticipant = strtolower(trim($participantEmail));
-                    if (! in_array($normalizedParticipant, $emailsToSend)) {
+                // 2. Wszyscy uczestnicy – jeśli e-mail inny niż już na liście
+                foreach ($order->participants as $fop) {
+                    $participantEmail = trim((string) ($fop->participant_email ?? ''));
+                    if ($participantEmail === '') {
+                        continue;
+                    }
+                    $normalizedParticipant = strtolower($participantEmail);
+                    if (! in_array($normalizedParticipant, $emailsToSend, true)) {
                         $emailsToSend[] = $normalizedParticipant;
                     }
                 }
@@ -2192,7 +2242,9 @@ class CourseController extends Controller
      */
     public function orderPdf($ident)
     {
-        $order = FormOrder::with('primaryParticipant')->where('ident', $ident)->firstOrFail();
+        $order = FormOrder::with(['primaryParticipant', 'participants' => fn ($q) => $q->orderBy('id')])
+            ->where('ident', $ident)
+            ->firstOrFail();
         $course = $order->course;
 
         $pdf = Pdf::loadView('orders.pdf', [
@@ -2499,6 +2551,83 @@ class CourseController extends Controller
                 PaymentDisplayOption::getForCoursePage(),
                 auth()->user()
             )
+        );
+    }
+
+    /**
+     * @param  array<string, mixed>  $rules
+     */
+    protected function mergeOrderFormParticipantValidationRules(array &$rules, string $buyerType): void
+    {
+        $rules = array_merge($rules, app(OrderFormParticipantService::class)->validationRules($buyerType));
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    protected function orderFormParticipantValidationMessages(): array
+    {
+        return app(OrderFormParticipantService::class)->validationMessages();
+    }
+
+    /**
+     * @return list<array{first_name: string, last_name: string, email: string}>
+     */
+    protected function parseOrderFormParticipants(Request $request, string $buyerType): array
+    {
+        $rows = app(OrderFormParticipantService::class)->parseFromRequest($request, $buyerType);
+        if ($rows === []) {
+            throw ValidationException::withMessages([
+                'participant_email' => 'Podaj dane przynajmniej jednego uczestnika szkolenia.',
+            ]);
+        }
+
+        foreach ($rows as $index => $row) {
+            if ($row['first_name'] === '' || $row['last_name'] === '' || $row['email'] === '') {
+                $prefix = $index === 0 ? 'participant_' : 'participants.'.$index.'.';
+                $messages = [];
+                if ($row['first_name'] === '') {
+                    $messages[$index === 0 ? 'participant_first_name' : $prefix.'first_name'] = 'Imię uczestnika jest wymagane.';
+                }
+                if ($row['last_name'] === '') {
+                    $messages[$index === 0 ? 'participant_last_name' : $prefix.'last_name'] = 'Nazwisko uczestnika jest wymagane.';
+                }
+                if ($row['email'] === '') {
+                    $messages[$index === 0 ? 'participant_email' : $prefix.'email'] = 'E-mail uczestnika jest wymagany.';
+                }
+                throw ValidationException::withMessages($messages);
+            }
+        }
+
+        return $rows;
+    }
+
+    /**
+     * @param  list<array{first_name: string, last_name: string, email: string}>  $rows
+     */
+    protected function assertOrderFormParticipantEmails(int $courseId, array $rows, ?int $exceptFormOrderId): void
+    {
+        app(OrderFormParticipantService::class)->assertEmailsAvailable($courseId, $rows, $exceptFormOrderId);
+    }
+
+    /**
+     * @param  array<string, mixed>  $validated
+     * @param  array{first_name: string, last_name: string, email: string}  $primary
+     */
+    protected function applyPrimaryParticipantToValidated(array &$validated, array $primary): void
+    {
+        $validated['participant_first_name'] = $primary['first_name'];
+        $validated['participant_last_name'] = $primary['last_name'];
+        $validated['participant_email'] = $primary['email'];
+    }
+
+    protected function orderFormTotalPrice(Course $course, ?int $coursePriceVariantId, int $participantCount): ?float
+    {
+        $unit = $this->productPriceForFormOrder($course, $coursePriceVariantId);
+
+        return app(OrderFormParticipantService::class)->totalPrice(
+            $unit !== null ? (float) $unit : null,
+            $participantCount
         );
     }
 }

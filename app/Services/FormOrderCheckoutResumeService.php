@@ -276,22 +276,10 @@ class FormOrderCheckoutResumeService
 
     protected function isOrderResumableForFormSubmit(FormOrder $order): bool
     {
+        // Online: brak edycji formularza po przejściu do bramki (także awaiting/cancelled/failed).
+        // Odroczona: isEditLocked = FV lub zakończone.
         if ($order->isEditLocked()) {
             return false;
-        }
-
-        if ($order->payment_mode === FormOrder::PAYMENT_MODE_ONLINE_GATEWAY) {
-            if ($order->payment_status === FormOrder::PAYMENT_STATUS_PAID) {
-                return false;
-            }
-
-            if (! in_array($order->payment_status, [
-                FormOrder::PAYMENT_STATUS_AWAITING_PAYMENT,
-                FormOrder::PAYMENT_STATUS_FAILED,
-                FormOrder::PAYMENT_STATUS_CANCELLED,
-            ], true)) {
-                return false;
-            }
         }
 
         return true;

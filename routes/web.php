@@ -235,6 +235,9 @@ Route::post('/webhooks/ses/notifications', SesNotificationWebhookController::cla
 
 // Lookup uczestnika po e-mailu (musi być przed /courses/{id})
 Route::get('/courses/participant-lookup-by-email', [App\Http\Controllers\CourseController::class, 'participantLookupByEmail'])->name('courses.participant-lookup');
+Route::get('/courses/{id}/participant-email-availability', [App\Http\Controllers\CourseController::class, 'participantEmailAvailability'])
+    ->middleware('throttle:60,1')
+    ->name('courses.participant-email-availability');
 Route::post('/courses/gus-lookup-by-nip', App\Http\Controllers\GusLookupController::class)
     ->middleware('throttle:20,1')
     ->name('courses.gus-lookup');

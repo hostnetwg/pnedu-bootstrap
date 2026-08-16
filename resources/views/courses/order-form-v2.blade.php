@@ -221,22 +221,16 @@
                 <p class="form-text mb-0 mt-1" id="v2-participant-toggle-hint">Dane uczestnika są kopiowane z kontaktu. Odznacz, jeśli na szkoleniu będzie inna osoba — pola wyczyszczą się, gdy nadal są takie same.</p>
             </div>
             <div id="v2-participant-fields" @class(['order-v2__participant-fields--org-profile' => $profile !== 'person'])>
-                <h3 class="h6">Dane uczestnika</h3>
-                <p class="text-muted small mb-3">Na te dane zostaną przesłane dane dostępowe do szkolenia oraz zaświadczenie.</p>
-                <div class="row g-3">
-                    <div class="col-12 col-md-4">
-                        <label class="form-label order-v2__required" for="participant_first_name">Imię</label>
-                        <input class="form-control" id="participant_first_name" name="participant_first_name" value="{{ $field('participant_first_name') }}" autocomplete="given-name" required>
-                    </div>
-                    <div class="col-12 col-md-4">
-                        <label class="form-label order-v2__required" for="participant_last_name">Nazwisko</label>
-                        <input class="form-control" id="participant_last_name" name="participant_last_name" value="{{ $field('participant_last_name') }}" autocomplete="family-name" required>
-                    </div>
-                    <div class="col-12 col-md-4">
-                        <label class="form-label order-v2__required" for="participant_email">E-mail</label>
-                        <input type="email" class="form-control" id="participant_email" name="participant_email" value="{{ $field('participant_email') }}" autocomplete="{{ ($isTestMode ?? false) ? 'off' : 'email' }}" required>
-                    </div>
-                </div>
+                <h3 class="h6">Dane uczestników</h3>
+                <p class="text-muted small mb-3">Na te dane zostaną przesłane dane dostępowe do szkolenia oraz zaświadczenie. Szkoła lub firma może dodać wielu uczestników — kwota przelicza się automatycznie.</p>
+                @include('courses.partials.order-form-participants', [
+                    'course' => $course,
+                    'testData' => $testData ?? [],
+                    'isTestMode' => $isTestMode ?? false,
+                    'priceInfo' => $priceInfo ?? null,
+                    'prefillPriceVariantId' => $prefillPriceVariantId ?? null,
+                    'formVariant' => 'v2',
+                ])
             </div>
         </section>
 
@@ -575,6 +569,9 @@
         updateContactFieldsVisibility();
         syncParticipant();
         syncPaymentDefault(false);
+        if (typeof window.orderFormParticipantsUpdateBuyer === 'function') {
+            window.orderFormParticipantsUpdateBuyer();
+        }
     }
     function participantMirrorsContact() {
         if (!contactIsPersonProfile()) return false;
@@ -811,6 +808,7 @@
 })();
 </script>
 
+@include('courses.partials.order-form-participants-script')
 @include('courses.partials.order-form-submit-guard')
 @include('courses.partials.marketing-ga-event', ['course' => $course, 'gaEvent' => 'order_form_view'])
 

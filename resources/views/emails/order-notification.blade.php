@@ -63,12 +63,30 @@
         <p style="margin: 0 0 4px; font-weight: bold; font-size: 14px;">Fakturę prześlemy na</p>
         <p style="margin: 0 0 16px; padding-left: 12px; color: #444;"><strong>{{ $order->orderer_email }}</strong></p>
 
-        <p style="margin: 0 0 4px; font-weight: bold; font-size: 14px;">Uczestnik</p>
+        @php
+            $mailParticipants = $order->relationLoaded('participants')
+                ? $order->participants->sortBy('id')->values()
+                : $order->participants()->orderBy('id')->get();
+            if ($mailParticipants->isEmpty() && $order->primaryParticipant) {
+                $mailParticipants = collect([$order->primaryParticipant]);
+            }
+        @endphp
+        <p style="margin: 0 0 4px; font-weight: bold; font-size: 14px;">Uczestnik{{ $mailParticipants->count() > 1 ? 'cy' : '' }}</p>
         <p style="margin: 0 0 4px; padding-left: 12px; font-size: 13px; color: #666;">(dane dostępowe do szkolenia, materiałów oraz zaświadczenia)</p>
-        <p style="margin: 0; padding-left: 12px; color: #444;">
-            <strong style="font-size: 16px; color: #1a1a1a;">{{ $order->display_participant_name }}</strong><br>
-            {{ $order->display_participant_email }}
-        </p>
+        @forelse($mailParticipants as $p)
+            <p style="margin: 0 0 {{ $loop->last ? '0' : '10px' }}; padding-left: 12px; color: #444;">
+                @if($mailParticipants->count() > 1)
+                    <span style="color: #888; font-size: 12px;">{{ $loop->iteration }}.</span>
+                @endif
+                <strong style="font-size: 16px; color: #1a1a1a;">{{ trim(($p->participant_firstname ?? '').' '.($p->participant_lastname ?? '')) ?: '—' }}</strong><br>
+                {{ $p->participant_email ?: '—' }}
+            </p>
+        @empty
+            <p style="margin: 0; padding-left: 12px; color: #444;">
+                <strong style="font-size: 16px; color: #1a1a1a;">{{ $order->display_participant_name }}</strong><br>
+                {{ $order->display_participant_email }}
+            </p>
+        @endforelse
     </td></tr>
     </table>
     

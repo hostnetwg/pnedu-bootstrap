@@ -782,31 +782,6 @@
                     <div class="form-info-text mt-2">
                         Na poniższe dane zostaną przesłane dane dostępowe do szkolenia oraz wystawione i przesłane zaświadczenie.
                     </div>
-                    <div class="row g-3 mb-3">
-                        <div class="col-12 col-md-4">
-                            <label for="participant_first_name" class="form-label">Imię <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control @error('participant_first_name') is-invalid @enderror" id="participant_first_name" name="participant_first_name" value="{{ $testData['participant_first_name'] ?? old('participant_first_name') }}" required>
-                            @error('participant_first_name')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                        <div class="col-12 col-md-4">
-                            <label for="participant_last_name" class="form-label">Nazwisko <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control @error('participant_last_name') is-invalid @enderror" id="participant_last_name" name="participant_last_name" value="{{ $testData['participant_last_name'] ?? old('participant_last_name') }}" required>
-                            @error('participant_last_name')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                        <div class="col-12 col-md-4">
-                            <label for="participant_email" class="form-label">
-                                E-mail uczestnika <span class="text-danger">*</span>
-                            </label>
-                            <input type="email" class="form-control @error('participant_email') is-invalid @enderror" id="participant_email" name="participant_email" value="{{ $testData['participant_email'] ?? old('participant_email', ($isTestMode ?? false) ? '' : (auth()->check() ? auth()->user()->email : '')) }}" required autocomplete="{{ ($isTestMode ?? false) ? 'off' : 'email' }}">
-                            @error('participant_email')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                    </div>
                     <div class="mt-1 mb-2 d-flex justify-content-end" id="participant_copy_wrapper" style="display:none;">
                         <div class="form-check text-end d-inline-flex align-items-center">
                             <label class="form-check-label me-2" for="participant_copy_from_contact">
@@ -822,8 +797,16 @@
                             >
                         </div>
                     </div>
+                    @include('courses.partials.order-form-participants', [
+                        'course' => $course,
+                        'testData' => $testData ?? [],
+                        'isTestMode' => $isTestMode ?? false,
+                        'priceInfo' => $priceInfo ?? null,
+                        'prefillPriceVariantId' => $prefillPriceVariantId ?? null,
+                        'formVariant' => 'legacy',
+                    ])
                     <div class="form-info-text mt-2" id="participant-email-info-text">
-                        Zalecane jest podanie indywidualnego adresu e-mail uczestnika, a nie ogólnego adresu placówki – adres e-mail jest powiązany z danym uczestnikiem szkolenia; w przeciwnym razie mogą wystąpić błędy przy generowaniu zaświadczenia. Na podany adres zostanie utworzone konto na platformie z dostępem do zasobów szkolenia; jeśli konto już istnieje, zasoby zostaną do niego dodane.
+                        Zalecane jest podanie indywidualnego adresu e-mail uczestnika, a nie ogólnego adresu placówki – adres e-mail jest powiązany z danym uczestnikiem szkolenia; w przeciwnym razie mogą wystąpić błędy przy generowaniu zaświadczenia. Na podany adres zostanie utworzone konto na platformie z dostępem do zasobów szkolenia; jeśli konto już istnieje, zasoby zostaną do niego dodane. Szkoła lub firma może dodać do jednego zamówienia wielu uczestników (limit {{ (int) config('order_form.max_participants', 50) }}) — kwota przelicza się automatycznie.
                     </div>
                 </fieldset>
                 <div class="order-form-section form-section-full-width" data-analytics-section="payment_method" data-analytics-section-v2="payment">
@@ -1568,5 +1551,6 @@
         data-max-batch="{{ (int) config('analytics.client_events.max_events_per_batch', 20) }}"></div>
     @include('courses.partials.order-form-client-tracking')
 @endif
+@include('courses.partials.order-form-participants-script')
 @endsection
 

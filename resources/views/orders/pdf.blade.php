@@ -31,7 +31,7 @@
             margin-bottom: 10px;
         }
         .header-table td {
-            padding: 10px;
+            padding: 4px 10px 10px 10px;
             vertical-align: top;
             width: 50%;
         }
@@ -41,29 +41,37 @@
         .header-right {
             text-align: right;
         }
-        .location-date {
-            text-align: center;
-            font-size: 10px;
-            margin-bottom: 10px;
+        .header-section-label {
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin: 0 0 6px 0;
+            line-height: 1.2;
         }
-        .location-date-dots {
-            margin-bottom: 5px;
-            letter-spacing: 2px;
+        .header-org {
+            margin-top: 18px;
+        }
+        .header-org h1 {
+            font-size: 16px;
+            font-weight: bold;
+            margin: 0 0 2px 0;
+            line-height: 1.2;
+        }
+        .header-org p {
+            font-size: 10px;
+            margin: 0 0 1px 0;
+            line-height: 1.15;
         }
         .header-table h1 {
             font-size: 16px;
             font-weight: bold;
-            margin-bottom: 10px;
+            margin-bottom: 4px;
+            line-height: 1.25;
         }
-        .header-table h2 {
-            font-size: 14px;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-        .header-table p {
+        .header-table .header-left > p {
             font-size: 10px;
-            margin-bottom: 3px;
-            line-height: 1.4;
+            margin-bottom: 2px;
+            line-height: 1.3;
         }
         .divider {
             border-top: 1px solid #000;
@@ -97,14 +105,18 @@
             text-align: center;
         }
         table.order-table td:nth-child(1) {
-            width: 8%;
+            width: 7%;
             text-align: center;
         }
         table.order-table td:nth-child(2) {
-            width: 70%;
+            width: 68%;
         }
         table.order-table td:nth-child(3) {
-            width: 22%;
+            width: 8%;
+            text-align: center;
+        }
+        table.order-table td:nth-child(4) {
+            width: 17%;
             text-align: center;
         }
         table.invoice-table {
@@ -217,34 +229,39 @@
     <table class="header-table">
         <tr>
             <td class="header-left">
+                <div class="header-section-label">Zamawiający</div>
                 <h1>{{ $order->orderer_name }}</h1>
                 <p>tel. {{ $order->orderer_phone }}</p>
                 <p>e-mail: {{ $order->orderer_email }}</p>
             </td>
             <td class="header-right">
-                <div class="location-date">
-                    <div class="location-date-dots">...............................................................</div>
-                    <div>                   miejscowość, data</div>
+                <div class="header-org">
+                    <h1>Platforma Nowoczesnej Edukacji</h1>
+                    <p>ul. A. Zamoyskiego 30/14, 09-320 Bieżuń</p>
+                    <p>RSPO: 481379 NIP: 7392137630</p>
+                    <p>NR KONTA: {{ substr('25114020040000300282222577', 0, 2) }} {{ substr('25114020040000300282222577', 2, 4) }} {{ substr('25114020040000300282222577', 6, 4) }} {{ substr('25114020040000300282222577', 10, 4) }} {{ substr('25114020040000300282222577', 14, 4) }} {{ substr('25114020040000300282222577', 18, 4) }} {{ substr('25114020040000300282222577', 22, 4) }}</p>
+                    <p>e-mail: {{ $contactEmail }}</p>
+                    <p>tel. +48501654274</p>
                 </div>
-                <h1>Platforma Nowoczesnej Edukacji</h1>
-                <p>ul. A. Zamoyskiego 30/14, 09-320 Bieżuń</p>
-                <p>RSPO: 481379 NIP: 7392137630</p>
-                <p>NR KONTA: {{ substr('25114020040000300282222577', 0, 2) }} {{ substr('25114020040000300282222577', 2, 4) }} {{ substr('25114020040000300282222577', 6, 4) }} {{ substr('25114020040000300282222577', 10, 4) }} {{ substr('25114020040000300282222577', 14, 4) }} {{ substr('25114020040000300282222577', 18, 4) }} {{ substr('25114020040000300282222577', 22, 4) }}</p>
-                <p>e-mail: {{ $contactEmail }}</p>
-                <p>tel. +48501654274</p>
             </td>
         </tr>
     </table>
 
     <!-- Tytuł ZAMÓWIENIE -->
-    <div class="order-title">ZAMÓWIENIE</div>
+    <div class="order-title">ZAMÓWIENIE nr {{ $order->id }}</div>
 
     <!-- Tabela z zamówieniem -->
+    @php
+        $orderQty = $order->relationLoaded('participants')
+            ? max(1, $order->participants->count())
+            : max(1, (int) $order->participants()->count());
+    @endphp
     <table class="order-table">
         <thead>
             <tr>
                 <th>L.p.</th>
                 <th>Nazwa produktu</th>
+                <th>szt.</th>
                 <th>Cena brutto</th>
             </tr>
         </thead>
@@ -254,6 +271,7 @@
                 <td>
                     SZKOLENIE: {{ str_replace('&nbsp;', ' ', strip_tags($order->product_name)) }}
                 </td>
+                <td>{{ $orderQty }}</td>
                 <td>{{ number_format($order->product_price, 0, ',', ' ') }} PLN</td>
             </tr>
         </tbody>
@@ -334,15 +352,30 @@
             </tr>
         </thead>
         <tbody>
-            <tr>
-                <td>{{ $order->display_participant_name }}</td>
-                <td>{{ $order->display_participant_email }}</td>
-            </tr>
+            @php
+                $pdfParticipants = $order->relationLoaded('participants')
+                    ? $order->participants->sortBy('id')->values()
+                    : $order->participants()->orderBy('id')->get();
+                if ($pdfParticipants->isEmpty() && $order->primaryParticipant) {
+                    $pdfParticipants = collect([$order->primaryParticipant]);
+                }
+            @endphp
+            @forelse($pdfParticipants as $p)
+                <tr>
+                    <td>{{ trim(($p->participant_firstname ?? '').' '.($p->participant_lastname ?? '')) ?: '—' }}</td>
+                    <td>{{ $p->participant_email ?: '—' }}</td>
+                </tr>
+            @empty
+                <tr>
+                    <td>{{ $order->display_participant_name ?: '—' }}</td>
+                    <td>{{ $order->display_participant_email ?: '—' }}</td>
+                </tr>
+            @endforelse
         </tbody>
     </table>
 
     <div class="info-text" style="margin-top: 0; font-style: italic;">
-        * na powyższy e-mail zostaną przesłane dane dostępowe do kursu.
+        * na {{ $pdfParticipants->count() > 1 ? 'powyższe adresy e-mail' : 'powyższy e-mail' }} zostaną przesłane dane dostępowe do szkolenia.
     </div>
 
     <!-- Sekcja z pieczątką i podpisem -->

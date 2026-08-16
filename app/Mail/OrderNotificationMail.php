@@ -34,7 +34,10 @@ class OrderNotificationMail extends Mailable
      */
     public function __construct(FormOrder $order, $course)
     {
-        $this->order = $order->loadMissing('primaryParticipant');
+        $this->order = $order->loadMissing([
+            'primaryParticipant',
+            'participants' => fn ($q) => $q->orderBy('id'),
+        ]);
         $this->course = $course;
     }
 

@@ -205,10 +205,16 @@ class FormOrder extends Model
     }
 
     /**
-     * Zamówienie zablokowane do edycji przez klienta (zakończone lub z numerem faktury).
+     * Zamówienie zablokowane do edycji przez klienta.
+     * Online (bramka): zawsze po utworzeniu — lista uczestników i kwota są zamrożone.
+     * Odroczona FV: do wystawienia faktury / status_completed.
      */
     public function isEditLocked(): bool
     {
+        if ($this->payment_mode === self::PAYMENT_MODE_ONLINE_GATEWAY) {
+            return true;
+        }
+
         if ($this->status_completed) {
             return true;
         }
