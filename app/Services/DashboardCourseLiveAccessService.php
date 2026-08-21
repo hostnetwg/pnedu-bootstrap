@@ -80,7 +80,8 @@ class DashboardCourseLiveAccessService
     }
 
     /**
-     * Eksperyment embed: tylko konta z allowlisty (gdy lista niepusta).
+     * Opcjonalny allowlist embed: tylko gdy lista w config niepusta.
+     * Domyślnie pusta = wszyscy (steruje radio kursu w adm).
      */
     public function viewerMayUseEmbed(?string $email = null): bool
     {

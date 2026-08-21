@@ -82,15 +82,12 @@ return [
         'live_presence_mobile_ttl_seconds' => (int) env('CLICKMEETING_LIVE_PRESENCE_MOBILE_TTL', 10800),
         'live_presence_heartbeat_seconds' => (int) env('CLICKMEETING_LIVE_PRESENCE_HEARTBEAT', 25),
         /**
-         * Tymczasowy allowlist eksperymentu embed (e-maile kont pnedu, po przecinku).
-         * Pusty = brak ograniczenia (gdy eksperyment wyłączymy / otworzymy dla wszystkich).
+         * Opcjonalny allowlist e-mail (konta pnedu, po przecinku).
+         * Pusty / brak w .env = wszyscy uczestnicy (steruje tylko radio kursu w adm).
          */
         'embed_allowlist_emails' => array_values(array_filter(array_map(
             static fn (string $email): string => strtolower(trim($email)),
-            explode(',', (string) env(
-                'CLICKMEETING_EMBED_ALLOWLIST',
-                'waldemar.grabowski@hostnet.pl,luman@gmail.com,info.gim@op.pl'
-            ))
+            explode(',', (string) env('CLICKMEETING_EMBED_ALLOWLIST', ''))
         ))),
     ],
 

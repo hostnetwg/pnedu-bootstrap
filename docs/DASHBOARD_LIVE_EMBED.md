@@ -23,7 +23,7 @@ Obie ścieżki korzystają z tego samego rekordu `participant_live_access` (toke
 | 4 | `CLICKMEETING_API_TOKEN` także w `.env` **pnedu** (wywołania API po stronie konta) |
 | 5 | **Jeden aktywny token** na uczestnika; przy ponownym wejściu embed: nowy token + `DELETE` starego w CM |
 | 6 | Anty-sharing: slot obecności Laravel (1 sesja / uczestnik) + wspólny token z mailem |
-| 7 | Przycisk / wejście embed tymczasowo tylko dla allowlisty e-mail (`CLICKMEETING_EMBED_ALLOWLIST`; puste = wszyscy) |
+| 7 | Embed widoczny dla **wszystkich** uczestników kursu (wg radio w adm). `CLICKMEETING_EMBED_ALLOWLIST` opcjonalny; pusty/brak = bez ograniczenia |
 | 8 | **Maile (provision FORM + „Wyślij link do live”) na razie bez zmian** — nadal bezpośredni URL ClickMeeting; radio steruje tylko UI na pnedu (2026-08-21) |
 
 ## Adm (pneadm)
@@ -86,7 +86,7 @@ Limit CM (dokumentacja vendor): max tokenów na wydarzenie ≈ **4 ×** max ucze
 | Serwis embed / token | `app/Services/LiveTransmissionService.php` |
 | API CM | `app/Services/ClickMeetingService.php` (`deactivateTokens` itd.) |
 | Obecność | `app/Services/LiveTransmissionPresenceService.php` |
-| Allowlista | `config/services.php` ← `CLICKMEETING_EMBED_ALLOWLIST` (`.env` / `.env.example`) |
+| Allowlista (opcjonalna) | `CLICKMEETING_EMBED_ALLOWLIST` — domyślnie pusta = wszyscy |
 | Homepage | ten sam serwis + `HomepageLiveMeetingNotice` — [HOMEPAGE_LIVE_MEETING.md](./HOMEPAGE_LIVE_MEETING.md) |
 
 ## Relacja do maili adm (pneadm)
@@ -114,5 +114,5 @@ sail test --filter=ParticipantLiveMeetingLink
 ## Deploy
 
 1. **pneadm:** `sail artisan migrate` (flagi radio + `embed_token_consumed_at` jeśli jeszcze nie).
-2. **pnedu:** `.env` — `CLICKMEETING_API_TOKEN`, opcjonalnie `CLICKMEETING_EMBED_ALLOWLIST`; `config:clear` / deploy jak zwykle.
+2. **pnedu:** `.env` — `CLICKMEETING_API_TOKEN` (allowlista niepotrzebna, domyślnie wszyscy); `config:clear` / deploy jak zwykle.
 3. W edycji kursu ustawić radio na **Osadzony pokój** dla szkoleń eksperymentalnych.
