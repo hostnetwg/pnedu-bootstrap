@@ -73,6 +73,27 @@ return [
         'timeout' => (int) env('GUS_BIR_TIMEOUT', 10),
     ],
 
+    'clickmeeting' => [
+        'url' => env('CLICKMEETING_API_URL', 'https://api.clickmeeting.com/v1/'),
+        'token' => env('CLICKMEETING_API_TOKEN'),
+        /** Desktop: TTL slotu przy heartbeat z /transmisja */
+        'live_presence_ttl_seconds' => (int) env('CLICKMEETING_LIVE_PRESENCE_TTL', 90),
+        /** Mobile: brak heartbeat (redirect do CM) — dłuższy slot anty-sharing */
+        'live_presence_mobile_ttl_seconds' => (int) env('CLICKMEETING_LIVE_PRESENCE_MOBILE_TTL', 10800),
+        'live_presence_heartbeat_seconds' => (int) env('CLICKMEETING_LIVE_PRESENCE_HEARTBEAT', 25),
+        /**
+         * Tymczasowy allowlist eksperymentu embed (e-maile kont pnedu, po przecinku).
+         * Pusty = brak ograniczenia (gdy eksperyment wyłączymy / otworzymy dla wszystkich).
+         */
+        'embed_allowlist_emails' => array_values(array_filter(array_map(
+            static fn (string $email): string => strtolower(trim($email)),
+            explode(',', (string) env(
+                'CLICKMEETING_EMBED_ALLOWLIST',
+                'waldemar.grabowski@hostnet.pl,luman@gmail.com,info.gim@op.pl'
+            ))
+        ))),
+    ],
+
     'payu' => [
         'sandbox' => filter_var(env('PAYU_SANDBOX', true), FILTER_VALIDATE_BOOLEAN),
         'pos_id' => env('PAYU_POS_ID'),

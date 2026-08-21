@@ -1,11 +1,11 @@
 # Spotkanie na żywo w panelu uczestnika (`/dashboard/szkolenia`)
 
-Data: 2026-07-18  
+Data: 2026-08-21  
 Projekt: `pnedu`
 
 ## Cel
 
-Na liście szkoleń uczestnika (`http://edu.localhost:8081/dashboard/szkolenia` / produkcja `pnedu.pl`) pokazujemy link do spotkania online **przed startem i w trakcie** szkolenia — niezależnie od tego, czy ClickMeeting wymaga tokena.
+Na liście szkoleń uczestnika (`http://edu.localhost:8081/dashboard/szkolenia` / produkcja `pnedu.pl`) pokazujemy wejście do spotkania online **przed startem i w trakcie** szkolenia — niezależnie od tego, czy ClickMeeting wymaga tokena.
 
 ## Decyzje (Waldemar, 2026-07-18)
 
@@ -40,7 +40,12 @@ Wspólna baza **pneadm** (bez nowego API):
 Sekcja live pojawia się, gdy:
 
 1. okno czasowe otwarte (jak wyżej),
-2. jest `joinUrl` (live access success **lub** `meeting_link`).
+2. włączony jest **Pokój na ClickMeeting** i jest `joinUrl` (live access success **lub** `meeting_link`), **albo** włączony jest osadzony pokój (`embed_on_pnedu` + warunki embed).
+
+Przyciski (wzajemnie wykluczające, radio w adm):
+
+- **Pokój na ClickMeeting** (`clickmeeting_join_enabled`) — zewnętrzny CM (domyślnie)
+- **Osadzony pokój** (`embed_on_pnedu`) — embed na koncie
 
 Przycisk **Dołącz** jest aktywny dopiero **2 godziny przed `start_date`** (i później, w trakcie). Wcześniej: nieaktywny + tooltip Bootstrap; JS odblokowuje bez przeładowania strony (`data-join-unlock-at`).
 
@@ -58,4 +63,5 @@ Tylko **pnedu** (`git pull` + `view:clear` / `view:cache`). Bez migracji — tab
 
 ## Powiązane
 
-Dyskretny pasek na stronie głównej (próba): [HOMEPAGE_LIVE_MEETING.md](./HOMEPAGE_LIVE_MEETING.md).
+Dyskretny pasek na stronie głównej (próba): [HOMEPAGE_LIVE_MEETING.md](./HOMEPAGE_LIVE_MEETING.md).  
+Osadzony pokój ClickMeeting (opcjonalnie): [DASHBOARD_LIVE_EMBED.md](./DASHBOARD_LIVE_EMBED.md).

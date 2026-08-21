@@ -18,7 +18,8 @@ Zalogowany użytkownik na **stronie głównej** (`/`) widzi dyskretny pasek z za
 | — | Przycisk „Dołącz” aktywny od **2 h przed startem**; wcześniej tooltip + auto-odblokowanie bez reload | 2026-07-18 |
 | B | Najbliższy **dzień** z otwartym oknem live + linkiem; jeśli tego dnia jest więcej szkoleń użytkownika — pokaż **wszystkie z tego dnia** (jak karty na `/dashboard/szkolenia`) | 2026-08-10 |
 
-Reguły widoczności i URL = jak w [DASHBOARD_LIVE_MEETING.md](./DASHBOARD_LIVE_MEETING.md) (ten sam `DashboardCourseLiveAccessService`).
+Reguły widoczności i URL = jak w [DASHBOARD_LIVE_MEETING.md](./DASHBOARD_LIVE_MEETING.md) (ten sam `DashboardCourseLiveAccessService`).  
+Tryb **osadzonego pokoju** (radio w adm): [DASHBOARD_LIVE_EMBED.md](./DASHBOARD_LIVE_EMBED.md).
 
 ## Kod
 

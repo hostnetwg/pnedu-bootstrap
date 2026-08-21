@@ -41,7 +41,7 @@ final class HomepageLiveMeetingNotice
             })
             ->with([
                 'course:id,title,start_date,end_date',
-                'course.onlineDetail:id,course_id,platform,meeting_link,meeting_password',
+                'course.onlineDetail:id,course_id,platform,meeting_link,meeting_password,clickmeeting_event_id,clickmeeting_join_enabled,embed_on_pnedu',
                 'liveAccess',
             ])
             ->get()

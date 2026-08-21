@@ -77,7 +77,10 @@
     <main class="flex-grow-1">
         @yield('content')
     </main>
-    @include('layouts.footer')
+    @hasSection('hide_site_footer')
+    @else
+        @include('layouts.footer')
+    @endif
     @include('layouts.cookie-consent')
     
     <!-- Scripts -->

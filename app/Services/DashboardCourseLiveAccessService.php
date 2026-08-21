@@ -8,6 +8,7 @@ use App\Models\ParticipantLiveAccess;
 use App\Support\DashboardCourseLiveAccess;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
+use Illuminate\Support\Facades\Auth;
 
 class DashboardCourseLiveAccessService
 {
@@ -36,13 +37,30 @@ class DashboardCourseLiveAccessService
         $meetingPassword = trim((string) ($online?->meeting_password ?? ''));
 
         $joinUrl = $this->resolveJoinUrl($liveAccess, $meetingLink);
-        if ($joinUrl === null) {
-            return DashboardCourseLiveAccess::hidden();
-        }
-
         $password = $meetingPassword !== '' ? $meetingPassword : null;
         $countdown = $this->resolveCountdown($course);
         $joinGate = $this->resolveJoinGate($course);
+
+        $clickmeetingJoinEnabled = (bool) ($online?->clickmeeting_join_enabled ?? true)
+            && $joinUrl !== null;
+
+        $embedEnabled = (bool) ($online?->embed_on_pnedu ?? false)
+            && $platform === 'clickmeeting'
+            && trim((string) ($online?->clickmeeting_event_id
+                ?: $liveAccess?->clickmeeting_event_id
+                ?? '')) !== ''
+            && $this->viewerMayUseEmbed();
+
+        if (! $clickmeetingJoinEnabled && ! $embedEnabled) {
+            return DashboardCourseLiveAccess::hidden();
+        }
+
+        $embedUrl = $embedEnabled
+            ? route('dashboard.szkolenia.transmisja', [
+                'participant' => $participant,
+                'fullscreen' => 1,
+            ])
+            : null;
 
         return new DashboardCourseLiveAccess(
             show: true,
@@ -55,7 +73,28 @@ class DashboardCourseLiveAccessService
             joinUnlocked: $joinGate['unlocked'],
             joinUnlockAtIso: $joinGate['unlock_at_iso'],
             joinUnlockHint: $joinGate['hint'],
+            clickmeetingJoinEnabled: $clickmeetingJoinEnabled,
+            embedEnabled: $embedEnabled,
+            embedUrl: $embedUrl,
         );
+    }
+
+    /**
+     * Eksperyment embed: tylko konta z allowlisty (gdy lista niepusta).
+     */
+    public function viewerMayUseEmbed(?string $email = null): bool
+    {
+        $allowlist = config('services.clickmeeting.embed_allowlist_emails', []);
+        if (! is_array($allowlist) || $allowlist === []) {
+            return true;
+        }
+
+        $normalized = strtolower(trim((string) ($email ?? Auth::user()?->email ?? '')));
+        if ($normalized === '') {
+            return false;
+        }
+
+        return in_array($normalized, $allowlist, true);
     }
 
     /**

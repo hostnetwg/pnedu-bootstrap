@@ -6,6 +6,9 @@ use App\Models\CourseVideo;
 use App\Models\Participant;
 use App\Models\ParticipantTrainingVideoNote;
 use App\Models\PneadmCourseSurveyLink;
+use App\Services\DashboardCourseLiveAccessService;
+use App\Services\LiveTransmissionPresenceService;
+use App\Services\LiveTransmissionService;
 use App\Services\NativeSurveyDuplicateGuard;
 use App\Support\DashboardParticipantsListing;
 use App\Support\DashboardResourceCounts;
@@ -13,8 +16,10 @@ use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\View\View;
 
 class DashboardController extends Controller
 {
@@ -188,10 +193,9 @@ class DashboardController extends Controller
             return null;
         }
 
-        $intended = route('dashboard.szkolenia.wideo', $participant);
-        $query = $request->query();
-        if ($query !== []) {
-            $intended .= '?'.http_build_query($query);
+        $intended = $request->fullUrl();
+        if ($intended === '') {
+            $intended = route('dashboard.szkolenia.wideo', $participant);
         }
 
         Auth::guard('web')->logout();
@@ -306,5 +310,138 @@ class DashboardController extends Controller
     public function szkolenia(Request $request)
     {
         return view('dashboard.szkolenia', DashboardParticipantsListing::forAuthenticatedUser($request));
+    }
+
+    /**
+     * Osadzony pokój ClickMeeting (desktop) lub redirect z auto-login (mobile).
+     */
+    public function szkoleniaTransmisja(
+        Request $request,
+        Participant $participant,
+        LiveTransmissionService $liveTransmissionService,
+        LiveTransmissionPresenceService $presenceService
+    ): View|RedirectResponse|Response {
+        if ($redirect = $this->redirectToLoginWhenTrainingEmailMismatch($request, $participant)) {
+            return $redirect;
+        }
+
+        $this->assertParticipantBelongsToUser($participant);
+
+        $bare = $request->boolean('bare');
+
+        if (! app(DashboardCourseLiveAccessService::class)->viewerMayUseEmbed()) {
+            return $this->transmisjaFailureResponse(
+                $bare,
+                'Osadzony pokój jest na razie dostępny tylko dla kont testowych.'
+            );
+        }
+
+        $ownerSessionId = (string) $request->session()->getId();
+        $isMobile = $this->isMobileUserAgent((string) $request->userAgent());
+        $ttl = $presenceService->ttlSeconds($isMobile);
+        $acquired = $presenceService->acquire((int) $participant->id, $ownerSessionId, $ttl);
+        if (! ($acquired['ok'] ?? false)) {
+            return $this->transmisjaFailureResponse(
+                $bare,
+                (string) ($acquired['error'] ?? LiveTransmissionPresenceService::ERROR_BUSY)
+            );
+        }
+
+        $forceNewToken = $request->boolean('rejoin');
+        $built = $liveTransmissionService->buildForParticipant($participant, $forceNewToken);
+        if (! ($built['ok'] ?? false)) {
+            $presenceService->release((int) $participant->id, $ownerSessionId);
+
+            return $this->transmisjaFailureResponse(
+                $bare,
+                (string) ($built['error'] ?? 'Nie udało się otworzyć transmisji.')
+            );
+        }
+
+        if ($isMobile) {
+            $fallback = $built['room_autologin_url'] ?? null;
+            if (is_string($fallback) && $fallback !== '') {
+                return redirect()->away($fallback);
+            }
+        }
+
+        return view('dashboard.szkolenia-transmisja', [
+            'participant' => $participant,
+            'course' => $participant->course,
+            'courseTitle' => $built['course_title'] ?? ($participant->course?->title ?? 'Szkolenie'),
+            'iframeSrc' => $built['iframe_src'] ?? null,
+            'roomAutologinUrl' => $built['room_autologin_url'] ?? null,
+            'roomTokenUrl' => $built['room_token_url'] ?? null,
+            'tokenRotated' => (bool) ($built['token_rotated'] ?? false),
+            'bareLayout' => $bare,
+            'rejoinUrl' => route('dashboard.szkolenia.transmisja', array_filter([
+                'participant' => $participant,
+                'rejoin' => 1,
+                'bare' => $bare ? 1 : null,
+            ])),
+            'presenceHeartbeatUrl' => route('dashboard.szkolenia.transmisja.heartbeat', $participant),
+            'presenceLeaveUrl' => route('dashboard.szkolenia.transmisja.leave', $participant),
+            'presenceHeartbeatMs' => $presenceService->heartbeatIntervalSeconds() * 1000,
+        ]);
+    }
+
+    private function transmisjaFailureResponse(bool $bare, string $message): RedirectResponse|Response
+    {
+        if ($bare) {
+            return response()->view('dashboard.szkolenia-transmisja-error', [
+                'message' => $message,
+            ]);
+        }
+
+        return redirect()
+            ->route('dashboard.szkolenia')
+            ->with('error', $message);
+    }
+
+    public function szkoleniaTransmisjaHeartbeat(
+        Request $request,
+        Participant $participant,
+        LiveTransmissionPresenceService $presenceService
+    ): JsonResponse {
+        if ($redirect = $this->redirectToLoginWhenTrainingEmailMismatch($request, $participant)) {
+            return response()->json(['ok' => false, 'error' => 'auth'], 401);
+        }
+
+        $this->assertParticipantBelongsToUser($participant);
+
+        $ok = $presenceService->heartbeat(
+            (int) $participant->id,
+            (string) $request->session()->getId(),
+            $presenceService->ttlSeconds(false)
+        );
+
+        return response()->json(['ok' => $ok], $ok ? 200 : 409);
+    }
+
+    public function szkoleniaTransmisjaLeave(
+        Request $request,
+        Participant $participant,
+        LiveTransmissionPresenceService $presenceService
+    ): JsonResponse {
+        if ($redirect = $this->redirectToLoginWhenTrainingEmailMismatch($request, $participant)) {
+            return response()->json(['ok' => false, 'error' => 'auth'], 401);
+        }
+
+        $this->assertParticipantBelongsToUser($participant);
+
+        $presenceService->release(
+            (int) $participant->id,
+            (string) $request->session()->getId()
+        );
+
+        return response()->json(['ok' => true]);
+    }
+
+    private function isMobileUserAgent(string $userAgent): bool
+    {
+        return (bool) preg_match(
+            '/android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini|mobile/i',
+            $userAgent
+        );
     }
 }

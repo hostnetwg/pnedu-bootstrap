@@ -212,6 +212,115 @@ class DashboardCourseLiveAccessServiceTest extends TestCase
         $this->assertSame('https://pnedu.clickmeeting.com/open-room', $live->joinUrl);
     }
 
+    public function test_embed_enabled_when_flag_and_clickmeeting_event_id(): void
+    {
+        if (! $this->pneadmTablesAvailable()) {
+            $this->markTestSkipped('Brak tabel pneadm w środowisku testowym.');
+        }
+
+        if (! \Illuminate\Support\Facades\Schema::connection('pneadm')->hasColumn('course_online_details', 'embed_on_pnedu')) {
+            $this->markTestSkipped('Brak kolumny embed_on_pnedu — uruchom migrację pneadm.');
+        }
+
+        config([
+            'services.clickmeeting.embed_allowlist_emails' => [
+                'waldemar.grabowski@hostnet.pl',
+                'luman@gmail.com',
+                'info.gim@op.pl',
+            ],
+        ]);
+
+        $this->actingAs(\App\Models\User::factory()->create([
+            'email' => 'info.gim@op.pl',
+        ]));
+
+        [$participant] = $this->seedCourseWithParticipant(
+            start: '2026-07-18 09:00:00',
+            end: '2026-07-18 14:00:00',
+            meetingLink: 'https://pnedu.clickmeeting.com/open-room',
+            platform: 'clickmeeting',
+            embedOnPnedu: true,
+            clickmeetingEventId: '10164812',
+        );
+
+        $live = $this->service->forParticipant($participant->fresh(['course.onlineDetail', 'liveAccess']));
+
+        $this->assertTrue($live->show);
+        $this->assertTrue($live->embedEnabled);
+        $this->assertNotNull($live->embedUrl);
+        $this->assertStringContainsString('/transmisja', (string) $live->embedUrl);
+        $this->assertStringContainsString('fullscreen=1', (string) $live->embedUrl);
+        $this->assertTrue($live->clickmeetingJoinEnabled);
+    }
+
+    public function test_clickmeeting_join_hidden_when_flag_disabled(): void
+    {
+        if (! $this->pneadmTablesAvailable()) {
+            $this->markTestSkipped('Brak tabel pneadm w środowisku testowym.');
+        }
+
+        if (! \Illuminate\Support\Facades\Schema::connection('pneadm')->hasColumn('course_online_details', 'clickmeeting_join_enabled')) {
+            $this->markTestSkipped('Brak kolumny clickmeeting_join_enabled — uruchom migrację pneadm.');
+        }
+
+        config(['services.clickmeeting.embed_allowlist_emails' => []]);
+
+        [$participant] = $this->seedCourseWithParticipant(
+            start: '2026-07-18 09:00:00',
+            end: '2026-07-18 14:00:00',
+            meetingLink: 'https://pnedu.clickmeeting.com/open-room',
+            platform: 'clickmeeting',
+            embedOnPnedu: true,
+            clickmeetingEventId: '10164812',
+            clickmeetingJoinEnabled: false,
+        );
+
+        $live = $this->service->forParticipant($participant->fresh(['course.onlineDetail', 'liveAccess']));
+
+        $this->assertTrue($live->show);
+        $this->assertFalse($live->clickmeetingJoinEnabled);
+        $this->assertTrue($live->embedEnabled);
+        $this->assertNotNull($live->embedUrl);
+    }
+
+    public function test_embed_hidden_for_users_outside_allowlist(): void
+    {
+        if (! $this->pneadmTablesAvailable()) {
+            $this->markTestSkipped('Brak tabel pneadm w środowisku testowym.');
+        }
+
+        if (! \Illuminate\Support\Facades\Schema::connection('pneadm')->hasColumn('course_online_details', 'embed_on_pnedu')) {
+            $this->markTestSkipped('Brak kolumny embed_on_pnedu — uruchom migrację pneadm.');
+        }
+
+        config([
+            'services.clickmeeting.embed_allowlist_emails' => [
+                'waldemar.grabowski@hostnet.pl',
+                'luman@gmail.com',
+                'info.gim@op.pl',
+            ],
+        ]);
+
+        $this->actingAs(\App\Models\User::factory()->create([
+            'email' => 'other@example.test',
+        ]));
+
+        [$participant] = $this->seedCourseWithParticipant(
+            start: '2026-07-18 09:00:00',
+            end: '2026-07-18 14:00:00',
+            meetingLink: 'https://pnedu.clickmeeting.com/open-room',
+            platform: 'clickmeeting',
+            embedOnPnedu: true,
+            clickmeetingEventId: '10164812',
+        );
+
+        $live = $this->service->forParticipant($participant->fresh(['course.onlineDetail', 'liveAccess']));
+
+        $this->assertTrue($live->show);
+        $this->assertFalse($live->embedEnabled);
+        $this->assertNull($live->embedUrl);
+    }
+
     /**
      * @return array{0: Participant, 1: Course}
      */
@@ -221,6 +330,9 @@ class DashboardCourseLiveAccessServiceTest extends TestCase
         string $meetingLink,
         string $platform,
         ?string $password = null,
+        bool $embedOnPnedu = false,
+        ?string $clickmeetingEventId = null,
+        bool $clickmeetingJoinEnabled = true,
     ): array {
         $course = Course::query()->create([
             'title' => 'Szkolenie live test',
@@ -234,12 +346,24 @@ class DashboardCourseLiveAccessServiceTest extends TestCase
             'certificate_format' => '{nr}/PNE',
         ]);
 
-        CourseOnlineDetail::query()->create([
+        $onlinePayload = [
             'course_id' => $course->id,
             'platform' => $platform,
             'meeting_link' => $meetingLink,
             'meeting_password' => $password,
-        ]);
+        ];
+
+        if (\Illuminate\Support\Facades\Schema::connection('pneadm')->hasColumn('course_online_details', 'clickmeeting_event_id')) {
+            $onlinePayload['clickmeeting_event_id'] = $clickmeetingEventId;
+        }
+        if (\Illuminate\Support\Facades\Schema::connection('pneadm')->hasColumn('course_online_details', 'clickmeeting_join_enabled')) {
+            $onlinePayload['clickmeeting_join_enabled'] = $clickmeetingJoinEnabled;
+        }
+        if (\Illuminate\Support\Facades\Schema::connection('pneadm')->hasColumn('course_online_details', 'embed_on_pnedu')) {
+            $onlinePayload['embed_on_pnedu'] = $embedOnPnedu;
+        }
+
+        CourseOnlineDetail::query()->create($onlinePayload);
 
         $participant = Participant::query()->create([
             'course_id' => $course->id,

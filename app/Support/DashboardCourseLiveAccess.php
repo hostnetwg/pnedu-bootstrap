@@ -18,6 +18,9 @@ final class DashboardCourseLiveAccess
         public readonly bool $joinUnlocked = false,
         public readonly ?string $joinUnlockAtIso = null,
         public readonly ?string $joinUnlockHint = null,
+        public readonly bool $clickmeetingJoinEnabled = true,
+        public readonly bool $embedEnabled = false,
+        public readonly ?string $embedUrl = null,
     ) {}
 
     public static function hidden(): self

@@ -46,7 +46,7 @@ class DashboardParticipantsListing
                     ])->withCount(['videos', 'fileLinks']);
                 },
                 'course.instructor:id,title,first_name,last_name,gender',
-                'course.onlineDetail:id,course_id,platform,meeting_link,meeting_password',
+                'course.onlineDetail:id,course_id,platform,meeting_link,meeting_password,clickmeeting_event_id,clickmeeting_join_enabled,embed_on_pnedu',
                 'liveAccess',
             ])
             ->orderByRaw('COALESCE(courses.start_date, participants.created_at) DESC')

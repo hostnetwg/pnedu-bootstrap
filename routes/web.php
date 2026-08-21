@@ -165,6 +165,18 @@ Route::get('/dashboard/szkolenia/{participant}/wideo', [App\Http\Controllers\Das
     ->middleware(['auth', 'verified'])
     ->name('dashboard.szkolenia.wideo');
 
+Route::get('/dashboard/szkolenia/{participant}/transmisja', [App\Http\Controllers\DashboardController::class, 'szkoleniaTransmisja'])
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard.szkolenia.transmisja');
+
+Route::post('/dashboard/szkolenia/{participant}/transmisja/heartbeat', [App\Http\Controllers\DashboardController::class, 'szkoleniaTransmisjaHeartbeat'])
+    ->middleware(['auth', 'verified', 'throttle:60,1'])
+    ->name('dashboard.szkolenia.transmisja.heartbeat');
+
+Route::post('/dashboard/szkolenia/{participant}/transmisja/leave', [App\Http\Controllers\DashboardController::class, 'szkoleniaTransmisjaLeave'])
+    ->middleware(['auth', 'verified', 'throttle:60,1'])
+    ->name('dashboard.szkolenia.transmisja.leave');
+
 Route::post('/dashboard/szkolenia/{participant}/wideo/{video}/notatka', [App\Http\Controllers\DashboardController::class, 'saveTrainingVideoNote'])
     ->middleware(['auth', 'verified', 'throttle:60,1'])
     ->whereNumber('video')

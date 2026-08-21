@@ -34,16 +34,21 @@ class CourseOnlineDetail extends Model
         'platform',
         'meeting_link',
         'meeting_password',
+        'clickmeeting_event_id',
+        'clickmeeting_join_enabled',
+        'embed_on_pnedu',
+    ];
+
+    protected $casts = [
+        'clickmeeting_join_enabled' => 'boolean',
+        'embed_on_pnedu' => 'boolean',
     ];
 
     /**
      * Course online detail belongs to a course.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
     public function course(): BelongsTo
     {
         return $this->belongsTo(Course::class, 'course_id');
     }
 }
-
