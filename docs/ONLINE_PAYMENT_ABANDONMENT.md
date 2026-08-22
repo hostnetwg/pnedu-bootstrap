@@ -49,8 +49,49 @@ Brak migracji (kolumny `cancelled_at` / `cancelled_reason` już w bazie pneadm).
 
 ## Kolejne etapy (plan)
 
-- Etap 2: przycisk „Zapłać ponownie” na `/payment/pending`
+- ~~Etap 2: przycisk „Zapłać ponownie” na `/payment/pending`, mail startowy online~~ — **wdrożone** (patrz sekcja poniżej)
 - Etap 3: e-mail recovery (cron + ręcznie w adm)
 - Etap 4: badge/filtr „porzucona płatność” w adm
 
 Pełna strategia: wątek decyzyjny 2026-08-22 (60 min, auto-anulowanie, oba linki w mailu recovery).
+
+---
+
+## Etap 2 — wdrożone (retry + pending + mail startowy)
+
+### 1. Ponowienie płatności (signed URL)
+
+- Trasa: `GET /orders/{ident}/retry-payment` (`orders.retry-payment`), middleware `signed`.
+- Serwis: `App\Services\FormOrderOnlinePaymentRetryService`.
+- Tworzy nowy rekord `online_payment_orders` na tym samym `form_order_id`, ustawia `payment_status = awaiting_payment`, przekierowuje do PayU/PayNow.
+- Ważność linku: `config/order_form.php` → `online_retry_signed_url_days` (env: `ORDER_FORM_ONLINE_RETRY_SIGNED_URL_DAYS`, domyślnie 7).
+
+### 2. Strona `/payment/pending/{ident}`
+
+- Numer zamówienia (`form_orders.ident`), kwota, kontakt.
+- Przycisk **Zapłać ponownie** (signed URL).
+- Link **Wolę fakturę z odroczonym terminem** → formularz z `?prefill_from=` i `payment_type=deferred` (bez `order_ident`, nowe zamówienie odroczone anuluje stare online — Etap 1).
+
+### 3. E-mail po starcie płatności online
+
+- `App\Mail\OnlinePaymentStartedMail` — wysyłany po utworzeniu pierwszego `OnlinePaymentOrder` w checkout online oraz przy ponowieniu płatności.
+- Odbiorcy: e-mail zamawiającego + uczestników (bez duplikatów).
+- Zawiera: link retry, link FV odroczonej, link do strony pending.
+
+### Testy
+
+```bash
+cd pnedu
+sail test --filter=FormOrderOnlinePaymentRetry
+sail test --filter=OnlinePaymentStartedMail
+```
+
+### Deploy (pnedu)
+
+```bash
+cd /home/srv66127/domains/pnedu.pl/app
+git pull origin main
+/opt/alt/php82/usr/bin/php artisan optimize:clear
+```
+
+Brak migracji.

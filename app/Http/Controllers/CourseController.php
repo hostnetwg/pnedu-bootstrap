@@ -6,7 +6,6 @@ use App\Mail\OrderNotificationMail;
 use App\Models\Course;
 use App\Models\CoursePriceVariant;
 use App\Models\FormOrder;
-use App\Models\FormOrderParticipant;
 use App\Models\Participant;
 use App\Models\PaymentDisplayOption;
 use App\Services\Analytics\BackendAnalyticsTracker;
@@ -1027,6 +1026,8 @@ class CourseController extends Controller
             $this->orderFormResumeRouteParams($prefillPriceVariantId)
         );
 
+        $testData = $this->mergePrefillFromUnpaidOnlineOrder($course, $testData);
+
         $user = auth()->user();
         $fbSourceDefault = $this->resolveFbSourceDefaultForForm(null);
         $conversionPlacementDefault = $this->resolveConversionPlacementDefaultForForm((int) $course->id, null);
@@ -1153,6 +1154,38 @@ class CourseController extends Controller
     protected function messageWhenOrderEditLinkNotFound(): string
     {
         return 'Zamówienia powiązanego z tym linkiem nie ma już w systemie — mogło zostać trwale usunięte przez administratora. Możesz wypełnić poniższy formularz i przesłać zamówienie ponownie; zostanie ono zarejestrowane jako nowe.';
+    }
+
+    /**
+     * Prefill formularza z nieopłaconego zamówienia online (?prefill_from=) — np. przejście na FV odroczoną.
+     *
+     * @param  array<string, mixed>  $formData
+     * @return array<string, mixed>
+     */
+    protected function mergePrefillFromUnpaidOnlineOrder(Course $course, array $formData): array
+    {
+        $prefillFromIdent = trim((string) request()->query('prefill_from', ''));
+        if ($prefillFromIdent === '') {
+            return $formData;
+        }
+
+        $prefillOrder = FormOrder::query()
+            ->where('ident', $prefillFromIdent)
+            ->where('product_id', $course->id)
+            ->first();
+
+        $retryService = app(\App\Services\FormOrderOnlinePaymentRetryService::class);
+        if (! $prefillOrder || ! $retryService->canRetryPayment($prefillOrder)) {
+            return $formData;
+        }
+
+        $prefill = $this->orderFormPrefillFromFormOrder($prefillOrder);
+        unset($prefill['order_ident'], $prefill['order_id']);
+
+        $requestedPaymentType = request()->query('payment_type');
+        $prefill['payment_type'] = $requestedPaymentType === 'online' ? 'online' : 'deferred';
+
+        return array_merge($formData, $prefill);
     }
 
     /**
@@ -2022,6 +2055,17 @@ class CourseController extends Controller
                 $formOrder,
                 $validated['participant_email']
             );
+
+            try {
+                app(\App\Services\FormOrderOnlinePaymentRetryService::class)
+                    ->sendPaymentStartedMail($formOrder, $course, $onlineOrder);
+            } catch (\Throwable $mailException) {
+                Log::error('Error sending online payment started email', [
+                    'form_order_id' => $formOrder->id,
+                    'online_payment_order_id' => $onlineOrder->id,
+                    'error' => $mailException->getMessage(),
+                ]);
+            }
         } catch (Exception $e) {
             Log::error('Error creating FormOrder/OnlinePaymentOrder (order-form online)', [
                 'error' => $e->getMessage(),

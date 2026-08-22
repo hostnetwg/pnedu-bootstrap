@@ -25,4 +25,7 @@ return [
     /** Powód operacyjnego anulowania przy przejściu klienta na fakturę odroczoną. */
     'online_superseded_cancel_reason' => 'zastąpione zamówieniem odroczonym',
 
+    /** Ważność podpisanego linku „Zapłać ponownie” (dni). */
+    'online_retry_signed_url_days' => (int) env('ORDER_FORM_ONLINE_RETRY_SIGNED_URL_DAYS', 7),
+
 ];

@@ -10,6 +10,7 @@ use App\Models\Participant;
 use App\Models\WebhookLog;
 use App\Services\Analytics\BackendAnalyticsTracker;
 use App\Services\FormOrderCheckoutResumeService;
+use App\Services\FormOrderOnlinePaymentRetryService;
 use App\Services\PayNowService;
 use App\Services\PayUService;
 use Carbon\Carbon;
@@ -336,9 +337,75 @@ class PaymentController extends Controller
      */
     public function pending(string $ident)
     {
-        $order = OnlinePaymentOrder::where('ident', $ident)->with('course')->firstOrFail();
+        $order = OnlinePaymentOrder::where('ident', $ident)->with(['course', 'formOrder'])->firstOrFail();
 
-        return view('payment.pending', compact('order'));
+        if ($order->isPaid()) {
+            return redirect()->route('payment.success', $order->ident);
+        }
+
+        $formOrder = $order->formOrder;
+        $retryService = app(FormOrderOnlinePaymentRetryService::class);
+
+        $canRetryPayment = $formOrder !== null && $retryService->canRetryPayment($formOrder);
+        $retryPaymentUrl = $canRetryPayment ? $retryService->signedRetryUrl($formOrder) : null;
+        $deferredOrderFormUrl = $canRetryPayment ? $retryService->deferredOrderFormUrl($formOrder) : null;
+
+        $paymentFailed = $formOrder !== null && in_array($formOrder->payment_status, [
+            FormOrder::PAYMENT_STATUS_CANCELLED,
+            FormOrder::PAYMENT_STATUS_FAILED,
+        ], true);
+
+        return view('payment.pending', compact(
+            'order',
+            'formOrder',
+            'canRetryPayment',
+            'retryPaymentUrl',
+            'deferredOrderFormUrl',
+            'paymentFailed',
+        ));
+    }
+
+    /**
+     * Ponowienie płatności online dla zamówienia formularza (signed URL).
+     */
+    public function retryFormOrderPayment(Request $request, string $ident)
+    {
+        $formOrder = FormOrder::where('ident', $ident)->firstOrFail();
+        $retryService = app(FormOrderOnlinePaymentRetryService::class);
+
+        if (! $retryService->canRetryPayment($formOrder)) {
+            return redirect()
+                ->route('courses.show', $formOrder->product_id)
+                ->with('error', 'To zamówienie nie kwalifikuje się już do ponowienia płatności online.');
+        }
+
+        try {
+            $onlineOrder = $retryService->createRetryPaymentAttempt($formOrder, $request->ip());
+            $course = $formOrder->course ?? \App\Models\Course::findOrFail($formOrder->product_id);
+            $retryService->sendPaymentStartedMail($formOrder, $course, $onlineOrder);
+        } catch (\Throwable $exception) {
+            Log::error('retryFormOrderPayment: błąd tworzenia próby płatności', [
+                'form_order_ident' => $ident,
+                'message' => $exception->getMessage(),
+            ]);
+
+            $latestAttempt = OnlinePaymentOrder::query()
+                ->where('form_order_id', $formOrder->id)
+                ->orderByDesc('id')
+                ->first();
+
+            if ($latestAttempt) {
+                return redirect()
+                    ->route('payment.pending', $latestAttempt->ident)
+                    ->with('error', 'Nie udało się przygotować płatności. Spróbuj ponownie za chwilę.');
+            }
+
+            return redirect()
+                ->route('courses.show', $formOrder->product_id)
+                ->with('error', 'Nie udało się przygotować płatności. Skontaktuj się z nami: kontakt@pnedu.pl');
+        }
+
+        return $retryService->redirectToGateway($onlineOrder);
     }
 
     /**

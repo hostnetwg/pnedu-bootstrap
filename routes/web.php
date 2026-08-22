@@ -277,6 +277,9 @@ Route::get('/payment/paynow/return', [App\Http\Controllers\PaymentController::cl
 // Strony po płatności
 Route::get('/payment/success/{ident}', [App\Http\Controllers\PaymentController::class, 'success'])->name('payment.success');
 Route::get('/payment/pending/{ident}', [App\Http\Controllers\PaymentController::class, 'pending'])->name('payment.pending');
+Route::get('/orders/{ident}/retry-payment', [App\Http\Controllers\PaymentController::class, 'retryFormOrderPayment'])
+    ->middleware('signed')
+    ->name('orders.retry-payment');
 // Zamówienie z odroczonym terminem
 Route::get('/courses/{id}/deferred-order/test', [App\Http\Controllers\CourseController::class, 'deferredOrder'])->name('payment.deferred.test');
 Route::get('/courses/{id}/deferred-order/edit/{ident}', [App\Http\Controllers\CourseController::class, 'deferredOrder'])
