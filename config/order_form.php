@@ -28,4 +28,7 @@ return [
     /** Ważność podpisanego linku „Zapłać ponownie” (dni). */
     'online_retry_signed_url_days' => (int) env('ORDER_FORM_ONLINE_RETRY_SIGNED_URL_DAYS', 7),
 
+    /** Recovery e-mail (Etap 3) — cron + ręcznie z adm. */
+    'online_recovery_enabled' => (bool) env('ORDER_FORM_ONLINE_RECOVERY_ENABLED', true),
+
 ];

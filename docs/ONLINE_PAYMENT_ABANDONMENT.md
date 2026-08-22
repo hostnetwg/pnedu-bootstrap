@@ -50,7 +50,7 @@ Brak migracji (kolumny `cancelled_at` / `cancelled_reason` już w bazie pneadm).
 ## Kolejne etapy (plan)
 
 - ~~Etap 2: przycisk „Zapłać ponownie” na `/payment/pending`, mail startowy online~~ — **wdrożone** (patrz sekcja poniżej)
-- Etap 3: e-mail recovery (cron + ręcznie w adm)
+- ~~Etap 3: e-mail recovery (cron + ręcznie w adm)~~ — **wdrożone** (patrz sekcja poniżej)
 - Etap 4: badge/filtr „porzucona płatność” w adm
 
 Pełna strategia: wątek decyzyjny 2026-08-22 (60 min, auto-anulowanie, oba linki w mailu recovery).
@@ -95,3 +95,60 @@ git pull origin main
 ```
 
 Brak migracji.
+
+---
+
+## Etap 3 — wdrożone (recovery e-mail: cron + adm)
+
+### 1. Automatyczny cron (pnedu)
+
+- Komenda: `form-orders:send-online-payment-recovery-emails` (co godzinę przez `schedule:run`).
+- Wysyła **jeden** recovery e-mail na zamówienie (`online_payment_recovery_sent_at`).
+- Kandydaci: porzucone nieopłacone online (`FormOrderOnlineAbandonmentService::isAbandonedUnpaidOnline`) — failed/cancelled od razu, `awaiting_payment` po ≥ 60 min.
+- Mail: `OnlinePaymentRecoveryMail` — linki **Zapłać ponownie** + **FV odroczona** + pending.
+- Konfiguracja: `online_recovery_enabled` (env: `ORDER_FORM_ONLINE_RECOVERY_ENABLED`).
+
+```bash
+cd pnedu
+sail artisan form-orders:send-online-payment-recovery-emails --dry-run
+```
+
+### 2. Ręcznie z adm (pneadm)
+
+- Przycisk na stronie zamówienia: **Wyślij mail recovery płatności** (pasek „Rozliczenie”).
+- Wywołanie server-to-server: `POST /api/internal/form-orders/{id}/send-online-payment-recovery` (pnedu, token `PNEDU_INTERNAL_API_TOKEN`).
+- Ręczna wysyłka **może powtórzyć** mail (`allow_resend=true`).
+
+### 3. Migracja (pneadm → baza pneadm)
+
+Kolumna `form_orders.online_payment_recovery_sent_at` (nullable timestamp).
+
+### Testy
+
+```bash
+cd pnedu
+sail test --filter=FormOrderOnlinePaymentRecovery
+sail test --filter=OnlinePaymentRecoveryMail
+
+cd ../pneadm
+sail test --filter=PneduOnlinePaymentRecovery
+```
+
+### Deploy
+
+**pnedu:**
+```bash
+cd /home/srv66127/domains/pnedu.pl/app
+git pull origin main
+/opt/alt/php82/usr/bin/php artisan optimize:clear
+```
+
+**pneadm** (migracja + adm):
+```bash
+cd /home/srv66127/domains/adm.pnedu.pl/pneadm
+git pull origin main
+/opt/alt/php82/usr/bin/php artisan migrate --force
+/opt/alt/php82/usr/bin/php artisan optimize:clear
+```
+
+Cron pnedu: `schedule:run` musi obejmować nową komendę hourly (istniejący cron daily — sprawdź czy prod ma `* * * * * schedule:run` lub dodaj osobny wpis).

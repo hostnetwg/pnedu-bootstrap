@@ -10,6 +10,7 @@ Artisan::command('inspire', function () {
 
 Schedule::command('users:send-verification-reminders')->daily();
 Schedule::command('users:purge-unverified')->daily();
+Schedule::command('form-orders:send-online-payment-recovery-emails')->hourly();
 
 /*
  * Kolejka (analytics, Sendy, e-mail) — NIE przez schedule:run na produkcji.
