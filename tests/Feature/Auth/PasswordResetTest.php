@@ -147,6 +147,29 @@ class PasswordResetTest extends TestCase
         });
     }
 
+    public function test_initial_password_setup_screen_locks_email_from_query_string(): void
+    {
+        Notification::fake();
+
+        $user = User::factory()->create([
+            'last_login_at' => null,
+            'login_count' => 0,
+        ]);
+
+        $this->post('/forgot-password', ['email' => $user->email]);
+
+        Notification::assertSentTo($user, SystemResetPassword::class, function ($notification) use ($user) {
+            $response = $this->get('/ustaw-haslo/'.$notification->token.'?email='.urlencode($user->email));
+
+            $response->assertOk();
+            $response->assertSee('value="'.$user->email.'"', false);
+            $response->assertSee('readonly', false);
+            $response->assertSee('Adres e-mail uczestnika podany w zamówieniu.', false);
+
+            return true;
+        });
+    }
+
     public function test_initial_password_setup_success_message_does_not_say_reset(): void
     {
         Notification::fake();

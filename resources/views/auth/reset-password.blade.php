@@ -33,11 +33,20 @@
                             <input type="hidden" name="redirect" value="{{ $redirectAfterSetup }}">
                         @endif
 
+                        @php
+                            $prefilledResetEmail = old('email', $request->email);
+                            $lockResetEmail = (bool) old('email_locked', filled($request->query('email')));
+                        @endphp
+
                         <div class="row mb-3">
                             <label for="email" class="col-md-4 col-form-label text-md-end">{{ __('Email') }}</label>
 
                             <div class="col-md-6">
-                                <input id="email" type="email" class="form-control @error('email') is-invalid @enderror" name="email" value="{{ old('email', $request->email) }}" required autocomplete="email" autofocus
+                                @if($lockResetEmail)
+                                    <input type="hidden" name="email_locked" value="1">
+                                @endif
+                                <input id="email" type="email" class="form-control @error('email') is-invalid @enderror @if($lockResetEmail) bg-light @endif" name="email" value="{{ $prefilledResetEmail }}" required autocomplete="email" autofocus
+                                    @if($lockResetEmail) readonly @endif
                                     @error('email') aria-invalid="true" aria-describedby="reset-password-email-error" @enderror>
 
                                 @error('email')
@@ -45,6 +54,9 @@
                                         {{ $message }}
                                     </div>
                                 @enderror
+                                @if($lockResetEmail && $prefilledResetEmail)
+                                    <p class="form-text mb-0">Adres e-mail uczestnika podany w zamówieniu.</p>
+                                @endif
                             </div>
                         </div>
 

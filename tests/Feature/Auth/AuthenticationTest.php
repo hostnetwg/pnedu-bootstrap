@@ -17,6 +17,17 @@ class AuthenticationTest extends TestCase
         $response->assertStatus(200);
     }
 
+    public function test_login_screen_prefills_and_locks_email_from_query_string(): void
+    {
+        $response = $this->get('/login?email='.urlencode('uczestnik@example.test'));
+
+        $response->assertOk();
+        $response->assertSee('value="uczestnik@example.test"', false);
+        $response->assertSee('readonly', false);
+        $response->assertSee('Adres e-mail uczestnika podany w zamówieniu.', false);
+        $response->assertSessionHas('login_email_hint', 'uczestnik@example.test');
+    }
+
     public function test_users_can_authenticate_using_the_login_screen(): void
     {
         $user = User::factory()->create();

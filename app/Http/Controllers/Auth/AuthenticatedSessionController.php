@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Models\User;
 use App\Support\DashboardResourceCounts;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -15,8 +16,13 @@ class AuthenticatedSessionController extends Controller
     /**
      * Display the login view.
      */
-    public function create(): View
+    public function create(Request $request): View
     {
+        $emailFromQuery = User::normalizeEmail((string) $request->query('email', ''));
+        if ($emailFromQuery !== null) {
+            $request->session()->flash('login_email_hint', $emailFromQuery);
+        }
+
         return view('auth.login');
     }
 

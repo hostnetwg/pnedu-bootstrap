@@ -65,16 +65,22 @@
                             $loginEmailRuleFailed = $errors->has('email');
                             $loginEmailHighlighted = $loginEmailRuleFailed || $loginCredentialsFailed;
                             $loginEmailInvalidNoIcon = $loginCredentialsFailed && ! $loginEmailRuleFailed;
+                            $prefilledLoginEmail = old('email', session('login_email_hint', request('email')));
+                            $lockLoginEmail = (bool) old('email_locked', filled(request('email')) || filled(session('login_email_hint')));
                         @endphp
 
                         <div class="row mb-3">
                             <label for="email" class="col-md-4 col-form-label text-md-end">{{ __('Email') }}</label>
 
                             <div class="col-md-6">
+                                @if($lockLoginEmail)
+                                    <input type="hidden" name="email_locked" value="1">
+                                @endif
                                 <input id="email" type="email"
-                                    class="form-control @if($loginEmailHighlighted) is-invalid @endif @if($loginEmailInvalidNoIcon) login-email-invalid-border-only @endif"
+                                    class="form-control @if($loginEmailHighlighted) is-invalid @endif @if($loginEmailInvalidNoIcon) login-email-invalid-border-only @endif @if($lockLoginEmail) bg-light @endif"
                                     name="email"
-                                    value="{{ old('email', session('login_email_hint')) }}"
+                                    value="{{ $prefilledLoginEmail }}"
+                                    @if($lockLoginEmail) readonly @endif
                                     required
                                     autocomplete="email"
                                     autofocus
@@ -89,6 +95,9 @@
                                         {{ $message }}
                                     </div>
                                 @enderror
+                                @if($lockLoginEmail && $prefilledLoginEmail)
+                                    <p class="form-text mb-0">Adres e-mail uczestnika podany w zamówieniu.</p>
+                                @endif
                             </div>
                         </div>
 
