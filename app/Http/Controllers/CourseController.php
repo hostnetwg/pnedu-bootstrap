@@ -1193,9 +1193,21 @@ class CourseController extends Controller
      */
     protected function inferBuyerTypeFromFormOrder(FormOrder $order): string
     {
-        $nip = trim((string) ($order->buyer_nip ?? ''));
+        return \App\Support\OrderFormCustomerProfile::buyerTypeForProfile(
+            $this->inferCustomerProfileFromFormOrder($order)
+        );
+    }
 
-        return $nip !== '' ? 'organisation' : 'person';
+    /**
+     * Profil V2: person / school / organisation — wg NIP nabywcy i odbiorcy.
+     */
+    protected function inferCustomerProfileFromFormOrder(FormOrder $order): string
+    {
+        return \App\Support\OrderFormCustomerProfile::fromBuyerAndRecipient(
+            $order->buyer_nip,
+            $order->recipient_nip,
+            $order->recipient_name
+        );
     }
 
     /**
@@ -1320,10 +1332,12 @@ class CourseController extends Controller
     protected function orderFormPrefillFromFormOrder(FormOrder $existingOrder): array
     {
         $participantPrefill = $this->participantPrefillFromFormOrder($existingOrder);
-        $buyerType = $this->inferBuyerTypeFromFormOrder($existingOrder);
+        $customerProfile = $this->inferCustomerProfileFromFormOrder($existingOrder);
+        $buyerType = \App\Support\OrderFormCustomerProfile::buyerTypeForProfile($customerProfile);
         $recipientIdentity = app(OrderFormRecipientIdentityService::class)->prefillFromFormOrder($existingOrder);
 
         $orderData = [
+            'customer_profile' => $customerProfile,
             'buyer_type' => $buyerType,
             'payment_type' => ($existingOrder->payment_mode === FormOrder::PAYMENT_MODE_ONLINE_GATEWAY) ? 'online' : 'deferred',
             'buyer_name' => $existingOrder->buyer_name,

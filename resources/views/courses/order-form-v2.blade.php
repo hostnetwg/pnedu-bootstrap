@@ -88,7 +88,11 @@
     use App\Support\OrderFormV2ParticipantDefaults;
 
     $field = static fn (string $name, mixed $default = '') => old($name, $testData[$name] ?? $default);
-    $profile = old('customer_profile', 'school');
+    $profile = old(
+        'customer_profile',
+        $testData['customer_profile']
+            ?? (($testData['buyer_type'] ?? null) === 'person' ? 'person' : 'school')
+    );
     $participantIsContact = $profile === 'person' && (bool) old(
         'participant_is_contact',
         OrderFormV2ParticipantDefaults::isParticipantSameAsContactDefault($profile)
@@ -104,6 +108,9 @@
         $hasOptionalRecipient = $profile === 'school';
     }
     $paymentType = old('payment_type', $testData['payment_type'] ?? ($profile === 'person' ? 'online' : 'deferred'));
+    $applyPrefillOnLoad = request()->filled('prefill_from')
+        || filled($testData['customer_profile'] ?? null)
+        || (filled($testData['payment_type'] ?? null) && filled($testData['contact_email'] ?? null));
     $rawVariantId = old('price_variant_id', $prefillPriceVariantId ?? ($testData['price_variant_id'] ?? null));
     $priceInfo = $course->getPriceInfoForOrderFormHeader(filled($rawVariantId) ? (int) $rawVariantId : null);
     $contactName = $field('contact_name');
@@ -778,6 +785,11 @@
     if (fillTestButton && Object.keys(testData).length > 0) {
         fillTestButton.addEventListener('click', applyTestDataToForm);
     }
+    @if($applyPrefillOnLoad ?? false)
+    if (Object.keys(testData).length > 0) {
+        applyTestDataToForm();
+    }
+    @endif
     form.addEventListener('submit', function (event) {
         syncContactNameHidden();
         syncContact();

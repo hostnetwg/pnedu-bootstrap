@@ -71,6 +71,7 @@ Pełna strategia: wątek decyzyjny 2026-08-22 (60 min, auto-anulowanie, oba link
 - Numer zamówienia (`form_orders.ident`), kwota, kontakt.
 - Przycisk **Zapłać ponownie** (signed URL).
 - Link **Wolę fakturę z odroczonym terminem** → formularz z `?prefill_from=` i `payment_type=deferred` (bez `order_ident`, nowe zamówienie odroczone anuluje stare online — Etap 1).
+- Prefill V2 wybiera profil: brak NIP nabywcy → **Osoba prywatna**; NIP nabywcy + (NIP lub nazwa odbiorcy) → **Szkoła / JST**; tylko NIP nabywcy → **Placówka / firma**; płatność z URL (`deferred`).
 
 ### 3. E-mail po starcie płatności online
 
