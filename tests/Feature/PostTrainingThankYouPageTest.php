@@ -20,6 +20,7 @@ class PostTrainingThankYouPageTest extends TestCase
             ->assertSee('Dziękujemy za udział w szkoleniu')
             ->assertSee('Materiały szkoleniowe są już dostępne na Twoim koncie')
             ->assertSee('Nagranie i zaświadczenie pojawią się wkrótce')
+            ->assertSee('możesz też zajrzeć później na swoje konto na pnedu.pl')
             ->assertSee('Zaloguj się na pnedu.pl')
             ->assertSee('window.top.location.replace', false);
     }
@@ -34,7 +35,7 @@ class PostTrainingThankYouPageTest extends TestCase
             ->get(route('post-training.thank-you', ['course' => 1]))
             ->assertOk()
             ->assertSee('Dziękujemy za udział w szkoleniu')
-            ->assertSee('Przejdź do Twoich szkoleń')
+            ->assertSee('Przejdź do Twoich zasobów')
             ->assertSee('Strona główna')
             ->assertDontSee('Zaloguj się na pnedu.pl')
             ->assertSee('dashboard', false);

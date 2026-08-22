@@ -91,7 +91,7 @@
         <p class="text-muted mb-3">
             <strong>Materiały szkoleniowe są już dostępne na Twoim koncie.</strong>
             Nagranie i zaświadczenie pojawią się wkrótce — potrzebujemy chwili, by je przygotować i udostępnić.
-            O gotowości poinformujemy Cię osobnym e-mailem.
+            O gotowości damy znać osobnym e-mailem — możesz też zajrzeć później na swoje konto na pnedu.pl.
         </p>
 
         <ul class="list-unstyled text-start post-training-thanks-list mb-3 mx-auto" style="max-width: 24rem;">
@@ -130,7 +130,7 @@
             @if($isAuthenticated)
                 <a href="{{ $dashboardUrl }}" class="btn btn-primary btn-lg">
                     <i class="bi bi-grid me-1"></i>
-                    Przejdź do Twoich szkoleń
+                    Przejdź do Twoich zasobów
                 </a>
             @else
                 <a href="{{ $loginUrl }}" class="btn btn-primary btn-lg">
