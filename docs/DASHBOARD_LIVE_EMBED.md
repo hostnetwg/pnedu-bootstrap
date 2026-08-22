@@ -24,7 +24,7 @@ Obie ścieżki korzystają z tego samego rekordu `participant_live_access` (toke
 | 5 | **Jeden aktywny token** na uczestnika; przy ponownym wejściu embed: nowy token + `DELETE` starego w CM |
 | 6 | Anty-sharing: slot obecności Laravel (1 sesja / uczestnik) + wspólny token z mailem |
 | 7 | Embed widoczny dla **wszystkich** uczestników kursu (wg radio w adm). `CLICKMEETING_EMBED_ALLOWLIST` opcjonalny; pusty/brak = bez ograniczenia |
-| 8 | **Maile (provision FORM + „Wyślij link do live”) na razie bez zmian** — nadal bezpośredni URL ClickMeeting; radio steruje tylko UI na pnedu (2026-08-21) |
+| 8 | Przy trybie embed admin ma checkbox **Link w e-mailu do osadzonego w PNEDU pokoju** (domyślnie ON). ON = główny link maila do `/transmisja` + alternatywny bezpośredni CM; OFF = mail jak dotychczas (bezpośredni CM). |
 
 ## Adm (pneadm)
 
@@ -39,6 +39,7 @@ Kolumny:
 
 - `course_online_details.clickmeeting_join_enabled` (bool, default **true**)
 - `course_online_details.embed_on_pnedu` (bool, default **false**)
+- `course_online_details.embed_email_link_enabled` (bool, default **true**) — działa tylko gdy `embed_on_pnedu = true`
 - `participant_live_access.embed_token_consumed_at` — lokalna flaga „ten token już wpuszczono w embed” (bez czekania na `first_use_date` CM)
 
 Migracje (pneadm):
@@ -46,13 +47,17 @@ Migracje (pneadm):
 - `2026_08_20_200210_…embed_on_pnedu…`
 - `2026_08_21_181500_…clickmeeting_join_enabled…`
 - `2026_08_21_182800_…normalize_live_room_mode…` (ustawia dokładnie jedną opcję na istniejących wierszach)
+- `2026_08_22_131100_…embed_email_link_enabled…`
 - `2026_08_20_230500_…embed_token_consumed_at…`
 
 ```bash
 cd /home/hostnet/WEB-APP/pneadm && sail artisan migrate
 ```
 
-Pole formularza: `live_room_mode` = `clickmeeting` \| `embed_pnedu` → `CoursesController::resolveLiveRoomFlags()`.
+Pola formularza:
+
+- `live_room_mode` = `clickmeeting` \| `embed_pnedu` → `CoursesController::resolveLiveRoomFlags()`
+- `embed_email_link_enabled` — checkbox widoczny przy `embed_pnedu`
 
 ## Pnedu — przepływ użytkownika
 
@@ -93,12 +98,10 @@ Limit CM (dokumentacja vendor): max tokenów na wydarzenie ≈ **4 ×** max ucze
 
 | Akcja adm | Co robi względem embed |
 |-----------|-------------------------|
-| **Dodaj uczestnika do PNEDU** | Tworzy konto + provision CM + mail z **bezpośrednim** linkiem CM (bez URL `/transmisja`) |
-| **Wyślij link do live** | Mail z **bezpośrednim** linkiem CM |
+| **Dodaj uczestnika do PNEDU** | Tworzy konto + provision CM + mail. Gdy `embed_email_link_enabled = true`, główny link prowadzi do `/transmisja`, a bezpośredni CM jest alternatywą; gdy false — mail jak dawniej z bezpośrednim CM. |
+| **Wyślij link do live** | Ta sama reguła dla maila live uczestnika. |
 
-Radio **nie** zmienia treści tych maili (decyzja 8). Embed działa dopiero po wejściu na pnedu, gdy kurs ma `embed_on_pnedu`.
-
-Opcja na później (nie wdrożona): CTA w mailu → `/transmisja`, gdy włączony tryb osadzony.
+Embed w mailu jest sterowany osobnym checkboxem, żeby można było mieć przycisk embed w panelu pnedu, ale nadal wysyłać stare maile z bezpośrednim CM.
 
 ## Testy
 
