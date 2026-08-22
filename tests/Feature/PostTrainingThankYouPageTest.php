@@ -22,6 +22,21 @@ class PostTrainingThankYouPageTest extends TestCase
             ->assertSee('window.top.location.replace', false);
     }
 
+    public function test_thank_you_page_for_authenticated_user_uses_app_layout_and_dashboard_cta(): void
+    {
+        $user = \App\Models\User::factory()->create([
+            'email_verified_at' => now(),
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('post-training.thank-you', ['course' => 1]))
+            ->assertOk()
+            ->assertSee('Dziękujemy za udział w szkoleniu')
+            ->assertSee('Przejdź do Twoich szkoleń')
+            ->assertDontSee('Zaloguj się na pnedu.pl')
+            ->assertSee('dashboard', false);
+    }
+
     public function test_thank_you_page_shows_course_title_for_clickmeeting_event(): void
     {
         if (! $this->tablesReady()) {

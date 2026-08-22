@@ -6,6 +6,7 @@ use App\Models\CourseVideo;
 use App\Models\Participant;
 use App\Models\ParticipantTrainingVideoNote;
 use App\Models\PneadmCourseSurveyLink;
+use App\Services\ClickMeetingService;
 use App\Services\DashboardCourseLiveAccessService;
 use App\Services\LiveTransmissionPresenceService;
 use App\Services\LiveTransmissionService;
@@ -366,6 +367,8 @@ class DashboardController extends Controller
         }
 
         $courseId = (int) ($participant->course_id ?? $participant->course?->id ?? 0);
+        $participant->loadMissing('course.onlineDetail');
+        $eventId = trim((string) ($participant->course?->onlineDetail?->clickmeeting_event_id ?? ''));
 
         return view('dashboard.szkolenia-transmisja', [
             'participant' => $participant,
@@ -384,6 +387,9 @@ class DashboardController extends Controller
             'postTrainingThankYouUrl' => $courseId > 0
                 ? route('post-training.thank-you', ['course' => $courseId])
                 : route('post-training.thank-you'),
+            'meetingStatusUrl' => $eventId !== ''
+                ? route('dashboard.szkolenia.transmisja.meeting-status', $participant)
+                : null,
             'presenceHeartbeatUrl' => route('dashboard.szkolenia.transmisja.heartbeat', $participant),
             'presenceLeaveUrl' => route('dashboard.szkolenia.transmisja.leave', $participant),
             'presenceHeartbeatMs' => $presenceService->heartbeatIntervalSeconds() * 1000,
@@ -401,6 +407,43 @@ class DashboardController extends Controller
         return redirect()
             ->route('dashboard.szkolenia')
             ->with('error', $message);
+    }
+
+    public function szkoleniaTransmisjaMeetingStatus(
+        Request $request,
+        Participant $participant,
+        ClickMeetingService $clickMeeting
+    ): JsonResponse {
+        if ($redirect = $this->redirectToLoginWhenTrainingEmailMismatch($request, $participant)) {
+            return response()->json(['ok' => false, 'ended' => false, 'error' => 'auth'], 401);
+        }
+
+        $this->assertParticipantBelongsToUser($participant);
+
+        $participant->loadMissing('course.onlineDetail');
+        $eventId = trim((string) ($participant->course?->onlineDetail?->clickmeeting_event_id ?? ''));
+        $courseId = (int) ($participant->course_id ?? $participant->course?->id ?? 0);
+        $thankYouUrl = $courseId > 0
+            ? route('post-training.thank-you', ['course' => $courseId])
+            : route('post-training.thank-you');
+
+        if ($eventId === '') {
+            return response()->json([
+                'ok' => true,
+                'ended' => false,
+                'thank_you_url' => $thankYouUrl,
+            ]);
+        }
+
+        $status = $clickMeeting->isConferenceEnded($eventId);
+
+        return response()->json([
+            'ok' => (bool) ($status['success'] ?? false),
+            'ended' => (bool) ($status['ended'] ?? false),
+            'status' => $status['status'] ?? null,
+            'thank_you_url' => $thankYouUrl,
+            'error' => $status['error'] ?? null,
+        ]);
     }
 
     public function szkoleniaTransmisjaHeartbeat(

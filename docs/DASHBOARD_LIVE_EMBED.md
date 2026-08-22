@@ -78,10 +78,14 @@ Szczegóły maila provision: `pneadm/docs/FORM_ORDERS_PNEDU_PROVISION.md`.
 4. Desktop embed: iframe CM (`?bare=1`), auto pełny ekran (gate modal), belka PNE z napisem „NODN Platforma Nowoczesnej Edukacji”.
 5. Esc / „Wyjdź z pełnego ekranu” = tylko wyjście z FS (pokój zostaje).
 6. „Zamknij transmisję” = modal → zwolnienie slotu obecności + **przekierowanie na** `/po-szkoleniu?course={id}` (strona podziękowania). W trybie fullscreen host (`bare=1`) parent dostaje `postMessage` i też idzie na tę stronę.
+7. **Auto po „Zakończ dla wszystkich”:** `/transmisja` polluje `GET …/transmisja/meeting-status` (co ~12 s, cache CM 12 s). Gdy API CM ma `status=inactive`, uczestnik jest automatycznie kierowany na `/po-szkoleniu`.
 
 **Uwaga (embed vs CM full page):** ustawienie thank-you URL w CM przekierowuje przeglądarkę tylko w pełnym oknie ClickMeeting. W **iframe** na pnedu CM często zostawia czarny ekran końca — dlatego pnedu:
 - przy zamykaniu transmisji sam prowadzi na `/po-szkoleniu`;
+- polluje status wydarzenia w CM i po `inactive` zamyka embed automatycznie;
 - jeśli CM jednak załaduje `/po-szkoleniu` w iframe, skrypt na stronie podziękowania (i listener `load` iframe) wyciąga widok do top-level.
+
+**Zalogowany vs gość na `/po-szkoleniu`:** zalogowany → layout z menu i stopką pnedu + CTA „Przejdź do Twoich szkoleń”; gość (redirect z CM poza kontem) → uproszczony layout + „Zaloguj się”.
 
 ### Tokeny (model)
 

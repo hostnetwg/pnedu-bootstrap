@@ -191,6 +191,10 @@ Route::post('/dashboard/szkolenia/{participant}/transmisja/leave', [App\Http\Con
     ->middleware(['auth', 'verified', 'throttle:60,1'])
     ->name('dashboard.szkolenia.transmisja.leave');
 
+Route::get('/dashboard/szkolenia/{participant}/transmisja/meeting-status', [App\Http\Controllers\DashboardController::class, 'szkoleniaTransmisjaMeetingStatus'])
+    ->middleware(['auth', 'verified', 'throttle:30,1'])
+    ->name('dashboard.szkolenia.transmisja.meeting-status');
+
 Route::post('/dashboard/szkolenia/{participant}/wideo/{video}/notatka', [App\Http\Controllers\DashboardController::class, 'saveTrainingVideoNote'])
     ->middleware(['auth', 'verified', 'throttle:60,1'])
     ->whereNumber('video')

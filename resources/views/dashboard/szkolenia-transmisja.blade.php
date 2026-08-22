@@ -462,6 +462,54 @@
         });
     }
 
+    // Auto: prezenter zakończył wydarzenie (CM status=inactive) → podziękowanie.
+    const meetingStatusUrl = @json($meetingStatusUrl ?? null);
+    let meetingEndedHandled = false;
+    function pollMeetingEnded() {
+        if (!meetingStatusUrl || meetingEndedHandled) {
+            return;
+        }
+        fetch(meetingStatusUrl, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+            credentials: 'same-origin',
+        }).then(function (res) {
+            if (!res.ok) {
+                return null;
+            }
+            return res.json();
+        }).then(function (data) {
+            if (!data || !data.ended) {
+                return;
+            }
+            meetingEndedHandled = true;
+            if (typeof data.thank_you_url === 'string' && data.thank_you_url !== '') {
+                // Preferuj URL z API (zawsze z course=).
+                try {
+                    if (window.top && window.top !== window.self) {
+                        window.top.postMessage({
+                            type: 'cm-embed-close',
+                            thankYouUrl: data.thank_you_url,
+                        }, window.location.origin);
+                        releasePresence();
+                        return;
+                    }
+                } catch (e) {}
+                releasePresence();
+                window.location.href = data.thank_you_url;
+                return;
+            }
+            closeTransmission();
+        }).catch(function () {});
+    }
+    if (meetingStatusUrl) {
+        setTimeout(pollMeetingEnded, 8000);
+        setInterval(pollMeetingEnded, 12000);
+    }
+
     btn.addEventListener('click', toggleFullscreen);
     if (exitBtn) {
         exitBtn.addEventListener('click', function () {

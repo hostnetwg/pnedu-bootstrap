@@ -61,6 +61,53 @@ class ClickMeetingService
     }
 
     /**
+     * Czy wydarzenie jest zakończone / niedostępne (np. po „Zakończ dla wszystkich”).
+     * Wynik cache’owany krótko — wielu uczestników polluje ten sam event z /transmisja.
+     *
+     * @return array{success: bool, ended: bool, status?: string|null, error?: string}
+     */
+    public function isConferenceEnded(string $eventId): array
+    {
+        $eventId = trim($eventId);
+        if ($eventId === '' || ! preg_match('/^\d{1,20}$/', $eventId)) {
+            return [
+                'success' => false,
+                'ended' => false,
+                'error' => 'Nieprawidłowe ID wydarzenia ClickMeeting.',
+            ];
+        }
+
+        $cacheKey = 'cm:conference_ended:'.$eventId;
+
+        $cached = \Illuminate\Support\Facades\Cache::remember($cacheKey, 12, function () use ($eventId) {
+            $result = $this->getConference($eventId);
+            if (! ($result['success'] ?? false)) {
+                return [
+                    'success' => false,
+                    'ended' => false,
+                    'error' => (string) ($result['error'] ?? 'Nie udało się pobrać wydarzenia.'),
+                ];
+            }
+
+            $status = strtolower(trim((string) data_get($result, 'conference.status', '')));
+            // API: active | inactive — po zamknięciu przez prezentera zwykle inactive.
+            $ended = $status === 'inactive';
+
+            return [
+                'success' => true,
+                'ended' => $ended,
+                'status' => $status !== '' ? $status : null,
+            ];
+        });
+
+        return is_array($cached) ? $cached : [
+            'success' => false,
+            'ended' => false,
+            'error' => 'Nie udało się odczytać statusu wydarzenia.',
+        ];
+    }
+
+    /**
      * @return array{success: bool, error?: string, token?: string}
      */
     public function getAccessTokenForEmail(string $eventId, string $email): array
