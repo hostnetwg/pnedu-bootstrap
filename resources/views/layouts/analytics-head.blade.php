@@ -11,9 +11,9 @@
         @endphp
         @if(!empty($gtmId) || !empty($gaId))
             <script>
-                // Chrome/Firefox can show a permission prompt ("Apps on device" / Local Network Access)
-                // when a page attempts to connect to localhost or private network ranges. Some third-party
-                // tags may probe local endpoints; blocking these avoids the prompt without disabling analytics.
+                // Chrome/Opera: prompt „dostęp do innych aplikacji…” gdy strona łączy się z localhost.
+                // Główna blokada: HTTP Permissions-Policy (DenyLocalNetworkAccessPolicy).
+                // Ten skrypt to zapas: fetch/XHR/sendBeacon/WebSocket do hostów prywatnych.
                 (function () {
                     function isPrivateOrLoopbackHost(hostname) {
                         if (!hostname) { return false; }
@@ -60,6 +60,33 @@
                             }
                             return _open.apply(this, arguments);
                         };
+                    }
+
+                    // sendBeacon (częsty w tagach GA/GTM)
+                    if (navigator.sendBeacon) {
+                        var _beacon = navigator.sendBeacon.bind(navigator);
+                        navigator.sendBeacon = function (url, data) {
+                            if (shouldBlockUrl(url)) {
+                                return false;
+                            }
+                            return _beacon(url, data);
+                        };
+                    }
+
+                    // WebSocket → localhost
+                    if (typeof window.WebSocket === 'function') {
+                        var _WS = window.WebSocket;
+                        window.WebSocket = function (url, protocols) {
+                            if (shouldBlockUrl(url)) {
+                                throw new Error('Blocked local network request');
+                            }
+                            return protocols === undefined ? new _WS(url) : new _WS(url, protocols);
+                        };
+                        window.WebSocket.prototype = _WS.prototype;
+                        window.WebSocket.CONNECTING = _WS.CONNECTING;
+                        window.WebSocket.OPEN = _WS.OPEN;
+                        window.WebSocket.CLOSING = _WS.CLOSING;
+                        window.WebSocket.CLOSED = _WS.CLOSED;
                     }
                 })();
             </script>

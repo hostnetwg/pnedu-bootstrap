@@ -41,6 +41,18 @@ class MarketingAnalyticsOptOutTest extends TestCase
         $this->assertNotFalse($blockerPos, 'Brak skryptu blokującego Local Network Access.');
         $this->assertNotFalse($gtmPos, 'Brak GTM w nagłówku analityki.');
         $this->assertLessThan($gtmPos, $blockerPos, 'Blokada localhost musi być przed GTM.');
+        $this->assertStringContainsString('navigator.sendBeacon', $html);
+    }
+
+    public function test_login_page_sends_permissions_policy_denying_local_network_access(): void
+    {
+        $response = $this->get('/login');
+
+        $response->assertOk();
+        $response->assertHeader(
+            'Permissions-Policy',
+            \App\Http\Middleware\DenyLocalNetworkAccessPolicy::HEADER_VALUE
+        );
     }
 
     public function test_analytics_head_omits_gtm_and_ga_with_analytics_opt_out_cookie(): void

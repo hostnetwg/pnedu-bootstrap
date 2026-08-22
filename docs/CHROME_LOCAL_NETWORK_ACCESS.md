@@ -1,37 +1,44 @@
-# Chrome — prompt „Dostęp do innych aplikacji…” (Local Network Access)
+# Chrome / Opera — prompt „Dostęp do innych aplikacji…” (Local Network Access)
 
-Data: 2026-07-13  
-Plik: `resources/views/layouts/analytics-head.blade.php`
+Data: 2026-08-22  
+Kod: `app/Http/Middleware/DenyLocalNetworkAccessPolicy.php`, `resources/views/layouts/analytics-head.blade.php`
 
 ## Problem
 
-Od Chrome 142 publiczne strony (np. `https://pnedu.pl`) przy próbie połączenia z **localhost** lub siecią prywatną (`127.0.0.1`, `192.168.*`) mogą pokazać prompt:
+Od Chrome 142 (także Opera, Edge) publiczna strona (`https://pnedu.pl`) przy próbie połączenia z **localhost** / siecią prywatną (`127.0.0.1`, `192.168.*`) pokazuje prompt:
 
-> Dostęp do innych aplikacji i usług na tym urządzeniu
+> „pnedu.pl” prosi o dostęp do innych aplikacji i usług na tym urządzeniu.
 
-Często wywołują go tagi z **GTM/GA4** (skrypty agencji), nie logowanie Laravel.
+To **nie** jest logowanie Laravel i **nie** jest zwykła analityka (pageview GA). Chromium pyta, bo jakiś skrypt na stronie — najczęściej tag z **GTM/GA4 agencji** — sondą lokalne usługi na komputerze użytkownika (debug, helper, drukarka, menedżer haseł itd.). Inne firmy nie pokazują tego okna, gdy ich tagi nie ruszają localhost.
 
-## Rozwiązanie (opcja 1 — wdrożone)
+Blokada samego `fetch` / `XMLHttpRequest` **nie wystarcza**: przeglądarka potrafi zapytać o uprawnienie zanim JS przechwyci żądanie, albo gdy tag wstawi `<script src="http://127.0.0.1/…">`.
 
-Przed załadowaniem GTM/GA wczesny skrypt blokuje `fetch()` i `XMLHttpRequest` do hostów loopback / prywatnych. Analityka na zewnętrznych domenach Google działa bez zmian.
+## Rozwiązanie (wdrożone)
 
-**Nie obejmuje:** `<script src="http://127.0.0.1/...">`, iframe, `sendBeacon` — wtedy audyt kontenera GTM u agencji.
+1. **Nagłówek HTTP** `Permissions-Policy: local-network-access=(), local-network=(), loopback-network=()`  
+   Dokument **nie ma** prawa do sieci lokalnej → Chromium **nie pokazuje promptu**, żądania na localhost kończą się błędem. Analityka na `google-analytics.com` / `googletagmanager.com` działa normalnie.
+2. **Wczesny skrypt** przed GTM nadal blokuje `fetch`, XHR, `sendBeacon` i `WebSocket` do hostów prywatnych (zapas, gdy nagłówek nie zadziała w danej przeglądarce).
 
 ## Deploy prod (`pnedu.pl`)
 
 ```bash
-cd ~/domains/pnedu.pl/app
+cd /home/srv66127/domains/pnedu.pl/app
 git pull origin main
+/opt/alt/php82/usr/bin/php artisan optimize:clear
 /opt/alt/php82/usr/bin/php artisan view:clear
-/opt/alt/php82/usr/bin/php artisan view:cache
 ```
 
-Weryfikacja: `/login` w Chrome — brak promptu (po hard refresh). Źródło strony: przed `gtm.js` widać `Blocked local network request` w skrypcie ochronnym.
+Weryfikacja:
+
+- `/login` w Operze/Chrome — **brak** promptu (twardy refresh).
+- Nagłówek odpowiedzi: `Permissions-Policy` z `local-network-access=()`.
+- W DevTools → Network nie powinno być udanych requestów na `127.0.0.1`.
 
 ## Użytkownik kliknął „Zablokuj”
 
-Kłódka przy adresie → ustawienia witryny → **Dostęp do sieci lokalnej** → Zezwól.
+Kłódka przy adresie → ustawienia witryny → **Dostęp do sieci lokalnej** / **Aplikacje na urządzeniu** → Zezwól (tylko gdyby kiedyś była potrzeba; na pnedu.pl nie jest).
 
-## Opcja 2 (nie wdrożona)
+## Nie robić
 
-Wyłączenie GTM/GA na `/login`, `/register` — zero promptu na auth, brak pageview w GA na tych URL-ach.
+- Nie wyłączać całej analityki na `/login` bez potrzeby — pageview logowania może zostać, skoro LNA jest zabronione nagłówkiem.
+- Nie ruszać GTM u agencji jako pierwszego kroku; jeśli prompt wróci po deployu, wtedy audyt tagów sondujących localhost.
