@@ -164,13 +164,28 @@ class Course extends Model
      */
     public function plainTitle(string $fallback = ''): string
     {
-        $plain = trim(strip_tags(html_entity_decode(
-            (string) ($this->title ?? ''),
-            ENT_QUOTES | ENT_HTML5,
-            'UTF-8'
-        )));
+        $plain = trim(strip_tags((string) ($this->title ?? '')));
+        $plain = $this->normalizeTitleNonBreakingSpaces($plain);
 
         return $plain !== '' ? $plain : $fallback;
+    }
+
+    /**
+     * &nbsp;, &#160; oraz podwójnie zakodowane &amp;nbsp; → znak twardej spacji (U+00A0).
+     */
+    private function normalizeTitleNonBreakingSpaces(string $value): string
+    {
+        $nbsp = html_entity_decode('&nbsp;', ENT_HTML5, 'UTF-8');
+
+        for ($i = 0; $i < 2; $i++) {
+            $value = html_entity_decode($value, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        }
+
+        return str_replace(
+            ['&nbsp;', '&#160;', '&#xA0;', '&#x00A0;'],
+            $nbsp,
+            $value
+        );
     }
 
     /**

@@ -82,6 +82,19 @@ class OrderFormV2OfferSummaryTest extends TestCase
     }
 
     #[Test]
+    public function it_decodes_double_encoded_nbsp_in_title(): void
+    {
+        $course = new Course([
+            'title' => 'Statut szkoły i&amp;nbsp;przedszkola',
+        ]);
+
+        $nbsp = html_entity_decode('&nbsp;', ENT_HTML5, 'UTF-8');
+
+        $this->assertStringNotContainsString('&nbsp;', $course->plainTitle());
+        $this->assertSame('Statut szkoły i'.$nbsp.'przedszkola', $course->plainTitle());
+    }
+
+    #[Test]
     public function it_shows_variant_label_only_when_multiple_active_variants_exist(): void
     {
         $course = new Course(['title' => 'Test', 'is_paid' => true]);
