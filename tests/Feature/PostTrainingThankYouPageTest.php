@@ -18,6 +18,8 @@ class PostTrainingThankYouPageTest extends TestCase
         $this->get(route('post-training.thank-you'))
             ->assertOk()
             ->assertSee('Dziękujemy za udział w szkoleniu')
+            ->assertSee('Materiały szkoleniowe są już dostępne na Twoim koncie')
+            ->assertSee('Nagranie i zaświadczenie pojawią się wkrótce')
             ->assertSee('Zaloguj się na pnedu.pl')
             ->assertSee('window.top.location.replace', false);
     }
@@ -121,7 +123,46 @@ class PostTrainingThankYouPageTest extends TestCase
         $this->get(route('post-training.thank-you', ['course' => $course->id]))
             ->assertOk()
             ->assertSee('KURS PO PARAMETRZE COURSE')
-            ->assertSee('Data: 01.10.2026 14:00');
+            ->assertSee('Data: 01.10.2026 14:00')
+            ->assertSee('Materiały szkoleniowe —')
+            ->assertSee('już dostępne');
+    }
+
+    public function test_thank_you_page_shows_survey_cta_when_active_link_exists(): void
+    {
+        if (! $this->tablesReady()
+            || ! \Illuminate\Support\Facades\Schema::connection('pneadm')->hasTable('course_survey_links')) {
+            $this->markTestSkipped('Brak wymaganych tabel pneadm.');
+        }
+
+        $start = Carbon::parse('2026-10-01 14:00:00', 'Europe/Warsaw');
+
+        $course = Course::query()->create([
+            'title' => 'KURS Z ANKIETĄ',
+            'description' => 'Opis',
+            'start_date' => $start,
+            'end_date' => $start->copy()->addHours(2),
+            'is_paid' => true,
+            'type' => 'online',
+            'category' => 'open',
+            'is_active' => true,
+            'certificate_format' => '{nr}/PNE',
+        ]);
+
+        \App\Models\PneadmCourseSurveyLink::query()->create([
+            'course_id' => $course->id,
+            'public_token' => 'tok'.bin2hex(random_bytes(8)),
+            'title' => 'Ankieta testowa po szkoleniu',
+            'is_active' => true,
+            'order' => 1,
+            'channel' => 'native',
+        ]);
+
+        $this->get(route('post-training.thank-you', ['course' => $course->id]))
+            ->assertOk()
+            ->assertSee('Wypełnij ankietę')
+            ->assertSee('Ankieta testowa po szkoleniu')
+            ->assertSee('A jeśli masz jeszcze minutę');
     }
 
     public function test_invalid_course_query_is_ignored(): void

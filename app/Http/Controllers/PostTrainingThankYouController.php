@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Course;
 use App\Models\CourseOnlineDetail;
+use App\Models\PneadmCourseSurveyLink;
 use Carbon\CarbonInterface;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -18,22 +19,54 @@ class PostTrainingThankYouController extends Controller
     {
         $course = $this->resolveCourse($request);
         $eventId = $this->normalizeEventId($request->query('event'));
-
-        $courseTitle = $course?->plainTitle();
-        $instructorLine = $this->instructorLineForCourse($course);
-        $startDateTimeLine = $this->startDateTimeLineForCourse($course);
+        $survey = $this->resolveSurveyCta($course);
 
         $user = $request->user();
 
         return view('post-training.thank-you', [
-            'courseTitle' => $courseTitle,
-            'instructorLine' => $instructorLine,
-            'startDateTimeLine' => $startDateTimeLine,
+            'courseTitle' => $course?->plainTitle(),
+            'instructorLine' => $this->instructorLineForCourse($course),
+            'startDateTimeLine' => $this->startDateTimeLineForCourse($course),
             'eventId' => $eventId,
             'isAuthenticated' => $user !== null,
             'dashboardUrl' => route('dashboard.szkolenia'),
             'loginUrl' => route('login'),
+            'surveyUrl' => $survey['url'] ?? null,
+            'surveyTitle' => $survey['title'] ?? null,
         ]);
+    }
+
+    /**
+     * @return array{url: string, title: string}|null
+     */
+    private function resolveSurveyCta(?Course $course): ?array
+    {
+        if ($course === null) {
+            return null;
+        }
+
+        $link = PneadmCourseSurveyLink::query()
+            ->where('course_id', $course->id)
+            ->orderBy('order')
+            ->orderBy('id')
+            ->get()
+            ->first(fn (PneadmCourseSurveyLink $item) => $item->isAvailableNow());
+
+        if ($link === null) {
+            return null;
+        }
+
+        $url = $link->gateAbsoluteUrl();
+        if ($url === null) {
+            return null;
+        }
+
+        $title = trim((string) ($link->title ?? ''));
+
+        return [
+            'url' => $url,
+            'title' => $title !== '' ? $title : 'Ankieta poszkoleniowa',
+        ];
     }
 
     private function resolveCourse(Request $request): ?Course

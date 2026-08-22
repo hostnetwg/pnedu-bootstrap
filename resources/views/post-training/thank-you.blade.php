@@ -1,7 +1,7 @@
 @extends($isAuthenticated ? 'layouts.app' : 'layouts.post-training-thanks')
 
 @section('title', 'Dziękujemy za udział w szkoleniu — Platforma Nowoczesnej Edukacji')
-@section('meta_description', 'Dziękujemy za udział w szkoleniu. Na pnedu.pl znajdziesz nagranie, materiały i zaświadczenie, gdy będą dostępne.')
+@section('meta_description', 'Dziękujemy za udział w szkoleniu. Materiały są już na koncie; nagranie i zaświadczenie pojawią się wkrótce.')
 
 @if($isAuthenticated)
 @push('styles')
@@ -89,20 +89,42 @@
         @endif
 
         <p class="text-muted mb-3">
-            @if($isAuthenticated)
-                Spotkanie na żywo dobiegło końca. Materiały ze szkolenia — nagranie, pliki i zaświadczenie —
-                pojawią się na Twoim koncie, gdy tylko będą gotowe.
-            @else
-                Spotkanie na żywo dobiegło końca. Materiały ze szkolenia — nagranie, pliki i zaświadczenie —
-                udostępniamy na koncie uczestnika na <strong>pnedu.pl</strong>, gdy tylko będą gotowe.
-            @endif
+            <strong>Materiały szkoleniowe są już dostępne na Twoim koncie.</strong>
+            Nagranie i zaświadczenie pojawią się wkrótce — potrzebujemy chwili, by je przygotować i udostępnić.
+            O gotowości poinformujemy Cię osobnym e-mailem.
         </p>
 
-        <ul class="list-unstyled text-start post-training-thanks-list mb-3 mx-auto" style="max-width: 22rem;">
-            <li><i class="bi bi-camera-video text-primary me-2"></i>Nagranie szkolenia</li>
-            <li><i class="bi bi-folder2-open text-primary me-2"></i>Materiały szkoleniowe</li>
-            <li><i class="bi bi-award text-primary me-2"></i>Zaświadczenie ukończenia</li>
+        <ul class="list-unstyled text-start post-training-thanks-list mb-3 mx-auto" style="max-width: 24rem;">
+            <li>
+                <i class="bi bi-folder2-open text-success me-2"></i>
+                Materiały szkoleniowe — <strong>już dostępne</strong>
+            </li>
+            <li>
+                <i class="bi bi-camera-video text-primary me-2"></i>
+                Nagranie szkolenia — <span class="text-muted">wkrótce</span>
+            </li>
+            <li>
+                <i class="bi bi-award text-primary me-2"></i>
+                Zaświadczenie ukończenia — <span class="text-muted">wkrótce</span>
+            </li>
         </ul>
+
+        @if(!empty($surveyUrl))
+            <div class="border rounded-3 bg-light px-3 py-3 mb-3 text-start mx-auto" style="max-width: 32rem;">
+                <p class="mb-2 fw-semibold">A jeśli masz jeszcze minutę…</p>
+                <p class="small text-muted mb-3 mb-sm-2">
+                    Będzie nam bardzo miło, jeśli wypełnisz krótką ankietę po szkoleniu
+                    @if(!empty($surveyTitle))
+                        <span class="text-body">({{ $surveyTitle }})</span>
+                    @endif
+                    — Twoja opinia pomaga nam robić kolejne spotkania jeszcze lepiej.
+                </p>
+                <a href="{{ $surveyUrl }}" class="btn btn-outline-primary">
+                    <i class="bi bi-clipboard2-check me-1"></i>
+                    Wypełnij ankietę
+                </a>
+            </div>
+        @endif
 
         <div class="d-flex flex-column flex-sm-row gap-2 justify-content-center">
             @if($isAuthenticated)
