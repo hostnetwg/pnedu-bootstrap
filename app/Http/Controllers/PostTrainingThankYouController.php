@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Course;
+use App\Models\CourseFileLink;
 use App\Models\CourseOnlineDetail;
 use App\Models\PneadmCourseSurveyLink;
 use Carbon\CarbonInterface;
@@ -19,7 +20,8 @@ class PostTrainingThankYouController extends Controller
     {
         $course = $this->resolveCourse($request);
         $eventId = $this->normalizeEventId($request->query('event'));
-        $survey = $this->resolveSurveyCta($course);
+        $surveyUrl = $this->resolveSurveyUrl($course);
+        $hasMaterials = $this->courseHasMaterials($course);
 
         $user = $request->user();
 
@@ -31,15 +33,25 @@ class PostTrainingThankYouController extends Controller
             'isAuthenticated' => $user !== null,
             'dashboardUrl' => route('dashboard.szkolenia'),
             'loginUrl' => route('login'),
-            'surveyUrl' => $survey['url'] ?? null,
-            'surveyTitle' => $survey['title'] ?? null,
+            'surveyUrl' => $surveyUrl,
+            'hasMaterials' => $hasMaterials,
         ]);
     }
 
-    /**
-     * @return array{url: string, title: string}|null
-     */
-    private function resolveSurveyCta(?Course $course): ?array
+    private function courseHasMaterials(?Course $course): bool
+    {
+        if ($course === null) {
+            return false;
+        }
+
+        return CourseFileLink::query()
+            ->where('course_id', $course->id)
+            ->whereNotNull('url')
+            ->where('url', '!=', '')
+            ->exists();
+    }
+
+    private function resolveSurveyUrl(?Course $course): ?string
     {
         if ($course === null) {
             return null;
@@ -56,17 +68,7 @@ class PostTrainingThankYouController extends Controller
             return null;
         }
 
-        $url = $link->gateAbsoluteUrl();
-        if ($url === null) {
-            return null;
-        }
-
-        $title = trim((string) ($link->title ?? ''));
-
-        return [
-            'url' => $url,
-            'title' => $title !== '' ? $title : 'Ankieta poszkoleniowa',
-        ];
+        return $link->gateAbsoluteUrl();
     }
 
     private function resolveCourse(Request $request): ?Course

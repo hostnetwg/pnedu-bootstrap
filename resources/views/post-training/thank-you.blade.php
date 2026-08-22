@@ -89,16 +89,20 @@
         @endif
 
         <p class="text-muted mb-3">
-            <strong>Materiały szkoleniowe są już dostępne na Twoim koncie.</strong>
+            @if(!empty($hasMaterials))
+                <strong>Materiały szkoleniowe są już dostępne na Twoim koncie.</strong>
+            @endif
             Nagranie i zaświadczenie pojawią się wkrótce — potrzebujemy chwili, by je przygotować i udostępnić.
             O gotowości damy znać osobnym e-mailem — możesz też zajrzeć później na swoje konto na pnedu.pl.
         </p>
 
         <ul class="list-unstyled text-start post-training-thanks-list mb-3 mx-auto" style="max-width: 24rem;">
-            <li>
-                <i class="bi bi-folder2-open text-success me-2"></i>
-                Materiały szkoleniowe — <strong>już dostępne</strong>
-            </li>
+            @if(!empty($hasMaterials))
+                <li>
+                    <i class="bi bi-folder2-open text-success me-2"></i>
+                    Materiały szkoleniowe — <strong>już dostępne</strong>
+                </li>
+            @endif
             <li>
                 <i class="bi bi-camera-video text-primary me-2"></i>
                 Nagranie szkolenia — <span class="text-muted">wkrótce</span>
@@ -113,11 +117,8 @@
             <div class="border rounded-3 bg-light px-3 py-3 mb-3 text-start mx-auto" style="max-width: 32rem;">
                 <p class="mb-2 fw-semibold">A jeśli masz jeszcze minutę…</p>
                 <p class="small text-muted mb-3 mb-sm-2">
-                    Będzie nam bardzo miło, jeśli wypełnisz krótką ankietę po szkoleniu
-                    @if(!empty($surveyTitle))
-                        <span class="text-body">({{ $surveyTitle }})</span>
-                    @endif
-                    — Twoja opinia pomaga nam robić kolejne spotkania jeszcze lepiej.
+                    Będzie nam bardzo miło, jeśli wypełnisz krótką ankietę po szkoleniu —
+                    Twoja opinia pomaga nam robić kolejne spotkania jeszcze lepiej.
                 </p>
                 <a href="{{ $surveyUrl }}" class="btn btn-outline-primary">
                     <i class="bi bi-clipboard2-check me-1"></i>

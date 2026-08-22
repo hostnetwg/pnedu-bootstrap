@@ -18,9 +18,9 @@ class PostTrainingThankYouPageTest extends TestCase
         $this->get(route('post-training.thank-you'))
             ->assertOk()
             ->assertSee('Dziękujemy za udział w szkoleniu')
-            ->assertSee('Materiały szkoleniowe są już dostępne na Twoim koncie')
             ->assertSee('Nagranie i zaświadczenie pojawią się wkrótce')
             ->assertSee('możesz też zajrzeć później na swoje konto na pnedu.pl')
+            ->assertDontSee('Materiały szkoleniowe są już dostępne na Twoim koncie')
             ->assertSee('Zaloguj się na pnedu.pl')
             ->assertSee('window.top.location.replace', false);
     }
@@ -125,6 +125,41 @@ class PostTrainingThankYouPageTest extends TestCase
             ->assertOk()
             ->assertSee('KURS PO PARAMETRZE COURSE')
             ->assertSee('Data: 01.10.2026 14:00')
+            ->assertDontSee('Materiały szkoleniowe —')
+            ->assertDontSee('już dostępne');
+    }
+
+    public function test_thank_you_page_shows_materials_when_file_link_exists(): void
+    {
+        if (! $this->tablesReady()
+            || ! \Illuminate\Support\Facades\Schema::connection('pneadm')->hasTable('course_file_links')) {
+            $this->markTestSkipped('Brak wymaganych tabel pneadm.');
+        }
+
+        $start = Carbon::parse('2026-10-01 14:00:00', 'Europe/Warsaw');
+
+        $course = Course::query()->create([
+            'title' => 'KURS Z MATERIAŁAMI',
+            'description' => 'Opis',
+            'start_date' => $start,
+            'end_date' => $start->copy()->addHours(2),
+            'is_paid' => true,
+            'type' => 'online',
+            'category' => 'open',
+            'is_active' => true,
+            'certificate_format' => '{nr}/PNE',
+        ]);
+
+        \App\Models\CourseFileLink::query()->create([
+            'course_id' => $course->id,
+            'url' => 'https://drive.google.com/example',
+            'title' => 'Pakiet materiałów',
+            'order' => 1,
+        ]);
+
+        $this->get(route('post-training.thank-you', ['course' => $course->id]))
+            ->assertOk()
+            ->assertSee('Materiały szkoleniowe są już dostępne na Twoim koncie')
             ->assertSee('Materiały szkoleniowe —')
             ->assertSee('już dostępne');
     }
@@ -153,7 +188,7 @@ class PostTrainingThankYouPageTest extends TestCase
         \App\Models\PneadmCourseSurveyLink::query()->create([
             'course_id' => $course->id,
             'public_token' => 'tok'.bin2hex(random_bytes(8)),
-            'title' => 'Ankieta testowa po szkoleniu',
+            'title' => 'ANKIETA: TESTOWE SZKOLENIE 3 (2026-08-21)',
             'is_active' => true,
             'order' => 1,
             'channel' => 'native',
@@ -162,8 +197,8 @@ class PostTrainingThankYouPageTest extends TestCase
         $this->get(route('post-training.thank-you', ['course' => $course->id]))
             ->assertOk()
             ->assertSee('Wypełnij ankietę')
-            ->assertSee('Ankieta testowa po szkoleniu')
-            ->assertSee('A jeśli masz jeszcze minutę');
+            ->assertSee('A jeśli masz jeszcze minutę')
+            ->assertDontSee('ANKIETA: TESTOWE SZKOLENIE 3 (2026-08-21)');
     }
 
     public function test_invalid_course_query_is_ignored(): void
