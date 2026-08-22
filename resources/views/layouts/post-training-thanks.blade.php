@@ -81,5 +81,16 @@
             &copy; {{ date('Y') }} Platforma Nowoczesnej Edukacji
         </div>
     </footer>
+    {{-- Gdy CM ładuje tę stronę w iframe embedu — wyjdź do top-level (pełna strona podziękowania). --}}
+    <script>
+    (function () {
+        try {
+            if (window.self === window.top) {
+                return;
+            }
+            window.top.location.replace(window.location.href);
+        } catch (e) {}
+    })();
+    </script>
 </body>
 </html>

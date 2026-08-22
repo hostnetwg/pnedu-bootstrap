@@ -77,7 +77,11 @@ Szczegóły maila provision: `pneadm/docs/FORM_ORDERS_PNEDU_PROVISION.md`.
 3. **Osadzony:** link do `route('dashboard.szkolenia.transmisja')` (+ `fullscreen=1` z homepage/listy).
 4. Desktop embed: iframe CM (`?bare=1`), auto pełny ekran (gate modal), belka PNE z napisem „NODN Platforma Nowoczesnej Edukacji”.
 5. Esc / „Wyjdź z pełnego ekranu” = tylko wyjście z FS (pokój zostaje).
-6. „Zamknij transmisję” = modal → zwolnienie slotu obecności + zamknięcie hosta.
+6. „Zamknij transmisję” = modal → zwolnienie slotu obecności + **przekierowanie na** `/po-szkoleniu?course={id}` (strona podziękowania). W trybie fullscreen host (`bare=1`) parent dostaje `postMessage` i też idzie na tę stronę.
+
+**Uwaga (embed vs CM full page):** ustawienie thank-you URL w CM przekierowuje przeglądarkę tylko w pełnym oknie ClickMeeting. W **iframe** na pnedu CM często zostawia czarny ekran końca — dlatego pnedu:
+- przy zamykaniu transmisji sam prowadzi na `/po-szkoleniu`;
+- jeśli CM jednak załaduje `/po-szkoleniu` w iframe, skrypt na stronie podziękowania (i listener `load` iframe) wyciąga widok do top-level.
 
 ### Tokeny (model)
 
@@ -130,6 +134,8 @@ W ustawieniach wydarzenia CM (**Edycja → Ustawienia → Działania follow-up �
 - Trasa: `GET /po-szkoleniu` (`PostTrainingThankYouController`), layout `noindex`.
 
 **Strategia platform-first:** uczestnik po wyjściu z pokoju CM trafia na pnedu.pl z informacją o nagraniu, materiałach i zaświadczeniu — zamiast domyślnej strony ClickMeeting.
+
+**Embed (iframe):** redirect CM nie zawsze „wychodzi” z iframe — patrz punkt 6 w przepływie UX powyżej.
 
 **Awaria pnedu.pl (502):** redirect CM na tę stronę nie zadziała; operacyjnie można ponownie wysłać zaproszenie z zakładki **Zaproszenia** w panelu CM ([przykład](https://account-panel.clickmeeting.com/10166300#invites)).
 

@@ -365,6 +365,8 @@ class DashboardController extends Controller
             }
         }
 
+        $courseId = (int) ($participant->course_id ?? $participant->course?->id ?? 0);
+
         return view('dashboard.szkolenia-transmisja', [
             'participant' => $participant,
             'course' => $participant->course,
@@ -379,6 +381,9 @@ class DashboardController extends Controller
                 'rejoin' => 1,
                 'bare' => $bare ? 1 : null,
             ])),
+            'postTrainingThankYouUrl' => $courseId > 0
+                ? route('post-training.thank-you', ['course' => $courseId])
+                : route('post-training.thank-you'),
             'presenceHeartbeatUrl' => route('dashboard.szkolenia.transmisja.heartbeat', $participant),
             'presenceLeaveUrl' => route('dashboard.szkolenia.transmisja.leave', $participant),
             'presenceHeartbeatMs' => $presenceService->heartbeatIntervalSeconds() * 1000,

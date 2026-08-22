@@ -18,7 +18,8 @@ class PostTrainingThankYouPageTest extends TestCase
         $this->get(route('post-training.thank-you'))
             ->assertOk()
             ->assertSee('Dziękujemy za udział w szkoleniu')
-            ->assertSee('Zaloguj się na pnedu.pl');
+            ->assertSee('Zaloguj się na pnedu.pl')
+            ->assertSee('window.top.location.replace', false);
     }
 
     public function test_thank_you_page_shows_course_title_for_clickmeeting_event(): void

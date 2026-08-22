@@ -201,7 +201,11 @@
                 return;
             }
             if (event.data && event.data.type === 'cm-embed-close') {
+                var thankYou = event.data.thankYouUrl;
                 cleanup();
+                if (typeof thankYou === 'string' && thankYou.indexOf('/po-szkoleniu') !== -1) {
+                    window.location.href = thankYou;
+                }
             }
         }
 

@@ -99,7 +99,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Anuluj"></button>
             </div>
             <div class="modal-body pt-2">
-                <p class="mb-0">Zamkniesz pokój na tym urządzeniu. Możesz wejść ponownie przez „Dołącz do spotkania na żywo”.</p>
+                <p class="mb-0">Zamkniesz pokój na tym urządzeniu i przejdziesz do strony z podziękowaniem (nagranie, materiały, zaświadczenie). Możesz wejść ponownie przez „Dołącz do spotkania na żywo”, jeśli spotkanie jeszcze trwa.</p>
             </div>
             <div class="modal-footer border-0 pt-0">
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Wróć do pokoju</button>
@@ -260,6 +260,7 @@
     const leaveUrl = @json($presenceLeaveUrl ?? null);
     const heartbeatMs = {{ (int) ($presenceHeartbeatMs ?? 25000) }};
     const csrfToken = @json(csrf_token());
+    const thankYouUrl = @json($postTrainingThankYouUrl ?? route('post-training.thank-you'));
 
     function postPresence(url, keepalive) {
         if (!url) {
@@ -420,15 +421,45 @@
         bootstrap.Modal.getOrCreateInstance(modalEl).show();
     }
 
+    function goToThankYouPage() {
+        const target = thankYouUrl || @json(route('post-training.thank-you'));
+        try {
+            if (window.top && window.top !== window.self) {
+                window.top.location.href = target;
+                return;
+            }
+        } catch (e) {}
+        window.location.href = target;
+    }
+
     function closeTransmission() {
         releasePresence();
         try {
             if (window.top && window.top !== window.self) {
-                window.top.postMessage({ type: 'cm-embed-close' }, window.location.origin);
+                window.top.postMessage({
+                    type: 'cm-embed-close',
+                    thankYouUrl: thankYouUrl,
+                }, window.location.origin);
                 return;
             }
         } catch (e) {}
-        window.location.href = @json(route('dashboard.szkolenia'));
+        goToThankYouPage();
+    }
+
+    // Gdy CM przekieruje iframe na /po-szkoleniu (same-origin) — wyjdź z iframe do pełnej strony.
+    const cmFrame = document.getElementById('cm-embed-frame');
+    if (cmFrame) {
+        cmFrame.addEventListener('load', function () {
+            try {
+                const href = cmFrame.contentWindow.location.href;
+                if (typeof href === 'string' && href.indexOf('/po-szkoleniu') !== -1) {
+                    releasePresence();
+                    goToThankYouPage();
+                }
+            } catch (e) {
+                // Cross-origin (nadal CM) — brak dostępu do location; to normalne.
+            }
+        });
     }
 
     btn.addEventListener('click', toggleFullscreen);
