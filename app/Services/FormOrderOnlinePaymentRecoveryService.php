@@ -235,7 +235,7 @@ class FormOrderOnlinePaymentRecoveryService
             'course' => $course,
             'online_payment_order' => $onlinePaymentOrder,
             'retry_url' => $this->retryService->signedRetryUrl($order),
-            'deferred_url' => $this->retryService->deferredOrderFormUrl($order),
+            'deferred_url' => $this->retryService->signedConvertToDeferredUrl($order),
             'pending_url' => route('payment.pending', $onlinePaymentOrder->ident),
         ];
     }

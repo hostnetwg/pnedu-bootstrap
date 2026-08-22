@@ -11,6 +11,7 @@ use App\Models\WebhookLog;
 use App\Services\Analytics\BackendAnalyticsTracker;
 use App\Services\FormOrderCheckoutResumeService;
 use App\Services\FormOrderOnlinePaymentRetryService;
+use App\Services\FormOrderOnlineToDeferredConversionService;
 use App\Services\PayNowService;
 use App\Services\PayUService;
 use Carbon\Carbon;
@@ -348,7 +349,7 @@ class PaymentController extends Controller
 
         $canRetryPayment = $formOrder !== null && $retryService->canRetryPayment($formOrder);
         $retryPaymentUrl = $canRetryPayment ? $retryService->signedRetryUrl($formOrder) : null;
-        $deferredOrderFormUrl = $canRetryPayment ? $retryService->deferredOrderFormUrl($formOrder) : null;
+        $deferredOrderFormUrl = $canRetryPayment ? $retryService->signedConvertToDeferredUrl($formOrder) : null;
 
         $paymentFailed = $formOrder !== null && in_array($formOrder->payment_status, [
             FormOrder::PAYMENT_STATUS_CANCELLED,
@@ -406,6 +407,96 @@ class PaymentController extends Controller
         }
 
         return $retryService->redirectToGateway($onlineOrder);
+    }
+
+    /**
+     * Strona potwierdzenia: nieopłacone online → faktura odroczona (to samo form_orders).
+     */
+    public function showConvertToDeferred(string $ident)
+    {
+        $formOrder = FormOrder::query()
+            ->where('ident', $ident)
+            ->with([
+                'course',
+                'participants' => fn ($query) => $query->orderBy('id'),
+            ])
+            ->firstOrFail();
+
+        $conversion = app(FormOrderOnlineToDeferredConversionService::class);
+
+        if ($formOrder->payment_mode === FormOrder::PAYMENT_MODE_DEFERRED_INVOICE
+            && $formOrder->payment_status === FormOrder::PAYMENT_STATUS_SUBMITTED) {
+            return redirect()
+                ->route('orders.summary', $formOrder->ident)
+                ->with('info', 'To zamówienie jest już złożone z fakturą odroczoną.');
+        }
+
+        if (! $conversion->canConvert($formOrder)) {
+            return redirect()
+                ->route('courses.show', $formOrder->product_id)
+                ->with('error', 'To zamówienie nie kwalifikuje się już do zmiany na fakturę odroczoną.');
+        }
+
+        return view('payment.convert-to-deferred', [
+            'formOrder' => $formOrder,
+            'course' => $conversion->resolveCourse($formOrder),
+            'confirmUrl' => $conversion->signedConfirmSubmitUrl($formOrder),
+            'editDataUrl' => $conversion->editDataUrl($formOrder),
+            'defaultPaymentTerms' => $conversion->defaultPaymentTermsDays(),
+            'maxPaymentTerms' => $conversion->maxPaymentTermsDays(),
+        ]);
+    }
+
+    /**
+     * Potwierdzenie konwersji online → deferred_invoice (signed POST).
+     */
+    public function confirmConvertToDeferred(Request $request, string $ident)
+    {
+        $formOrder = FormOrder::where('ident', $ident)->firstOrFail();
+        $conversion = app(FormOrderOnlineToDeferredConversionService::class);
+
+        $maxTerms = $conversion->maxPaymentTermsDays();
+        $validated = $request->validate([
+            'payment_terms' => ['required', 'integer', 'min:0', 'max:'.$maxTerms],
+        ], [
+            'payment_terms.required' => 'Podaj termin płatności (dni).',
+            'payment_terms.max' => 'Termin płatności może wynosić maksymalnie '.$maxTerms.' dni.',
+        ]);
+
+        $result = $conversion->convert($formOrder, (int) $validated['payment_terms']);
+
+        if (! ($result['success'] ?? false)) {
+            $error = $result['error'] ?? 'Nie udało się zmienić sposobu płatności.';
+
+            if (($result['code'] ?? '') === 'already_paid') {
+                $paidAttempt = OnlinePaymentOrder::query()
+                    ->where('form_order_id', $formOrder->id)
+                    ->where('status', OnlinePaymentOrder::STATUS_PAID)
+                    ->orderByDesc('id')
+                    ->first();
+
+                if ($paidAttempt) {
+                    return redirect()
+                        ->route('payment.success', $paidAttempt->ident)
+                        ->with('info', $error);
+                }
+            }
+
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', $error);
+        }
+
+        /** @var FormOrder $order */
+        $order = $result['order'];
+        $redirect = redirect()->route('orders.summary', $order->ident);
+
+        if (($result['code'] ?? '') === 'converted') {
+            $redirect->with('order_just_submitted', $order->ident);
+        }
+
+        return $redirect;
     }
 
     /**

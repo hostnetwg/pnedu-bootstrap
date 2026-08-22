@@ -31,4 +31,8 @@ return [
     /** Recovery e-mail (Etap 3) — cron + ręcznie z adm. */
     'online_recovery_enabled' => (bool) env('ORDER_FORM_ONLINE_RECOVERY_ENABLED', true),
 
+    /** Konwersja online → FV odroczona: domyślny i max termin płatności (dni). */
+    'online_to_deferred_default_payment_terms' => (int) env('ORDER_FORM_ONLINE_TO_DEFERRED_DEFAULT_TERMS', 14),
+    'online_to_deferred_max_payment_terms' => (int) env('ORDER_FORM_ONLINE_TO_DEFERRED_MAX_TERMS', 30),
+
 ];

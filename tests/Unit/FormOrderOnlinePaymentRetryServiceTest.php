@@ -68,6 +68,26 @@ class FormOrderOnlinePaymentRetryServiceTest extends TestCase
         $this->assertStringContainsString('signature=', $url);
     }
 
+    public function test_signed_convert_to_deferred_url_uses_named_route(): void
+    {
+        URL::forceRootUrl('https://pnedu.pl');
+
+        $order = FormOrder::make([
+            'ident' => '260822-CONV01',
+            'product_id' => 42,
+            'payment_mode' => FormOrder::PAYMENT_MODE_ONLINE_GATEWAY,
+            'payment_status' => FormOrder::PAYMENT_STATUS_FAILED,
+            'cancelled_at' => null,
+            'invoice_number' => null,
+            'status_completed' => 0,
+        ]);
+
+        $url = $this->service->signedConvertToDeferredUrl($order);
+
+        $this->assertStringContainsString('/orders/260822-CONV01/convert-to-deferred', $url);
+        $this->assertStringContainsString('signature=', $url);
+    }
+
     public function test_deferred_order_form_url_includes_prefill_from(): void
     {
         $order = FormOrder::make([

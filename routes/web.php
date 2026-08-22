@@ -290,6 +290,12 @@ Route::get('/payment/pending/{ident}', [App\Http\Controllers\PaymentController::
 Route::get('/orders/{ident}/retry-payment', [App\Http\Controllers\PaymentController::class, 'retryFormOrderPayment'])
     ->middleware('signed')
     ->name('orders.retry-payment');
+Route::get('/orders/{ident}/convert-to-deferred', [App\Http\Controllers\PaymentController::class, 'showConvertToDeferred'])
+    ->middleware('signed')
+    ->name('orders.convert-to-deferred');
+Route::post('/orders/{ident}/convert-to-deferred', [App\Http\Controllers\PaymentController::class, 'confirmConvertToDeferred'])
+    ->middleware('signed')
+    ->name('orders.convert-to-deferred.confirm');
 // Zamówienie z odroczonym terminem
 Route::get('/courses/{id}/deferred-order/test', [App\Http\Controllers\CourseController::class, 'deferredOrder'])->name('payment.deferred.test');
 Route::get('/courses/{id}/deferred-order/edit/{ident}', [App\Http\Controllers\CourseController::class, 'deferredOrder'])

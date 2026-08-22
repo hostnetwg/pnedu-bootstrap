@@ -70,7 +70,7 @@ Pełna strategia: wątek decyzyjny 2026-08-22 (60 min, auto-anulowanie, oba link
 
 - Numer zamówienia (`form_orders.ident`), kwota, kontakt.
 - Przycisk **Zapłać ponownie** (signed URL).
-- Link **Wolę fakturę z odroczonym terminem** → formularz z `?prefill_from=` i `payment_type=deferred` (bez `order_ident`, nowe zamówienie odroczone anuluje stare online — Etap 1).
+- Link **Wolę fakturę z odroczonym terminem** → strona potwierdzenia konwersji (signed `convert-to-deferred`; awaryjnie pełny formularz z prefillem przez „Chcę poprawić dane”).
 - Prefill V2 wybiera profil: brak NIP nabywcy → **Osoba prywatna**; NIP nabywcy + (NIP lub nazwa odbiorcy) → **Szkoła / JST**; tylko NIP nabywcy → **Placówka / firma**; płatność z URL (`deferred`).
 
 ### 3. E-mail po starcie płatności online
@@ -195,3 +195,40 @@ git pull origin main
 ```
 
 Brak migracji (Etap 4).
+
+---
+
+## Hybryda: konwersja online → FV odroczona (to samo zamówienie)
+
+Data: 2026-08-22  
+Projekt: **pnedu**
+
+### Zachowanie
+
+1. Link z maila recovery / started oraz z `/payment/pending` → **strona potwierdzenia** (`GET /orders/{ident}/convert-to-deferred`, signed), nie od razu pełny formularz.
+2. Na stronie: numer zamówienia, szkolenie, kwota, nabywca / odbiorca / uczestnik(cy), kontakt.
+3. Pole **termin płatności** (dni): domyślnie **14**, max **30** (`order_form.online_to_deferred_*`).
+4. Główny CTA: **Potwierdzam zamówienie z fakturą z odroczonym terminem** → `POST` signed → to samo `form_orders` przełącza się na `deferred_invoice` + `submitted` + `invoice_payment_delay`.
+5. Po sukcesie: redirect na `/orders/{ident}/summary` z `order_just_submitted` → mail z PDF jak przy zwykłym odroczonym.
+6. Drugorzędnie: **Chcę poprawić dane** → pełny formularz z `?prefill_from=` + `payment_type=deferred` (jak wcześniej; nowe zamówienie odroczone anuluje stare online — Etap 1).
+
+Serwis: `App\Services\FormOrderOnlineToDeferredConversionService`.
+
+Ochrona wyścigu: przy `payment_status=paid` konwersja jest odrzucana (lock w transakcji).
+
+### Testy
+
+```bash
+cd pnedu
+sail test --filter=FormOrderOnlineToDeferredConversion
+```
+
+### Deploy (pnedu)
+
+```bash
+cd /home/srv66127/domains/pnedu.pl/app
+git pull origin main
+/opt/alt/php82/usr/bin/php artisan optimize:clear
+```
+
+Brak migracji.

@@ -41,6 +41,21 @@ class FormOrderOnlinePaymentRetryService
         );
     }
 
+    /**
+     * Strona potwierdzenia konwersji na FV odroczoną (signed).
+     */
+    public function signedConvertToDeferredUrl(FormOrder $formOrder): string
+    {
+        return URL::temporarySignedRoute(
+            'orders.convert-to-deferred',
+            now()->addDays($this->retrySignedUrlDays()),
+            ['ident' => $formOrder->ident]
+        );
+    }
+
+    /**
+     * Awaryjny pełny formularz z prefillem (poprawa danych).
+     */
     public function deferredOrderFormUrl(FormOrder $formOrder): string
     {
         $params = ['id' => $formOrder->product_id];
@@ -175,7 +190,7 @@ class FormOrderOnlinePaymentRetryService
         }
 
         $retryUrl = $this->signedRetryUrl($formOrder);
-        $deferredUrl = $this->deferredOrderFormUrl($formOrder);
+        $deferredUrl = $this->signedConvertToDeferredUrl($formOrder);
         $pendingUrl = route('payment.pending', $onlineOrder->ident);
 
         foreach ($emailsToSend as $email) {
