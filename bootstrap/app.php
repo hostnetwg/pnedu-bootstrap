@@ -83,7 +83,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 'current_password',
             ]);
 
-            if ($request->is('login', 'register', 'forgot-password', 'reset-password*')) {
+            if ($request->is('login', 'register', 'forgot-password', 'reset-password*', 'ustaw-haslo*')) {
                 return redirect()
                     ->to($request->url())
                     ->withInput($safeInput)

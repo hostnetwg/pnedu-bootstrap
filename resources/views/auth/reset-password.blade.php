@@ -1,17 +1,34 @@
 @extends('layouts.guest')
 
+@section('robots', 'noindex, nofollow')
+@section('title', $isInitialPasswordSetup
+    ? 'Ustaw hasło — Platforma Nowoczesnej Edukacji'
+    : 'Resetowanie hasła — Platforma Nowoczesnej Edukacji')
+@section('meta_description', $isInitialPasswordSetup
+    ? 'Ustaw hasło do konta na pnedu.pl utworzonego po zapisie na szkolenie.'
+    : 'Ustaw nowe hasło do konta na pnedu.pl.')
+
 @section('content')
 <div class="container">
     <div class="row justify-content-center">
         <div class="col-md-8">
             <div class="card">
-                <div class="card-header">{{ __('Reset Password') }}</div>
+                <div class="card-header">
+                    <h1 class="h5 mb-0">{{ $isInitialPasswordSetup ? __('Set Password') : __('Reset Password') }}</h1>
+                </div>
 
                 <div class="card-body">
+                    @if($isInitialPasswordSetup)
+                        <p class="text-muted mb-4">{{ __('Set your password to sign in after we created your account for the training.') }}</p>
+                    @endif
+
                     <form method="POST" action="{{ route('password.store') }}" novalidate>
                         @csrf
 
                         <input type="hidden" name="token" value="{{ $request->route('token') }}">
+                        @if($isInitialPasswordSetup)
+                            <input type="hidden" name="intent" value="set">
+                        @endif
 
                         <div class="row mb-3">
                             <label for="email" class="col-md-4 col-form-label text-md-end">{{ __('Email') }}</label>
@@ -86,7 +103,7 @@
                         <div class="row mb-0">
                             <div class="col-md-6 offset-md-4">
                                 <button type="submit" class="btn btn-primary">
-                                    {{ __('Reset Password') }}
+                                    {{ $isInitialPasswordSetup ? __('Set Password') : __('Reset Password') }}
                                 </button>
                             </div>
                         </div>

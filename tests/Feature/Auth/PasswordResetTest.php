@@ -70,4 +70,100 @@ class PasswordResetTest extends TestCase
             return true;
         });
     }
+
+    public function test_initial_password_setup_screen_uses_set_password_copy(): void
+    {
+        Notification::fake();
+
+        $user = User::factory()->create([
+            'last_login_at' => null,
+            'login_count' => 0,
+        ]);
+
+        $this->post('/forgot-password', ['email' => $user->email]);
+
+        Notification::assertSentTo($user, SystemResetPassword::class, function ($notification) {
+            $response = $this->get('/ustaw-haslo/'.$notification->token);
+
+            $response->assertOk();
+            $response->assertSee('Ustaw hasło', false);
+            $response->assertSee('Konto zostało utworzone po zapisie na szkolenie', false);
+            $response->assertDontSee('Resetowanie hasła', false);
+
+            return true;
+        });
+    }
+
+    public function test_legacy_reset_link_for_never_logged_in_user_uses_set_password_copy(): void
+    {
+        Notification::fake();
+
+        $user = User::factory()->create([
+            'last_login_at' => null,
+            'login_count' => 0,
+        ]);
+
+        $this->post('/forgot-password', ['email' => $user->email]);
+
+        Notification::assertSentTo($user, SystemResetPassword::class, function ($notification) use ($user) {
+            $response = $this->get('/reset-password/'.$notification->token.'?email='.urlencode($user->email));
+
+            $response->assertOk();
+            $response->assertSee('Ustaw hasło', false);
+            $response->assertDontSee('Resetowanie hasła', false);
+
+            return true;
+        });
+    }
+
+    public function test_reset_password_screen_for_returning_user_keeps_reset_copy(): void
+    {
+        Notification::fake();
+
+        $user = User::factory()->create([
+            'last_login_at' => now(),
+            'login_count' => 2,
+        ]);
+
+        $this->post('/forgot-password', ['email' => $user->email]);
+
+        Notification::assertSentTo($user, SystemResetPassword::class, function ($notification) use ($user) {
+            $response = $this->get('/reset-password/'.$notification->token.'?email='.urlencode($user->email));
+
+            $response->assertOk();
+            $response->assertSee('Resetowanie hasła', false);
+            $response->assertDontSee('Konto zostało utworzone po zapisie na szkolenie', false);
+
+            return true;
+        });
+    }
+
+    public function test_initial_password_setup_success_message_does_not_say_reset(): void
+    {
+        Notification::fake();
+
+        $user = User::factory()->create([
+            'last_login_at' => null,
+            'login_count' => 0,
+        ]);
+
+        $this->post('/forgot-password', ['email' => $user->email]);
+
+        Notification::assertSentTo($user, SystemResetPassword::class, function ($notification) use ($user) {
+            $response = $this->post('/reset-password', [
+                'token' => $notification->token,
+                'email' => $user->email,
+                'password' => 'password',
+                'password_confirmation' => 'password',
+                'intent' => 'set',
+            ]);
+
+            $response
+                ->assertSessionHasNoErrors()
+                ->assertRedirect(route('login'))
+                ->assertSessionHas('status', 'Hasło zostało ustawione. Możesz się zalogować.');
+
+            return true;
+        });
+    }
 }

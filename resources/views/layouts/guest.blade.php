@@ -8,17 +8,19 @@
 
     {{-- Meta Pixel tymczasowo wyłączony (test). Przywróć: include layouts.facebook-pixel --}}
 
-    @if(config('seo.block_search_indexing'))
+    @hasSection('robots')
+        <meta name="robots" content="@yield('robots')">
+    @elseif(config('seo.block_search_indexing'))
         <meta name="robots" content="noindex, nofollow">
     @else
         <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
     @endif
-    <meta name="description" content="{{ config('seo.default_description') }}">
+    <meta name="description" content="@yield('meta_description', config('seo.default_description'))">
 
     <!-- CSRF Token -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ config('app.name', 'Laravel') }}</title>
+    <title>@yield('title', config('app.name', 'Platforma Nowoczesnej Edukacji'))</title>
 
     <!-- Fonts -->
     <link rel="dns-prefetch" href="//fonts.gstatic.com">

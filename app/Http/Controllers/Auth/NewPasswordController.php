@@ -16,11 +16,14 @@ use Illuminate\View\View;
 class NewPasswordController extends Controller
 {
     /**
-     * Display the password reset view.
+     * Display the password reset / first-time set view.
      */
     public function create(Request $request): View
     {
-        return view('auth.reset-password', ['request' => $request]);
+        return view('auth.reset-password', [
+            'request' => $request,
+            'isInitialPasswordSetup' => $this->isInitialPasswordSetup($request),
+        ]);
     }
 
     /**
@@ -34,7 +37,10 @@ class NewPasswordController extends Controller
             'token' => ['required'],
             'email' => ['required', 'email'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'intent' => ['nullable', 'in:set,reset'],
         ]);
+
+        $isInitialPasswordSetup = $this->isInitialPasswordSetup($request);
 
         // Here we will attempt to reset the user's password. If it is successful we
         // will update the password on an actual user model and persist it to the
@@ -51,12 +57,43 @@ class NewPasswordController extends Controller
             }
         );
 
-        // If the password was successfully reset, we will redirect the user back to
-        // the application's home authenticated view. If there is an error we can
-        // redirect them back to where they came from with their error message.
-        return $status == Password::PASSWORD_RESET
-                    ? redirect()->route('login')->with('status', __($status))
-                    : back()->withInput($request->only('email'))
-                        ->withErrors(['email' => __($status)]);
+        if ($status == Password::PASSWORD_RESET) {
+            $message = $isInitialPasswordSetup
+                ? __('passwords.set')
+                : __($status);
+
+            return redirect()->route('login')->with('status', $message);
+        }
+
+        $error = $status === Password::INVALID_TOKEN && $isInitialPasswordSetup
+            ? __('passwords.token_set')
+            : __($status);
+
+        return back()->withInput($request->only('email', 'intent'))
+            ->withErrors(['email' => $error]);
+    }
+
+    /**
+     * First-time password (konto z provision ADM) vs klasyczny reset.
+     *
+     * Stare maile nadal wskazują /reset-password/… — rozpoznajemy je po braku logowania.
+     */
+    private function isInitialPasswordSetup(Request $request): bool
+    {
+        $intent = $request->input('intent', $request->query('intent'));
+        if ($intent === 'set' || $request->routeIs('password.set')) {
+            return true;
+        }
+
+        $email = User::normalizeEmail((string) $request->input('email', $request->query('email')));
+        if ($email === null) {
+            return false;
+        }
+
+        $user = User::query()->where('email', $email)->first();
+
+        return $user !== null
+            && $user->last_login_at === null
+            && (int) ($user->login_count ?? 0) === 0;
     }
 }
