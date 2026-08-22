@@ -33,6 +33,7 @@ class PostTrainingThankYouPageTest extends TestCase
             ->assertOk()
             ->assertSee('Dziękujemy za udział w szkoleniu')
             ->assertSee('Przejdź do Twoich szkoleń')
+            ->assertSee('Strona główna')
             ->assertDontSee('Zaloguj się na pnedu.pl')
             ->assertSee('dashboard', false);
     }

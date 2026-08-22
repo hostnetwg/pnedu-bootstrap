@@ -115,11 +115,11 @@
                     <i class="bi bi-box-arrow-in-right me-1"></i>
                     Zaloguj się na pnedu.pl
                 </a>
-                <a href="{{ route('home') }}" class="btn btn-outline-secondary btn-lg">
-                    <i class="bi bi-house me-1"></i>
-                    Strona główna
-                </a>
             @endif
+            <a href="{{ route('home') }}" class="btn btn-outline-secondary btn-lg">
+                <i class="bi bi-house me-1"></i>
+                Strona główna
+            </a>
         </div>
 
         @if(!$isAuthenticated)
