@@ -37,6 +37,7 @@
                         <button type="button"
                             class="btn btn-outline-secondary"
                             id="profile-toggle-current-password"
+                            tabindex="-1"
                             aria-label="Pokaż aktualne hasło"
                             title="Pokaż aktualne hasło"
                             aria-pressed="false">
@@ -70,6 +71,7 @@
                         <button type="button"
                             class="btn btn-outline-secondary"
                             id="profile-toggle-new-password"
+                            tabindex="-1"
                             aria-label="Pokaż nowe hasło"
                             title="Pokaż nowe hasło"
                             aria-pressed="false">
@@ -107,6 +109,7 @@
                         <button type="button"
                             class="btn btn-outline-secondary"
                             id="profile-toggle-password-confirmation"
+                            tabindex="-1"
                             aria-label="Pokaż potwierdzenie hasła"
                             title="Pokaż potwierdzenie hasła"
                             aria-pressed="false">

@@ -64,9 +64,9 @@ Pola formularza:
 ### Pierwszy zakup (nowe konto)
 
 1. Mail z adm: **Ustaw hasło na pnedu.pl** (główny przycisk, przed sekcją spotkania).
-2. Link `/ustaw-haslo/{token}?email=…&redirect=…` — `redirect` wskazuje pokój osadzony (`/dashboard/szkolenia/{id}/transmisja?fullscreen=1`) albo `/dashboard/szkolenia`, gdy brak embed.
-3. Po ustawieniu hasła: **autologin** (`NewPasswordController`) + przekierowanie na bezpieczny `redirect` (tylko ścieżka względna).
-4. Użytkownik trafia od razu do pokoju / listy szkoleń — bez osobnego logowania.
+2. Link `/ustaw-haslo/{token}?email=…&redirect=/dashboard/szkolenia` — po haśle użytkownik trafia na listę szkoleń (nie do pokoju; transmisja dopiero w oknie live, 2 h przed startem).
+3. Po ustawieniu hasła: **autologin** (`NewPasswordController`) + przekierowanie na `/dashboard/szkolenia`.
+4. Na liście widać szkolenie, licznik i przycisk „Dołącz do spotkania na żywo” (aktywny w oknie live).
 
 Szczegóły maila provision: `pneadm/docs/FORM_ORDERS_PNEDU_PROVISION.md`.
 

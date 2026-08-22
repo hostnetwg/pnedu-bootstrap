@@ -31,6 +31,7 @@
                                     <button type="button"
                                         class="btn btn-outline-secondary"
                                         id="confirm-toggle-password"
+                                        tabindex="-1"
                                         aria-label="Pokaż hasło"
                                         title="Pokaż hasło"
                                         aria-pressed="false">
