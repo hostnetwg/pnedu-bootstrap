@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
@@ -23,6 +24,7 @@ class NewPasswordController extends Controller
         return view('auth.reset-password', [
             'request' => $request,
             'isInitialPasswordSetup' => $this->isInitialPasswordSetup($request),
+            'redirectAfterSetup' => $this->safeRedirectPath((string) old('redirect', $request->query('redirect', ''))),
         ]);
     }
 
@@ -38,22 +40,25 @@ class NewPasswordController extends Controller
             'email' => ['required', 'email'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'intent' => ['nullable', 'in:set,reset'],
+            'redirect' => ['nullable', 'string', 'max:2048'],
         ]);
 
         $isInitialPasswordSetup = $this->isInitialPasswordSetup($request);
+        $resetUser = null;
 
         // Here we will attempt to reset the user's password. If it is successful we
         // will update the password on an actual user model and persist it to the
         // database. Otherwise we will parse the error and return the response.
         $status = Password::reset(
             $request->only('email', 'password', 'password_confirmation', 'token'),
-            function (User $user) use ($request) {
+            function (User $user) use ($request, &$resetUser) {
                 $user->forceFill([
                     'password' => Hash::make($request->password),
                     'remember_token' => Str::random(60),
                 ])->save();
 
                 event(new PasswordReset($user));
+                $resetUser = $user;
             }
         );
 
@@ -62,6 +67,15 @@ class NewPasswordController extends Controller
                 ? __('passwords.set')
                 : __($status);
 
+            if ($isInitialPasswordSetup && $resetUser instanceof User) {
+                Auth::login($resetUser);
+                $request->session()->regenerate();
+
+                return redirect()
+                    ->to($this->safeRedirectPath((string) $request->input('redirect', '')) ?? route('dashboard.szkolenia'))
+                    ->with('status', $message);
+            }
+
             return redirect()->route('login')->with('status', $message);
         }
 
@@ -69,7 +83,7 @@ class NewPasswordController extends Controller
             ? __('passwords.token_set')
             : __($status);
 
-        return back()->withInput($request->only('email', 'intent'))
+        return back()->withInput($request->only('email', 'intent', 'redirect'))
             ->withErrors(['email' => $error]);
     }
 
@@ -95,5 +109,19 @@ class NewPasswordController extends Controller
         return $user !== null
             && $user->last_login_at === null
             && (int) ($user->login_count ?? 0) === 0;
+    }
+
+    private function safeRedirectPath(string $redirect): ?string
+    {
+        $redirect = trim($redirect);
+        if ($redirect === '') {
+            return null;
+        }
+
+        if (! str_starts_with($redirect, '/') || str_starts_with($redirect, '//')) {
+            return null;
+        }
+
+        return $redirect;
     }
 }

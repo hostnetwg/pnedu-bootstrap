@@ -14,7 +14,7 @@ return [
     */
 
     'reset' => 'Your password has been reset.',
-    'set' => 'Your password has been set. You can sign in.',
+    'set' => 'Your password has been set. You are signed in.',
     'sent' => 'We have emailed your password reset link.',
     'throttled' => 'Please wait before retrying.',
     'token' => 'This password reset token is invalid.',

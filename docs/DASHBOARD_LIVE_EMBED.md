@@ -61,6 +61,17 @@ Pola formularza:
 
 ## Pnedu — przepływ użytkownika
 
+### Pierwszy zakup (nowe konto)
+
+1. Mail z adm: **Ustaw hasło na pnedu.pl** (główny przycisk, przed sekcją spotkania).
+2. Link `/ustaw-haslo/{token}?email=…&redirect=…` — `redirect` wskazuje pokój osadzony (`/dashboard/szkolenia/{id}/transmisja?fullscreen=1`) albo `/dashboard/szkolenia`, gdy brak embed.
+3. Po ustawieniu hasła: **autologin** (`NewPasswordController`) + przekierowanie na bezpieczny `redirect` (tylko ścieżka względna).
+4. Użytkownik trafia od razu do pokoju / listy szkoleń — bez osobnego logowania.
+
+Szczegóły maila provision: `pneadm/docs/FORM_ORDERS_PNEDU_PROVISION.md`.
+
+### Wejście na żywo (konto istniejące)
+
 1. Uczestnik ma zakup / provision → w oknie live (2 h przed startem do końca) widzi przycisk wg radio.
 2. **ClickMeeting:** `joinUrl` = `room_url` + token z `participant_live_access` (lub `meeting_link`).
 3. **Osadzony:** link do `route('dashboard.szkolenia.transmisja')` (+ `fullscreen=1` z homepage/listy).

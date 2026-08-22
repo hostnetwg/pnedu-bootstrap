@@ -23,7 +23,10 @@ class PasswordResetTest extends TestCase
     {
         Notification::fake();
 
-        $user = User::factory()->create();
+        $user = User::factory()->create([
+            'last_login_at' => now(),
+            'login_count' => 2,
+        ]);
 
         $this->post('/forgot-password', ['email' => $user->email]);
 
@@ -34,7 +37,10 @@ class PasswordResetTest extends TestCase
     {
         Notification::fake();
 
-        $user = User::factory()->create();
+        $user = User::factory()->create([
+            'last_login_at' => now(),
+            'login_count' => 2,
+        ]);
 
         $this->post('/forgot-password', ['email' => $user->email]);
 
@@ -51,7 +57,10 @@ class PasswordResetTest extends TestCase
     {
         Notification::fake();
 
-        $user = User::factory()->create();
+        $user = User::factory()->create([
+            'last_login_at' => now(),
+            'login_count' => 2,
+        ]);
 
         $this->post('/forgot-password', ['email' => $user->email]);
 
@@ -160,8 +169,41 @@ class PasswordResetTest extends TestCase
 
             $response
                 ->assertSessionHasNoErrors()
-                ->assertRedirect(route('login'))
-                ->assertSessionHas('status', 'Hasło zostało ustawione. Możesz się zalogować.');
+                ->assertRedirect(route('dashboard.szkolenia'))
+                ->assertSessionHas('status', 'Hasło zostało ustawione. Jesteś zalogowany/a.');
+
+            $this->assertAuthenticatedAs($user);
+
+            return true;
+        });
+    }
+
+    public function test_initial_password_setup_redirects_to_safe_target_after_login(): void
+    {
+        Notification::fake();
+
+        $user = User::factory()->create([
+            'last_login_at' => null,
+            'login_count' => 0,
+        ]);
+
+        $this->post('/forgot-password', ['email' => $user->email]);
+
+        Notification::assertSentTo($user, SystemResetPassword::class, function ($notification) use ($user) {
+            $response = $this->post('/reset-password', [
+                'token' => $notification->token,
+                'email' => $user->email,
+                'password' => 'password',
+                'password_confirmation' => 'password',
+                'intent' => 'set',
+                'redirect' => '/dashboard/szkolenia/123/transmisja?fullscreen=1',
+            ]);
+
+            $response
+                ->assertSessionHasNoErrors()
+                ->assertRedirect('/dashboard/szkolenia/123/transmisja?fullscreen=1');
+
+            $this->assertAuthenticatedAs($user);
 
             return true;
         });

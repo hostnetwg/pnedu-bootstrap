@@ -29,6 +29,9 @@
                         @if($isInitialPasswordSetup)
                             <input type="hidden" name="intent" value="set">
                         @endif
+                        @if(! empty($redirectAfterSetup))
+                            <input type="hidden" name="redirect" value="{{ $redirectAfterSetup }}">
+                        @endif
 
                         <div class="row mb-3">
                             <label for="email" class="col-md-4 col-form-label text-md-end">{{ __('Email') }}</label>

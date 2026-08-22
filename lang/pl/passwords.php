@@ -10,7 +10,7 @@ return [
 
     'reset' => 'Hasło zostało zresetowane. Możesz się zalogować.',
 
-    'set' => 'Hasło zostało ustawione. Możesz się zalogować.',
+    'set' => 'Hasło zostało ustawione. Jesteś zalogowany/a.',
 
     'sent' => 'Wysłaliśmy na podany adres e-mail link do zresetowania hasła.',
 
