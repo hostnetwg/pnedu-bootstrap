@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\UserLoginTrackingService;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -70,6 +71,8 @@ class NewPasswordController extends Controller
             if ($isInitialPasswordSetup && $resetUser instanceof User) {
                 Auth::login($resetUser);
                 $request->session()->regenerate();
+                app(UserLoginTrackingService::class)->recordAuthenticatedSession($resetUser);
+                $request->session()->put('pnedu_login_session_recorded', true);
 
                 return redirect()
                     ->to($this->safeRedirectPath((string) $request->input('redirect', '')) ?? route('dashboard.szkolenia'))

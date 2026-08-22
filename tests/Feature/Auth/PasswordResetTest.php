@@ -173,6 +173,9 @@ class PasswordResetTest extends TestCase
                 ->assertSessionHas('status', 'Hasło zostało ustawione. Jesteś zalogowany/a.');
 
             $this->assertAuthenticatedAs($user);
+            $user->refresh();
+            $this->assertNotNull($user->last_login_at);
+            $this->assertSame(1, $user->login_count);
 
             return true;
         });
