@@ -31,6 +31,11 @@ Route::post('/api/internal/form-orders/{id}/send-online-payment-recovery', [App\
     ->whereNumber('id')
     ->name('internal.form-orders.send-online-payment-recovery');
 
+Route::get('/api/internal/form-orders/{id}/preview-online-payment-recovery', [App\Http\Controllers\Internal\FormOrderOnlinePaymentRecoveryController::class, 'preview'])
+    ->middleware('internal.api')
+    ->whereNumber('id')
+    ->name('internal.form-orders.preview-online-payment-recovery');
+
 Route::get('/l/{campaign_code}', App\Http\Controllers\MarketingCampaignShortLinkController::class)
     ->where('campaign_code', '[A-Za-z0-9._-]+')
     ->middleware('throttle:180,1')

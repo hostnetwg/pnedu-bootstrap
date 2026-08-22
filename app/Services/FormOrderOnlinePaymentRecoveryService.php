@@ -42,6 +42,60 @@ class FormOrderOnlinePaymentRecoveryService
     }
 
     /**
+     * @return array{success: bool, error?: string, code?: string, to?: string, emails?: list<string>, subject?: string, body_html?: string, body?: string, hint?: string}
+     */
+    public function previewRecoveryEmail(FormOrder $order): array
+    {
+        if (! $this->isEnabled()) {
+            return [
+                'success' => false,
+                'error' => 'Recovery e-mail jest wyłączony w konfiguracji.',
+                'code' => 'disabled',
+            ];
+        }
+
+        if (! $this->eligibleForManualRecovery($order)) {
+            return [
+                'success' => false,
+                'error' => 'Zamówienie nie kwalifikuje się do wysyłki recovery e-mail.',
+                'code' => 'not_eligible',
+            ];
+        }
+
+        $built = $this->buildRecoveryMail($order);
+        if (! ($built['success'] ?? false)) {
+            return $built;
+        }
+
+        $mailable = new OnlinePaymentRecoveryMail(
+            $order,
+            $built['course'],
+            $built['online_payment_order'],
+            $built['retry_url'],
+            $built['deferred_url'],
+            $built['pending_url']
+        );
+        $builtMail = $mailable->build();
+        $html = $mailable->render();
+        $plain = trim(preg_replace('/\s+/', ' ', strip_tags($html)) ?? '');
+
+        $emails = $built['emails'];
+        $hint = $order->online_payment_recovery_sent_at
+            ? 'Recovery e-mail był już wysyłany ('.$order->online_payment_recovery_sent_at->timezone('Europe/Warsaw')->format('d.m.Y H:i').'). Ponowna wysyłka jest dozwolona.'
+            : 'Wiadomość nie była jeszcze wysyłana. Po zatwierdzeniu trafi do wszystkich wymienionych odbiorców.';
+
+        return [
+            'success' => true,
+            'to' => implode(', ', $emails),
+            'emails' => $emails,
+            'subject' => (string) ($builtMail->subject ?? ''),
+            'body_html' => $html,
+            'body' => $plain,
+            'hint' => $hint,
+        ];
+    }
+
+    /**
      * @return array{success: bool, error?: string, code?: string, emails?: list<string>, sent_at?: string}
      */
     public function sendRecoveryEmail(FormOrder $order, bool $allowResend = false): array
@@ -70,40 +124,17 @@ class FormOrderOnlinePaymentRecoveryService
             ];
         }
 
-        $course = Course::find($order->product_id);
-        if (! $course) {
-            return [
-                'success' => false,
-                'error' => 'Nie znaleziono kursu powiązanego z zamówieniem.',
-                'code' => 'course_missing',
-            ];
+        $built = $this->buildRecoveryMail($order);
+        if (! ($built['success'] ?? false)) {
+            return $built;
         }
 
-        $onlinePaymentOrder = OnlinePaymentOrder::query()
-            ->where('form_order_id', $order->id)
-            ->orderByDesc('id')
-            ->first();
-
-        if (! $onlinePaymentOrder) {
-            return [
-                'success' => false,
-                'error' => 'Brak powiązanej próby płatności online.',
-                'code' => 'online_payment_missing',
-            ];
-        }
-
-        $emailsToSend = $this->collectRecipientEmails($order);
-        if ($emailsToSend === []) {
-            return [
-                'success' => false,
-                'error' => 'Brak adresów e-mail odbiorców.',
-                'code' => 'no_recipients',
-            ];
-        }
-
-        $retryUrl = $this->retryService->signedRetryUrl($order);
-        $deferredUrl = $this->retryService->deferredOrderFormUrl($order);
-        $pendingUrl = route('payment.pending', $onlinePaymentOrder->ident);
+        $emailsToSend = $built['emails'];
+        $course = $built['course'];
+        $onlinePaymentOrder = $built['online_payment_order'];
+        $retryUrl = $built['retry_url'];
+        $deferredUrl = $built['deferred_url'];
+        $pendingUrl = $built['pending_url'];
 
         $sentCount = 0;
         foreach ($emailsToSend as $email) {
@@ -149,6 +180,63 @@ class FormOrderOnlinePaymentRecoveryService
             'success' => true,
             'emails' => $emailsToSend,
             'sent_at' => $sentAt->toIso8601String(),
+        ];
+    }
+
+    /**
+     * @return array{
+     *     success: bool,
+     *     error?: string,
+     *     code?: string,
+     *     emails?: list<string>,
+     *     course?: Course,
+     *     online_payment_order?: OnlinePaymentOrder,
+     *     retry_url?: string,
+     *     deferred_url?: string,
+     *     pending_url?: string
+     * }
+     */
+    private function buildRecoveryMail(FormOrder $order): array
+    {
+        $course = Course::find($order->product_id);
+        if (! $course) {
+            return [
+                'success' => false,
+                'error' => 'Nie znaleziono kursu powiązanego z zamówieniem.',
+                'code' => 'course_missing',
+            ];
+        }
+
+        $onlinePaymentOrder = OnlinePaymentOrder::query()
+            ->where('form_order_id', $order->id)
+            ->orderByDesc('id')
+            ->first();
+
+        if (! $onlinePaymentOrder) {
+            return [
+                'success' => false,
+                'error' => 'Brak powiązanej próby płatności online.',
+                'code' => 'online_payment_missing',
+            ];
+        }
+
+        $emailsToSend = $this->collectRecipientEmails($order);
+        if ($emailsToSend === []) {
+            return [
+                'success' => false,
+                'error' => 'Brak adresów e-mail odbiorców.',
+                'code' => 'no_recipients',
+            ];
+        }
+
+        return [
+            'success' => true,
+            'emails' => $emailsToSend,
+            'course' => $course,
+            'online_payment_order' => $onlinePaymentOrder,
+            'retry_url' => $this->retryService->signedRetryUrl($order),
+            'deferred_url' => $this->retryService->deferredOrderFormUrl($order),
+            'pending_url' => route('payment.pending', $onlinePaymentOrder->ident),
         ];
     }
 

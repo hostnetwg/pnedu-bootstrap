@@ -118,6 +118,7 @@ sail artisan form-orders:send-online-payment-recovery-emails --dry-run
 - Przycisk na stronie zamówienia: **Wyślij mail recovery płatności** (pasek „Rozliczenie”).
 - Wywołanie server-to-server: `POST /api/internal/form-orders/{id}/send-online-payment-recovery` (pnedu, token `PNEDU_INTERNAL_API_TOKEN`).
 - Ręczna wysyłka **może powtórzyć** mail (`allow_resend=true`).
+- **Podgląd przed wysyłką** (jak mail PNEDU): modal ładuje temat, odbiorców i HTML z `GET …/preview-online-payment-recovery` (pnedu) / `form-orders/{id}/online-payment/recovery-email-preview` (adm).
 
 ### 3. Migracja (pneadm → baza pneadm)
 
