@@ -147,6 +147,12 @@ class FormOrderOnlineToDeferredConversionService
 
     public function resolveCourse(FormOrder $formOrder): ?Course
     {
-        return $formOrder->course ?? Course::find($formOrder->product_id);
+        $course = $formOrder->course ?? Course::query()->find($formOrder->product_id);
+
+        if ($course) {
+            $course->loadMissing('instructor');
+        }
+
+        return $course;
     }
 }

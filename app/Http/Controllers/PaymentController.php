@@ -417,7 +417,7 @@ class PaymentController extends Controller
         $formOrder = FormOrder::query()
             ->where('ident', $ident)
             ->with([
-                'course',
+                'course.instructor',
                 'participants' => fn ($query) => $query->orderBy('id'),
             ])
             ->firstOrFail();

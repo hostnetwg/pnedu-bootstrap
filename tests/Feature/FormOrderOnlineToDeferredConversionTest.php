@@ -61,6 +61,10 @@ class FormOrderOnlineToDeferredConversionTest extends TestCase
         $response->assertSee('Chcę poprawić dane', false);
         $response->assertSee('Termin płatności', false);
         $response->assertSee('Anna Test', false);
+        if (! empty($course->trainer) && $course->trainer !== 'Brak trenera') {
+            $response->assertSee($course->trainer_title.':', false);
+            $response->assertSee($course->trainer, false);
+        }
     }
 
     public function test_confirm_converts_same_form_order_to_deferred(): void

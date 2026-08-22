@@ -42,8 +42,14 @@
                         <h3>Szkolenie</h3>
                         <div class="info-row">
                             <span class="info-label">Temat:</span>
-                            <span class="info-value">{!! $course->title !!}</span>
+                            <span class="info-value">{{ strip_tags((string) $course->title) }}</span>
                         </div>
+                        @if(! empty($course->trainer) && $course->trainer !== 'Brak trenera')
+                            <div class="info-row">
+                                <span class="info-label">{{ $course->trainer_title }}:</span>
+                                <span class="info-value">{{ $course->trainer }}</span>
+                            </div>
+                        @endif
                         @if($course->start_date)
                             <div class="info-row">
                                 <span class="info-label">Data:</span>
@@ -179,9 +185,9 @@
 .convert-header h1 { font-size: 1.75rem; font-weight: 700; }
 .order-info-box { background: #f8f9fa; border-left: 4px solid #1976d2; padding: 1.5rem; margin-bottom: 1.5rem; border-radius: 4px; }
 .order-info-box h3 { font-size: 1.1rem; margin-bottom: 1rem; }
-.info-row { margin-bottom: 0.75rem; }
-.info-label { font-weight: 600; color: #495057; display: inline-block; min-width: 7rem; }
-.info-value { color: #212529; }
+.info-row { display: flex; gap: 0.5rem 0.75rem; margin-bottom: 0.75rem; align-items: flex-start; }
+.info-label { flex: 0 0 7.5rem; font-weight: 600; color: #495057; }
+.info-value { flex: 1 1 auto; min-width: 0; color: #212529; overflow-wrap: anywhere; }
 .convert-form { padding-top: 0.25rem; }
 </style>
 @endpush
