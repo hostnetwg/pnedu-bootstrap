@@ -2,7 +2,7 @@
 
 Data: 2026-08-21  
 Projekty: `pnedu` + `pneadm`  
-Kanon UI / tokenów: ten plik. Widoczność przycisku „Dołącz”: [DASHBOARD_LIVE_MEETING.md](./DASHBOARD_LIVE_MEETING.md). Provision / maile adm: `pneadm/docs/FORM_ORDERS_PNEDU_PROVISION.md`.
+Kanon UI / tokenów: ten plik. Widoczność przycisku „Dołącz”: [DASHBOARD_LIVE_MEETING.md](./DASHBOARD_LIVE_MEETING.md). Provision / maile adm: `pneadm/docs/FORM_ORDERS_PNEDU_PROVISION.md`. **Strategia platform-first:** `pneadm/docs/strategy/PNEDU_PLATFORM_FIRST.md`.
 
 ## Cel
 
@@ -114,12 +114,32 @@ Limit CM (dokumentacja vendor): max tokenów na wydarzenie ≈ **4 ×** max ucze
 
 Embed w mailu jest sterowany osobnym checkboxem, żeby można było mieć przycisk embed w panelu pnedu, ale nadal wysyłać stare maile z bezpośrednim CM.
 
+## Strona podziękowania po spotkaniu (ClickMeeting → pnedu.pl)
+
+W ustawieniach wydarzenia CM (**Edycja → Ustawienia → Działania follow-up → Strona z podziękowaniem z własnym adresem URL**) wklej adres strony na pnedu.pl.
+
+| Środowisko | URL (zalecany — z ID kursu w adm) |
+|------------|-------------------------------------|
+| Produkcja | `https://pnedu.pl/po-szkoleniu?course=563` |
+| Lokalnie | `http://localhost:8081/po-szkoleniu?course=563` |
+
+- `course` = ID szkolenia w adm (`courses.id`). Przy zapisie kursu online z platformą ClickMeeting i wypełnionym **ID wydarzenia ClickMeeting** adm **automatycznie** ustawia ten URL w CM przez API.
+- Alternatywnie (ręcznie w CM): `?event=10166300` — ID wydarzenia z panelu CM.
+- Gdy kurs istnieje w bazie, strona pokazuje **tytuł szkolenia**, **prowadzącego** oraz **datę i godzinę rozpoczęcia**.
+- Bez parametru `course` / `event` działa ogólna strona podziękowania z CTA na logowanie / dashboard.
+- Trasa: `GET /po-szkoleniu` (`PostTrainingThankYouController`), layout `noindex`.
+
+**Strategia platform-first:** uczestnik po wyjściu z pokoju CM trafia na pnedu.pl z informacją o nagraniu, materiałach i zaświadczeniu — zamiast domyślnej strony ClickMeeting.
+
+**Awaria pnedu.pl (502):** redirect CM na tę stronę nie zadziała; operacyjnie można ponownie wysłać zaproszenie z zakładki **Zaproszenia** w panelu CM ([przykład](https://account-panel.clickmeeting.com/10166300#invites)).
+
 ## Testy
 
 ```bash
 # pnedu
 sail test --filter=LiveTransmission
 sail test --filter=DashboardCourseLiveAccessServiceTest
+sail test --filter=PostTrainingThankYouPageTest
 
 # pneadm (provision / live mail — bez zmiany CTA embed)
 sail test --filter=ParticipantLiveMeetingLink

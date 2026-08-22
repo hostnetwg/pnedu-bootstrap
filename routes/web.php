@@ -79,6 +79,10 @@ Route::get('/regulamin', function () {
     return view('regulamin');
 })->name('regulamin');
 
+Route::get('/po-szkoleniu', App\Http\Controllers\PostTrainingThankYouController::class)
+    ->middleware('throttle:120,1')
+    ->name('post-training.thank-you');
+
 Route::get('/polityka-prywatnosci', function () {
     return view('polityka-prywatnosci');
 })->name('polityka-prywatnosci');
