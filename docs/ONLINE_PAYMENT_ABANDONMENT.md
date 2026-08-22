@@ -51,7 +51,7 @@ Brak migracji (kolumny `cancelled_at` / `cancelled_reason` już w bazie pneadm).
 
 - ~~Etap 2: przycisk „Zapłać ponownie” na `/payment/pending`, mail startowy online~~ — **wdrożone** (patrz sekcja poniżej)
 - ~~Etap 3: e-mail recovery (cron + ręcznie w adm)~~ — **wdrożone** (patrz sekcja poniżej)
-- Etap 4: badge/filtr „porzucona płatność” w adm
+- ~~Etap 4: badge/filtr „porzucona płatność” w adm~~ — **wdrożone** (patrz sekcja poniżej)
 
 Pełna strategia: wątek decyzyjny 2026-08-22 (60 min, auto-anulowanie, oba linki w mailu recovery).
 
@@ -152,3 +152,44 @@ git pull origin main
 ```
 
 Cron pnedu: `schedule:run` musi obejmować nową komendę hourly (istniejący cron daily — sprawdź czy prod ma `* * * * * schedule:run` lub dodaj osobny wpis).
+
+---
+
+## Etap 4 — wdrożone (badge + filtr w adm)
+
+Projekt: **pneadm**
+
+### Kryteria (jak Etap 1)
+
+Zamówienie ma badge / trafia do filtra, gdy:
+
+- `payment_mode = online_gateway`
+- bez `cancelled_at`, bez FV, bez `status_completed`, `payment_status != paid`
+- oraz: `payment_status` ∈ {`cancelled`, `failed`} **albo** `awaiting_payment` i minęło ≥ **60 min** od ostatniej aktywności (`order_date` / `created_at` / max `online_payment_orders.created_at`)
+
+Serwis: `App\Services\FormOrderOnlineAbandonmentService` (pneadm)  
+Config: `config/form_orders.php` → `online_abandonment_minutes` (env: `ORDER_FORM_ONLINE_ABANDONMENT_MINUTES`)
+
+### UI
+
+- Lista `/form-orders`: checkbox **„Tylko porzucona płatność online”** (`abandoned_online=1`)
+- Badge na karcie: **PORZUCONA PŁATNOŚĆ**
+- Badge na stronie szczegółów (pasek rozliczenia)
+
+### Testy
+
+```bash
+cd pneadm
+sail test --filter=FormOrderOnlineAbandonment
+sail test --filter=FormOrdersAbandonedOnline
+```
+
+### Deploy (pneadm)
+
+```bash
+cd /home/srv66127/domains/adm.pnedu.pl/pneadm
+git pull origin main
+/opt/alt/php82/usr/bin/php artisan optimize:clear
+```
+
+Brak migracji (Etap 4).
