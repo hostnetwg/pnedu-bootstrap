@@ -65,11 +65,12 @@ class PostTrainingThankYouPageTest extends TestCase
 
         $response->assertOk()
             ->assertSee('TESTOWE SZKOLENIE CM')
-            ->assertSee('Data rozpoczęcia: 15.09.2026 10:30')
+            ->assertSee('Data: 15.09.2026 10:30')
             ->assertSee('Zaloguj się na pnedu.pl');
 
         if ($instructor !== null) {
-            $response->assertSee('Prowadzący: dr hab. Jan Kowalski');
+            $response->assertSee('Prowadzący: dr hab. Jan Kowalski')
+                ->assertSee('|');
         }
     }
 
@@ -103,7 +104,7 @@ class PostTrainingThankYouPageTest extends TestCase
         $this->get(route('post-training.thank-you', ['course' => $course->id]))
             ->assertOk()
             ->assertSee('KURS PO PARAMETRZE COURSE')
-            ->assertSee('Data rozpoczęcia: 01.10.2026 14:00');
+            ->assertSee('Data: 01.10.2026 14:00');
     }
 
     public function test_invalid_course_query_is_ignored(): void

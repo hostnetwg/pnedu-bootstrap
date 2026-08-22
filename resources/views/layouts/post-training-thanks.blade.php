@@ -20,57 +20,58 @@
             background:
                 radial-gradient(900px 420px at 15% -10%, #cfe2ff 0%, transparent 55%),
                 linear-gradient(180deg, #f5f8fc 0%, #eef2f6 100%);
-            min-height: calc(100vh - 72px);
-            padding: 2.5rem 1rem 3rem;
+            min-height: 100vh;
+            padding: 2rem 1rem 2.5rem;
             display: flex;
             align-items: center;
         }
         .post-training-thanks-card {
-            max-width: 640px;
+            width: 100%;
+            max-width: 860px;
             margin: 0 auto;
             background: #fff;
             border: 1px solid #d9e2ec;
             border-radius: 1.25rem;
-            padding: 2.5rem 1.75rem;
+            padding: 2rem 2rem 2.25rem;
             text-align: center;
             box-shadow: 0 16px 40px rgba(26, 35, 50, .08);
         }
-        .post-training-thanks-icon {
+        .post-training-thanks-brand img {
             width: 4.5rem;
             height: 4.5rem;
-            border-radius: 50%;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            background: linear-gradient(135deg, #198754, #20c997);
-            color: #fff;
-            font-size: 2rem;
-            margin-bottom: 1.25rem;
-            box-shadow: 0 12px 28px rgba(25, 135, 84, .28);
+            object-fit: contain;
+        }
+        .post-training-thanks-brand-name {
+            font-size: .875rem;
+            letter-spacing: .01em;
+            color: #5c6778;
+        }
+        .post-training-thanks-course-title {
+            font-size: 1.125rem;
+            line-height: 1.45;
+        }
+        .post-training-thanks-meta {
+            font-size: .8125rem;
+            line-height: 1.4;
         }
         .post-training-thanks-list li {
-            padding: .35rem 0;
+            padding: .3rem 0;
         }
         .post-training-thanks-card .btn-lg {
             border-radius: .8rem;
             font-weight: 700;
         }
+        @media (min-width: 768px) {
+            .post-training-thanks-card {
+                padding: 2.25rem 2.5rem 2.5rem;
+            }
+            .post-training-thanks-course-title {
+                font-size: 1.2rem;
+            }
+        }
     </style>
 </head>
 <body class="d-flex flex-column min-vh-100 bg-light">
-    <header class="border-bottom bg-white py-2">
-        <div class="container">
-            <a href="{{ route('home') }}" class="d-inline-flex align-items-center text-decoration-none text-dark fw-semibold">
-                <img src="{{ asset('images/Logo_PNG.svg') }}"
-                     alt="Logo {{ config('app.name') }}"
-                     width="40"
-                     height="40"
-                     class="me-2">
-                Platforma Nowoczesnej Edukacji
-            </a>
-        </div>
-    </header>
-
     <main class="flex-grow-1">
         @yield('content')
     </main>

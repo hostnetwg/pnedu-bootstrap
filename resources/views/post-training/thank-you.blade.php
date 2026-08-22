@@ -6,33 +6,42 @@
 @section('content')
 <div class="post-training-thanks-page">
     <div class="post-training-thanks-card" data-aos="zoom-in">
-        <div class="post-training-thanks-icon" aria-hidden="true">
-            <i class="bi bi-hand-thumbs-up-fill"></i>
+        <div class="post-training-thanks-brand mb-3">
+            <img src="{{ asset('images/Logo_PNG.svg') }}"
+                 alt="Logo Platforma Nowoczesnej Edukacji"
+                 width="72"
+                 height="72">
+            <div class="post-training-thanks-brand-name fw-semibold mt-2">
+                Platforma Nowoczesnej Edukacji
+            </div>
         </div>
 
-        <h1 class="h3 fw-bold mb-3">Dziękujemy za udział w szkoleniu!</h1>
+        <h1 class="h4 fw-bold mb-3">Dziękujemy za udział w szkoleniu!</h1>
 
         @if(!empty($courseTitle))
-            <p class="lead fw-semibold mb-2">{{ $courseTitle }}</p>
+            <p class="post-training-thanks-course-title fw-semibold mb-2">{{ $courseTitle }}</p>
         @endif
 
         @if(!empty($instructorLine) || !empty($startDateTimeLine))
-            <div class="post-training-thanks-meta text-muted mb-3">
-                @if(!empty($instructorLine))
-                    <div class="mb-1">{{ $instructorLine }}</div>
-                @endif
+            <p class="post-training-thanks-meta text-muted mb-3">
                 @if(!empty($startDateTimeLine))
-                    <div>Data rozpoczęcia: {{ $startDateTimeLine }}</div>
+                    Data: {{ $startDateTimeLine }}
                 @endif
-            </div>
+                @if(!empty($startDateTimeLine) && !empty($instructorLine))
+                    <span class="mx-1">|</span>
+                @endif
+                @if(!empty($instructorLine))
+                    {{ $instructorLine }}
+                @endif
+            </p>
         @endif
 
-        <p class="text-muted mb-4">
+        <p class="text-muted mb-3">
             Spotkanie na żywo dobiegło końca. Materiały ze szkolenia — nagranie, pliki i zaświadczenie —
             udostępniamy na koncie uczestnika na <strong>pnedu.pl</strong>, gdy tylko będą gotowe.
         </p>
 
-        <ul class="list-unstyled text-start post-training-thanks-list mb-4">
+        <ul class="list-unstyled text-start post-training-thanks-list mb-3 mx-auto" style="max-width: 22rem;">
             <li><i class="bi bi-camera-video text-primary me-2"></i>Nagranie szkolenia</li>
             <li><i class="bi bi-folder2-open text-primary me-2"></i>Materiały szkoleniowe</li>
             <li><i class="bi bi-award text-primary me-2"></i>Zaświadczenie ukończenia</li>
@@ -57,7 +66,7 @@
         </div>
 
         @if(!$isAuthenticated)
-            <p class="small text-muted mt-4 mb-0">
+            <p class="small text-muted mt-3 mb-0">
                 Zaloguj się tym samym adresem e-mail, który podałeś/aś przy zapisie na szkolenie.
             </p>
         @endif
