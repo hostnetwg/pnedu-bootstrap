@@ -11,6 +11,7 @@ use App\Models\Participant;
 use App\Models\PaymentDisplayOption;
 use App\Services\Analytics\BackendAnalyticsTracker;
 use App\Services\FormOrderCheckoutResumeService;
+use App\Services\FormOrderOnlineAbandonmentService;
 use App\Services\OrderFormParticipantService;
 use App\Services\OrderFormRecipientIdentityService;
 use App\Services\SendyService;
@@ -1497,6 +1498,12 @@ class CourseController extends Controller
                     ->with('error', 'To zamówienie zostało już zakończone lub zafakturowane. Zmiany nie zostały zapisane.');
             }
 
+            $this->cancelSupersededOnlineOrdersBeforeDeferredSubmit(
+                (int) $course->id,
+                $participantRows,
+                $order?->id
+            );
+
             $this->assertOrderFormParticipantEmails((int) $course->id, $participantRows, $order?->id);
             $this->applyPrimaryParticipantToValidated($validated, $primaryParticipant);
             $currentPrice = $this->orderFormTotalPrice($course, $coursePriceVariantId, count($participantRows));
@@ -1765,6 +1772,12 @@ class CourseController extends Controller
                     ->route('payment.order-form.edit', ['id' => $course->id, 'ident' => $order->ident])
                     ->with('error', 'To zamówienie zostało już zakończone lub zafakturowane. Zmiany nie zostały zapisane.');
             }
+
+            $this->cancelSupersededOnlineOrdersBeforeDeferredSubmit(
+                (int) $course->id,
+                $participantRows,
+                $order?->id
+            );
 
             $this->assertOrderFormParticipantEmails((int) $course->id, $participantRows, $order?->id);
             $currentPrice = $this->orderFormTotalPrice($course, $coursePriceVariantId, count($participantRows));
@@ -2600,6 +2613,26 @@ class CourseController extends Controller
         }
 
         return $rows;
+    }
+
+    /**
+     * @param  list<array{first_name: string, last_name: string, email: string}>  $rows
+     */
+    protected function cancelSupersededOnlineOrdersBeforeDeferredSubmit(
+        int $courseId,
+        array $participantRows,
+        ?int $exceptFormOrderId
+    ): void {
+        $emails = array_map(
+            static fn (array $row): string => (string) ($row['email'] ?? ''),
+            $participantRows
+        );
+
+        app(FormOrderOnlineAbandonmentService::class)->cancelSupersededUnpaidOnlineOrders(
+            $courseId,
+            $emails,
+            $exceptFormOrderId
+        );
     }
 
     /**

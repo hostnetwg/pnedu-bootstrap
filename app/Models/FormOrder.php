@@ -110,6 +110,8 @@ class FormOrder extends Model
         'ip_address',
         'fb_source',
         'conversion_placement',
+        'cancelled_at',
+        'cancelled_reason',
     ];
 
     /**
@@ -123,6 +125,7 @@ class FormOrder extends Model
         'pnedu_provisioned_at' => 'datetime',
         'pnedu_user_existed_before' => 'boolean',
         'updated_manually_at' => 'datetime',
+        'cancelled_at' => 'datetime',
         'product_price' => 'decimal:2',
         'course_price_variant_id' => 'integer',
         'publigo_sent' => 'boolean',
@@ -202,6 +205,14 @@ class FormOrder extends Model
         return $this->hasOne(FormOrderParticipant::class, 'form_order_id')
             ->where('is_primary', true)
             ->whereNull('deleted_at');
+    }
+
+    /**
+     * Próby płatności online powiązane z zamówieniem z formularza.
+     */
+    public function onlinePaymentOrders()
+    {
+        return $this->hasMany(OnlinePaymentOrder::class, 'form_order_id');
     }
 
     /**

@@ -244,11 +244,10 @@ class OrderFormParticipantService
             ->whereRaw('LOWER(TRIM(participant_email)) = ?', [$email])
             ->whereHas('formOrder', function ($q) use ($courseId, $exceptFormOrderId) {
                 $q->where('product_id', $courseId)
-                    ->whereNull('cancelled_at')
                     ->whereNull('deleted_at');
-                if ($exceptFormOrderId) {
-                    $q->where('id', '!=', $exceptFormOrderId);
-                }
+
+                app(FormOrderOnlineAbandonmentService::class)
+                    ->scopeOrdersBlockingParticipantEmail($q, $exceptFormOrderId);
             })
             ->exists();
 
