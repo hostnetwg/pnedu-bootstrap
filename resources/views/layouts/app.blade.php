@@ -11,23 +11,41 @@
 
     {{-- Meta Pixel tymczasowo wyłączony (test). Przywróć: include layouts.facebook-pixel --}}
 
-    @if(config('seo.block_search_indexing'))
-        <meta name="robots" content="noindex, nofollow">
-    @else
-        {{-- Google: jawne pozwolenie na podgląd obrazów i fragmentów (dobre praktyki SERP) --}}
-        <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
-    @endif
-
     @php
         $seoTitle = trim($__env->yieldContent('title')) ?: 'Platforma Nowoczesnej Edukacji';
         $seoDesc = trim($__env->yieldContent('meta_description')) ?: config('seo.default_description');
         $seoCanonical = \Illuminate\Support\Facades\View::hasSection('canonical')
             ? trim($__env->yieldContent('canonical'))
             : url()->current();
+        $seoDefaultNoindex = request()->routeIs(
+            'login',
+            'register',
+            'password.*',
+            'verification.*',
+            'dashboard*',
+            'profile.*',
+            'payment.*',
+            'orders.*',
+            'certificates.*',
+            'certificate-registration.*',
+            'survey.*',
+            'survey.gate.*',
+            'post-training.*'
+        );
+        $seoRobots = \Illuminate\Support\Facades\View::hasSection('robots')
+            ? trim($__env->yieldContent('robots'))
+            : (config('seo.block_search_indexing')
+                ? 'noindex, nofollow'
+                : ($seoDefaultNoindex
+                    ? 'noindex, follow'
+                    : 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1'));
+        $seoImage = trim($__env->yieldContent('og_image')) ?: config('seo.default_og_image');
     @endphp
 
+    <meta name="robots" content="{{ $seoRobots }}">
     <meta name="description" content="{{ $seoDesc }}">
     <link rel="canonical" href="{{ $seoCanonical }}">
+    @yield('pagination_links')
 
     <meta property="og:locale" content="pl_PL">
     <meta property="og:type" content="@yield('og_type', 'website')">
@@ -35,17 +53,20 @@
     <meta property="og:title" content="@yield('og_title', $seoTitle)">
     <meta property="og:description" content="@yield('og_description', $seoDesc)">
     <meta property="og:site_name" content="{{ config('app.name') }}">
-    @if(config('seo.default_og_image'))
-        <meta property="og:image" content="{{ config('seo.default_og_image') }}">
+    @if($seoImage)
+        <meta property="og:image" content="{{ $seoImage }}">
+        <meta property="og:image:alt" content="@yield('og_image_alt', $seoTitle)">
     @endif
+    @yield('article_meta')
 
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="@yield('twitter_title', $seoTitle)">
     <meta name="twitter:description" content="@yield('twitter_description', $seoDesc)">
-    @if(config('seo.default_og_image'))
-        <meta name="twitter:image" content="{{ config('seo.default_og_image') }}">
+    @if($seoImage)
+        <meta name="twitter:image" content="{{ $seoImage }}">
     @endif
 
+    @include('layouts.partials.global-structured-data', ['seoCanonical' => $seoCanonical])
     @stack('structured-data')
 
     <!-- Favicon -->

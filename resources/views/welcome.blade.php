@@ -5,53 +5,6 @@
 
 @section('meta_description', 'Szkolenia online dla nauczycieli i szkół: TIK, sztuczna inteligencja w edukacji, Office 365, Canva, certyfikaty. Zapisz się na szkolenie z Platformą Nowoczesnej Edukacji.')
 
-@push('structured-data')
-@php
-    $baseUrl = rtrim(config('app.url'), '/');
-    $orgId = $baseUrl.'/#organization';
-@endphp
-<script type="application/ld+json">
-{!! json_encode([
-    '@context' => 'https://schema.org',
-    '@graph' => [
-        [
-            '@type' => 'WebSite',
-            '@id' => $baseUrl.'/#website',
-            'name' => config('app.name'),
-            'url' => $baseUrl.'/',
-            'inLanguage' => 'pl-PL',
-            'description' => config('seo.default_description'),
-            'publisher' => ['@id' => $orgId],
-        ],
-        [
-            '@type' => 'EducationalOrganization',
-            '@id' => $orgId,
-            'name' => config('app.name'),
-            'legalName' => 'Niepubliczny Ośrodek Doskonalenia Nauczycieli „Platforma Nowoczesnej Edukacji”',
-            'url' => $baseUrl.'/',
-            'logo' => $baseUrl.'/logo-pne.png',
-            'image' => $baseUrl.'/logo-pne.png',
-            'email' => 'kontakt@pnedu.pl',
-            'telephone' => '+48-501-654-274',
-            'address' => [
-                '@type' => 'PostalAddress',
-                'streetAddress' => 'ul. A. Zamoyskiego 30/14',
-                'addressLocality' => 'Bieżuń',
-                'postalCode' => '09-320',
-                'addressCountry' => 'PL',
-            ],
-            'sameAs' => [
-                'https://www.facebook.com/WaldemarGrabowskiEdukacja/',
-                'https://www.instagram.com/platforma.nowoczesnej.edukacji/',
-                'https://www.youtube.com/c/WaldemarGrabowskiEdukacja',
-                'https://www.linkedin.com/in/waldemar-grabowski/',
-            ],
-        ],
-    ],
-], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!}
-</script>
-@endpush
-
 @section('banner')
     @include('layouts.hero-banner')
     @include('layouts.homepage-live-meeting-notice')
@@ -390,7 +343,7 @@
             <div class="container h-100">
                 <div class="row h-100 align-items-center">
                     <div class="col-md-6 text-white">
-                        <h1 class="display-4 fw-bold mb-4">Szkolenia dla dyrektorów</h1>
+                        <h2 class="display-4 fw-bold mb-4">Szkolenia dla dyrektorów</h2>
                         <p class="lead mb-4">Wspieramy liderów oświaty w skutecznym zarządzaniu szkołą. Od przepisów prawa po budowanie kultury współpracy i skutecznego nadzoru pedagogicznego.</p>
                         <a href="#courses" class="btn btn-light btn-lg">Dowiedz się więcej</a>
                     </div>
@@ -408,7 +361,7 @@
             <div class="container h-100">
                 <div class="row h-100 align-items-center">
                     <div class="col-md-6 text-white">
-                        <h1 class="display-4 fw-bold mb-4">Szkolenia dla rad pedagogicznych</h1>
+                        <h2 class="display-4 fw-bold mb-4">Szkolenia dla rad pedagogicznych</h2>
                         <p class="lead mb-4">Zapewniamy kompleksowe wsparcie w organizacji rad pedagogicznych, które naprawdę angażują i rozwijają kompetencje zespołu nauczycieli.</p>
                         <a href="https://nowoczesna-edukacja.pl" class="btn btn-light btn-lg">Zobacz ofertę</a>
                     </div>
@@ -426,7 +379,7 @@
             <div class="container h-100">
                 <div class="row h-100 align-items-center">
                     <div class="col-md-6 text-white">
-                        <h1 class="display-4 fw-bold mb-4">Bezpłatne webinary</h1>
+                        <h2 class="display-4 fw-bold mb-4">Bezpłatne webinary</h2>
                         <p class="lead mb-4">Dołącz do tysięcy nauczycieli korzystających z cotygodniowych darmowych szkoleń. Praktyka, inspiracja i nowoczesne podejście do edukacji.</p>
                         <a href="#courses" class="btn btn-light btn-lg">Zapisz się teraz</a>
                     </div>
@@ -444,7 +397,7 @@
             <div class="container h-100">
                 <div class="row h-100 align-items-center">
                     <div class="col-md-6 text-white">
-                        <h1 class="display-4 fw-bold mb-4">TIK w pracy NAUCZYCIELA</h1>
+                        <h2 class="display-4 fw-bold mb-4">TIK w pracy NAUCZYCIELA</h2>
                         <p class="lead mb-4">Szkolenia z wykorzystania technologii informacyjnych w edukacji to konkretne narzędzia, gotowe scenariusze i sprawdzone rozwiązania.</p>
                         <a href="#courses" class="btn btn-light btn-lg">Poznaj szczegóły</a>
                     </div>

@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
-@section('title', $course->title . ' – Szczegóły szkolenia')
+@section('title', $course->plainTitle() . ' – Szczegóły szkolenia')
+@section('meta_description', 'Szczegóły szkolenia „'.$course->plainTitle().'”: program, termin, forma realizacji, cena oraz zapis online w Platformie Nowoczesnej Edukacji.')
 
 @push('styles')
 <style>
@@ -443,7 +444,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="course-details-col">
             <div class="course-header-row">
                 <div class="course-header-content">
-                    <div class="course-title">{!! $course->title !!}</div>
+                    <h1 class="course-title">{!! $course->title !!}</h1>
                     <div class="course-meta-row">
                         @if($course->instructor && !empty($course->instructor->photo))
                             <div class="instructor-photo-header">

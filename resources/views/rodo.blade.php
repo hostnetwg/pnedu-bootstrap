@@ -2,6 +2,7 @@
 @extends('layouts.app')
 
 @section('title', 'Informacja o przetwarzaniu danych osobowych')
+@section('meta_description', 'Informacja RODO Platformy Nowoczesnej Edukacji: administrator danych, cele przetwarzania, podstawy prawne i prawa osób korzystających z serwisu.')
 
 @section('content')
 <div class="container py-4">

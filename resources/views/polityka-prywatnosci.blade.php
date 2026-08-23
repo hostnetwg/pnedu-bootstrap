@@ -2,6 +2,7 @@
 @extends('layouts.app')
 
 @section('title', 'Polityka prywatności')
+@section('meta_description', 'Polityka prywatności pnedu.pl: zasady przetwarzania danych, pliki cookie, analityka, newsletter i kontakt z administratorem danych.')
 
 @section('content')
 <div class="container py-4">

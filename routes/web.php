@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\BlogController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\ExternalSurveyGateController;
 use App\Http\Controllers\HomeController;
@@ -13,6 +14,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/robots.txt', [SeoController::class, 'robots'])->name('seo.robots');
 Route::get('/sitemap.xml', [SeoController::class, 'sitemap'])->name('seo.sitemap');
+Route::get('/llms.txt', [SeoController::class, 'llms'])->name('seo.llms');
 
 Route::get('/media/pneadm/{path}', [App\Http\Controllers\PneadmMediaController::class, 'show'])
     ->where('path', '.*')
@@ -97,10 +99,11 @@ Route::get('/polityka-prywatnosci', function () {
     return view('polityka-prywatnosci');
 })->name('polityka-prywatnosci');
 
-// Blog: lista artykułów
-Route::get('/blog', function () {
-    return view('blog.index');
-})->name('blog.index');
+// Blog: artykuły publikowane z panelu adm.pnedu.pl.
+Route::get('/api/blog/new-count', [BlogController::class, 'newCount'])
+    ->middleware('throttle:120,1')
+    ->name('blog.new-count');
+Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
 
 // O nas - Zespół
 Route::get('/o-nas/zespol', [App\Http\Controllers\AboutController::class, 'team'])->name('about.team');
@@ -150,14 +153,9 @@ Route::get('/bezplatne/akademia-rodzica', [App\Http\Controllers\CourseController
 Route::get('/bezplatne/akademia-dyrektora', [App\Http\Controllers\CourseController::class, 'directorAcademyCourses'])
     ->name('courses.director-academy');
 
-// Artykuły bloga
-Route::get('/blog/sztuczna-inteligencja-w-edukacji', function () {
-    return view('blog.sztuczna-inteligencja-w-edukacji');
-})->name('blog.sztuczna-inteligencja-w-edukacji');
-
-Route::get('/blog/wykorzystanie-aplikacji-canva', function () {
-    return view('blog.wykorzystanie-aplikacji-canva');
-})->name('blog.wykorzystanie-aplikacji-canva');
+Route::get('/blog/{slug}', [BlogController::class, 'show'])
+    ->where('slug', '[A-Za-z0-9-]+')
+    ->name('blog.show');
 
 Route::get('/dashboard', [App\Http\Controllers\DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])

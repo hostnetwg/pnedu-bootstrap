@@ -2,6 +2,7 @@
 @extends('layouts.app')
 
 @section('title', 'Regulamin – Platforma Nowoczesnej Edukacji')
+@section('meta_description', 'Regulamin Platformy Nowoczesnej Edukacji: zasady korzystania z serwisu, zamawiania szkoleń, płatności, reklamacji i świadczenia usług.')
 
 @section('content')
 <section class="py-5">

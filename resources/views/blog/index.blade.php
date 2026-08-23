@@ -1,102 +1,205 @@
 @extends('layouts.app')
 
 @section('title', 'Blog - Platforma Nowoczesnej Edukacji')
+@section('meta_description', 'Artykuły, porady i praktyczne inspiracje dla nauczycieli, dyrektorów oraz osób rozwijających nowoczesną edukację.')
+@section('canonical', $search === '' && $articles->currentPage() > 1 ? $articles->url($articles->currentPage()) : route('blog.index'))
+@if($search !== '')
+    @section('robots', 'noindex, follow')
+@endif
+@section('pagination_links')
+    @if($search === '')
+        @if($articles->previousPageUrl())
+            <link rel="prev" href="{{ $articles->previousPageUrl() }}">
+        @endif
+        @if($articles->nextPageUrl())
+            <link rel="next" href="{{ $articles->nextPageUrl() }}">
+        @endif
+    @endif
+@endsection
+
+@push('structured-data')
+@php
+    $baseUrl = rtrim((string) config('app.url'), '/');
+    $startPosition = (($articles->currentPage() - 1) * $articles->perPage()) + 1;
+    $blogItems = $articles->getCollection()->values()->map(function ($article, int $index) use ($startPosition) {
+        return [
+            '@type' => 'ListItem',
+            'position' => $startPosition + $index,
+            'url' => route('blog.show', $article->slug),
+            'name' => $article->plainTitle(),
+        ];
+    })->all();
+
+    $blogSchema = [
+        '@context' => 'https://schema.org',
+        '@graph' => [
+            [
+                '@type' => 'Blog',
+                '@id' => route('blog.index').'#blog',
+                'name' => 'Blog Platformy Nowoczesnej Edukacji',
+                'description' => 'Artykuły, porady i praktyczne inspiracje dla nauczycieli, dyrektorów oraz osób rozwijających nowoczesną edukację.',
+                'url' => route('blog.index'),
+                'inLanguage' => 'pl-PL',
+                'publisher' => ['@id' => $baseUrl.'/#organization'],
+            ],
+            [
+                '@type' => 'ItemList',
+                '@id' => url()->current().'#blog-list',
+                'name' => 'Lista artykułów bloga Platformy Nowoczesnej Edukacji',
+                'itemListElement' => $blogItems,
+            ],
+            [
+                '@type' => 'BreadcrumbList',
+                '@id' => route('blog.index').'#breadcrumb',
+                'itemListElement' => [
+                    [
+                        '@type' => 'ListItem',
+                        'position' => 1,
+                        'name' => 'Strona główna',
+                        'item' => route('home'),
+                    ],
+                    [
+                        '@type' => 'ListItem',
+                        'position' => 2,
+                        'name' => 'Blog',
+                        'item' => route('blog.index'),
+                    ],
+                ],
+            ],
+        ],
+    ];
+@endphp
+<script type="application/ld+json">
+{!! json_encode($blogSchema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!}
+</script>
+@endpush
+
+@push('styles')
+<style>
+    .blog-teaser {
+        width: 100%;
+        padding: 2.5rem 0;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    .blog-teaser:first-of-type {
+        padding-top: 0;
+    }
+
+    .blog-teaser:last-of-type {
+        border-bottom: 0;
+        padding-bottom: 0;
+    }
+
+    .blog-teaser__image {
+        aspect-ratio: 16 / 9;
+        object-fit: cover;
+        display: block;
+    }
+
+    .blog-teaser__image--placeholder {
+        min-height: 220px;
+        background: linear-gradient(135deg, #0d6efd 0%, #084298 100%);
+    }
+
+    .blog-teaser__title a:hover {
+        color: #0d6efd !important;
+    }
+
+    @media (min-width: 992px) {
+        .blog-teaser__excerpt {
+            font-size: 1.125rem;
+            line-height: 1.7;
+        }
+    }
+</style>
+@endpush
 
 @section('content')
 
 @section('main-padding', '')
 
-<!-- ===== HERO BANNER ======================================= -->
-<div class="bg-primary bg-gradient text-white py-3 text-center">
+<div class="bg-primary bg-gradient text-white py-5 text-center">
     <div class="container">
-        <p class="lead fw-semibold mb-0">
-            Blog Platformy Nowoczesnej Edukacji<br>
-            <span style="color: #c6a300; font-style: normal; font-weight: 600;">
-                Artykuły, porady i nowości ze świata edukacji
-            </span>
-        </p>
+        <h1 class="display-5 fw-bold mb-3">Blog Platformy Nowoczesnej Edukacji</h1>
+        <p class="lead fw-semibold mb-0">Artykuły, porady i nowości ze świata edukacji</p>
     </div>
 </div>
 
-<!-- ===== BLOG ARTICLES ======================================= -->
-<div class="container pt-5 pb-5">
-    <article class="mb-5">
-                <header class="mb-4">
-                    <h1 class="display-5 fw-bold">Sztuczna Inteligencja w Edukacji: Możliwości i Zagrożenia</h1>
-                    <div class="text-muted mb-2">
-                        Opublikowano: 8 lipca 2025 | Autor: Jan Kowalski | Czytanie: 4 min | <i class="bi bi-chat-dots"></i> 3 komentarze
-                    </div>
-                    <div class="mb-3">
-                        <i class="bi bi-tags"></i>
-                        <a href="#" class="text-decoration-none">AI</a>, <a href="#" class="text-decoration-none">Edukacja</a>, <a href="#" class="text-decoration-none">Technologie</a>
-                    </div>
-                    <img src="https://placehold.co/1200x400?text=Sztuczna+Inteligencja+w+Edukacji" class="img-fluid rounded" alt="Sztuczna Inteligencja w Edukacji">
-                </header>
-                <section>
-                    <p>Sztuczna inteligencja (SI) staje się coraz bardziej obecna w edukacji, wpływając zarówno na procesy nauczania, jak i uczenia się. Dzięki algorytmom uczenia maszynowego oraz zaawansowanym narzędziom analitycznym, nauczyciele mogą lepiej dostosować materiały do indywidualnych potrzeb uczniów, a administracja szkół uzyskuje cenne dane o wynikach i zaangażowaniu.</p>
-                    <h2>Możliwości</h2>
-                    <ul>
-                        <li>Personalizacja nauczania: SI pozwala tworzyć spersonalizowane ścieżki edukacyjne, dopasowując tempo i zakres materiału do możliwości każdego ucznia.</li>
-                        <li>Automatyzacja oceniania: dzięki analizie tekstu i rozpoznawaniu wzorców, SI może wspierać nauczycieli w ocenianiu prac pisemnych oraz testów, oszczędzając czas.</li>
-                        <li>Wsparcie dla uczniów o specjalnych potrzebach: narzędzia oparte na SI pomagają w tworzeniu materiałów dostępnych, np. tłumaczeń na język migowy czy syntezy mowy.</li>
-                    </ul>
-                    <h2>Zagrożenia</h2>
-                    <ul>
-                        <li>Ryzyko utraty prywatności: gromadzenie danych o uczniach wymaga ścisłego przestrzegania przepisów RODO oraz dbałości o bezpieczeństwo informacji.</li>
-                        <li>Zależność od technologii: nadmierne poleganie na algorytmach może prowadzić do zaniedbania kompetencji interpersonalnych i krytycznego myślenia.</li>
-                        <li>Nierówności dostępowe: szkoły z ograniczonym budżetem mogą nie mieć możliwości wdrożenia zaawansowanych rozwiązań SI, co pogłębia różnice edukacyjne.</li>
-                    </ul>
-                    <p>Podsumowując, sztuczna inteligencja w edukacji otwiera wiele perspektyw, ale wymaga świadomego i odpowiedzialnego podejścia, które zrównoważy korzyści z potencjalnymi zagrożeniami.</p>
-                </section>
-                <footer class="mt-4">
-                    <div>
-                        Udostępnij:
-                        <a href="#" class="text-muted me-2"><i class="bi bi-facebook"></i></a>
-                        <a href="#" class="text-muted me-2"><i class="bi bi-twitter"></i></a>
-                        <a href="#" class="text-muted"><i class="bi bi-linkedin"></i></a>
-                    </div>
-                </footer>
-            </article>
+<div class="container-fluid px-3 px-md-4 px-xl-5 py-5">
+    <div class="row justify-content-center mb-5">
+        <div class="col-12 col-xl-10">
+            <form method="GET" action="{{ route('blog.index') }}" class="input-group input-group-lg">
+                <input type="search" name="q" value="{{ $search }}" class="form-control" placeholder="Szukaj artykułów">
+                <button type="submit" class="btn btn-primary">Szukaj</button>
+                @if($search !== '')
+                    <a href="{{ route('blog.index') }}" class="btn btn-outline-secondary">Wyczyść</a>
+                @endif
+            </form>
+        </div>
+    </div>
 
-            <hr class="my-5">
+    <div class="row">
+        <div class="col-12">
+            @if($articles->count() > 0)
+                @foreach($articles as $article)
+                    @include('blog.partials.teaser', [
+                        'title' => $article->plainTitle(),
+                        'slug' => $article->slug,
+                        'excerpt' => $article->plainExcerpt(),
+                        'publishedAt' => $article->published_at,
+                        'readingMinutes' => $article->readingTimeMinutes(),
+                        'imageUrl' => $article->publicImageUrl(),
+                    ])
+                @endforeach
 
-            <article class="mb-5">
-                <header class="mb-4">
-                    <h1 class="display-5 fw-bold">Wykorzystanie aplikacji Canva w pracy nauczyciela</h1>
-                    <div class="text-muted mb-2">
-                        Opublikowano: 10 lipca 2025 | Autor: Anna Nowak | Czytanie: 3 min | <i class="bi bi-chat-dots"></i> 2 komentarze
+                @if($articles->hasPages())
+                    <div class="mt-5 pt-3">
+                        {{ $articles->links() }}
                     </div>
-                    <div class="mb-3">
-                        <i class="bi bi-tags"></i>
-                        <a href="#" class="text-decoration-none">Canva</a>, <a href="#" class="text-decoration-none">Grafika</a>, <a href="#" class="text-decoration-none">Narzędzia</a>
-                    </div>
-                    <img src="https://placehold.co/1200x400?text=Wykorzystanie+aplikacji+Canva" class="img-fluid rounded" alt="Wykorzystanie aplikacji Canva w pracy nauczyciela">
-                </header>
-                <section>
-                    <p>Canva to popularne narzędzie do projektowania graficznego, które zdobyło uznanie zarówno w środowisku edukacyjnym, jak i biznesowym. Intuicyjny interfejs i bogata biblioteka szablonów pozwalają nauczycielom szybko tworzyć estetyczne materiały dydaktyczne, które angażują uczniów i ułatwiają prezentację treści.</p>
-                    <h2>Dlaczego warto korzystać z Canvy?</h2>
-                    <ul>
-                        <li>Szeroka gama szablonów: od prezentacji i plakatów, przez certyfikaty i infografiki, po materiały interaktywne.</li>
-                        <li>Prosta obsługa: Canva umożliwia pracę w przeglądarce bez instalacji dodatkowego oprogramowania, a wbudowane narzędzia prowadzą krok po kroku przez proces tworzenia.</li>
-                        <li>Współpraca w zespole: nauczyciele mogą wspólnie edytować projekty oraz udostępniać je uczniom lub kolegom z grona pedagogicznego.</li>
-                    </ul>
-                    <h2>Przykłady zastosowań</h2>
-                    <ul>
-                        <li>Przygotowywanie materiałów multimedialnych: kolorowe prezentacje, quizy oraz plakaty edukacyjne zwiększają atrakcyjność lekcji.</li>
-                        <li>Tworzenie certyfikatów i dyplomów: gotowe szablony pozwalają szybko nagradzać uczniów za udział w konkursach czy projektach.</li>
-                        <li>Budowanie tablic interaktywnych: poprzez eksport materiałów jako obrazy lub PDF-y, można je wykorzystać na platformach e-learningowych.</li>
-                    </ul>
-                    <p>Podsumowując, Canva to narzędzie, które znacząco ułatwia pracę nauczyciela, pozwalając skupić się na merytorycznej stronie edukacji, a nie na skomplikowanym procesie graficznym.</p>
-                </section>
-                <footer class="mt-4">
-                    <div>
-                        Udostępnij:
-                        <a href="#" class="text-muted me-2"><i class="bi bi-facebook"></i></a>
-                        <a href="#" class="text-muted me-2"><i class="bi bi-twitter"></i></a>
-                        <a href="#" class="text-muted"><i class="bi bi-linkedin"></i></a>
-                    </div>
-                </footer>
-            </article>
+                @endif
+            @elseif($search !== '')
+                <div class="text-center py-5">
+                    <i class="bi bi-journal-text display-3 text-muted"></i>
+                    <h2 class="h4 mt-3">Brak wyników wyszukiwania</h2>
+                    <p class="text-muted mb-0">Nie znaleziono artykułów dla podanej frazy.</p>
+                </div>
+            @else
+                @include('blog.partials.teaser', [
+                    'isExample' => true,
+                    'showExampleNotice' => true,
+                    'title' => 'Sztuczna inteligencja w edukacji: możliwości i zagrożenia',
+                    'excerpt' => 'Sztuczna inteligencja coraz mocniej wspiera nauczanie, ocenianie i organizację pracy szkoły. Zobacz, jak wykorzystać ją praktycznie — i na co uważać, planując wdrożenia w placówce oświatowej.',
+                    'publishedAt' => '08.07.2025',
+                    'readingMinutes' => 4,
+                    'imageUrl' => 'https://placehold.co/1200x675/0d6efd/ffffff?text=Sztuczna+Inteligencja+w+Edukacji',
+                ])
+
+                @include('blog.partials.teaser', [
+                    'isExample' => true,
+                    'title' => 'Wykorzystanie aplikacji Canva w pracy nauczyciela',
+                    'excerpt' => 'Canva pozwala szybko tworzyć estetyczne materiały dydaktyczne: prezentacje, plakaty, certyfikaty i infografiki. Sprawdź, jak wpleść to narzędzie w codzienną pracę nauczyciela bez tracenia czasu na skomplikowaną grafikę.',
+                    'publishedAt' => '10.07.2025',
+                    'readingMinutes' => 3,
+                    'imageUrl' => 'https://placehold.co/1200x675/084298/ffffff?text=Wykorzystanie+aplikacji+Canva',
+                ])
+
+                <div class="text-center text-muted small mt-4">
+                    Po opublikowaniu artykułów w panelu administracyjnym powyższe przykłady zostaną zastąpione rzeczywistymi wpisami.
+                </div>
+            @endif
+        </div>
+    </div>
 </div>
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    if (typeof window.pneMarkBlogSeen === 'function') {
+        window.pneMarkBlogSeen(@json($blogSeenAt));
+    }
+});
+</script>
+@endpush
 
 @endsection

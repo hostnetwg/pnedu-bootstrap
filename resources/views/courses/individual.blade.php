@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('title', 'Szkolenia indywidualne - Platforma Nowoczesnej Edukacji')
+@section('meta_description', 'Szkolenia indywidualne online dla nauczycieli, dyrektorów i specjalistów oświaty. Wybierz temat, termin i formę nauki dopasowaną do swoich potrzeb.')
 
 @section('content')
 

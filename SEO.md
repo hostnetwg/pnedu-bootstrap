@@ -23,9 +23,22 @@ Dokument obowiązuje przy **każdej nowej treści publicznej** (strony, podstron
 | **Robots** | `config('seo.block_search_indexing')` — na produkcji **wyłącz** blokadę (`SEO_BLOCK_INDEXING` nie `true`). |
 | **Sitemap** | Dynamicznie: `GET /sitemap.xml` → `App\Http\Controllers\SeoController` — zawiera **strony statyczne + aktywne kursy**. |
 | **Robots.txt** | Dynamicznie: `GET /robots.txt` → ten sam kontroler; **nie dodawaj** statycznych `public/robots.txt` ani `public/sitemap.xml` (nadpisują Laravel). |
-| **JSON-LD** | Strona główna: structured data w `welcome.blade.php`; przy nowych typach treści rozważ `Organization` / `WebPage` / `BreadcrumbList`. |
+| **JSON-LD** | Globalne dane marki: `resources/views/layouts/partials/global-structured-data.blade.php`; przy nowych typach treści dodawaj zgodne z treścią `BlogPosting`, `BreadcrumbList`, `ItemList`, `Course` itp. |
 | **Semantyka HTML** | Jeden `h1` na widok; hierarchia `h2`–`h3`; linki z sensownym tekstem kotwicy (nie „kliknij tutaj”). |
 | **Obrazy** | Zawsze `alt` opisowy; pliki z nazwą sensowną (np. `szkolenie-tik-nauczyciele.jpg`). |
+
+---
+
+## 2a. AI Search / AI Overviews / AI Mode
+
+Google deklaruje, że widoczność w AI Overviews i AI Mode opiera się na podstawowym indeksie Google Search. Nie ma osobnego „AI schema” ani obowiązkowego pliku dla Google. Dla `pnedu.pl` obowiązuje więc:
+
+- Strony muszą być indeksowalne, dostępne dla crawlerów i uprawnione do snippetów (`max-snippet`, brak przypadkowego `noindex`).
+- Treść ma odpowiadać wprost na pytania użytkowników: jasny `h1`, logiczne `h2`/`h3`, krótkie akapity, listy, tabele i konkretne definicje.
+- Dane strukturalne używamy standardowe i zgodne z widoczną treścią: `EducationalOrganization`, `WebSite`, `Blog`, `BlogPosting`, `BreadcrumbList`, `ItemList`.
+- Nie dodajemy sztucznych treści tylko dla AI, ukrytych bloków, „keyword stuffing”, fałszywych FAQ ani niezgodnego schema.
+- `/llms.txt` jest dodatkiem dla narzędzi AI, które go czytają; nie jest czynnikiem rankingowym Google i nie zastępuje sitemap/robots/HTML.
+- Najlepszym sygnałem dla AI jest spójna encja marki: te same dane organizacji, kontaktu, social links i obszarów specjalizacji na stronie, w schema oraz w treściach.
 
 ---
 

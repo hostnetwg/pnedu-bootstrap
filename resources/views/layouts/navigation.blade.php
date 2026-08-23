@@ -56,7 +56,13 @@
                 </li>
 
                 {{-- Blog --}}
-                <li class="nav-item"><a class="nav-link" href="{{ route('blog.index') }}">Blog</a></li>
+                <li class="nav-item">
+                    <a class="nav-link blog-nav-link {{ request()->routeIs('blog.*') ? 'active fw-semibold' : '' }}"
+                       href="{{ route('blog.index') }}">
+                        Blog
+                        <span id="blog-nav-badge" class="blog-nav-badge d-none" aria-hidden="true"></span>
+                    </a>
+                </li>
 
                 {{-- O NAS (dropdown) --}}
                 <li class="nav-item dropdown">
@@ -150,3 +156,4 @@
     }
 }
 </style>
+@include('layouts.partials.blog-nav-badge')
