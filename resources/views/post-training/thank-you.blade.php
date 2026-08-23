@@ -88,69 +88,93 @@
             </p>
         @endif
 
-        <p class="text-muted mb-3">
-            @foreach($resources->summaryLines() as $line)
-                @if($line['strong'])
-                    <strong>{{ $line['text'] }}</strong>
-                @else
-                    {{ $line['text'] }}
-                @endif
-                @if(! $loop->last)
-                    {{ ' ' }}
-                @endif
-            @endforeach
-        </p>
+        @if($phase->showFullResources)
+            <p class="text-muted mb-3">
+                @foreach($resources->summaryLines() as $line)
+                    @if($line['strong'])
+                        <strong>{{ $line['text'] }}</strong>
+                    @else
+                        {{ $line['text'] }}
+                    @endif
+                    @if(! $loop->last)
+                        {{ ' ' }}
+                    @endif
+                @endforeach
+            </p>
 
-        <ul class="list-unstyled text-start post-training-thanks-list mb-3 mx-auto" style="max-width: 24rem;">
-            @if($resources->showMaterialsInList)
+            <ul class="list-unstyled text-start post-training-thanks-list mb-3 mx-auto" style="max-width: 24rem;">
+                @if($resources->showMaterialsInList)
+                    <li>
+                        <i class="bi bi-folder2-open {{ $resources->hasMaterials ? 'text-success' : 'text-primary' }} me-2"></i>
+                        Materiały szkoleniowe —
+                        @if($resources->hasMaterials)
+                            <strong>już dostępne</strong>
+                        @else
+                            <span class="text-muted">wkrótce</span>
+                        @endif
+                    </li>
+                @endif
                 <li>
-                    <i class="bi bi-folder2-open {{ $resources->hasMaterials ? 'text-success' : 'text-primary' }} me-2"></i>
-                    Materiały szkoleniowe —
-                    @if($resources->hasMaterials)
+                    <i class="bi bi-camera-video {{ $resources->hasRecording ? 'text-success' : 'text-primary' }} me-2"></i>
+                    Nagranie szkolenia —
+                    @if($resources->hasRecording)
                         <strong>już dostępne</strong>
                     @else
                         <span class="text-muted">wkrótce</span>
                     @endif
                 </li>
-            @endif
-            <li>
-                <i class="bi bi-camera-video {{ $resources->hasRecording ? 'text-success' : 'text-primary' }} me-2"></i>
-                Nagranie szkolenia —
-                @if($resources->hasRecording)
-                    <strong>już dostępne</strong>
-                @else
-                    <span class="text-muted">wkrótce</span>
+                @if($resources->showCertificateInList())
+                    <li>
+                        <i class="bi bi-award {{ $resources->certificateAvailable() ? 'text-success' : 'text-primary' }} me-2"></i>
+                        Zaświadczenie ukończenia —
+                        @if($resources->certificateAvailable())
+                            <strong>już dostępne</strong>
+                        @else
+                            <span class="text-muted">wkrótce</span>
+                        @endif
+                    </li>
                 @endif
-            </li>
-            @if($resources->showCertificateInList())
-                <li>
-                    <i class="bi bi-award {{ $resources->certificateAvailable() ? 'text-success' : 'text-primary' }} me-2"></i>
-                    Zaświadczenie ukończenia —
-                    @if($resources->certificateAvailable())
-                        <strong>już dostępne</strong>
-                    @else
-                        <span class="text-muted">wkrótce</span>
-                    @endif
-                </li>
-            @endif
-        </ul>
+            </ul>
 
-        @if(!empty($resources->surveyUrl))
-            <div class="border rounded-3 bg-light px-3 py-3 mb-3 text-start mx-auto" style="max-width: 32rem;">
-                <p class="mb-2 fw-semibold">A jeśli masz jeszcze minutę…</p>
-                <p class="small text-muted mb-3 mb-sm-2">
-                    Będzie nam bardzo miło, jeśli wypełnisz krótką ankietę po szkoleniu —
-                    Twoja opinia pomaga nam robić kolejne spotkania jeszcze lepiej.
-                </p>
-                <a href="{{ $resources->surveyUrl }}" class="btn btn-outline-primary">
-                    <i class="bi bi-clipboard2-check me-1"></i>
-                    Wypełnij ankietę
-                </a>
-            </div>
+            @if(!empty($resources->surveyUrl))
+                <div class="border rounded-3 bg-light px-3 py-3 mb-3 text-start mx-auto" style="max-width: 32rem;">
+                    <p class="mb-2 fw-semibold">A jeśli masz jeszcze minutę…</p>
+                    <p class="small text-muted mb-3 mb-sm-2">
+                        Będzie nam bardzo miło, jeśli wypełnisz krótką ankietę po szkoleniu —
+                        Twoja opinia pomaga nam robić kolejne spotkania jeszcze lepiej.
+                    </p>
+                    <a href="{{ $resources->surveyUrl }}" class="btn btn-outline-primary">
+                        <i class="bi bi-clipboard2-check me-1"></i>
+                        Wypełnij ankietę
+                    </a>
+                </div>
+            @endif
+        @else
+            <p class="text-muted mb-3">
+                @foreach($phase->earlySummaryLines() as $line)
+                    @if($line['strong'])
+                        <strong>{{ $line['text'] }}</strong>
+                    @else
+                        {{ $line['text'] }}
+                    @endif
+                    @if(! $loop->last)
+                        {{ ' ' }}
+                    @endif
+                @endforeach
+            </p>
+
+            @if(!empty($phase->joinUnlockHint))
+                <p class="small text-muted mb-3">{{ $phase->joinUnlockHint }}</p>
+            @endif
         @endif
 
         <div class="d-flex flex-column flex-sm-row gap-2 justify-content-center">
-            @if($isAuthenticated)
+            @if($phase->canReturnToLive && !empty($phase->returnToLiveUrl))
+                <a href="{{ $phase->returnToLiveUrl }}" class="btn btn-primary btn-lg">
+                    <i class="bi bi-camera-video me-1"></i>
+                    Wróć do transmisji
+                </a>
+            @elseif($isAuthenticated)
                 <a href="{{ $dashboardUrl }}" class="btn btn-primary btn-lg">
                     <i class="bi bi-grid me-1"></i>
                     Przejdź do Twoich zasobów

@@ -87,6 +87,11 @@ Szczegóły maila provision: `pneadm/docs/FORM_ORDERS_PNEDU_PROVISION.md`.
 
 **Zalogowany vs gość na `/po-szkoleniu`:** zalogowany → layout z menu i stopką pnedu + CTA „Przejdź do Twoich zasobów”; gość (redirect z CM poza kontem) → uproszczony layout + „Zaloguj się”. Tekst zależy od zasobów kursu w adm: materiały (`course_file_links`), nagranie (`course_videos`), status zaświadczeń (`courses.certificate_download_status`: `download_enabled` / `in_preparation` / `no_certificate`). Gdy kurs ma aktywną ankietę (`course_survey_links`) — dodatkowe CTA „Wypełnij ankietę”.
 
+**Dwie fazy (tylko gdy jest `?course=` lub `?event=`):**
+- **Wczesne wyjście** — przed progiem końcowym: krótki komunikat (przed startem / „wyszedłeś ze spotkania”), opcjonalnie **Wróć do transmisji** (gdy link live aktywny), bez listy zasobów i ankiety.
+- **Koniec szkolenia** — pełny komunikat (materiały, nagranie, zaświadczenie, ankieta): gdy `now >= end_date − min(20% czasu trwania, 45 min)`, po `end_date`, albo wcześniej gdy CM `inactive` (flaga w cache z polla `/transmisja`, bez dodatkowego API na thank-you).
+- Brak `end_date` w kursie → koniec szacowany jako `start_date + 1 h`.
+
 ### Tokeny (model)
 
 1. Pierwsze `/transmisja`: używa `participant_live_access.token` (z provision / maila), ustawia `embed_token_consumed_at`.

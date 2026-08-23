@@ -11,8 +11,10 @@ use App\Services\DashboardCourseLiveAccessService;
 use App\Services\LiveTransmissionPresenceService;
 use App\Services\LiveTransmissionService;
 use App\Services\NativeSurveyDuplicateGuard;
+use App\Support\ClickMeetingConferenceEndedCache;
 use App\Support\DashboardParticipantsListing;
 use App\Support\DashboardResourceCounts;
+use App\Support\PostTrainingThankYouPhase;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -436,6 +438,19 @@ class DashboardController extends Controller
         }
 
         $status = $clickMeeting->isConferenceEnded($eventId);
+
+        if (($status['ended'] ?? false) && $eventId !== '') {
+            $course = $participant->course;
+            $start = $course?->start_date;
+            $expiresAt = $start instanceof \Carbon\CarbonInterface
+                ? PostTrainingThankYouPhase::effectiveEnd(
+                    $course,
+                    \Carbon\Carbon::parse($start)->timezone((string) config('app.timezone', 'Europe/Warsaw'))
+                )->copy()->addDay()
+                : now()->addDay();
+
+            ClickMeetingConferenceEndedCache::mark($eventId, $expiresAt);
+        }
 
         return response()->json([
             'ok' => (bool) ($status['success'] ?? false),

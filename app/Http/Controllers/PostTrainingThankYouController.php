@@ -4,6 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Course;
 use App\Models\CourseOnlineDetail;
+use App\Models\Participant;
+use App\Services\DashboardCourseLiveAccessService;
+use App\Support\ClickMeetingConferenceEndedCache;
+use App\Support\PostTrainingThankYouPhase;
 use App\Support\PostTrainingThankYouResources;
 use Carbon\CarbonInterface;
 use Illuminate\Http\Request;
@@ -15,13 +19,25 @@ use Illuminate\View\View;
  */
 class PostTrainingThankYouController extends Controller
 {
-    public function __invoke(Request $request): View
-    {
+    public function __invoke(
+        Request $request,
+        DashboardCourseLiveAccessService $liveAccessService,
+    ): View {
         $course = $this->resolveCourse($request);
-        $eventId = $this->normalizeEventId($request->query('event'));
-        $resources = PostTrainingThankYouResources::forCourse($course);
+        $eventId = $this->resolveClickMeetingEventId($request, $course);
+        $cmEndedByHost = $this->wasConferenceEndedByHost($eventId);
 
         $user = $request->user();
+        $participant = $this->resolveParticipantForUser($user, $course);
+
+        $phase = PostTrainingThankYouPhase::resolve(
+            $course,
+            $cmEndedByHost,
+            $participant,
+            $liveAccessService,
+        );
+
+        $resources = PostTrainingThankYouResources::forCourse($course);
 
         return view('post-training.thank-you', [
             'courseTitle' => $course?->plainTitle(),
@@ -32,6 +48,7 @@ class PostTrainingThankYouController extends Controller
             'dashboardUrl' => route('dashboard.szkolenia'),
             'loginUrl' => route('login'),
             'resources' => $resources,
+            'phase' => $phase,
         ]);
     }
 
@@ -40,7 +57,10 @@ class PostTrainingThankYouController extends Controller
         $courseId = $this->normalizeCourseId($request->query('course'));
         if ($courseId !== null) {
             return Course::query()
-                ->with(['instructor:id,title,first_name,last_name,gender'])
+                ->with([
+                    'instructor:id,title,first_name,last_name,gender',
+                    'onlineDetail:id,course_id,clickmeeting_event_id',
+                ])
                 ->find($courseId);
         }
 
@@ -52,12 +72,51 @@ class PostTrainingThankYouController extends Controller
         $online = CourseOnlineDetail::query()
             ->where('clickmeeting_event_id', $eventId)
             ->with([
-                'course:id,title,instructor_id,start_date,certificate_download_status',
+                'course:id,title,instructor_id,start_date,end_date,certificate_download_status',
                 'course.instructor:id,title,first_name,last_name,gender',
+                'course.onlineDetail:id,course_id,clickmeeting_event_id',
             ])
             ->first();
 
         return $online?->course;
+    }
+
+    private function resolveClickMeetingEventId(Request $request, ?Course $course): ?string
+    {
+        $eventId = $this->normalizeEventId($request->query('event'));
+        if ($eventId !== null) {
+            return $eventId;
+        }
+
+        $fromCourse = trim((string) ($course?->onlineDetail?->clickmeeting_event_id ?? ''));
+
+        return $fromCourse !== '' ? $fromCourse : null;
+    }
+
+    private function wasConferenceEndedByHost(?string $eventId): bool
+    {
+        if ($eventId === null) {
+            return false;
+        }
+
+        return ClickMeetingConferenceEndedCache::wasEndedByHost($eventId);
+    }
+
+    private function resolveParticipantForUser(mixed $user, ?Course $course): ?Participant
+    {
+        if ($user === null || $course === null) {
+            return null;
+        }
+
+        $emailNormalized = Participant::normalizeEmail($user->email ?? null);
+        if ($emailNormalized === null) {
+            return null;
+        }
+
+        return Participant::query()
+            ->forNormalizedEmail($emailNormalized)
+            ->where('course_id', $course->id)
+            ->first();
     }
 
     private function normalizeCourseId(mixed $raw): ?int
