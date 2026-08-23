@@ -77,7 +77,7 @@ Szczegóły maila provision: `pneadm/docs/FORM_ORDERS_PNEDU_PROVISION.md`.
 3. **Osadzony:** link do `route('dashboard.szkolenia.transmisja')` (+ `fullscreen=1` z homepage/listy).
 4. Desktop embed: iframe CM (`?bare=1`), auto pełny ekran (gate modal). Strona `/transmisja` **bez menu i stopki pnedu** (layout `transmisja-bare`) — tylko zielony pasek PNE + okno CM. **Widok normalny:** branding po lewej, przyciski po prawej. **Pełny ekran:** ten sam pasek + „Wyjdź z pełnego ekranu” / „Zamknij”.
 5. Esc / „Wyjdź z pełnego ekranu” = tylko wyjście z FS (pokój zostaje).
-6. „Zamknij transmisję” = modal → zwolnienie slotu obecności + **przekierowanie na** `/po-szkoleniu?course={id}` (strona podziękowania). W trybie fullscreen host (`bare=1`) parent dostaje `postMessage` i też idzie na tę stronę.
+6. „Zamknij transmisję” = modal → zwolnienie slotu obecności + **przekierowanie na** `/po-szkoleniu?course={id}` (strona podziękowania). Modal i backdrop Bootstrapa są **wewnątrz** `#cm-embed-shell`, żeby były widoczne także w natywnym Fullscreen API. W trybie fullscreen host (`bare=1`) parent dostaje `postMessage` i też idzie na tę stronę.
 7. **Auto po „Zakończ dla wszystkich”:** `/transmisja` polluje `GET …/transmisja/meeting-status` (co ~12 s, cache CM 12 s). Gdy API CM ma `status=inactive`, uczestnik jest automatycznie kierowany na `/po-szkoleniu`.
 
 **Uwaga (embed vs CM full page):** ustawienie thank-you URL w CM przekierowuje przeglądarkę tylko w pełnym oknie ClickMeeting. W **iframe** na pnedu CM często zostawia czarny ekran końca — dlatego pnedu:

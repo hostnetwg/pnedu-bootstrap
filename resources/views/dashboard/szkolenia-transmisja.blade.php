@@ -83,23 +83,23 @@
                 @endif
             </div>
         </div>
-    </div>
-</div>
 
-{{-- Potwierdzenie zamknięcia transmisji (nie mylić z wyjściem z pełnego ekranu) --}}
-<div class="modal fade" id="cmCloseTransmissionModal" tabindex="-1" aria-labelledby="cmCloseTransmissionModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header border-0 pb-0">
-                <h2 class="modal-title fs-5" id="cmCloseTransmissionModalLabel">Zamknąć transmisję?</h2>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Anuluj"></button>
-            </div>
-            <div class="modal-body pt-2">
-                <p class="mb-0">Zamkniesz pokój na tym urządzeniu i przejdziesz do strony z podziękowaniem (nagranie, materiały, zaświadczenie). Możesz wejść ponownie przez „Dołącz do spotkania na żywo”, jeśli spotkanie jeszcze trwa.</p>
-            </div>
-            <div class="modal-footer border-0 pt-0">
-                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Wróć do pokoju</button>
-                <button type="button" class="btn btn-danger" id="cmCloseTransmissionConfirm">Zamknij transmisję</button>
+        {{-- Modal musi być wewnątrz shella — natywny Fullscreen API pokazuje tylko elementy w fullscreenElement --}}
+        <div class="modal fade" id="cmCloseTransmissionModal" tabindex="-1" aria-labelledby="cmCloseTransmissionModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header border-0 pb-0">
+                        <h2 class="modal-title fs-5" id="cmCloseTransmissionModalLabel">Zamknąć transmisję?</h2>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Anuluj"></button>
+                    </div>
+                    <div class="modal-body pt-2">
+                        <p class="mb-0">Zamkniesz pokój na tym urządzeniu i przejdziesz do strony z podziękowaniem (nagranie, materiały, zaświadczenie). Możesz wejść ponownie przez „Dołącz do spotkania na żywo”, jeśli spotkanie jeszcze trwa.</p>
+                    </div>
+                    <div class="modal-footer border-0 pt-0">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Wróć do pokoju</button>
+                        <button type="button" class="btn btn-danger" id="cmCloseTransmissionConfirm">Zamknij transmisję</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -301,9 +301,17 @@
     #cm-embed-shell.is-fullscreen .cm-transmisja-brand-bar__actions {
         display: flex;
     }
-    /* Modal nad warstwą FS (Bootstrap domyślnie ~1055, shell ma 2000) */
+    /* Modal + backdrop wewnątrz shella (natywny FS i CSS FS) */
+    #cm-embed-shell {
+        position: relative;
+    }
     #cmCloseTransmissionModal {
         z-index: 2100;
+    }
+    #cm-embed-shell > .modal-backdrop {
+        z-index: 2090;
+        position: absolute;
+        inset: 0;
     }
     body.cm-transmisja-fs .modal-backdrop,
     .modal-backdrop.show {
@@ -482,7 +490,27 @@
             closeTransmission();
             return;
         }
+
+        // Backdrop Bootstrapa ląduje w body — poza natywnym fullscreenElement jest niewidoczny.
+        const fsRoot = document.fullscreenElement || shell;
+        if (modalEl.parentElement !== fsRoot) {
+            fsRoot.appendChild(modalEl);
+        }
+
+        function relocateBackdrop() {
+            const backdrop = document.querySelector('.modal-backdrop');
+            if (backdrop && backdrop.parentElement !== fsRoot) {
+                fsRoot.appendChild(backdrop);
+            }
+        }
+
+        modalEl.addEventListener('show.bs.modal', function () {
+            queueMicrotask(relocateBackdrop);
+            setTimeout(relocateBackdrop, 0);
+        }, { once: true });
+
         bootstrap.Modal.getOrCreateInstance(modalEl).show();
+        relocateBackdrop();
     }
 
     function goToThankYouPage() {
