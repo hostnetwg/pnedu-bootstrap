@@ -91,7 +91,8 @@ class PostTrainingThankYouPageTest extends TestCase
 
         $this->get(route('post-training.thank-you', ['course' => $course->id]))
             ->assertOk()
-            ->assertSee('Szkolenie jeszcze się nie rozpoczęło')
+            ->assertSee('Szkolenie jeszcze się nie rozpoczęło', false)
+            ->assertDontSee('Dziękujemy za udział w szkoleniu!')
             ->assertDontSee('Materiały szkoleniowe —')
             ->assertDontSee('Wypełnij ankietę');
     }
@@ -120,7 +121,8 @@ class PostTrainingThankYouPageTest extends TestCase
 
         $this->get(route('post-training.thank-you', ['course' => $course->id]))
             ->assertOk()
-            ->assertSee('Wyszedłeś/aś ze spotkania')
+            ->assertSee('Wyszedłeś/aś ze spotkania', false)
+            ->assertDontSee('Dziękujemy za udział w szkoleniu!')
             ->assertSee('Szkolenie nadal trwa')
             ->assertDontSee('Nagranie szkolenia —')
             ->assertDontSee('Wypełnij ankietę');

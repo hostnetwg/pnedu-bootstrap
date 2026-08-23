@@ -74,4 +74,24 @@ class PostTrainingThankYouPhaseTest extends TestCase
 
         $this->assertTrue(PostTrainingThankYouPhase::isClosingPhase($during, $start, $end, true));
     }
+
+    public function test_early_phases_use_different_headings(): void
+    {
+        $beforeStart = new PostTrainingThankYouPhase(
+            phase: PostTrainingThankYouPhase::PHASE_EARLY_BEFORE_START,
+            showFullResources: false,
+        );
+        $during = new PostTrainingThankYouPhase(
+            phase: PostTrainingThankYouPhase::PHASE_EARLY_DURING,
+            showFullResources: false,
+        );
+        $closing = new PostTrainingThankYouPhase(
+            phase: PostTrainingThankYouPhase::PHASE_CLOSING,
+            showFullResources: true,
+        );
+
+        $this->assertSame('Szkolenie jeszcze się nie rozpoczęło', $beforeStart->heading());
+        $this->assertSame('Wyszedłeś/aś ze spotkania', $during->heading());
+        $this->assertSame('Dziękujemy za udział w szkoleniu!', $closing->heading());
+    }
 }

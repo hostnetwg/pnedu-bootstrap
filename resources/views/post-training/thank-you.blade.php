@@ -1,7 +1,9 @@
 @extends($isAuthenticated ? 'layouts.app' : 'layouts.post-training-thanks')
 
-@section('title', 'Dziękujemy za udział w szkoleniu — Platforma Nowoczesnej Edukacji')
-@section('meta_description', 'Dziękujemy za udział w szkoleniu. Sprawdź, co jest już dostępne na Twoim koncie na pnedu.pl.')
+@section('title', $phase->pageTitle() . ' — Platforma Nowoczesnej Edukacji')
+@section('meta_description', $phase->isEarlyExit()
+    ? 'Informacja o szkoleniu na Platformie Nowoczesnej Edukacji.'
+    : 'Dziękujemy za udział w szkoleniu. Sprawdź, co jest już dostępne na Twoim koncie na pnedu.pl.')
 
 @if($isAuthenticated)
 @push('styles')
@@ -68,7 +70,7 @@
             </div>
         @endunless
 
-        <h1 class="h4 fw-bold mb-3">Dziękujemy za udział w szkoleniu!</h1>
+        <h1 class="h4 fw-bold mb-3">{{ $phase->heading() }}</h1>
 
         @if(!empty($courseTitle))
             <p class="post-training-thanks-course-title fw-semibold mb-2">{{ $courseTitle }}</p>

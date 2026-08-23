@@ -91,6 +91,24 @@ class PostTrainingThankYouPhase
         return in_array($this->phase, [self::PHASE_EARLY_BEFORE_START, self::PHASE_EARLY_DURING], true);
     }
 
+    public function heading(): string
+    {
+        return match ($this->phase) {
+            self::PHASE_EARLY_BEFORE_START => 'Szkolenie jeszcze się nie rozpoczęło',
+            self::PHASE_EARLY_DURING => 'Wyszedłeś/aś ze spotkania',
+            default => 'Dziękujemy za udział w szkoleniu!',
+        };
+    }
+
+    public function pageTitle(): string
+    {
+        return match ($this->phase) {
+            self::PHASE_EARLY_BEFORE_START => 'Szkolenie jeszcze się nie rozpoczęło',
+            self::PHASE_EARLY_DURING => 'Wyszedłeś/aś ze spotkania',
+            default => 'Dziękujemy za udział w szkoleniu',
+        };
+    }
+
     /**
      * @return list<array{strong: bool, text: string}>
      */
@@ -98,10 +116,6 @@ class PostTrainingThankYouPhase
     {
         if ($this->phase === self::PHASE_EARLY_BEFORE_START) {
             return [
-                [
-                    'strong' => true,
-                    'text' => 'Szkolenie jeszcze się nie rozpoczęło.',
-                ],
                 [
                     'strong' => false,
                     'text' => 'Jeśli tylko sprawdziłeś/aś dostęp do pokoju — wróć na spotkanie o zaplanowanej godzinie.',
@@ -111,10 +125,6 @@ class PostTrainingThankYouPhase
 
         if ($this->phase === self::PHASE_EARLY_DURING) {
             return [
-                [
-                    'strong' => true,
-                    'text' => 'Wyszedłeś/aś ze spotkania.',
-                ],
                 [
                     'strong' => false,
                     'text' => 'Szkolenie nadal trwa. Możesz wrócić do transmisji z panelu. Materiały, nagranie i zaświadczenie udostępniamy po zakończeniu szkolenia.',
