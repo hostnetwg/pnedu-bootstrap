@@ -33,6 +33,7 @@ class Article extends Model
     protected $casts = [
         'published_at' => 'datetime',
         'comments_enabled' => 'boolean',
+        'view_count' => 'integer',
     ];
 
     public function scopePublished(Builder $query): Builder
@@ -152,5 +153,40 @@ class Article extends Model
         $words = count($matches[0] ?? []);
 
         return max(1, (int) ceil($words / 220));
+    }
+
+    /**
+     * Zlicza jedno wyświetlenie artykułu na publicznym blogu (max. raz na sesję).
+     */
+    public function recordPublicView(): void
+    {
+        $sessionKey = 'blog_article_viewed_'.$this->id;
+
+        if (session()->has($sessionKey)) {
+            return;
+        }
+
+        session()->put($sessionKey, now()->timestamp);
+
+        $this->increment('view_count');
+    }
+
+    public function formattedViewCount(): string
+    {
+        return number_format((int) $this->view_count, 0, ',', ' ');
+    }
+
+    public function viewCountLabel(): string
+    {
+        $count = (int) $this->view_count;
+        $formatted = $this->formattedViewCount();
+
+        $word = match (true) {
+            $count === 1 => 'wyświetlenie',
+            $count % 10 >= 2 && $count % 10 <= 4 && ($count % 100 < 12 || $count % 100 > 14) => 'wyświetlenia',
+            default => 'wyświetleń',
+        };
+
+        return $formatted.' '.$word;
     }
 }

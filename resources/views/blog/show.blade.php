@@ -313,6 +313,8 @@
                         {{ $article->published_at?->format('d.m.Y') }}
                         <span class="mx-1">|</span>
                         {{ $article->readingTimeMinutes() }} min czytania
+                        <span class="mx-1">|</span>
+                        {{ $article->viewCountLabel() }}
                     </div>
                 </div>
             </div>

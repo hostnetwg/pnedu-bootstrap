@@ -40,6 +40,8 @@ class BlogController extends Controller
             ->where('slug', $slug)
             ->firstOrFail();
 
+        $article->recordPublicView();
+
         $seenAt = now()->toIso8601String();
 
         return view('blog.show', compact('article', 'seenAt'));

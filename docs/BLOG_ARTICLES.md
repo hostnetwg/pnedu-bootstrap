@@ -15,6 +15,8 @@ protected $connection = 'pneadm';
 - `/blog` - lista opublikowanych artykułów.
 - `/blog/{slug}` - pojedynczy artykuł.
 
+Przy wejściu na artykuł `BlogController` wywołuje `Article::recordPublicView()` — inkrementuje `view_count` w bazie `pneadm` (max. raz na sesję odwiedzającego). Licznik jest widoczny w nagłówku artykułu (data, czas czytania, wyświetlenia).
+
 Widoczne są tylko rekordy:
 
 - ze statusem `published`,
