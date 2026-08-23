@@ -1,7 +1,7 @@
 @extends($isAuthenticated ? 'layouts.app' : 'layouts.post-training-thanks')
 
 @section('title', 'Dziękujemy za udział w szkoleniu — Platforma Nowoczesnej Edukacji')
-@section('meta_description', 'Dziękujemy za udział w szkoleniu. Materiały są już na koncie; nagranie i zaświadczenie pojawią się wkrótce.')
+@section('meta_description', 'Dziękujemy za udział w szkoleniu. Sprawdź, co jest już dostępne na Twoim koncie na pnedu.pl.')
 
 @if($isAuthenticated)
 @push('styles')
@@ -89,38 +89,55 @@
         @endif
 
         <p class="text-muted mb-3">
-            @if(!empty($hasMaterials))
-                <strong>Materiały szkoleniowe są już dostępne na Twoim koncie.</strong>
-            @endif
-            Nagranie i zaświadczenie pojawią się wkrótce — potrzebujemy chwili, by je przygotować i udostępnić.
-            O gotowości damy znać osobnym e-mailem — możesz też zajrzeć później na swoje konto na pnedu.pl.
+            @foreach($resources->summaryLines() as $line)
+                @if($line['strong'])
+                    <strong>{{ $line['text'] }}</strong>
+                @else
+                    {{ $line['text'] }}
+                @endif
+                @if(! $loop->last)
+                    {{ ' ' }}
+                @endif
+            @endforeach
         </p>
 
         <ul class="list-unstyled text-start post-training-thanks-list mb-3 mx-auto" style="max-width: 24rem;">
-            @if(!empty($hasMaterials))
+            @if($resources->hasMaterials)
                 <li>
                     <i class="bi bi-folder2-open text-success me-2"></i>
                     Materiały szkoleniowe — <strong>już dostępne</strong>
                 </li>
             @endif
             <li>
-                <i class="bi bi-camera-video text-primary me-2"></i>
-                Nagranie szkolenia — <span class="text-muted">wkrótce</span>
+                <i class="bi bi-camera-video {{ $resources->hasRecording ? 'text-success' : 'text-primary' }} me-2"></i>
+                Nagranie szkolenia —
+                @if($resources->hasRecording)
+                    <strong>już dostępne</strong>
+                @else
+                    <span class="text-muted">wkrótce</span>
+                @endif
             </li>
-            <li>
-                <i class="bi bi-award text-primary me-2"></i>
-                Zaświadczenie ukończenia — <span class="text-muted">wkrótce</span>
-            </li>
+            @if($resources->showCertificateInList())
+                <li>
+                    <i class="bi bi-award {{ $resources->certificateAvailable() ? 'text-success' : 'text-primary' }} me-2"></i>
+                    Zaświadczenie ukończenia —
+                    @if($resources->certificateAvailable())
+                        <strong>już dostępne</strong>
+                    @else
+                        <span class="text-muted">wkrótce</span>
+                    @endif
+                </li>
+            @endif
         </ul>
 
-        @if(!empty($surveyUrl))
+        @if(!empty($resources->surveyUrl))
             <div class="border rounded-3 bg-light px-3 py-3 mb-3 text-start mx-auto" style="max-width: 32rem;">
                 <p class="mb-2 fw-semibold">A jeśli masz jeszcze minutę…</p>
                 <p class="small text-muted mb-3 mb-sm-2">
                     Będzie nam bardzo miło, jeśli wypełnisz krótką ankietę po szkoleniu —
                     Twoja opinia pomaga nam robić kolejne spotkania jeszcze lepiej.
                 </p>
-                <a href="{{ $surveyUrl }}" class="btn btn-outline-primary">
+                <a href="{{ $resources->surveyUrl }}" class="btn btn-outline-primary">
                     <i class="bi bi-clipboard2-check me-1"></i>
                     Wypełnij ankietę
                 </a>

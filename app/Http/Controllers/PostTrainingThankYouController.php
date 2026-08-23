@@ -3,9 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Course;
-use App\Models\CourseFileLink;
 use App\Models\CourseOnlineDetail;
-use App\Models\PneadmCourseSurveyLink;
+use App\Support\PostTrainingThankYouResources;
 use Carbon\CarbonInterface;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -20,8 +19,7 @@ class PostTrainingThankYouController extends Controller
     {
         $course = $this->resolveCourse($request);
         $eventId = $this->normalizeEventId($request->query('event'));
-        $surveyUrl = $this->resolveSurveyUrl($course);
-        $hasMaterials = $this->courseHasMaterials($course);
+        $resources = PostTrainingThankYouResources::forCourse($course);
 
         $user = $request->user();
 
@@ -33,42 +31,8 @@ class PostTrainingThankYouController extends Controller
             'isAuthenticated' => $user !== null,
             'dashboardUrl' => route('dashboard.szkolenia'),
             'loginUrl' => route('login'),
-            'surveyUrl' => $surveyUrl,
-            'hasMaterials' => $hasMaterials,
+            'resources' => $resources,
         ]);
-    }
-
-    private function courseHasMaterials(?Course $course): bool
-    {
-        if ($course === null) {
-            return false;
-        }
-
-        return CourseFileLink::query()
-            ->where('course_id', $course->id)
-            ->whereNotNull('url')
-            ->where('url', '!=', '')
-            ->exists();
-    }
-
-    private function resolveSurveyUrl(?Course $course): ?string
-    {
-        if ($course === null) {
-            return null;
-        }
-
-        $link = PneadmCourseSurveyLink::query()
-            ->where('course_id', $course->id)
-            ->orderBy('order')
-            ->orderBy('id')
-            ->get()
-            ->first(fn (PneadmCourseSurveyLink $item) => $item->isAvailableNow());
-
-        if ($link === null) {
-            return null;
-        }
-
-        return $link->gateAbsoluteUrl();
     }
 
     private function resolveCourse(Request $request): ?Course
@@ -88,7 +52,7 @@ class PostTrainingThankYouController extends Controller
         $online = CourseOnlineDetail::query()
             ->where('clickmeeting_event_id', $eventId)
             ->with([
-                'course:id,title,instructor_id,start_date',
+                'course:id,title,instructor_id,start_date,certificate_download_status',
                 'course.instructor:id,title,first_name,last_name,gender',
             ])
             ->first();

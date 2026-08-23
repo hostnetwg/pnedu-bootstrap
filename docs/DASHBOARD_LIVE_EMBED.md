@@ -85,7 +85,7 @@ Szczegóły maila provision: `pneadm/docs/FORM_ORDERS_PNEDU_PROVISION.md`.
 - polluje status wydarzenia w CM i po `inactive` zamyka embed automatycznie;
 - jeśli CM jednak załaduje `/po-szkoleniu` w iframe, skrypt na stronie podziękowania (i listener `load` iframe) wyciąga widok do top-level.
 
-**Zalogowany vs gość na `/po-szkoleniu`:** zalogowany → layout z menu i stopką pnedu + CTA „Przejdź do Twoich szkoleń”; gość (redirect z CM poza kontem) → uproszczony layout + „Zaloguj się”. Tekst: materiały już dostępne; nagranie i zaświadczenie wkrótce (mail). Gdy kurs ma aktywną ankietę (`course_survey_links`) — dodatkowe CTA „Wypełnij ankietę”.
+**Zalogowany vs gość na `/po-szkoleniu`:** zalogowany → layout z menu i stopką pnedu + CTA „Przejdź do Twoich zasobów”; gość (redirect z CM poza kontem) → uproszczony layout + „Zaloguj się”. Tekst zależy od zasobów kursu w adm: materiały (`course_file_links`), nagranie (`course_videos`), status zaświadczeń (`courses.certificate_download_status`: `download_enabled` / `in_preparation` / `no_certificate`). Gdy kurs ma aktywną ankietę (`course_survey_links`) — dodatkowe CTA „Wypełnij ankietę”.
 
 ### Tokeny (model)
 

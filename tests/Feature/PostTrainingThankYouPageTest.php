@@ -126,7 +126,7 @@ class PostTrainingThankYouPageTest extends TestCase
             ->assertSee('KURS PO PARAMETRZE COURSE')
             ->assertSee('Data: 01.10.2026 14:00')
             ->assertDontSee('Materiały szkoleniowe —')
-            ->assertDontSee('już dostępne');
+            ->assertDontSee('Materiały szkoleniowe są już dostępne');
     }
 
     public function test_thank_you_page_shows_materials_when_file_link_exists(): void
@@ -206,6 +206,99 @@ class PostTrainingThankYouPageTest extends TestCase
         $this->get(route('post-training.thank-you', ['course' => 'abc']))
             ->assertOk()
             ->assertSee('Dziękujemy za udział w szkoleniu');
+    }
+
+    public function test_thank_you_page_shows_certificate_available_when_download_enabled(): void
+    {
+        if (! $this->tablesReady()) {
+            $this->markTestSkipped('Brak wymaganych tabel pneadm.');
+        }
+
+        $start = Carbon::parse('2026-10-01 14:00:00', 'Europe/Warsaw');
+
+        $course = Course::query()->create([
+            'title' => 'KURS Z ZAŚWIADCZENIEM',
+            'description' => 'Opis',
+            'start_date' => $start,
+            'end_date' => $start->copy()->addHours(2),
+            'is_paid' => true,
+            'type' => 'online',
+            'category' => 'open',
+            'is_active' => true,
+            'certificate_format' => '{nr}/PNE',
+        ]);
+
+        $course->forceFill(['certificate_download_status' => 'download_enabled'])->save();
+
+        $this->get(route('post-training.thank-you', ['course' => $course->id]))
+            ->assertOk()
+            ->assertSee('Zaświadczenie jest już dostępne do pobrania na Twoim koncie')
+            ->assertSee('Zaświadczenie ukończenia —')
+            ->assertSee('już dostępne');
+    }
+
+    public function test_thank_you_page_hides_certificate_line_when_no_certificate(): void
+    {
+        if (! $this->tablesReady()) {
+            $this->markTestSkipped('Brak wymaganych tabel pneadm.');
+        }
+
+        $start = Carbon::parse('2026-10-01 14:00:00', 'Europe/Warsaw');
+
+        $course = Course::query()->create([
+            'title' => 'KURS BEZ ZAŚWIADCZENIA',
+            'description' => 'Opis',
+            'start_date' => $start,
+            'end_date' => $start->copy()->addHours(2),
+            'is_paid' => true,
+            'type' => 'online',
+            'category' => 'open',
+            'is_active' => true,
+            'certificate_format' => '{nr}/PNE',
+        ]);
+
+        $course->forceFill(['certificate_download_status' => 'no_certificate'])->save();
+
+        $this->get(route('post-training.thank-you', ['course' => $course->id]))
+            ->assertOk()
+            ->assertDontSee('Zaświadczenie ukończenia —')
+            ->assertSee('Nagranie pojawi się wkrótce');
+    }
+
+    public function test_thank_you_page_shows_recording_available_when_video_exists(): void
+    {
+        if (! $this->tablesReady()
+            || ! \Illuminate\Support\Facades\Schema::connection('pneadm')->hasTable('course_videos')) {
+            $this->markTestSkipped('Brak wymaganych tabel pneadm.');
+        }
+
+        $start = Carbon::parse('2026-10-01 14:00:00', 'Europe/Warsaw');
+
+        $course = Course::query()->create([
+            'title' => 'KURS Z NAGRANIEM',
+            'description' => 'Opis',
+            'start_date' => $start,
+            'end_date' => $start->copy()->addHours(2),
+            'is_paid' => true,
+            'type' => 'online',
+            'category' => 'open',
+            'is_active' => true,
+            'certificate_format' => '{nr}/PNE',
+        ]);
+
+        \App\Models\CourseVideo::query()->create([
+            'course_id' => $course->id,
+            'video_url' => 'https://example.test/video.mp4',
+            'platform' => 'youtube',
+            'title' => 'Nagranie 1',
+            'order' => 1,
+        ]);
+
+        $this->get(route('post-training.thank-you', ['course' => $course->id]))
+            ->assertOk()
+            ->assertSee('Nagranie szkolenia jest już dostępne na Twoim koncie')
+            ->assertSee('Nagranie szkolenia —')
+            ->assertSee('już dostępne');
     }
 
     private function tablesReady(): bool
