@@ -3,12 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Models\Article;
-use App\Models\Course;
-use App\Models\TrainingOffer;
+use App\Services\Seo\SitemapUrlBuilder;
 use Illuminate\Http\Response;
 
 class SeoController extends Controller
 {
+    public function __construct(
+        private readonly SitemapUrlBuilder $sitemapUrlBuilder,
+    ) {}
+
     public function robots(): Response
     {
         if (config('seo.block_search_indexing')) {
@@ -30,7 +33,7 @@ class SeoController extends Controller
             abort(404);
         }
 
-        $urls = array_merge($this->staticUrls(), $this->courseUrls(), $this->trainingOfferUrls(), $this->articleUrls());
+        $urls = $this->sitemapUrlBuilder->build();
 
         return response()
             ->view('seo.sitemap', ['urls' => $urls])
@@ -96,109 +99,5 @@ class SeoController extends Controller
             'Content-Type' => 'text/plain; charset=UTF-8',
             'Cache-Control' => 'public, max-age=3600',
         ]);
-    }
-
-    /**
-     * @return array<int, array{loc: string, lastmod: string, changefreq: string, priority: string}>
-     */
-    private function staticUrls(): array
-    {
-        $now = now()->toAtomString();
-
-        $routes = [
-            ['route' => 'home', 'changefreq' => 'daily', 'priority' => '1.0'],
-            ['route' => 'rodo', 'changefreq' => 'yearly', 'priority' => '0.3'],
-            ['route' => 'regulamin', 'changefreq' => 'yearly', 'priority' => '0.4'],
-            ['route' => 'polityka-prywatnosci', 'changefreq' => 'yearly', 'priority' => '0.4'],
-            ['route' => 'blog.index', 'changefreq' => 'weekly', 'priority' => '0.7'],
-            ['route' => 'about.team', 'changefreq' => 'monthly', 'priority' => '0.6'],
-            ['route' => 'about.accreditation', 'changefreq' => 'yearly', 'priority' => '0.5'],
-            ['route' => 'courses.individual', 'changefreq' => 'weekly', 'priority' => '0.8'],
-            ['route' => 'training-offers.pedagogical-councils.index', 'changefreq' => 'weekly', 'priority' => '0.8'],
-            ['route' => 'courses.free', 'changefreq' => 'weekly', 'priority' => '0.8'],
-            ['route' => 'courses.office365', 'changefreq' => 'weekly', 'priority' => '0.8'],
-            ['route' => 'courses.parent-academy', 'changefreq' => 'weekly', 'priority' => '0.8'],
-            ['route' => 'courses.director-academy', 'changefreq' => 'weekly', 'priority' => '0.8'],
-        ];
-
-        $out = [];
-        foreach ($routes as $row) {
-            $out[] = [
-                'loc' => route($row['route']),
-                'lastmod' => $now,
-                'changefreq' => $row['changefreq'],
-                'priority' => $row['priority'],
-            ];
-        }
-
-        return $out;
-    }
-
-    /**
-     * @return array<int, array{loc: string, lastmod: string, changefreq: string, priority: string}>
-     */
-    private function courseUrls(): array
-    {
-        $courses = Course::query()
-            ->where('is_active', true)
-            ->where('show_on_pnedu', true)
-            ->whereNull('deleted_at')
-            ->orderBy('id')
-            ->get(['id', 'updated_at']);
-
-        return $courses->map(function (Course $course) {
-            $lastmod = $course->updated_at?->toAtomString() ?? now()->toAtomString();
-
-            return [
-                'loc' => route('courses.show', $course->id),
-                'lastmod' => $lastmod,
-                'changefreq' => 'weekly',
-                'priority' => '0.8',
-            ];
-        })->all();
-    }
-
-    /**
-     * @return array<int, array{loc: string, lastmod: string, changefreq: string, priority: string}>
-     */
-    private function trainingOfferUrls(): array
-    {
-        $offers = TrainingOffer::query()
-            ->publiclyVisible()
-            ->orderBy('slug')
-            ->get(['slug', 'updated_at']);
-
-        return $offers->map(function (TrainingOffer $offer) {
-            $lastmod = $offer->updated_at?->toAtomString() ?? now()->toAtomString();
-
-            return [
-                'loc' => route('training-offers.pedagogical-councils.show', $offer->slug),
-                'lastmod' => $lastmod,
-                'changefreq' => 'monthly',
-                'priority' => '0.7',
-            ];
-        })->all();
-    }
-
-    /**
-     * @return array<int, array{loc: string, lastmod: string, changefreq: string, priority: string}>
-     */
-    private function articleUrls(): array
-    {
-        $articles = Article::query()
-            ->published()
-            ->ordered()
-            ->get(['slug', 'updated_at']);
-
-        return $articles->map(function (Article $article) {
-            $lastmod = $article->updated_at?->toAtomString() ?? now()->toAtomString();
-
-            return [
-                'loc' => route('blog.show', $article->slug),
-                'lastmod' => $lastmod,
-                'changefreq' => 'monthly',
-                'priority' => '0.6',
-            ];
-        })->all();
     }
 }

@@ -21,7 +21,7 @@ Dokument obowiązuje przy **każdej nowej treści publicznej** (strony, podstron
 | **Open Graph / Twitter** | Domyślnie z `title` / `meta_description`; przy ważnych landingach: `@section('og_title')`, `og_description`, `og_type`. |
 | **Obraz OG** | `config('seo.default_og_image')` / `SEO_OG_IMAGE` w `.env`; domyślnie logo przy poprawnym `APP_URL`. |
 | **Robots** | `config('seo.block_search_indexing')` — na produkcji **wyłącz** blokadę (`SEO_BLOCK_INDEXING` nie `true`). |
-| **Sitemap** | Dynamicznie: `GET /sitemap.xml` → `App\Http\Controllers\SeoController` — zawiera **strony statyczne + aktywne kursy**. |
+| **Sitemap** | Dynamicznie: `GET /sitemap.xml` → `App\Services\Seo\SitemapUrlBuilder` — strony statyczne + kursy (`show_on_pnedu`) + oferty szkoleń + artykuły bloga. Przy braku tabeli/kolumny/trasy sekcja jest pomijana (log warning), endpoint **nie zwraca 500**. |
 | **Robots.txt** | Dynamicznie: `GET /robots.txt` → ten sam kontroler; **nie dodawaj** statycznych `public/robots.txt` ani `public/sitemap.xml` (nadpisują Laravel). |
 | **JSON-LD** | Globalne dane marki: `resources/views/layouts/partials/global-structured-data.blade.php`; przy nowych typach treści dodawaj zgodne z treścią `BlogPosting`, `BreadcrumbList`, `ItemList`, `Course` itp. |
 | **Semantyka HTML** | Jeden `h1` na widok; hierarchia `h2`–`h3`; linki z sensownym tekstem kotwicy (nie „kliknij tutaj”). |
@@ -56,6 +56,8 @@ Google deklaruje, że widoczność w AI Overviews i AI Mode opiera się na podst
 - `APP_URL=https://pnedu.pl` (bez końcowego `/`).
 - Po zmianie `.env`: `php artisan config:cache` (lub `config:clear` w dev).
 - `SEO_BLOCK_INDEXING` — nie ustawiaj `true` na produkcji, jeśli chcesz indeksowania.
+- Po deployu SEO/bloga: `php artisan optimize:clear` + `route:cache` na **pnedu**; migracje tabel współdzielonych w **pneadm** (`courses.show_on_pnedu`, `training_offers`, `articles`, `articles.sort_order`).
+- Smoke: `curl -sS -o /dev/null -w "%{http_code}\n" https://pnedu.pl/sitemap.xml` → oczekiwane `200`.
 
 ---
 
