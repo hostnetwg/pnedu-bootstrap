@@ -22,19 +22,28 @@ class PostTrainingThankYouResources
         public bool $hasMaterials,
         public bool $hasRecording,
         public string $certificateStatus,
+        public bool $showMaterialsInList,
         public ?string $surveyUrl = null,
     ) {}
 
     public static function forCourse(?Course $course): self
     {
         if ($course === null) {
-            return new self(false, false, self::CERT_IN_PREPARATION);
+            return new self(
+                hasMaterials: false,
+                hasRecording: false,
+                certificateStatus: self::CERT_IN_PREPARATION,
+                showMaterialsInList: true,
+            );
         }
 
+        $hasMaterials = self::courseHasMaterials($course);
+
         return new self(
-            hasMaterials: self::courseHasMaterials($course),
+            hasMaterials: $hasMaterials,
             hasRecording: self::courseHasRecording($course),
             certificateStatus: self::normalizeCertificateStatus($course->certificate_download_status ?? null),
+            showMaterialsInList: $hasMaterials,
             surveyUrl: self::resolveSurveyUrl($course),
         );
     }
@@ -66,7 +75,12 @@ class PostTrainingThankYouResources
 
     public function hasPendingResources(): bool
     {
-        return ! $this->hasRecording || $this->certificateInPreparation();
+        return $this->materialsPending() || ! $this->hasRecording || $this->certificateInPreparation();
+    }
+
+    public function materialsPending(): bool
+    {
+        return $this->showMaterialsInList && ! $this->hasMaterials;
     }
 
     /**
@@ -117,6 +131,10 @@ class PostTrainingThankYouResources
     private function pendingResourceLabels(): array
     {
         $pending = [];
+
+        if ($this->materialsPending()) {
+            $pending[] = 'materiały szkoleniowe';
+        }
 
         if (! $this->hasRecording) {
             $pending[] = 'nagranie';
@@ -205,7 +223,20 @@ class PostTrainingThankYouResources
             return 'Zaświadczenie pojawi się wkrótce'.$suffix;
         }
 
-        return 'Nagranie i zaświadczenie pojawią się wkrótce'.$suffix;
+        if ($items === ['materiały szkoleniowe']) {
+            return 'Materiały szkoleniowe pojawią się wkrótce'.$suffix;
+        }
+
+        if ($items === ['nagranie', 'zaświadczenie']) {
+            return 'Nagranie i zaświadczenie pojawią się wkrótce'.$suffix;
+        }
+
+        $joined = $this->joinPolishList($items);
+        $verb = count($items) > 1 || ($items[0] ?? '') === 'materiały szkoleniowe'
+            ? 'pojawią się'
+            : 'pojawi się';
+
+        return ucfirst($joined).' '.$verb.' wkrótce'.$suffix;
     }
 
     private static function courseHasMaterials(Course $course): bool

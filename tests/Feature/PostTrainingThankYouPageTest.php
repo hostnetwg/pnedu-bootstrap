@@ -18,11 +18,28 @@ class PostTrainingThankYouPageTest extends TestCase
         $this->get(route('post-training.thank-you'))
             ->assertOk()
             ->assertSee('Dziękujemy za udział w szkoleniu')
-            ->assertSee('Nagranie i zaświadczenie pojawią się wkrótce')
+            ->assertSee('Materiały szkoleniowe, nagranie i zaświadczenie pojawią się wkrótce')
+            ->assertSee('Materiały szkoleniowe —')
+            ->assertSee('wkrótce')
             ->assertSee('możesz też zajrzeć później na swoje konto na pnedu.pl')
             ->assertDontSee('Materiały szkoleniowe są już dostępne na Twoim koncie')
             ->assertSee('Zaloguj się na pnedu.pl')
             ->assertSee('window.top.location.replace', false);
+    }
+
+    public function test_thank_you_page_without_course_shows_materials_for_authenticated_user(): void
+    {
+        $user = \App\Models\User::factory()->create([
+            'email_verified_at' => now(),
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('post-training.thank-you'))
+            ->assertOk()
+            ->assertSee('Materiały szkoleniowe —')
+            ->assertSee('Nagranie szkolenia —')
+            ->assertSee('Zaświadczenie ukończenia —')
+            ->assertSee('Przejdź do Twoich zasobów');
     }
 
     public function test_thank_you_page_for_authenticated_user_uses_app_layout_and_dashboard_cta(): void

@@ -7,12 +7,24 @@ use PHPUnit\Framework\TestCase;
 
 class PostTrainingThankYouResourcesTest extends TestCase
 {
+    public function test_generic_page_without_course_shows_materials_as_pending(): void
+    {
+        $resources = PostTrainingThankYouResources::forCourse(null);
+
+        $text = implode(' ', array_column($resources->summaryLines(), 'text'));
+
+        $this->assertTrue($resources->showMaterialsInList);
+        $this->assertFalse($resources->hasMaterials);
+        $this->assertStringContainsString('Materiały szkoleniowe, nagranie i zaświadczenie pojawią się wkrótce', $text);
+    }
+
     public function test_summary_lines_when_all_resources_available(): void
     {
         $resources = new PostTrainingThankYouResources(
             hasMaterials: true,
             hasRecording: true,
             certificateStatus: PostTrainingThankYouResources::CERT_DOWNLOAD_ENABLED,
+            showMaterialsInList: true,
         );
 
         $text = implode(' ', array_column($resources->summaryLines(), 'text'));
@@ -30,6 +42,7 @@ class PostTrainingThankYouResourcesTest extends TestCase
             hasMaterials: true,
             hasRecording: false,
             certificateStatus: PostTrainingThankYouResources::CERT_DOWNLOAD_ENABLED,
+            showMaterialsInList: true,
         );
 
         $text = implode(' ', array_column($resources->summaryLines(), 'text'));
@@ -46,6 +59,7 @@ class PostTrainingThankYouResourcesTest extends TestCase
             hasMaterials: false,
             hasRecording: true,
             certificateStatus: PostTrainingThankYouResources::CERT_DOWNLOAD_ENABLED,
+            showMaterialsInList: false,
         );
 
         $text = implode(' ', array_column($resources->summaryLines(), 'text'));
@@ -61,6 +75,7 @@ class PostTrainingThankYouResourcesTest extends TestCase
             hasMaterials: false,
             hasRecording: false,
             certificateStatus: PostTrainingThankYouResources::CERT_DOWNLOAD_ENABLED,
+            showMaterialsInList: false,
         );
 
         $text = implode(' ', array_column($resources->summaryLines(), 'text'));
@@ -75,6 +90,7 @@ class PostTrainingThankYouResourcesTest extends TestCase
             hasMaterials: false,
             hasRecording: false,
             certificateStatus: PostTrainingThankYouResources::CERT_IN_PREPARATION,
+            showMaterialsInList: false,
         );
 
         $text = implode(' ', array_column($resources->summaryLines(), 'text'));
@@ -88,6 +104,7 @@ class PostTrainingThankYouResourcesTest extends TestCase
             hasMaterials: false,
             hasRecording: false,
             certificateStatus: PostTrainingThankYouResources::CERT_NONE,
+            showMaterialsInList: false,
         );
 
         $this->assertTrue($resources->hasNoCertificate());

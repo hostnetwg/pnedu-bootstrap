@@ -102,10 +102,15 @@
         </p>
 
         <ul class="list-unstyled text-start post-training-thanks-list mb-3 mx-auto" style="max-width: 24rem;">
-            @if($resources->hasMaterials)
+            @if($resources->showMaterialsInList)
                 <li>
-                    <i class="bi bi-folder2-open text-success me-2"></i>
-                    Materiały szkoleniowe — <strong>już dostępne</strong>
+                    <i class="bi bi-folder2-open {{ $resources->hasMaterials ? 'text-success' : 'text-primary' }} me-2"></i>
+                    Materiały szkoleniowe —
+                    @if($resources->hasMaterials)
+                        <strong>już dostępne</strong>
+                    @else
+                        <span class="text-muted">wkrótce</span>
+                    @endif
                 </li>
             @endif
             <li>
