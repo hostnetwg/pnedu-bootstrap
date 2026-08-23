@@ -1,61 +1,17 @@
-@extends(!empty($bareLayout) ? 'layouts.transmisja-bare' : 'layouts.app')
+@extends('layouts.transmisja-bare')
 
 @section('title', 'Transmisja: ' . $courseTitle . ' - Platforma Nowoczesnej Edukacji')
-@section('hide_site_footer')
-@endsection
 
 @section('content')
 @php
     $bareLayout = ! empty($bareLayout);
 @endphp
-<div class="transmisja-page{{ $bareLayout ? ' transmisja-page--bare' : '' }}">
-    <div class="transmisja-toolbar" id="cm-page-toolbar">
-        <div class="transmisja-toolbar__title text-truncate" title="{{ $courseTitle }}">
-            {{ $courseTitle }}
-        </div>
-        <div class="transmisja-toolbar__actions">
-            <a href="{{ $rejoinUrl }}"
-               class="btn btn-outline-success btn-sm transmisja-toolbar__btn"
-               title="Wejdź ponownie (gdy ClickMeeting zgłasza wykorzystany token)"
-               aria-label="Wejdź ponownie">
-                <i class="bi bi-arrow-clockwise" aria-hidden="true"></i>
-                <span class="transmisja-toolbar__btn-label">Wejdź ponownie</span>
-            </a>
-            <button type="button"
-                    class="btn btn-outline-secondary btn-sm transmisja-toolbar__btn"
-                    id="cm-fullscreen-btn"
-                    title="Pełny ekran"
-                    aria-label="Pełny ekran">
-                <i class="bi bi-fullscreen" aria-hidden="true"></i>
-                <span class="transmisja-toolbar__btn-label">Pełny ekran</span>
-            </button>
-            <button type="button"
-                    class="btn btn-outline-danger btn-sm transmisja-toolbar__btn"
-                    id="cm-close-transmission-btn"
-                    title="Zamknij transmisję"
-                    aria-label="Zamknij transmisję">
-                <i class="bi bi-x-lg" aria-hidden="true"></i>
-                <span class="transmisja-toolbar__btn-label">Zamknij transmisję</span>
-            </button>
-        </div>
-    </div>
-
+<div class="transmisja-page transmisja-page--bare">
     <div id="cm-embed-shell" class="transmisja-shell">
-        {{-- Pasek PNE widoczny tylko w trybie pełnego ekranu --}}
-        <div id="cm-fullscreen-bar" class="cm-fullscreen-bar" hidden>
-            <div class="cm-fullscreen-bar__brand" title="NODN Platforma Nowoczesnej Edukacji">
-                <span class="cm-fullscreen-bar__brand-name">NODN Platforma Nowoczesnej Edukacji</span>
-                <a href="{{ route('home') }}"
-                   class="cm-fullscreen-bar__site-link"
-                   target="_blank"
-                   rel="noopener noreferrer"
-                   title="Otwórz pnedu.pl w nowej karcie">
-                    <span class="cm-fullscreen-bar__site-link-label">pnedu.pl</span>
-                    <i class="bi bi-box-arrow-up-right cm-fullscreen-bar__site-link-icon" aria-hidden="true"></i>
-                    <span class="visually-hidden"> (otwiera się w nowej karcie)</span>
-                </a>
-            </div>
-            <div class="cm-fullscreen-bar__actions">
+        {{-- Belka PNE — tylko w trybie pełnoekranowym --}}
+        <div id="cm-transmisja-brand-bar" class="cm-transmisja-brand-bar">
+            @include('dashboard.partials.transmisja-pne-brand')
+            <div class="cm-transmisja-brand-bar__actions">
             <button type="button"
                     class="btn btn-sm btn-light flex-shrink-0"
                     id="cm-fullscreen-exit-btn"
@@ -72,6 +28,37 @@
                 <i class="bi bi-x-lg me-1" aria-hidden="true"></i>
                 Zamknij
             </button>
+            </div>
+        </div>
+
+        <div class="transmisja-toolbar" id="cm-page-toolbar">
+            <div class="transmisja-toolbar__brand">
+                @include('dashboard.partials.transmisja-pne-brand')
+            </div>
+            <div class="transmisja-toolbar__actions">
+                <a href="{{ $rejoinUrl }}"
+                   class="btn btn-sm btn-light transmisja-toolbar__btn"
+                   title="Wejdź ponownie (gdy ClickMeeting zgłasza wykorzystany token)"
+                   aria-label="Wejdź ponownie">
+                    <i class="bi bi-arrow-clockwise" aria-hidden="true"></i>
+                    <span class="transmisja-toolbar__btn-label">Wejdź ponownie</span>
+                </a>
+                <button type="button"
+                        class="btn btn-sm btn-outline-light transmisja-toolbar__btn"
+                        id="cm-fullscreen-btn"
+                        title="Pełny ekran"
+                        aria-label="Pełny ekran">
+                    <i class="bi bi-fullscreen" aria-hidden="true"></i>
+                    <span class="transmisja-toolbar__btn-label">Pełny ekran</span>
+                </button>
+                <button type="button"
+                        class="btn btn-sm btn-outline-light transmisja-toolbar__btn"
+                        id="cm-close-transmission-btn"
+                        title="Zamknij transmisję"
+                        aria-label="Zamknij transmisję">
+                    <i class="bi bi-x-lg" aria-hidden="true"></i>
+                    <span class="transmisja-toolbar__btn-label">Zamknij transmisję</span>
+                </button>
             </div>
         </div>
 
@@ -136,16 +123,17 @@
         align-items: center;
         justify-content: space-between;
         gap: 0.75rem;
-        padding: 0.45rem 0.85rem;
-        background: #fff;
-        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+        padding: 0.4rem 1rem;
+        background: #0b3d2e;
+        color: #fff;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.12);
         flex: 0 0 auto;
+        overflow: hidden;
     }
-    .transmisja-toolbar__title {
-        font-size: 0.95rem;
-        font-weight: 600;
-        color: #212529;
+    .transmisja-toolbar__brand {
+        flex: 1 1 auto;
         min-width: 0;
+        overflow: hidden;
     }
     .transmisja-toolbar__actions {
         display: flex;
@@ -200,7 +188,74 @@
         border: 0;
         display: block;
     }
-    .cm-fullscreen-bar {
+    .pne-transmisja-brand {
+        display: flex;
+        align-items: baseline;
+        flex-wrap: wrap;
+        column-gap: 0.65rem;
+        row-gap: 0.15rem;
+        min-width: 0;
+        overflow: hidden;
+    }
+    .pne-transmisja-brand__name {
+        min-width: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-weight: 700;
+        letter-spacing: 0.01em;
+        line-height: 1.15;
+        text-align: left;
+    }
+    .pne-transmisja-brand__sep {
+        flex-shrink: 0;
+        width: 1px;
+        height: 1.15em;
+        align-self: center;
+    }
+    .pne-transmisja-brand__site-link {
+        flex-shrink: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        font-weight: 500;
+        letter-spacing: 0.01em;
+        text-decoration: none;
+        line-height: 1.15;
+        transition: color 0.15s ease;
+    }
+    .pne-transmisja-brand__site-link:hover,
+    .pne-transmisja-brand__site-link:focus-visible {
+        text-decoration: underline;
+        text-underline-offset: 0.18em;
+    }
+    .pne-transmisja-brand__site-link-icon {
+        font-size: 0.72em;
+        opacity: 0.85;
+        position: relative;
+        top: -0.05em;
+    }
+    .transmisja-toolbar .pne-transmisja-brand__name,
+    .cm-transmisja-brand-bar .pne-transmisja-brand__name {
+        font-size: 1.85rem;
+        color: #fff;
+    }
+    .transmisja-toolbar .pne-transmisja-brand__sep,
+    .cm-transmisja-brand-bar .pne-transmisja-brand__sep {
+        background: rgba(255, 255, 255, 0.35);
+    }
+    .transmisja-toolbar .pne-transmisja-brand__site-link,
+    .cm-transmisja-brand-bar .pne-transmisja-brand__site-link {
+        color: rgba(255, 255, 255, 0.78);
+        font-size: 1rem;
+    }
+    .transmisja-toolbar .pne-transmisja-brand__site-link:hover,
+    .transmisja-toolbar .pne-transmisja-brand__site-link:focus-visible,
+    .cm-transmisja-brand-bar .pne-transmisja-brand__site-link:hover,
+    .cm-transmisja-brand-bar .pne-transmisja-brand__site-link:focus-visible {
+        color: #fff;
+    }
+    .cm-transmisja-brand-bar {
         display: none;
         grid-template-columns: minmax(0, 1fr) auto;
         align-items: center;
@@ -212,65 +267,25 @@
         flex: 0 0 auto;
         overflow: hidden;
     }
-    .cm-fullscreen-bar__actions {
-        display: flex;
+
+    .cm-transmisja-brand-bar__actions {
+        display: none;
         align-items: center;
         gap: 0.4rem;
         flex-shrink: 0;
     }
-    .cm-fullscreen-bar__brand {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        min-width: 0;
-        overflow: hidden;
-    }
-    .cm-fullscreen-bar__brand-name {
-        min-width: 0;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        font-size: 1.85rem;
-        font-weight: 700;
-        letter-spacing: 0.01em;
-        line-height: 1.15;
-        text-align: left;
-    }
-    .cm-fullscreen-bar__site-link {
-        flex-shrink: 0;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.35rem;
-        padding: 0.2rem 0.65rem;
-        border-radius: 999px;
-        border: 1px solid rgba(255, 255, 255, 0.24);
-        background: rgba(255, 255, 255, 0.08);
-        color: rgba(255, 255, 255, 0.88);
-        font-size: 0.8125rem;
-        font-weight: 600;
-        letter-spacing: 0.02em;
-        text-decoration: none;
-        line-height: 1.2;
-        transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
-    }
-    .cm-fullscreen-bar__site-link:hover,
-    .cm-fullscreen-bar__site-link:focus-visible {
-        color: #fff;
-        background: rgba(255, 255, 255, 0.16);
-        border-color: rgba(255, 255, 255, 0.42);
-        text-decoration: none;
-    }
-    .cm-fullscreen-bar__site-link-icon {
-        font-size: 0.72rem;
-        opacity: 0.9;
-    }
     @media (max-width: 767.98px) {
-        .cm-fullscreen-bar__brand-name {
+        .transmisja-toolbar .pne-transmisja-brand__name,
+        .cm-transmisja-brand-bar .pne-transmisja-brand__name {
             font-size: 1rem;
         }
-        .cm-fullscreen-bar__site-link {
-            font-size: 0.75rem;
-            padding: 0.15rem 0.5rem;
+        .transmisja-toolbar .pne-transmisja-brand__site-link,
+        .cm-transmisja-brand-bar .pne-transmisja-brand__site-link {
+            font-size: 0.8125rem;
+        }
+        .transmisja-toolbar .pne-transmisja-brand__sep,
+        .cm-transmisja-brand-bar .pne-transmisja-brand__sep {
+            display: none;
         }
     }
 
@@ -280,8 +295,11 @@
         z-index: 2000;
         background: #000;
     }
-    #cm-embed-shell.is-fullscreen .cm-fullscreen-bar {
+    #cm-embed-shell.is-fullscreen .cm-transmisja-brand-bar {
         display: grid;
+    }
+    #cm-embed-shell.is-fullscreen .cm-transmisja-brand-bar__actions {
+        display: flex;
     }
     /* Modal nad warstwą FS (Bootstrap domyślnie ~1055, shell ma 2000) */
     #cmCloseTransmissionModal {
@@ -297,9 +315,6 @@
     body.cm-transmisja-fs {
         overflow: hidden;
     }
-    body.cm-transmisja-fs .navbar {
-        display: none !important;
-    }
 </style>
 <script>
 (function () {
@@ -307,7 +322,6 @@
     const shell = document.getElementById('cm-embed-shell');
     const btn = document.getElementById('cm-fullscreen-btn');
     const exitBtn = document.getElementById('cm-fullscreen-exit-btn');
-    const bar = document.getElementById('cm-fullscreen-bar');
 
     const heartbeatUrl = @json($presenceHeartbeatUrl ?? null);
     const leaveUrl = @json($presenceLeaveUrl ?? null);
@@ -401,9 +415,6 @@
             page.classList.toggle('is-browser-fullscreen', cssFullscreen);
         }
         document.body.classList.toggle('cm-transmisja-fs', cssFullscreen);
-        if (bar) {
-            bar.hidden = !cssFullscreen;
-        }
         const icon = btn.querySelector('i');
         const label = btn.querySelector('.transmisja-toolbar__btn-label');
         if (icon) {

@@ -208,8 +208,8 @@ class PostTrainingThankYouPhase
         }
 
         $url = null;
-        if ($live->embedEnabled && is_string($live->embedUrl) && $live->embedUrl !== '') {
-            $url = $live->embedUrl;
+        if ($live->embedEnabled && is_string($live->embedReturnUrl) && $live->embedReturnUrl !== '') {
+            $url = $live->embedReturnUrl;
         } elseif ($live->clickmeetingJoinEnabled && is_string($live->joinUrl) && $live->joinUrl !== '') {
             $url = $live->joinUrl;
         }

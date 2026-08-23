@@ -21,6 +21,8 @@ final class DashboardCourseLiveAccess
         public readonly bool $clickmeetingJoinEnabled = true,
         public readonly bool $embedEnabled = false,
         public readonly ?string $embedUrl = null,
+        /** Powrót do pokoju bez auto-pełnego ekranu (np. ze strony /po-szkoleniu). */
+        public readonly ?string $embedReturnUrl = null,
     ) {}
 
     public static function hidden(): self

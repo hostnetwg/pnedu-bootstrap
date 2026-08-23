@@ -250,6 +250,9 @@ class DashboardCourseLiveAccessServiceTest extends TestCase
         $this->assertNotNull($live->embedUrl);
         $this->assertStringContainsString('/transmisja', (string) $live->embedUrl);
         $this->assertStringContainsString('fullscreen=1', (string) $live->embedUrl);
+        $this->assertNotNull($live->embedReturnUrl);
+        $this->assertStringContainsString('/transmisja', (string) $live->embedReturnUrl);
+        $this->assertStringNotContainsString('fullscreen=1', (string) $live->embedReturnUrl);
         $this->assertTrue($live->clickmeetingJoinEnabled);
     }
 

@@ -62,6 +62,12 @@ class DashboardCourseLiveAccessService
             ])
             : null;
 
+        $embedReturnUrl = $embedEnabled
+            ? route('dashboard.szkolenia.transmisja', [
+                'participant' => $participant,
+            ])
+            : null;
+
         return new DashboardCourseLiveAccess(
             show: true,
             joinUrl: $joinUrl,
@@ -76,6 +82,7 @@ class DashboardCourseLiveAccessService
             clickmeetingJoinEnabled: $clickmeetingJoinEnabled,
             embedEnabled: $embedEnabled,
             embedUrl: $embedUrl,
+            embedReturnUrl: $embedReturnUrl,
         );
     }
 
