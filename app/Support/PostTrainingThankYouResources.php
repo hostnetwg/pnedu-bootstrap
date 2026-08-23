@@ -59,6 +59,16 @@ class PostTrainingThankYouResources
         return ! $this->hasNoCertificate();
     }
 
+    public function hasAvailableResources(): bool
+    {
+        return $this->hasMaterials || $this->hasRecording || $this->certificateAvailable();
+    }
+
+    public function hasPendingResources(): bool
+    {
+        return ! $this->hasRecording || $this->certificateInPreparation();
+    }
+
     /**
      * @return list<array{strong: bool, text: string}>
      */
@@ -66,35 +76,25 @@ class PostTrainingThankYouResources
     {
         $lines = [];
 
+        $availableLabels = [];
         if ($this->hasMaterials) {
-            $lines[] = [
-                'strong' => true,
-                'text' => 'Materiały szkoleniowe są już dostępne na Twoim koncie.',
-            ];
+            $availableLabels[] = 'materiały szkoleniowe';
         }
-
-        $available = [];
         if ($this->hasRecording) {
-            $available[] = 'nagranie';
+            $availableLabels[] = 'nagranie';
         }
         if ($this->certificateAvailable()) {
-            $available[] = 'zaświadczenie';
+            $availableLabels[] = 'zaświadczenie';
         }
 
-        if ($available !== []) {
+        if ($availableLabels !== []) {
             $lines[] = [
                 'strong' => true,
-                'text' => $this->formatAvailableLine($available),
+                'text' => $this->formatAvailableResourcesLine($availableLabels),
             ];
         }
 
-        $pending = [];
-        if (! $this->hasRecording) {
-            $pending[] = 'nagranie';
-        }
-        if ($this->certificateInPreparation()) {
-            $pending[] = 'zaświadczenie';
-        }
+        $pending = $this->pendingResourceLabels();
 
         if ($pending !== []) {
             $lines[] = [
@@ -105,26 +105,89 @@ class PostTrainingThankYouResources
 
         $lines[] = [
             'strong' => false,
-            'text' => 'O gotowości damy znać osobnym e-mailem — możesz też zajrzeć później na swoje konto na pnedu.pl.',
+            'text' => $this->footerLine($pending !== []),
         ];
 
         return $lines;
     }
 
     /**
-     * @param  list<string>  $items
+     * @return list<string>
      */
-    private function formatAvailableLine(array $items): string
+    private function pendingResourceLabels(): array
     {
-        if ($items === ['nagranie']) {
+        $pending = [];
+
+        if (! $this->hasRecording) {
+            $pending[] = 'nagranie';
+        }
+
+        if ($this->certificateInPreparation()) {
+            $pending[] = 'zaświadczenie';
+        }
+
+        return $pending;
+    }
+
+    private function footerLine(bool $hasPending): string
+    {
+        if ($hasPending) {
+            return 'O gotowości damy znać osobnym e-mailem — możesz też zajrzeć później na swoje konto na pnedu.pl.';
+        }
+
+        if ($this->hasAvailableResources()) {
+            return 'Możesz od razu skorzystać z zasobów na swoim koncie na pnedu.pl.';
+        }
+
+        return 'O gotowości damy znać osobnym e-mailem — możesz też zajrzeć później na swoje konto na pnedu.pl.';
+    }
+
+    /**
+     * @param  list<string>  $labels
+     */
+    private function formatAvailableResourcesLine(array $labels): string
+    {
+        if ($labels === ['materiały szkoleniowe']) {
+            return 'Materiały szkoleniowe są już dostępne na Twoim koncie.';
+        }
+
+        if ($labels === ['nagranie']) {
             return 'Nagranie szkolenia jest już dostępne na Twoim koncie.';
         }
 
-        if ($items === ['zaświadczenie']) {
+        if ($labels === ['zaświadczenie']) {
             return 'Zaświadczenie jest już dostępne do pobrania na Twoim koncie.';
         }
 
-        return 'Nagranie i zaświadczenie są już dostępne na Twoim koncie.';
+        $joined = $this->joinPolishList($labels);
+
+        return ucfirst($joined).' '.($this->countPolishPlural($labels) ? 'są' : 'jest').' już dostępne na Twoim koncie.';
+    }
+
+    /**
+     * @param  list<string>  $items
+     */
+    private function joinPolishList(array $items): string
+    {
+        $count = count($items);
+
+        if ($count <= 1) {
+            return $items[0] ?? '';
+        }
+
+        if ($count === 2) {
+            return $items[0].' i '.$items[1];
+        }
+
+        return implode(', ', array_slice($items, 0, -1)).' i '.end($items);
+    }
+
+    /**
+     * @param  list<string>  $labels
+     */
+    private function countPolishPlural(array $labels): bool
+    {
+        return count($labels) > 1;
     }
 
     /**

@@ -17,9 +17,42 @@ class PostTrainingThankYouResourcesTest extends TestCase
 
         $text = implode(' ', array_column($resources->summaryLines(), 'text'));
 
-        $this->assertStringContainsString('Materiały szkoleniowe są już dostępne', $text);
-        $this->assertStringContainsString('Nagranie i zaświadczenie są już dostępne', $text);
+        $this->assertStringContainsString('Materiały szkoleniowe, nagranie i zaświadczenie są już dostępne na Twoim koncie.', $text);
         $this->assertStringNotContainsString('pojawią się wkrótce', $text);
+        $this->assertStringNotContainsString('O gotowości damy znać osobnym e-mailem', $text);
+        $this->assertStringContainsString('Możesz od razu skorzystać z zasobów', $text);
+        $this->assertEquals(1, substr_count($text, 'na Twoim koncie'));
+    }
+
+    public function test_summary_lines_combine_materials_and_certificate_without_repetition(): void
+    {
+        $resources = new PostTrainingThankYouResources(
+            hasMaterials: true,
+            hasRecording: false,
+            certificateStatus: PostTrainingThankYouResources::CERT_DOWNLOAD_ENABLED,
+        );
+
+        $text = implode(' ', array_column($resources->summaryLines(), 'text'));
+
+        $this->assertStringContainsString('Materiały szkoleniowe i zaświadczenie są już dostępne na Twoim koncie.', $text);
+        $this->assertEquals(1, substr_count($text, 'na Twoim koncie'));
+        $this->assertStringContainsString('Nagranie pojawi się wkrótce', $text);
+        $this->assertStringContainsString('O gotowości damy znać osobnym e-mailem', $text);
+    }
+
+    public function test_summary_lines_when_nagranie_and_certificate_ready_use_ready_footer(): void
+    {
+        $resources = new PostTrainingThankYouResources(
+            hasMaterials: false,
+            hasRecording: true,
+            certificateStatus: PostTrainingThankYouResources::CERT_DOWNLOAD_ENABLED,
+        );
+
+        $text = implode(' ', array_column($resources->summaryLines(), 'text'));
+
+        $this->assertStringContainsString('Nagranie i zaświadczenie są już dostępne na Twoim koncie.', $text);
+        $this->assertStringContainsString('Możesz od razu skorzystać z zasobów', $text);
+        $this->assertStringNotContainsString('O gotowości damy znać osobnym e-mailem', $text);
     }
 
     public function test_summary_lines_when_certificate_is_available_only(): void
