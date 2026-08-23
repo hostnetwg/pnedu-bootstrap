@@ -5,13 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\Article;
 use App\Services\Seo\SitemapUrlBuilder;
 use Illuminate\Http\Response;
+use Throwable;
 
 class SeoController extends Controller
 {
-    public function __construct(
-        private readonly SitemapUrlBuilder $sitemapUrlBuilder,
-    ) {}
-
     public function robots(): Response
     {
         if (config('seo.block_search_indexing')) {
@@ -33,12 +30,23 @@ class SeoController extends Controller
             abort(404);
         }
 
-        $urls = $this->sitemapUrlBuilder->build();
+        try {
+            $urls = app(SitemapUrlBuilder::class)->build();
+            if ($urls === []) {
+                $urls = SitemapUrlBuilder::fallbackUrls();
+            }
 
-        return response()
-            ->view('seo.sitemap', ['urls' => $urls])
-            ->header('Content-Type', 'application/xml; charset=UTF-8')
-            ->header('Cache-Control', 'public, max-age=3600');
+            $xml = SitemapUrlBuilder::renderXml($urls);
+        } catch (Throwable $exception) {
+            report($exception);
+
+            $xml = SitemapUrlBuilder::renderXml(SitemapUrlBuilder::fallbackUrls());
+        }
+
+        return response($xml, 200, [
+            'Content-Type' => 'application/xml; charset=UTF-8',
+            'Cache-Control' => 'public, max-age=3600',
+        ]);
     }
 
     public function llms(): Response

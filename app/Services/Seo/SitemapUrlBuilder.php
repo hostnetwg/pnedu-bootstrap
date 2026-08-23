@@ -17,12 +17,64 @@ class SitemapUrlBuilder
      */
     public function build(): array
     {
-        return array_merge(
-            $this->staticUrls(),
-            $this->safeSection('courses', fn (): array => $this->courseUrls()),
-            $this->safeSection('training_offers', fn (): array => $this->trainingOfferUrls()),
-            $this->safeSection('articles', fn (): array => $this->articleUrls()),
-        );
+        try {
+            return array_merge(
+                $this->staticUrls(),
+                $this->safeSection('courses', fn (): array => $this->courseUrls()),
+                $this->safeSection('training_offers', fn (): array => $this->trainingOfferUrls()),
+                $this->safeSection('articles', fn (): array => $this->articleUrls()),
+            );
+        } catch (Throwable $exception) {
+            Log::error('Sitemap: nie udało się zbudować listy URL.', [
+                'exception' => $exception->getMessage(),
+            ]);
+
+            return self::fallbackUrls();
+        }
+    }
+
+    /**
+     * @param  array<int, array{loc: string, lastmod: string, changefreq: string, priority: string}>  $urls
+     */
+    public static function renderXml(array $urls): string
+    {
+        $lines = [
+            '<?xml version="1.0" encoding="UTF-8"?>',
+            '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+        ];
+
+        foreach ($urls as $url) {
+            $lines[] = '  <url>';
+            $lines[] = '    <loc>'.htmlspecialchars((string) ($url['loc'] ?? ''), ENT_XML1 | ENT_QUOTES, 'UTF-8').'</loc>';
+            $lines[] = '    <lastmod>'.htmlspecialchars((string) ($url['lastmod'] ?? ''), ENT_XML1 | ENT_QUOTES, 'UTF-8').'</lastmod>';
+            $lines[] = '    <changefreq>'.htmlspecialchars((string) ($url['changefreq'] ?? ''), ENT_XML1 | ENT_QUOTES, 'UTF-8').'</changefreq>';
+            $lines[] = '    <priority>'.htmlspecialchars((string) ($url['priority'] ?? ''), ENT_XML1 | ENT_QUOTES, 'UTF-8').'</priority>';
+            $lines[] = '  </url>';
+        }
+
+        $lines[] = '</urlset>';
+
+        return implode("\n", $lines)."\n";
+    }
+
+    /**
+     * @return array<int, array{loc: string, lastmod: string, changefreq: string, priority: string}>
+     */
+    public static function fallbackUrls(): array
+    {
+        $now = now()->toAtomString();
+        $home = rtrim((string) config('app.url'), '/');
+
+        if ($home === '') {
+            $home = 'https://pnedu.pl';
+        }
+
+        return [[
+            'loc' => $home,
+            'lastmod' => $now,
+            'changefreq' => 'daily',
+            'priority' => '1.0',
+        ]];
     }
 
     /**

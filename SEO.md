@@ -56,7 +56,8 @@ Google deklaruje, że widoczność w AI Overviews i AI Mode opiera się na podst
 - `APP_URL=https://pnedu.pl` (bez końcowego `/`).
 - Po zmianie `.env`: `php artisan config:cache` (lub `config:clear` w dev).
 - `SEO_BLOCK_INDEXING` — nie ustawiaj `true` na produkcji, jeśli chcesz indeksowania.
-- Po deployu SEO/bloga: `php artisan optimize:clear` + `route:cache` na **pnedu**; migracje tabel współdzielonych w **pneadm** (`courses.show_on_pnedu`, `training_offers`, `articles`, `articles.sort_order`).
+- Po deployu SEO/bloga: `composer dump-autoload -o` + `php artisan optimize:clear` + `route:cache` na **pnedu**; migracje tabel współdzielonych w **pneadm** (`courses.show_on_pnedu`, `training_offers`, `articles`, `articles.sort_order`).
+- Diagnostyka prod: `php artisan seo:sitemap-diagnose` (w katalogu frontu).
 - Smoke: `curl -sS -o /dev/null -w "%{http_code}\n" https://pnedu.pl/sitemap.xml` → oczekiwane `200`.
 
 ---
