@@ -43,8 +43,17 @@
     <div id="cm-embed-shell" class="transmisja-shell">
         {{-- Pasek PNE widoczny tylko w trybie pełnego ekranu --}}
         <div id="cm-fullscreen-bar" class="cm-fullscreen-bar" hidden>
-            <div class="cm-fullscreen-bar__brand text-truncate" title="NODN Platforma Nowoczesnej Edukacji">
-                NODN Platforma Nowoczesnej Edukacji
+            <div class="cm-fullscreen-bar__brand" title="NODN Platforma Nowoczesnej Edukacji">
+                <span class="cm-fullscreen-bar__brand-name">NODN Platforma Nowoczesnej Edukacji</span>
+                <a href="{{ route('home') }}"
+                   class="cm-fullscreen-bar__site-link"
+                   target="_blank"
+                   rel="noopener noreferrer"
+                   title="Otwórz pnedu.pl w nowej karcie">
+                    <span class="cm-fullscreen-bar__site-link-label">pnedu.pl</span>
+                    <i class="bi bi-box-arrow-up-right cm-fullscreen-bar__site-link-icon" aria-hidden="true"></i>
+                    <span class="visually-hidden"> (otwiera się w nowej karcie)</span>
+                </a>
             </div>
             <div class="cm-fullscreen-bar__actions">
             <button type="button"
@@ -210,6 +219,13 @@
         flex-shrink: 0;
     }
     .cm-fullscreen-bar__brand {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        min-width: 0;
+        overflow: hidden;
+    }
+    .cm-fullscreen-bar__brand-name {
         min-width: 0;
         white-space: nowrap;
         overflow: hidden;
@@ -219,6 +235,43 @@
         letter-spacing: 0.01em;
         line-height: 1.15;
         text-align: left;
+    }
+    .cm-fullscreen-bar__site-link {
+        flex-shrink: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.2rem 0.65rem;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.24);
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.88);
+        font-size: 0.8125rem;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        text-decoration: none;
+        line-height: 1.2;
+        transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+    }
+    .cm-fullscreen-bar__site-link:hover,
+    .cm-fullscreen-bar__site-link:focus-visible {
+        color: #fff;
+        background: rgba(255, 255, 255, 0.16);
+        border-color: rgba(255, 255, 255, 0.42);
+        text-decoration: none;
+    }
+    .cm-fullscreen-bar__site-link-icon {
+        font-size: 0.72rem;
+        opacity: 0.9;
+    }
+    @media (max-width: 767.98px) {
+        .cm-fullscreen-bar__brand-name {
+            font-size: 1rem;
+        }
+        .cm-fullscreen-bar__site-link {
+            font-size: 0.75rem;
+            padding: 0.15rem 0.5rem;
+        }
     }
 
     #cm-embed-shell.is-fullscreen {
