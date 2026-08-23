@@ -49,12 +49,61 @@ Google deklaruje, że widoczność w AI Overviews i AI Mode opiera się na podst
 
 1. Zarejestrowana trasa nazwana (`->name('…')`) pod `APP_URL`.
 2. Uzupełnione: `title`, `meta_description`.
-3. Jeśli to **ważna podstrona marketingowa**: dopisz trasę do listy w `SeoController::staticUrls()` (żeby trafiła do `sitemap.xml`).
+3. Jeśli to **ważna podstrona marketingowa**: dopisz trasę w `App\Services\Seo\SitemapUrlBuilder` (metoda `staticUrls()`) — trafi do `sitemap.xml`.
 4. Strony tylko dla zalogowanych — zwykle **nie** dodawaj do sitemap (zostają poza mapą lub `noindex` jeśli kiedyś indeksowane przez pomyłkę).
 
 ---
 
-## 4. Środowisko produkcyjne
+## 3a. Artykuły bloga (`/blog`)
+
+Zarządzanie treścią: panel **`adm.pnedu.pl` → Artykuły** — kanon operacyjny: **`pneadm/docs/ARTICLES.md`**. Front: **`docs/BLOG_ARTICLES.md`**.
+
+| Element | Wytyczna |
+|---------|----------|
+| Meta title | ok. **50–65 znaków**; pole `meta_title` w panelu lub skrócony tytuł |
+| Meta description | **120–160 znaków**; odpowiedź na intencję wyszukiwania |
+| Slug | krótki, bez `-1`/`-2` jeśli możliwe; zmiana po indeksacji → 301 |
+| Treść | jeden `h1`, logiczne `h2`/`h3`, linki do szkoleń i powiązanych artykułów |
+| Obrazy | `alt` opisowy |
+| Po publikacji | GSC → Inspekcja URL → „Poproś o indeksowanie” ([GSC_CHECKLIST.md](docs/GSC_CHECKLIST.md)) |
+
+Front automatycznie: `BlogPosting` + breadcrumb JSON-LD, wpis w sitemap, fragment w `llms.txt`, licznik wyświetleń (analityka).
+
+---
+
+## 3b. Kursy i listy bezpłatne
+
+| Element | Gdzie |
+|---------|--------|
+| Skrócone meta | `CourseSeoService` + `config/course_seo.php` |
+| Override ID (np. 540, 548) | `config/course_seo.php` → `course_overrides` |
+| Listy bezpłatne (TIK, Dyrektor, Office…) | `config/course_seo.php` → `listings` |
+| Schema | `/courses/{id}` — `Course`, `Offer`, `CourseInstance` |
+
+Docelowe długości (audyt 2026-08-23): title **~50–65 znaków**, description **~140–160 znaków**.
+
+---
+
+## 4. Audyt SEO 2026-08-23 — wdrożone i otwarte
+
+**Wdrożone (techniczne):**
+
+- Naprawa `/sitemap.xml` (HTTP 500 → dynamiczny XML bez Blade)
+- Meta Akademii Dyrektora + kursy 540/548
+- JSON-LD `Course` na stronach szkoleń
+- Checklista GSC: [docs/GSC_CHECKLIST.md](docs/GSC_CHECKLIST.md)
+- Komenda diagnostyczna: `php artisan seo:sitemap-diagnose`
+
+**Otwarte (kolejne etapy):**
+
+- Strony-filarowe („Szkolenia dla dyrektorów”, „Szkolenia online dla nauczycieli”)
+- TTFB / cache (raport: 3–5 s → cel < 0,8 s)
+- Systematyczne linkowanie artykuł → kurs → kategoria
+- Plan treści 90 dni (2 artykuły/tydzień)
+
+---
+
+## 5. Środowisko produkcyjne
 
 - `APP_URL=https://pnedu.pl` (bez końcowego `/`).
 - Po zmianie `.env`: `php artisan config:cache` (lub `config:clear` w dev).
@@ -65,10 +114,22 @@ Google deklaruje, że widoczność w AI Overviews i AI Mode opiera się na podst
 
 ---
 
-## 5. Dla Cursor / AI
+## 6. Dla Cursor / AI
 
-Przy każdej zmianie dotyczącej **treści widocznej dla użytkownika i Google** uwzględnij powyższe punkty automatycznie; w razie nowej podstrony publicznej — **domyślnie** zaproponuj `meta_description` i rozważ wpis w `SeoController`.
+Przy każdej zmianie dotyczącej **treści widocznej dla użytkownika i Google** uwzględnij powyższe punkty automatycznie.
+
+- Nowa **podstrona publiczna** → `title`, `meta_description`, ewentualnie wpis w `SitemapUrlBuilder::staticUrls()`.
+- Nowy **artykuł** → wytyczne sekcji 3a; nie twórz statycznego `public/sitemap.xml`.
+- Zmiana **kursu** → rozważ wpis w `config/course_seo.php` gdy title/description wymagają ręcznej korekty.
 
 ---
 
-*Ostatnia aktualizacja: dokumentacja projektu pnedu — wsparcie SEO jako standard pracy nad treścią.*
+## Powiązana dokumentacja
+
+| Plik | Temat |
+|------|--------|
+| [docs/BLOG_ARTICLES.md](docs/BLOG_ARTICLES.md) | Blog publiczny, schema, wyświetlenia |
+| [docs/GSC_CHECKLIST.md](docs/GSC_CHECKLIST.md) | Google Search Console |
+| [../pneadm/docs/ARTICLES.md](../pneadm/docs/ARTICLES.md) | Panel admin — zarządzanie artykułami |
+
+*Ostatnia aktualizacja: 2026-08-23 (audyt SEO, sitemap, meta kursów, schema Course, blog).*

@@ -127,9 +127,13 @@ Po wdrożeniu JSON-LD `Course` na `/courses/{id}`:
 
 ## Powiązane w repo
 
-- `SEO.md` — wytyczne techniczne
-- `config/course_seo.php` — ręczne title/description (540, 548, listy bezpłatne)
-- `app/Services/Seo/CourseSeoService.php` — meta + schema Course
-- `php artisan seo:sitemap-diagnose` — smoke sitemap na prod
+| Dokument | Temat |
+|----------|--------|
+| [SEO.md](../SEO.md) | Wytyczne techniczne SEO serwisu |
+| [BLOG_ARTICLES.md](./BLOG_ARTICLES.md) | Blog publiczny, schema, wyświetlenia |
+| [../../pneadm/docs/ARTICLES.md](../../pneadm/docs/ARTICLES.md) | Panel admin — tworzenie i publikacja artykułów |
+| `config/course_seo.php` | Ręczne title/description (540, 548, listy bezpłatne) |
+| `app/Services/Seo/CourseSeoService.php` | Meta + schema Course |
+| `php artisan seo:sitemap-diagnose` | Smoke sitemap na prod |
 
 *Ostatnia aktualizacja: 2026-08-23 (wdrożenie A/B/C po raporcie SEO).*
