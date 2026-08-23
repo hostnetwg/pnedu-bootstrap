@@ -22,6 +22,9 @@ Dokument obowiązuje przy **każdej nowej treści publicznej** (strony, podstron
 | **Obraz OG** | `config('seo.default_og_image')` / `SEO_OG_IMAGE` w `.env`; domyślnie logo przy poprawnym `APP_URL`. |
 | **Robots** | `config('seo.block_search_indexing')` — na produkcji **wyłącz** blokadę (`SEO_BLOCK_INDEXING` nie `true`). |
 | **Sitemap** | Dynamicznie: `GET /sitemap.xml` → `SitemapUrlBuilder::renderXml()` (bez Blade — deklaracja `<?xml` w widoku + `view:cache` powodowała ParseError na prod). |
+| **Meta kursów / list** | `CourseSeoService` + `config/course_seo.php` (skrócone title/description, override m.in. kursy 540/548, Akademia Dyrektora). |
+| **Schema Course** | JSON-LD na `/courses/{id}` — `Course`, `Offer`, `CourseInstance`, `BreadcrumbList`. |
+| **Search Console** | Checklista operacyjna: [`docs/GSC_CHECKLIST.md`](docs/GSC_CHECKLIST.md). |
 | **Robots.txt** | Dynamicznie: `GET /robots.txt` → ten sam kontroler; **nie dodawaj** statycznych `public/robots.txt` ani `public/sitemap.xml` (nadpisują Laravel). |
 | **JSON-LD** | Globalne dane marki: `resources/views/layouts/partials/global-structured-data.blade.php`; przy nowych typach treści dodawaj zgodne z treścią `BlogPosting`, `BreadcrumbList`, `ItemList`, `Course` itp. |
 | **Semantyka HTML** | Jeden `h1` na widok; hierarchia `h2`–`h3`; linki z sensownym tekstem kotwicy (nie „kliknij tutaj”). |

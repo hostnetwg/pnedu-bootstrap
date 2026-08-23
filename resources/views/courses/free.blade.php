@@ -1,7 +1,12 @@
 @extends('layouts.app')
 
-@section('title', ($pageTitle ?? 'TIK w pracy NAUCZYCIELA') . ' - Bezpłatne szkolenia - Platforma Nowoczesnej Edukacji')
-@section('meta_description', 'Bezpłatne webinary i szkolenia online dla nauczycieli. TIK, narzędzia cyfrowe, Office 365, Canva i praktyczne inspiracje do pracy w szkole.')
+@php
+    $listingSeo = app(\App\Services\Seo\CourseSeoService::class)
+        ->listingMeta(Route::currentRouteName());
+@endphp
+
+@section('title', $listingSeo['title'])
+@section('meta_description', $listingSeo['description'])
 
 @section('content')
 <div class="container py-5">

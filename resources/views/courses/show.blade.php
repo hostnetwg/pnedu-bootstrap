@@ -1,7 +1,24 @@
 @extends('layouts.app')
 
-@section('title', $course->plainTitle() . ' – Szczegóły szkolenia')
-@section('meta_description', 'Szczegóły szkolenia „'.$course->plainTitle().'”: program, termin, forma realizacji, cena oraz zapis online w Platformie Nowoczesnej Edukacji.')
+@php
+    $courseSeo = app(\App\Services\Seo\CourseSeoService::class);
+@endphp
+
+@section('title', $courseSeo->seoTitle($course))
+@section('meta_description', $courseSeo->seoDescription($course))
+@section('canonical', route('courses.show', $course->id))
+@section('og_type', 'website')
+@section('og_image', \App\Support\PneadmMedia::url($course->image) ?? config('seo.default_og_image'))
+@section('og_image_alt', $course->plainTitle())
+
+@push('structured-data')
+@php
+    $courseSchema = $courseSeo->structuredDataGraph($course);
+@endphp
+<script type="application/ld+json">
+{!! json_encode($courseSchema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!}
+</script>
+@endpush
 
 @push('styles')
 <style>
