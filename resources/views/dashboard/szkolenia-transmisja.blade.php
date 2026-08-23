@@ -26,7 +26,7 @@
                     title="Zamknij transmisję"
                     aria-label="Zamknij transmisję">
                 <i class="bi bi-x-lg me-1" aria-hidden="true"></i>
-                Zamknij
+                Zamknij transmisję
             </button>
             </div>
         </div>
