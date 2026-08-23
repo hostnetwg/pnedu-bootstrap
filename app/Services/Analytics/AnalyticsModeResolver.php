@@ -52,6 +52,7 @@ class AnalyticsModeResolver
             AnalyticsEventName::CampaignShortLinkVisit->value,
             AnalyticsEventName::CampaignRedirectResolved->value,
             AnalyticsEventName::CourseDescriptionViewed->value,
+            AnalyticsEventName::ArticleViewed->value,
             AnalyticsEventName::OrderFormViewed->value,
             AnalyticsEventName::OrderFormSubmitAttempted->value,
             AnalyticsEventName::FormOrderCreated->value,
@@ -77,6 +78,7 @@ class AnalyticsModeResolver
         $aggregateOnlyEvents = [
             AnalyticsEventName::CampaignShortLinkVisit->value,
             AnalyticsEventName::CourseDescriptionViewed->value,
+            AnalyticsEventName::ArticleViewed->value,
             AnalyticsEventName::OrderFormViewed->value,
             AnalyticsEventName::FormOrderCreated->value,
             AnalyticsEventName::OrderCreated->value,

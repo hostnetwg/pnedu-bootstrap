@@ -155,22 +155,6 @@ class Article extends Model
         return max(1, (int) ceil($words / 220));
     }
 
-    /**
-     * Zlicza jedno wyświetlenie artykułu na publicznym blogu (max. raz na sesję).
-     */
-    public function recordPublicView(): void
-    {
-        $sessionKey = 'blog_article_viewed_'.$this->id;
-
-        if (session()->has($sessionKey)) {
-            return;
-        }
-
-        session()->put($sessionKey, now()->timestamp);
-
-        $this->increment('view_count');
-    }
-
     public function formattedViewCount(): string
     {
         return number_format((int) $this->view_count, 0, ',', ' ');

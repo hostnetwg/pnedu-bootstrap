@@ -15,7 +15,7 @@ protected $connection = 'pneadm';
 - `/blog` - lista opublikowanych artykułów.
 - `/blog/{slug}` - pojedynczy artykuł.
 
-Przy wejściu na artykuł `BlogController` wywołuje `Article::recordPublicView()` — inkrementuje `view_count` w bazie `pneadm` (max. raz na sesję odwiedzającego). Licznik jest widoczny w nagłówku artykułu (data, czas czytania, wyświetlenia).
+Przy wejściu na artykuł middleware `TrackArticlePageView` wywołuje `ArticlePageViewTracker` — inkrementuje `view_count` w bazie `pneadm` tylko gdy analityka jest aktywna (ustawienia z panelu adm: włączenie, tryb, sampling) i żądanie przechodzi filtry jak przy innych eventach landingowych (boty, opt-out `pne_skip_analytics`, prefetch). Dedup: max. raz na sesję `pne_analytics_sid`. Licznik jest widoczny w nagłówku artykułu (data, czas czytania, wyświetlenia).
 
 Widoczne są tylko rekordy:
 

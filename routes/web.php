@@ -155,6 +155,7 @@ Route::get('/bezplatne/akademia-dyrektora', [App\Http\Controllers\CourseControll
 
 Route::get('/blog/{slug}', [BlogController::class, 'show'])
     ->where('slug', '[A-Za-z0-9-]+')
+    ->middleware(\App\Http\Middleware\TrackArticlePageView::class)
     ->name('blog.show');
 
 Route::get('/dashboard', [App\Http\Controllers\DashboardController::class, 'index'])

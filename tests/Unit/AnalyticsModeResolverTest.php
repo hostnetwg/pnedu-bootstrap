@@ -26,6 +26,12 @@ class AnalyticsModeResolverTest extends TestCase
             'session-1',
         ));
 
+        $this->assertTrue($resolver->shouldTrack(
+            AnalyticsEventName::ArticleViewed,
+            AnalyticsMode::AggregateOnly->value,
+            'session-1',
+        ));
+
         $this->assertFalse($resolver->shouldTrack(
             AnalyticsEventName::OrderFormValidationFailed,
             AnalyticsMode::AggregateOnly->value,
