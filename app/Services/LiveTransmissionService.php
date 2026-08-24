@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Participant;
 use App\Models\ParticipantLiveAccess;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 
 class LiveTransmissionService
 {
@@ -146,23 +147,43 @@ class LiveTransmissionService
      */
     public function recordEmbedEntry(Participant $participant): void
     {
-        $now = now();
-        $liveAccess = ParticipantLiveAccess::query()->firstOrNew([
-            'participant_id' => $participant->id,
-        ]);
-
-        if (! $liveAccess->exists) {
-            $liveAccess->course_id = $participant->course_id;
-            $liveAccess->platform = 'clickmeeting';
-            $liveAccess->embed_first_entered_at = $now;
-        } elseif ($liveAccess->embed_first_entered_at === null) {
-            $liveAccess->embed_first_entered_at = $now;
+        if (! $this->embedEntryColumnsAvailable()) {
+            return;
         }
 
-        $liveAccess->embed_last_entered_at = $now;
-        $liveAccess->save();
+        try {
+            $now = now();
+            $liveAccess = ParticipantLiveAccess::query()->firstOrNew([
+                'participant_id' => $participant->id,
+            ]);
 
-        $participant->setRelation('liveAccess', $liveAccess->fresh());
+            if (! $liveAccess->exists) {
+                $liveAccess->course_id = $participant->course_id;
+                $liveAccess->platform = 'clickmeeting';
+                $liveAccess->embed_first_entered_at = $now;
+            } elseif ($liveAccess->embed_first_entered_at === null) {
+                $liveAccess->embed_first_entered_at = $now;
+            }
+
+            $liveAccess->embed_last_entered_at = $now;
+            $liveAccess->save();
+
+            $participant->setRelation('liveAccess', $liveAccess->fresh());
+        } catch (\Throwable $e) {
+            Log::warning('LiveTransmissionService: nie udało się zapisać wejścia embed', [
+                'participant_id' => $participant->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    private function embedEntryColumnsAvailable(): bool
+    {
+        try {
+            return Schema::connection('pneadm')->hasColumn('participant_live_access', 'embed_last_entered_at');
+        } catch (\Throwable) {
+            return false;
+        }
     }
 
     public function isEmbedEnabledForParticipant(Participant $participant): bool

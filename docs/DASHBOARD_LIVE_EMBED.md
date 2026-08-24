@@ -53,8 +53,11 @@ Migracje (pneadm):
 - `2026_08_24_000001_…embed_entry_timestamps…`
 
 ```bash
+# lokalnie (dev)
 cd /home/hostnet/WEB-APP/pneadm && sail artisan migrate
 ```
+
+Prod: **`/opt/alt/php82/usr/bin/php artisan migrate --force`** w `~/domains/adm.pnedu.pl/pneadm` — patrz `pneadm/docs/deploy/PRODUCTION_PATHS.md` (na prod **bez** `sail`).
 
 Pola formularza:
 
@@ -164,6 +167,6 @@ sail test --filter=ParticipantLiveMeetingLink
 
 ## Deploy
 
-1. **pneadm:** `sail artisan migrate` (flagi radio + `embed_token_consumed_at` jeśli jeszcze nie).
-2. **pnedu:** `.env` — `CLICKMEETING_API_TOKEN` (allowlista niepotrzebna, domyślnie wszyscy); `config:clear` / deploy jak zwykle.
+1. **pneadm:** migracja w `~/domains/adm.pnedu.pl/pneadm` — `/opt/alt/php82/usr/bin/php artisan migrate --force` (na prod **bez** `sail`; lokalnie: `sail artisan migrate`). Runbook: `pneadm/docs/deploy/PRODUCTION_PATHS.md`.
+2. **pnedu:** `.env` — `CLICKMEETING_API_TOKEN`; deploy jak w `docs/deploy/PRODUCTION_PATHS.md`.
 3. W edycji kursu ustawić radio na **Osadzony pokój** dla szkoleń eksperymentalnych.
