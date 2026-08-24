@@ -21,6 +21,8 @@ class ParticipantLiveAccess extends Model
         'room_url',
         'token',
         'embed_token_consumed_at',
+        'embed_first_entered_at',
+        'embed_last_entered_at',
         'status',
         'message',
         'synced_at',
@@ -30,6 +32,8 @@ class ParticipantLiveAccess extends Model
     protected $casts = [
         'access_type' => 'integer',
         'embed_token_consumed_at' => 'datetime',
+        'embed_first_entered_at' => 'datetime',
+        'embed_last_entered_at' => 'datetime',
         'synced_at' => 'datetime',
         'expires_at' => 'datetime',
     ];
@@ -47,5 +51,10 @@ class ParticipantLiveAccess extends Model
     public function isSuccessful(): bool
     {
         return $this->status === 'success';
+    }
+
+    public function hasEnteredEmbedOnPnedu(): bool
+    {
+        return $this->embed_last_entered_at !== null;
     }
 }

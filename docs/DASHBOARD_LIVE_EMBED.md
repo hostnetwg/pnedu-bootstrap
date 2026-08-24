@@ -41,6 +41,7 @@ Kolumny:
 - `course_online_details.embed_on_pnedu` (bool, default **false**)
 - `course_online_details.embed_email_link_enabled` (bool, default **true**) — działa tylko gdy `embed_on_pnedu = true`
 - `participant_live_access.embed_token_consumed_at` — lokalna flaga „ten token już wpuszczono w embed” (bez czekania na `first_use_date` CM)
+- `participant_live_access.embed_first_entered_at`, `embed_last_entered_at` — rejestr wejść przez `/transmisja` (badge **Embed pnedu** na liście uczestników w adm)
 
 Migracje (pneadm):
 
@@ -49,6 +50,7 @@ Migracje (pneadm):
 - `2026_08_21_182800_…normalize_live_room_mode…` (ustawia dokładnie jedną opcję na istniejących wierszach)
 - `2026_08_22_131100_…embed_email_link_enabled…`
 - `2026_08_20_230500_…embed_token_consumed_at…`
+- `2026_08_24_000001_…embed_entry_timestamps…`
 
 ```bash
 cd /home/hostnet/WEB-APP/pneadm && sail artisan migrate

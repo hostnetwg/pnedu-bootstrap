@@ -179,6 +179,34 @@ class LiveTransmissionServiceTest extends TestCase
         $this->assertStringContainsString('nie jest włączony', (string) ($result['error'] ?? ''));
     }
 
+    public function test_record_embed_entry_persists_first_and_last_timestamps(): void
+    {
+        if (! $this->pneadmReady()) {
+            $this->markTestSkipped('Brak tabel/kolumn pneadm.');
+        }
+
+        [$participant] = $this->seedParticipant();
+        $service = app(LiveTransmissionService::class);
+
+        Carbon::setTestNow(Carbon::parse('2026-07-18 10:05:00', 'Europe/Warsaw'));
+        $service->recordEmbedEntry($participant);
+
+        $first = $participant->fresh()->liveAccess;
+        $this->assertNotNull($first?->embed_first_entered_at);
+        $this->assertNotNull($first?->embed_last_entered_at);
+        $this->assertTrue($first->hasEnteredEmbedOnPnedu());
+
+        Carbon::setTestNow(Carbon::parse('2026-07-18 11:15:00', 'Europe/Warsaw'));
+        $service->recordEmbedEntry($participant->fresh(['liveAccess']));
+
+        $second = $participant->fresh()->liveAccess;
+        $this->assertSame(
+            $first->embed_first_entered_at?->toDateTimeString(),
+            $second->embed_first_entered_at?->toDateTimeString(),
+        );
+        $this->assertSame('2026-07-18 11:15:00', $second->embed_last_entered_at?->format('Y-m-d H:i:s'));
+    }
+
     /**
      * @return array{0: Participant}
      */
@@ -233,7 +261,8 @@ class LiveTransmissionServiceTest extends TestCase
             return Schema::connection('pneadm')->hasTable('participants')
                 && Schema::connection('pneadm')->hasTable('course_online_details')
                 && Schema::connection('pneadm')->hasColumn('course_online_details', 'embed_on_pnedu')
-                && Schema::connection('pneadm')->hasTable('participant_live_access');
+                && Schema::connection('pneadm')->hasTable('participant_live_access')
+                && Schema::connection('pneadm')->hasColumn('participant_live_access', 'embed_last_entered_at');
         } catch (\Throwable) {
             return false;
         }

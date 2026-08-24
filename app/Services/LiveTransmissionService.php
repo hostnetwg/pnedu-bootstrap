@@ -141,6 +141,30 @@ class LiveTransmissionService
         ];
     }
 
+    /**
+     * Zapis wejścia uczestnika przez osadzony pokój /transmisja (widoczne w adm).
+     */
+    public function recordEmbedEntry(Participant $participant): void
+    {
+        $now = now();
+        $liveAccess = ParticipantLiveAccess::query()->firstOrNew([
+            'participant_id' => $participant->id,
+        ]);
+
+        if (! $liveAccess->exists) {
+            $liveAccess->course_id = $participant->course_id;
+            $liveAccess->platform = 'clickmeeting';
+            $liveAccess->embed_first_entered_at = $now;
+        } elseif ($liveAccess->embed_first_entered_at === null) {
+            $liveAccess->embed_first_entered_at = $now;
+        }
+
+        $liveAccess->embed_last_entered_at = $now;
+        $liveAccess->save();
+
+        $participant->setRelation('liveAccess', $liveAccess->fresh());
+    }
+
     public function isEmbedEnabledForParticipant(Participant $participant): bool
     {
         if (! $this->liveAccessService->viewerMayUseEmbed()) {

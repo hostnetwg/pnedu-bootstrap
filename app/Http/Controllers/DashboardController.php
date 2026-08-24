@@ -364,9 +364,13 @@ class DashboardController extends Controller
         if ($isMobile) {
             $fallback = $built['room_autologin_url'] ?? null;
             if (is_string($fallback) && $fallback !== '') {
+                $liveTransmissionService->recordEmbedEntry($participant);
+
                 return redirect()->away($fallback);
             }
         }
+
+        $liveTransmissionService->recordEmbedEntry($participant);
 
         $courseId = (int) ($participant->course_id ?? $participant->course?->id ?? 0);
         $participant->loadMissing('course.onlineDetail');
