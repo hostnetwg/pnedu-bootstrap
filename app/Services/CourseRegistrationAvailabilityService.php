@@ -42,11 +42,11 @@ class CourseRegistrationAvailabilityService
         return $successor;
     }
 
-    public function redirectToSuccessorForm(
-        Course $course,
-        Request $request,
-        string $routeName
-    ): ?RedirectResponse {
+    /**
+     * Przekierowanie z zamkniętej edycji: na stronę opisu kolejnej edycji (nie od razu na formularz).
+     */
+    public function redirectClosedRegistrationToSuccessor(Course $course, Request $request): ?RedirectResponse
+    {
         if (! $this->isClosed($course)) {
             return null;
         }
@@ -65,12 +65,21 @@ class CourseRegistrationAvailabilityService
 
         $params = array_merge(['id' => $successor->id], $query);
 
-        return redirect()->route($routeName, $params);
+        return redirect()->route('courses.show', $params);
+    }
+
+    /** @deprecated Use redirectClosedRegistrationToSuccessor() */
+    public function redirectToSuccessorForm(
+        Course $course,
+        Request $request,
+        string $routeName
+    ): ?RedirectResponse {
+        return $this->redirectClosedRegistrationToSuccessor($course, $request);
     }
 
     public function redirectMessage(Course $closedCourse, Course $successor): string
     {
-        return $this->closedMessage($closedCourse, $successor).' Poniżej widzisz formularz zapisu dla nowego terminu.';
+        return $this->closedMessage($closedCourse, $successor).' Sprawdź opis kolejnej edycji i zapisz się z formularza na tej stronie.';
     }
 
     public function closedMessage(Course $closedCourse, ?Course $successor = null): string

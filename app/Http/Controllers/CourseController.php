@@ -533,7 +533,7 @@ class CourseController extends Controller
     {
         $course = \App\Models\Course::with('registrationSuccessor')->findOrFail($id);
         $redirect = app(CourseRegistrationAvailabilityService::class)
-            ->redirectToSuccessorForm($course, request(), 'payment.online');
+            ->redirectClosedRegistrationToSuccessor($course, request());
         if ($redirect) {
             return $redirect;
         }
@@ -553,7 +553,7 @@ class CourseController extends Controller
     {
         $course = \App\Models\Course::with('registrationSuccessor')->findOrFail($id);
         $redirect = app(CourseRegistrationAvailabilityService::class)
-            ->redirectToSuccessorForm($course, $request, 'payment.online');
+            ->redirectClosedRegistrationToSuccessor($course, $request);
         if ($redirect) {
             return $redirect->withInput();
         }
@@ -857,7 +857,7 @@ class CourseController extends Controller
 
         if (! $ident) {
             $redirect = app(CourseRegistrationAvailabilityService::class)
-                ->redirectToSuccessorForm($course, request(), 'payment.deferred');
+                ->redirectClosedRegistrationToSuccessor($course, request());
             if ($redirect) {
                 return $redirect;
             }
@@ -953,7 +953,7 @@ class CourseController extends Controller
 
         if (! $ident) {
             $redirect = app(CourseRegistrationAvailabilityService::class)
-                ->redirectToSuccessorForm($course, request(), \App\Support\OrderFormVariant::publicRouteName());
+                ->redirectClosedRegistrationToSuccessor($course, request());
             if ($redirect) {
                 return $redirect;
             }
@@ -1049,7 +1049,7 @@ class CourseController extends Controller
 
         $course = \App\Models\Course::with(['priceVariants', 'instructor', 'onlineDetail', 'registrationSuccessor'])->findOrFail($id);
         $redirect = app(CourseRegistrationAvailabilityService::class)
-            ->redirectToSuccessorForm($course, request(), \App\Support\OrderFormVariant::publicRouteName());
+            ->redirectClosedRegistrationToSuccessor($course, request());
         if ($redirect) {
             return $redirect;
         }
@@ -1607,7 +1607,7 @@ class CourseController extends Controller
 
             if (! $order) {
                 $redirect = app(CourseRegistrationAvailabilityService::class)
-                    ->redirectToSuccessorForm($course, $request, 'payment.deferred');
+                    ->redirectClosedRegistrationToSuccessor($course, $request);
                 if ($redirect) {
                     return $redirect->withInput();
                 }
@@ -1890,7 +1890,7 @@ class CourseController extends Controller
 
             if (! $order) {
                 $redirect = app(CourseRegistrationAvailabilityService::class)
-                    ->redirectToSuccessorForm($course, $request, OrderFormVariant::publicRouteName());
+                    ->redirectClosedRegistrationToSuccessor($course, $request);
                 if ($redirect) {
                     return $redirect->withInput();
                 }
@@ -2053,7 +2053,7 @@ class CourseController extends Controller
 
             if (! $formOrder) {
                 $redirect = app(CourseRegistrationAvailabilityService::class)
-                    ->redirectToSuccessorForm($course, $request, OrderFormVariant::publicRouteName());
+                    ->redirectClosedRegistrationToSuccessor($course, $request);
                 if ($redirect) {
                     return $redirect->withInput();
                 }
