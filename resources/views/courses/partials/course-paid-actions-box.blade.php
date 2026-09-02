@@ -51,7 +51,13 @@
         ? 'btn btn-purchase-cta-v2 btn-lg fw-bold w-100'
         : 'btn btn-purchase-cta btn-lg fw-bold w-100';
 @endphp
-<h3>{{ $registrationClosed ? 'Kolejna edycja szkolenia' : 'Wybierz formę płatności i&nbsp;zarezerwuj miejsce!' }}</h3>
+<h3>
+    @if($registrationClosed)
+        Kolejna edycja szkolenia
+    @else
+        Wybierz formę płatności i&nbsp;zarezerwuj miejsce!
+    @endif
+</h3>
 @if($registrationClosed)
     <div class="alert alert-warning text-start small mb-3" role="alert">
         @if(filled($course->registration_closed_message))
@@ -164,7 +170,13 @@
     @endif
     @endif
 </div>
-<div class="mt-2 text-muted">{{ $registrationClosed ? 'Zapisy na poprzedni termin są zamknięte.' : 'Liczba miejsc ograniczona –' }}<br>{{ $registrationClosed ? 'Wybierz kolejną edycję.' : 'nie zwlekaj z&nbsp;rejestracją!' }}</div>
+<div class="mt-2 text-muted">
+    @if($registrationClosed)
+        Zapisy na poprzedni termin są zamknięte.<br>Wybierz kolejną edycję.
+    @else
+        Liczba miejsc ograniczona –<br>nie zwlekaj z&nbsp;rejestracją!
+    @endif
+</div>
 
 @once
     @push('scripts')
