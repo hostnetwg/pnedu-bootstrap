@@ -419,7 +419,20 @@ document.addEventListener('DOMContentLoaded', function() {
     @if(!empty($registrationNotice))
         <div class="alert alert-warning border-warning-subtle shadow-sm mb-4" role="alert">
             <h2 class="h5 alert-heading mb-2">Na ten termin nie ma już wolnych miejsc</h2>
-            <p class="mb-2">{{ $registrationNotice }}</p>
+            <p class="mb-2">
+                Na szkolenie w terminie
+                <strong class="text-danger">{{ $registrationClosedDateLabel }}</strong>
+                nie mamy już wolnych miejsc.
+            </p>
+            @if(!empty($registrationSuccessor) && !empty($registrationSuccessorDateLabel))
+                <p class="mb-2">
+                    Zapisz się na kolejną edycję w terminie
+                    <strong class="text-danger">{{ $registrationSuccessorDateLabel }}</strong>.
+                </p>
+            @endif
+            @if(filled($course->registration_closed_message))
+                <p class="mb-2">{{ $course->registration_closed_message }}</p>
+            @endif
             @if(!empty($registrationSuccessor))
                 <a href="{{ route('courses.show', $registrationSuccessor->id) }}" class="btn btn-warning fw-semibold">
                     Zobacz kolejną edycję
@@ -427,6 +440,8 @@ document.addEventListener('DOMContentLoaded', function() {
             @endif
         </div>
     @endif
+
+    @include('courses.partials.registration-redirect-notice', ['registrationRedirectNoticeContext' => 'course'])
 
     <!-- MOBILE: Płatności pod grafiką, tytułem i datą -->
     <div class="pay-mobile">

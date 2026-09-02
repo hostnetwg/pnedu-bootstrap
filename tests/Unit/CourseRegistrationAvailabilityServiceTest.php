@@ -71,8 +71,8 @@ class CourseRegistrationAvailabilityServiceTest extends TestCase
         $service = new CourseRegistrationAvailabilityService;
         $message = $service->closedMessage($course, $successor);
 
-        $this->assertStringContainsString('02.09.2026 10:00', $message);
+        $this->assertStringContainsString('środa, 02.09.2026 10:00', $message);
         $this->assertStringContainsString('Ten termin jest już pełny.', $message);
-        $this->assertStringContainsString('10.10.2026 10:00', $message);
+        $this->assertStringContainsString('sobota, 10.10.2026 10:00', $message);
     }
 }

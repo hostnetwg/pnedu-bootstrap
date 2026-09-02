@@ -494,6 +494,7 @@
             @endif
 
             @include('courses.partials.checkout-resume-banner')
+            @include('courses.partials.registration-redirect-notice')
 
             <form method="POST" action="{{ route('payment.order-form.store', $course->id) }}">
                 @csrf

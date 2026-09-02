@@ -106,6 +106,8 @@
                 </div>
             @endif
 
+            @include('courses.partials.registration-redirect-notice')
+
             <form method="POST" action="{{ route('payment.online.store', $course->id) }}" id="payOnlineForm">
                 @csrf
                 <fieldset class="order-form-section">

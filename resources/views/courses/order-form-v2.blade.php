@@ -155,6 +155,7 @@
             <span class="order-v2__step-label">4. Płatność</span>
         </div>
     </div>
+    @include('courses.partials.registration-redirect-notice')
 
     <form method="POST" action="{{ route('payment.order-form-v2.store', $course->id) }}" id="order-form-v2" novalidate>
         @csrf

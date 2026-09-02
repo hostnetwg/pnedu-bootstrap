@@ -448,8 +448,13 @@ class CourseController extends Controller
         $registrationNotice = $registrationAvailability->isClosed($course)
             ? $registrationAvailability->closedMessage($course, $registrationSuccessor)
             : null;
+        $registrationRedirectNotice = $registrationAvailability->redirectedFromNotice($course, request());
+        $registrationClosedDateLabel = $registrationAvailability->courseDateLabelWithWeekday($course);
+        $registrationSuccessorDateLabel = $registrationSuccessor
+            ? $registrationAvailability->courseDateLabelWithWeekday($registrationSuccessor)
+            : null;
 
-        return view('courses.show', compact('course', 'paymentOptions', 'activeCoursePriceVariants', 'registrationSuccessor', 'registrationNotice'));
+        return view('courses.show', compact('course', 'paymentOptions', 'activeCoursePriceVariants', 'registrationSuccessor', 'registrationNotice', 'registrationRedirectNotice', 'registrationClosedDateLabel', 'registrationSuccessorDateLabel'));
     }
 
     /**
@@ -463,9 +468,16 @@ class CourseController extends Controller
         if ($registrationAvailability->isClosed($course)) {
             $successor = $registrationAvailability->successor($course);
 
+            if ($successor) {
+                return redirect()->route('courses.show', [
+                    'id' => $successor->id,
+                    'registration_redirected_from' => $course->id,
+                ]);
+            }
+
             return redirect()
-                ->route('courses.show', $successor?->id ?? $course->id)
-                ->with('info', $registrationAvailability->closedMessage($course, $successor));
+                ->route('courses.show', $course->id)
+                ->with('info', $registrationAvailability->closedMessage($course));
         }
 
         try {
@@ -528,8 +540,10 @@ class CourseController extends Controller
 
         $displayOptions = PaymentDisplayOption::getForCoursePage();
         $developerSymbolicPayment = DeveloperOnlinePaymentTest::shouldApplySymbolicAmount($displayOptions, auth()->user());
+        $registrationRedirectNotice = app(CourseRegistrationAvailabilityService::class)
+            ->redirectedFromNotice($course, request());
 
-        return view('courses.pay-online', compact('course', 'developerSymbolicPayment'));
+        return view('courses.pay-online', compact('course', 'developerSymbolicPayment', 'registrationRedirectNotice'));
     }
 
     /**
@@ -918,8 +932,10 @@ class CourseController extends Controller
 
         $fbSourceDefault = $this->resolveFbSourceDefaultForForm($existingOrder);
         $conversionPlacementDefault = $this->resolveConversionPlacementDefaultForForm((int) $id, $existingOrder);
+        $registrationRedirectNotice = app(CourseRegistrationAvailabilityService::class)
+            ->redirectedFromNotice($course, request());
 
-        return view('courses.deferred-order', compact('course', 'testData', 'isTestMode', 'isEditMode', 'user', 'prefillPriceVariantId', 'fbSourceDefault', 'conversionPlacementDefault', 'checkoutResumeBanner'));
+        return view('courses.deferred-order', compact('course', 'testData', 'isTestMode', 'isEditMode', 'user', 'prefillPriceVariantId', 'fbSourceDefault', 'conversionPlacementDefault', 'checkoutResumeBanner', 'registrationRedirectNotice'));
     }
 
     /**
@@ -1015,8 +1031,10 @@ class CourseController extends Controller
         $fbSourceDefault = $this->resolveFbSourceDefaultForForm($existingOrder);
         $conversionPlacementDefault = $this->resolveConversionPlacementDefaultForForm((int) $id, $existingOrder);
         $developerSymbolicPayment = DeveloperOnlinePaymentTest::shouldApplySymbolicAmount($displayOptions, $user);
+        $registrationRedirectNotice = app(CourseRegistrationAvailabilityService::class)
+            ->redirectedFromNotice($course, request());
 
-        return view('courses.order-form', compact('course', 'testData', 'isTestMode', 'isEditMode', 'user', 'prefillPriceVariantId', 'fbSourceDefault', 'conversionPlacementDefault', 'checkoutResumeBanner', 'developerSymbolicPayment'));
+        return view('courses.order-form', compact('course', 'testData', 'isTestMode', 'isEditMode', 'user', 'prefillPriceVariantId', 'fbSourceDefault', 'conversionPlacementDefault', 'checkoutResumeBanner', 'developerSymbolicPayment', 'registrationRedirectNotice'));
     }
 
     /**
@@ -1078,8 +1096,10 @@ class CourseController extends Controller
         $fbSourceDefault = $this->resolveFbSourceDefaultForForm(null);
         $conversionPlacementDefault = $this->resolveConversionPlacementDefaultForForm((int) $course->id, null);
         $developerSymbolicPayment = DeveloperOnlinePaymentTest::shouldApplySymbolicAmount($displayOptions, $user);
+        $registrationRedirectNotice = app(CourseRegistrationAvailabilityService::class)
+            ->redirectedFromNotice($course, request());
 
-        return view($viewName, compact('course', 'testData', 'isTestMode', 'isEditMode', 'user', 'prefillPriceVariantId', 'fbSourceDefault', 'conversionPlacementDefault', 'checkoutResumeBanner', 'developerSymbolicPayment'));
+        return view($viewName, compact('course', 'testData', 'isTestMode', 'isEditMode', 'user', 'prefillPriceVariantId', 'fbSourceDefault', 'conversionPlacementDefault', 'checkoutResumeBanner', 'developerSymbolicPayment', 'registrationRedirectNotice'));
     }
 
     /**
