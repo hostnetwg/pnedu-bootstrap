@@ -63,6 +63,7 @@ class CourseRegistrationAvailabilityServiceTest extends TestCase
         $course = new Course;
         $course->forceFill([
             'id' => 10,
+            'start_date' => '2026-09-02 10:00:00',
             'registration_closed_at' => now(),
             'registration_closed_message' => 'Ten termin jest już pełny.',
         ]);
@@ -70,6 +71,7 @@ class CourseRegistrationAvailabilityServiceTest extends TestCase
         $service = new CourseRegistrationAvailabilityService;
         $message = $service->closedMessage($course, $successor);
 
+        $this->assertStringContainsString('02.09.2026 10:00', $message);
         $this->assertStringContainsString('Ten termin jest już pełny.', $message);
         $this->assertStringContainsString('10.10.2026 10:00', $message);
     }

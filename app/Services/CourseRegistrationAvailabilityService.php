@@ -62,15 +62,20 @@ class CourseRegistrationAvailabilityService
 
     public function redirectMessage(Course $closedCourse, Course $successor): string
     {
-        return $this->closedMessage($closedCourse, $successor).' Formularz został otwarty dla kolejnej edycji.';
+        return $this->closedMessage($closedCourse, $successor).' Poniżej widzisz formularz zapisu dla nowego terminu.';
     }
 
     public function closedMessage(Course $closedCourse, ?Course $successor = null): string
     {
-        $message = $closedCourse->registrationClosedMessage();
+        $message = 'Na szkolenie w terminie '.$this->courseDateLabel($closedCourse).' nie mamy już wolnych miejsc.';
+        $customMessage = trim((string) ($closedCourse->registration_closed_message ?? ''));
+
+        if ($customMessage !== '') {
+            $message .= ' '.$customMessage;
+        }
 
         if ($successor instanceof Course) {
-            $message .= ' Możesz zapisać się na kolejną edycję: '
+            $message .= ' Zapisz się na kolejną edycję w terminie '
                 .$this->courseDateLabel($successor).'.';
         }
 
