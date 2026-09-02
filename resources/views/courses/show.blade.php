@@ -402,12 +402,32 @@ document.addEventListener('DOMContentLoaded', function() {
 
 @section('content')
 <div class="container py-5">
+    @if(session('info'))
+        <div class="alert alert-info alert-dismissible fade show mb-4" role="alert">
+            {{ session('info') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Zamknij"></button>
+        </div>
+    @endif
+
     @if(session('error'))
         <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
             {{ session('error') }}
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Zamknij"></button>
         </div>
     @endif
+
+    @if(!empty($registrationNotice))
+        <div class="alert alert-warning border-warning-subtle shadow-sm mb-4" role="alert">
+            <h2 class="h5 alert-heading mb-2">Na ten termin nie ma już wolnych miejsc</h2>
+            <p class="mb-2">{{ $registrationNotice }}</p>
+            @if(!empty($registrationSuccessor))
+                <a href="{{ route('courses.show', $registrationSuccessor->id) }}" class="btn btn-warning fw-semibold">
+                    Zobacz kolejną edycję
+                </a>
+            @endif
+        </div>
+    @endif
+
     <!-- MOBILE: Płatności pod grafiką, tytułem i datą -->
     <div class="pay-mobile">
         @if(!$course->is_paid)

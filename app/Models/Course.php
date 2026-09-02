@@ -48,6 +48,9 @@ class Course extends Model
         'id_old',
         'source_id_old',
         'show_on_pnedu',
+        'registration_closed_at',
+        'registration_successor_course_id',
+        'registration_closed_message',
         'publigo_product_id',
         'publigo_price_id',
         'sendy_suppression_list_id',
@@ -61,6 +64,8 @@ class Course extends Model
         'is_paid' => 'boolean',
         'start_date' => 'datetime',
         'end_date' => 'datetime',
+        'registration_closed_at' => 'datetime',
+        'registration_successor_course_id' => 'integer',
         'post_end_access_duration_value' => 'integer',
     ];
 
@@ -135,6 +140,25 @@ class Course extends Model
     public function instructor(): BelongsTo
     {
         return $this->belongsTo(Instructor::class, 'instructor_id');
+    }
+
+    public function registrationSuccessor(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'registration_successor_course_id');
+    }
+
+    public function hasClosedRegistration(): bool
+    {
+        return $this->registration_closed_at !== null;
+    }
+
+    public function registrationClosedMessage(): string
+    {
+        $message = trim((string) ($this->registration_closed_message ?? ''));
+
+        return $message !== ''
+            ? $message
+            : 'Na ten termin nie ma już wolnych miejsc.';
     }
 
     /** Pełny URL miniatury kursu (storage pneadm, opcjonalnie przez proxy pnedu). */

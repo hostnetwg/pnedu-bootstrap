@@ -9,6 +9,7 @@ use App\Models\FormOrder;
 use App\Models\Participant;
 use App\Models\PaymentDisplayOption;
 use App\Services\Analytics\BackendAnalyticsTracker;
+use App\Services\CourseRegistrationAvailabilityService;
 use App\Services\FormOrderCheckoutResumeService;
 use App\Services\FormOrderOnlineAbandonmentService;
 use App\Services\OrderFormParticipantService;
@@ -437,13 +438,18 @@ class CourseController extends Controller
      */
     public function show($id)
     {
-        $course = \App\Models\Course::with(['instructor', 'priceVariants', 'onlineDetail'])->findOrFail($id);
+        $course = \App\Models\Course::with(['instructor', 'priceVariants', 'onlineDetail', 'registrationSuccessor'])->findOrFail($id);
 
         $paymentOptions = \App\Models\PaymentDisplayOption::getForCoursePage();
 
         $activeCoursePriceVariants = $this->activePriceVariantsOrdered($course);
+        $registrationAvailability = app(CourseRegistrationAvailabilityService::class);
+        $registrationSuccessor = $registrationAvailability->successor($course);
+        $registrationNotice = $registrationAvailability->isClosed($course)
+            ? $registrationAvailability->closedMessage($course, $registrationSuccessor)
+            : null;
 
-        return view('courses.show', compact('course', 'paymentOptions', 'activeCoursePriceVariants'));
+        return view('courses.show', compact('course', 'paymentOptions', 'activeCoursePriceVariants', 'registrationSuccessor', 'registrationNotice'));
     }
 
     /**
@@ -452,6 +458,16 @@ class CourseController extends Controller
      */
     public function register(Request $request, $id)
     {
+        $course = Course::with('registrationSuccessor')->findOrFail($id);
+        $registrationAvailability = app(CourseRegistrationAvailabilityService::class);
+        if ($registrationAvailability->isClosed($course)) {
+            $successor = $registrationAvailability->successor($course);
+
+            return redirect()
+                ->route('courses.show', $successor?->id ?? $course->id)
+                ->with('info', $registrationAvailability->closedMessage($course, $successor));
+        }
+
         try {
             $validated = $request->validate([
                 'email' => ['required', 'email:rfc,dns'],
@@ -503,7 +519,13 @@ class CourseController extends Controller
      */
     public function payOnline($id)
     {
-        $course = \App\Models\Course::findOrFail($id);
+        $course = \App\Models\Course::with('registrationSuccessor')->findOrFail($id);
+        $redirect = app(CourseRegistrationAvailabilityService::class)
+            ->redirectToSuccessorForm($course, request(), 'payment.online');
+        if ($redirect) {
+            return $redirect;
+        }
+
         $displayOptions = PaymentDisplayOption::getForCoursePage();
         $developerSymbolicPayment = DeveloperOnlinePaymentTest::shouldApplySymbolicAmount($displayOptions, auth()->user());
 
@@ -515,7 +537,12 @@ class CourseController extends Controller
      */
     public function storePayOnline(Request $request, $id)
     {
-        $course = \App\Models\Course::findOrFail($id);
+        $course = \App\Models\Course::with('registrationSuccessor')->findOrFail($id);
+        $redirect = app(CourseRegistrationAvailabilityService::class)
+            ->redirectToSuccessorForm($course, $request, 'payment.online');
+        if ($redirect) {
+            return $redirect->withInput();
+        }
 
         $rules = [
             'buyer_type' => 'nullable|in:person,company,organisation',
@@ -804,7 +831,7 @@ class CourseController extends Controller
      */
     public function deferredOrder($id, $ident = null)
     {
-        $course = \App\Models\Course::with('priceVariants')->findOrFail($id);
+        $course = \App\Models\Course::with(['priceVariants', 'registrationSuccessor'])->findOrFail($id);
         $existingOrder = null;
 
         // Sprawdź czy to tryb testowy (URL kończy się na /test)
@@ -813,6 +840,14 @@ class CourseController extends Controller
         // Sprawdź czy to edycja istniejącego zamówienia
         $orderData = [];
         $isEditMode = false;
+
+        if (! $ident) {
+            $redirect = app(CourseRegistrationAvailabilityService::class)
+                ->redirectToSuccessorForm($course, request(), 'payment.deferred');
+            if ($redirect) {
+                return $redirect;
+            }
+        }
 
         if ($ident) {
             $existingOrder = FormOrder::withTrashed()
@@ -895,12 +930,18 @@ class CourseController extends Controller
      */
     public function orderForm($id, $ident = null)
     {
-        $course = \App\Models\Course::with('priceVariants')->findOrFail($id);
+        $course = \App\Models\Course::with(['priceVariants', 'registrationSuccessor'])->findOrFail($id);
         $existingOrder = null;
 
         $displayOptions = \App\Models\PaymentDisplayOption::getForCoursePage();
 
         if (! $ident) {
+            $redirect = app(CourseRegistrationAvailabilityService::class)
+                ->redirectToSuccessorForm($course, request(), \App\Support\OrderFormVariant::publicRouteName());
+            if ($redirect) {
+                return $redirect;
+            }
+
             $gateway = app(\App\Support\OrderFormGateway::class);
             $variant = $gateway->resolveVariant(request(), $displayOptions);
             $gateway->markResolvedVariant(request(), $variant);
@@ -988,7 +1029,12 @@ class CourseController extends Controller
 
         app(\App\Support\OrderFormGateway::class)->markResolvedVariant(request(), \App\Support\OrderFormVariant::V2);
 
-        $course = \App\Models\Course::with(['priceVariants', 'instructor', 'onlineDetail'])->findOrFail($id);
+        $course = \App\Models\Course::with(['priceVariants', 'instructor', 'onlineDetail', 'registrationSuccessor'])->findOrFail($id);
+        $redirect = app(CourseRegistrationAvailabilityService::class)
+            ->redirectToSuccessorForm($course, request(), \App\Support\OrderFormVariant::publicRouteName());
+        if ($redirect) {
+            return $redirect;
+        }
 
         return $this->renderNewOrderForm(
             course: $course,
@@ -1475,7 +1521,7 @@ class CourseController extends Controller
      */
     public function storeDeferredOrder(Request $request, $id)
     {
-        $course = Course::with('priceVariants')->findOrFail($id);
+        $course = Course::with(['priceVariants', 'registrationSuccessor'])->findOrFail($id);
 
         $rules = [
             'buyer_name' => 'required|string|max:500',
@@ -1538,6 +1584,14 @@ class CourseController extends Controller
                 $primaryParticipant['email'],
                 $request->boolean('order_edit_intent')
             );
+
+            if (! $order) {
+                $redirect = app(CourseRegistrationAvailabilityService::class)
+                    ->redirectToSuccessorForm($course, $request, 'payment.deferred');
+                if ($redirect) {
+                    return $redirect->withInput();
+                }
+            }
 
             if ($order && ! $checkoutResume->canUpdateFromFormSubmit($order)) {
                 return redirect()
@@ -1660,7 +1714,7 @@ class CourseController extends Controller
 
     public function storeOrderForm(Request $request, $id, BackendAnalyticsTracker $backendAnalyticsTracker)
     {
-        $course = Course::with('priceVariants')->findOrFail($id);
+        $course = Course::with(['priceVariants', 'registrationSuccessor'])->findOrFail($id);
 
         $buyerType = $request->input('buyer_type', 'organisation');
         if (! in_array($buyerType, ['organisation', 'person'], true)) {
@@ -1813,6 +1867,14 @@ class CourseController extends Controller
                 $validated['participant_email'],
                 $request->boolean('order_edit_intent')
             );
+
+            if (! $order) {
+                $redirect = app(CourseRegistrationAvailabilityService::class)
+                    ->redirectToSuccessorForm($course, $request, OrderFormVariant::publicRouteName());
+                if ($redirect) {
+                    return $redirect->withInput();
+                }
+            }
 
             if ($order && ! $checkoutResume->canUpdateFromFormSubmit($order)) {
                 return redirect()
@@ -1968,6 +2030,14 @@ class CourseController extends Controller
                 $validated['participant_email'],
                 $request->boolean('order_edit_intent')
             );
+
+            if (! $formOrder) {
+                $redirect = app(CourseRegistrationAvailabilityService::class)
+                    ->redirectToSuccessorForm($course, $request, OrderFormVariant::publicRouteName());
+                if ($redirect) {
+                    return $redirect->withInput();
+                }
+            }
 
             if ($formOrder && ! $checkoutResume->canUpdateFromFormSubmit($formOrder)) {
                 return redirect()
