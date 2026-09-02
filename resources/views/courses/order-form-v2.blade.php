@@ -656,7 +656,16 @@
                 heading.focus({preventScroll: true});
             }
         }
-        window.scrollTo({top: Math.max(0, form.offsetTop - 120), behavior: 'smooth'});
+        var redirectNoticeHeading = document.getElementById('registration-redirect-notice-heading');
+        if (focusHeading === false && redirectNoticeHeading) {
+            requestAnimationFrame(function () {
+                if (typeof window.pneduScrollToRegistrationRedirectNotice === 'function') {
+                    window.pneduScrollToRegistrationRedirectNotice();
+                }
+            });
+        } else {
+            window.scrollTo({top: Math.max(0, form.offsetTop - 120), behavior: 'smooth'});
+        }
     }
     function validateCurrent() {
         syncContact();

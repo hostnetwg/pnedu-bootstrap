@@ -7,7 +7,12 @@
     $registrationAvailability = app(\App\Services\CourseRegistrationAvailabilityService::class);
     $registrationSuccessor = $registrationSuccessor ?? $registrationAvailability->successor($course);
     $registrationClosed = $registrationAvailability->isClosed($course);
-    $registrationNotice = $registrationNotice ?? ($registrationClosed ? $registrationAvailability->closedMessage($course, $registrationSuccessor) : null);
+    $registrationClosedDateLabel = $registrationClosed
+        ? $registrationAvailability->courseDateLabelWithWeekday($course)
+        : null;
+    $registrationSuccessorDateLabel = $registrationSuccessor
+        ? $registrationAvailability->courseDateLabelWithWeekday($registrationSuccessor)
+        : null;
     $signupCourse = $registrationClosed && $registrationSuccessor ? $registrationSuccessor : $course;
     if ($registrationClosed) {
         $variantCount = 0;
@@ -49,8 +54,25 @@
 <h3>{{ $registrationClosed ? 'Kolejna edycja szkolenia' : 'Wybierz formę płatności i&nbsp;zarezerwuj miejsce!' }}</h3>
 @if($registrationClosed)
     <div class="alert alert-warning text-start small mb-3" role="alert">
-        <strong>Ten termin jest już pełny.</strong><br>
-        {{ $registrationNotice }}
+        @if(filled($course->registration_closed_message))
+            <p class="mb-2"><strong>{{ $course->registration_closed_message }}</strong></p>
+        @else
+            <p class="mb-2"><strong>Ten termin jest już pełny.</strong></p>
+        @endif
+        <p class="mb-2">
+            Na szkolenie w terminie
+            <strong class="text-danger">{{ $registrationClosedDateLabel }}</strong>
+            nie mamy już wolnych miejsc.
+        </p>
+        @if($registrationSuccessor && $registrationSuccessorDateLabel)
+            <p class="mb-2">
+                Zapisz się na kolejną edycję w terminie
+                <strong class="text-danger">{{ $registrationSuccessorDateLabel }}</strong>.
+            </p>
+            <p class="mb-0">
+                Przez poniższy formularz zapiszesz się na nową edycję szkolenia.
+            </p>
+        @endif
     </div>
     @if(!$registrationSuccessor)
         <div class="alert alert-light border text-start small mb-3" role="note">
