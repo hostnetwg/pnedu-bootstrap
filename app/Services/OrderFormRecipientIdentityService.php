@@ -9,7 +9,8 @@ use Illuminate\Http\Request;
  * Identyfikacja odbiorcy (Podmiot3) w publicznym formularzu zamówienia PNEDU.
  *
  * NIP odbiorcy i identyfikator wewnętrzny (IDWew) są opcjonalne. GUS BIR wyszukuje wyłącznie po NIP,
- * więc przy IDWew nie ma pobierania z GUS. IDWew (KSeF FA(3)) wymaga poprawnego NIP nabywcy.
+ * więc przy IDWew nie ma pobierania z GUS. Pełny IDWew z KSeF (NIP-00001) zapisujemy do
+ * ksef_additional_entity_id_type / ksef_additional_entity_identifier.
  */
 class OrderFormRecipientIdentityService
 {
@@ -55,18 +56,20 @@ class OrderFormRecipientIdentityService
             return null;
         }
 
-        $buyerDigits = preg_replace('/\D+/', '', (string) $buyerNip);
-        if ($buyerDigits === '' || strlen($buyerDigits) !== 10) {
+        $rawInternalId = (string) $request->input('recipient_internal_id', '');
+        $buyerDigits = preg_replace('/\D+/', '', (string) $buyerNip) ?? '';
+
+        if (preg_match('/^[0-9]{5}$/', trim($rawInternalId)) && strlen($buyerDigits) !== 10) {
             return [
                 'field' => 'recipient_internal_id',
-                'message' => 'Aby podać identyfikator wewnętrzny, najpierw uzupełnij poprawny NIP nabywcy.',
+                'message' => 'Aby podać sam numer oddziału (5 cyfr), najpierw uzupełnij poprawny NIP nabywcy.',
             ];
         }
 
-        if (! $this->normalizeIdwew((string) $request->input('recipient_internal_id', ''), $buyerDigits)) {
+        if (! $this->normalizeIdwew($rawInternalId, $buyerDigits)) {
             return [
                 'field' => 'recipient_internal_id',
-                'message' => 'Podaj identyfikator wewnętrzny: 5 cyfr oddziału (np. 00001) lub pełny IDWew z KSeF (NIP-00001).',
+                'message' => 'Podaj pełny identyfikator wewnętrzny z KSeF, np. 1234567890-00001.',
             ];
         }
 
@@ -140,36 +143,41 @@ class OrderFormRecipientIdentityService
             return $prefill;
         }
 
-        if (preg_match('/^[0-9]{10}-([0-9]{5})$/', $identifier, $matches)) {
-            $prefill['recipient_internal_id'] = $matches[1];
-        } else {
-            $prefill['recipient_internal_id'] = $identifier;
-        }
+        $prefill['recipient_internal_id'] = $identifier;
+
+        return $prefill;
 
         return $prefill;
     }
 
     /**
-     * Normalizacja IDWew do postaci kanonicznej KSeF: NIP (10 cyfr) + „-” + 5 cyfr.
+     * Normalizacja IDWew do postaci kanonicznej KSeF: 10 cyfr NIP + „-” + 5 cyfr.
+     * Pełny identyfikator z KSeF zapisujemy bez wymagania zgodności z NIP nabywcy.
+     * Sam suffix 5-cyfrowy składamy z NIP nabywcy, gdy jest dostępny.
      */
     public function normalizeIdwew(string $raw, string $buyerNipDigits): ?string
     {
         $raw = trim($raw);
         $buyerNipDigits = preg_replace('/\D+/', '', $buyerNipDigits) ?? '';
 
-        if ($raw === '' || strlen($buyerNipDigits) !== 10) {
+        if ($raw === '') {
             return null;
         }
 
         if (preg_match('/^([0-9]{10})-([0-9]{5})$/', $raw, $matches)) {
-            if ($matches[1] !== $buyerNipDigits) {
-                return null;
-            }
-
             return $matches[1].'-'.$matches[2];
         }
 
+        $digits = preg_replace('/\D+/', '', $raw) ?? '';
+        if (strlen($digits) === 15) {
+            return substr($digits, 0, 10).'-'.substr($digits, 10, 5);
+        }
+
         if (preg_match('/^[0-9]{5}$/', $raw)) {
+            if (strlen($buyerNipDigits) !== 10) {
+                return null;
+            }
+
             return $buyerNipDigits.'-'.$raw;
         }
 

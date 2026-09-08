@@ -112,7 +112,35 @@ class OrderFormRecipientIdentityServiceTest extends TestCase
         $prefill = $this->service->prefillFromFormOrder($order);
 
         $this->assertSame('9876543210', $prefill['recipient_nip']);
-        $this->assertSame('00123', $prefill['recipient_internal_id']);
+        $this->assertSame('7392137630-00123', $prefill['recipient_internal_id']);
+    }
+
+    public function test_stores_full_idwew_even_when_it_differs_from_buyer_nip(): void
+    {
+        $request = Request::create('/', 'POST', [
+            'recipient_name' => 'Szkoła nr 1',
+            'recipient_internal_id' => '1234567890-00001',
+        ]);
+
+        $error = $this->service->validateRecipientIdentity($request, '7392137630');
+        $payload = $this->service->resolveStoragePayload($request, '7392137630');
+
+        $this->assertNull($error);
+        $this->assertSame('recipient', $payload['ksef_entity_source']);
+        $this->assertSame('odbiorca', $payload['ksef_additional_entity_role']);
+        $this->assertSame('IDWew', $payload['ksef_additional_entity_id_type']);
+        $this->assertSame('1234567890-00001', $payload['ksef_additional_entity_identifier']);
+    }
+
+    public function test_accepts_full_idwew_without_buyer_nip(): void
+    {
+        $request = Request::create('/', 'POST', [
+            'recipient_internal_id' => '1234567890-00001',
+        ]);
+
+        $this->assertNull($this->service->validateRecipientIdentity($request, null));
+        $payload = $this->service->resolveStoragePayload($request, null);
+        $this->assertSame('1234567890-00001', $payload['ksef_additional_entity_identifier']);
     }
 
     public function test_resolves_idwew_from_full_hyphenated_value(): void
