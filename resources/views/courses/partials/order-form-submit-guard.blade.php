@@ -17,13 +17,23 @@
     }
 
     forms.forEach(function(formEl) {
-        formEl.addEventListener('submit', function() {
+        formEl.addEventListener('submit', function(event) {
             var btn = formEl.querySelector('button[type="submit"]');
-            if (!btn || btn.disabled) {
+            if (!btn) {
                 return;
             }
+
+            if (event.defaultPrevented || (typeof formEl.checkValidity === 'function' && !formEl.checkValidity())) {
+                resetSubmitButtons();
+                return;
+            }
+
+            if (btn.disabled) {
+                return;
+            }
+
             btn.disabled = true;
-            btn.dataset.originalText = btn.textContent;
+            btn.dataset.originalText = btn.textContent.trim() || 'Zamówienie z obowiązkiem zapłaty';
             btn.textContent = btn.getAttribute('data-submitting-text') || btn.dataset.submittingText || 'Wysyłanie…';
             btn.setAttribute('aria-busy', 'true');
         });

@@ -84,6 +84,8 @@ class LegalCheckoutServiceTest extends TestCase
         $this->assertSame(config('legal.terms.current_version'), $evidence['terms_version']);
         $this->assertMatchesRegularExpression('/^[a-f0-9]{64}$/', $evidence['terms_hash']);
         $this->assertSame('service_and_digital', $evidence['early_performance_scope']);
+        $this->assertSame('2026-09-08-v2', $evidence['early_performance_statement_version']);
+        $this->assertStringContainsString('Proszę o rozpoczęcie realizacji szkolenia', $this->service->statement());
         $this->assertNotNull($evidence['early_performance_accepted_at']);
     }
 

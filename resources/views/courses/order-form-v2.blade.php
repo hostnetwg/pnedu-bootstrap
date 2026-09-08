@@ -819,6 +819,13 @@
         syncContact();
         if (!form.checkValidity()) {
             event.preventDefault();
+            var submitBtn = document.getElementById('order-form-submit-btn');
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.removeAttribute('aria-busy');
+                submitBtn.textContent = submitBtn.dataset.originalText
+                    || 'Zamówienie z obowiązkiem zapłaty';
+            }
             var invalid = form.querySelector(':invalid');
             var panel = invalid ? invalid.closest('[data-v2-step]') : null;
             if (panel) showStep(Number(panel.dataset.v2Step));

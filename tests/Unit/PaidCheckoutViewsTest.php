@@ -28,5 +28,10 @@ class PaidCheckoutViewsTest extends TestCase
                 $relativePath
             );
         }
+
+        $guard = file_get_contents(resource_path('views/courses/partials/order-form-submit-guard.blade.php'));
+        $this->assertIsString($guard);
+        $this->assertStringContainsString('checkValidity', $guard);
+        $this->assertStringContainsString('resetSubmitButtons', $guard);
     }
 }
