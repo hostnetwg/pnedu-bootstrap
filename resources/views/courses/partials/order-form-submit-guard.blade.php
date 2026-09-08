@@ -2,6 +2,28 @@
 (function() {
     var forms = document.querySelectorAll('form[action*="order-form"], form[action*="deferred-order"]');
 
+    function submittingLabel(btn) {
+        return btn.getAttribute('data-submitting-text') || btn.dataset.submittingText || 'Wysyłanie…';
+    }
+
+    function showSubmittingState(btn) {
+        btn.disabled = true;
+        btn.dataset.originalText = (btn.dataset.originalText || btn.textContent || '').trim()
+            || 'Zamówienie z obowiązkiem zapłaty';
+        btn.replaceChildren();
+
+        var spinner = document.createElement('span');
+        spinner.className = 'spinner-border spinner-border-sm me-2';
+        spinner.setAttribute('role', 'status');
+        spinner.setAttribute('aria-hidden', 'true');
+
+        var label = document.createElement('span');
+        label.textContent = submittingLabel(btn);
+
+        btn.append(spinner, label);
+        btn.setAttribute('aria-busy', 'true');
+    }
+
     function resetSubmitButtons() {
         forms.forEach(function(formEl) {
             var btn = formEl.querySelector('button[type="submit"]');
@@ -32,10 +54,7 @@
                 return;
             }
 
-            btn.disabled = true;
-            btn.dataset.originalText = btn.textContent.trim() || 'Zamówienie z obowiązkiem zapłaty';
-            btn.textContent = btn.getAttribute('data-submitting-text') || btn.dataset.submittingText || 'Wysyłanie…';
-            btn.setAttribute('aria-busy', 'true');
+            showSubmittingState(btn);
         });
     });
 

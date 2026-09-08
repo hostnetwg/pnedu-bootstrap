@@ -39,5 +39,7 @@ class PaidCheckoutViewsTest extends TestCase
         $this->assertIsString($guard);
         $this->assertStringContainsString('checkValidity', $guard);
         $this->assertStringContainsString('resetSubmitButtons', $guard);
+        $this->assertStringContainsString('spinner-border', $guard);
+        $this->assertStringContainsString('showSubmittingState', $guard);
     }
 }
