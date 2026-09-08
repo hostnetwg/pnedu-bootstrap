@@ -5,6 +5,7 @@ namespace App\Mail;
 use App\Models\Course;
 use App\Models\FormOrder;
 use App\Models\OnlinePaymentOrder;
+use App\Services\LegalDocumentService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
@@ -29,6 +30,8 @@ class OnlinePaymentStartedMail extends Mailable
 
     public function build(): self
     {
+        $legalDocuments = app(LegalDocumentService::class);
+        $termsVersion = $this->order->terms_version ?: (string) config('legal.terms.current_version');
         $courseTitle = str_replace('&nbsp;', ' ', strip_tags($this->order->product_name));
         $courseDate = $this->course && $this->course->start_date
             ? \Carbon\Carbon::parse($this->course->start_date)->format('Y-m-d')
@@ -46,6 +49,16 @@ class OnlinePaymentStartedMail extends Mailable
             )
             ->subject($subject)
             ->view('emails.online-payment-started')
+            ->attachData(
+                $legalDocuments->termsPdf($termsVersion),
+                "regulamin-pnedu-{$termsVersion}.pdf",
+                ['mime' => 'application/pdf']
+            )
+            ->attachData(
+                $legalDocuments->withdrawalFormPdf(),
+                'wzor-odstapienia-od-umowy-pnedu.pdf',
+                ['mime' => 'application/pdf']
+            )
             ->with([
                 'order' => $this->order,
                 'course' => $this->course,

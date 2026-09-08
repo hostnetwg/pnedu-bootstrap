@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Analytics;
 
 use App\Enums\Analytics\AnalyticsEventName;
 use App\Http\Controllers\Controller;
+use App\Services\Analytics\AnalyticsConsentService;
 use App\Services\Analytics\AnalyticsContextService;
 use App\Services\Analytics\AnalyticsEventContract;
 use App\Services\Analytics\AnalyticsService;
@@ -31,6 +32,7 @@ class ClientEventController extends Controller
 {
     public function __construct(
         private readonly AnalyticsService $analytics,
+        private readonly AnalyticsConsentService $consent,
         private readonly AnalyticsContextService $context,
         private readonly AnalyticsSessionService $sessionService,
         private readonly OrderFormSessionService $orderFormSessionService,
@@ -45,7 +47,7 @@ class ClientEventController extends Controller
         $noContent = response()->noContent();
 
         try {
-            if (! config('analytics.enabled', true)) {
+            if (! config('analytics.enabled', true) || ! $this->consent->hasAnalyticsConsent($request)) {
                 return $noContent;
             }
 

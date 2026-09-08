@@ -12,6 +12,7 @@ class GusAnalyticsTracker
 {
     public function __construct(
         private readonly AnalyticsService $analytics,
+        private readonly AnalyticsConsentService $consent,
         private readonly AnalyticsContextService $context,
         private readonly AnalyticsSessionService $sessions,
         private readonly OrderFormSessionService $orderFormSessions,
@@ -140,7 +141,7 @@ class GusAnalyticsTracker
 
     private function shouldTrack(Request $request): bool
     {
-        if (! config('analytics.enabled', true)) {
+        if (! config('analytics.enabled', true) || ! $this->consent->hasAnalyticsConsent($request)) {
             return false;
         }
 

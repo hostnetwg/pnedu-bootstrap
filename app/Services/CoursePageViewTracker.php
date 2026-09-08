@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\CoursePageStatsDaily;
+use App\Services\Analytics\AnalyticsConsentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
@@ -13,11 +14,13 @@ class CoursePageViewTracker
         private readonly MarketingAttributionService $attribution,
         private readonly FunnelSkipService $funnelSkip,
         private readonly MarketingBotDetector $botDetector,
+        private readonly AnalyticsConsentService $consent,
     ) {}
 
     public function shouldTrack(Request $request): bool
     {
-        if ($this->funnelSkip->shouldSkipTracking($request)) {
+        if (! $this->consent->hasAnalyticsConsent($request)
+            || $this->funnelSkip->shouldSkipTracking($request)) {
             return false;
         }
 
@@ -85,6 +88,10 @@ class CoursePageViewTracker
 
     public function funnelSessionCookie(Request $request): ?\Symfony\Component\HttpFoundation\Cookie
     {
+        if (! $this->consent->hasAnalyticsConsent($request)) {
+            return null;
+        }
+
         $cookieName = (string) config('marketing.funnel_session_cookie', 'pne_funnel_sid');
         if ($request->cookie($cookieName)) {
             return null;

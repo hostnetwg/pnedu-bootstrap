@@ -176,8 +176,9 @@
                     'school' => ['Szkoła publiczna / JST', 'Dane nabywcy oraz — jeśli wymaga tego faktura — dane odbiorcy. Wpisujesz je tak, jak przyjęte jest w Twojej placówce.', 'bi-building'],
                     'organisation' => ['Placówka niepubliczna / firma', 'Dane nabywcy i — opcjonalnie — odbiorcy na fakturze.', 'bi-briefcase'],
                     'person' => ['Osoba prywatna', 'Proste dane nabywcy i płatność online.', 'bi-person'],
+                    'jdg' => ['JDG — zakup niezawodowy', 'Jednoosobowa działalność, gdy to szkolenie nie ma charakteru zawodowego dla Twojej działalności.', 'bi-person-workspace'],
                 ] as $value => [$label, $description, $icon])
-                    <div class="col-12 col-md-4">
+                    <div class="col-12 col-md-6">
                         <label class="order-v2__choice d-block p-3" for="profile-{{ $value }}">
                             <input class="form-check-input me-2" type="radio" name="customer_profile" id="profile-{{ $value }}" value="{{ $value }}" @checked($profile === $value)>
                             <i class="bi {{ $icon }} me-1" aria-hidden="true"></i>
@@ -395,6 +396,11 @@
                 <p class="mb-1"><strong>Zamawiający:</strong> <span id="v2-review-profile"></span></p>
                 <p class="mb-0"><strong>Płatność:</strong> <span id="v2-review-payment"></span></p>
             </div>
+
+            @include('courses.partials.paid-checkout-legal', [
+                'customerProfile' => $profile,
+                'priceInfo' => $priceInfo,
+            ])
         </section>
 
         <div class="order-v2__actions py-3 d-flex justify-content-between gap-2" data-analytics-section-v2="submit">
@@ -404,7 +410,7 @@
                 <button type="button" class="btn btn-outline-secondary" id="v2-fill-test">Wypełnij dane testowe</button>
             @endif
             <button type="button" class="btn btn-success ms-auto px-4" id="v2-next">Dalej</button>
-            <button type="submit" class="btn btn-success ms-auto px-4" id="order-form-submit-btn" data-analytics-cta="submit_order" data-submitting-text="Wysyłanie zamówienia…" hidden>Zamawiam i przechodzę dalej</button>
+            <button type="submit" class="btn btn-success ms-auto px-4" id="order-form-submit-btn" data-analytics-cta="submit_order" data-submitting-text="Wysyłanie zamówienia…" hidden>Zamówienie z obowiązkiem zapłaty</button>
         </div>
     </form>
 </main>
@@ -632,7 +638,12 @@
         document.getElementById('v2-review-payment').textContent = isDeferred ? 'faktura z odroczonym terminem' : 'płatność online';
     }
     function updateReview() {
-        var labels = {school: 'szkoła publiczna / JST', organisation: 'placówka niepubliczna / firma', person: 'osoba prywatna'};
+        var labels = {
+            school: 'szkoła publiczna / JST',
+            organisation: 'placówka niepubliczna / firma',
+            person: 'osoba prywatna',
+            jdg: 'JDG — zakup niezawodowy'
+        };
         document.getElementById('v2-review-profile').textContent = labels[selectedProfile()];
         syncPaymentDefault(false);
     }

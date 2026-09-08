@@ -1,144 +1,50 @@
-{{-- Klauzula informacyjna RODO --}}
 @extends('layouts.app')
 
-@section('title', 'Informacja o przetwarzaniu danych osobowych')
-@section('meta_description', 'Informacja RODO Platformy Nowoczesnej Edukacji: administrator danych, cele przetwarzania, podstawy prawne i prawa osób korzystających z serwisu.')
+@section('title', 'Informacja RODO – pnedu.pl')
+@section('meta_description', 'Informacja o przetwarzaniu danych zamawiających, osób kontaktowych i uczestników szkoleń pnedu.pl.')
 
 @section('content')
-<div class="container py-4">
-    <div class="row justify-content-center">
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-header">
-                    <h1 class="mb-0">
-                        Informacja o&nbsp;przetwarzaniu danych osobowych
-                        <small class="d-block fs-6">(art.&nbsp;13 Rozporządzenia Parlamentu Europejskiego i&nbsp;Rady (UE)&nbsp;2016/679 – RODO)</small>
-                    </h1>
-                </div>
-                <div class="card-body">
+<section class="py-5">
+<div class="container">
+<div class="card">
+<div class="card-header"><h1 class="mb-0">Informacja o przetwarzaniu danych osobowych</h1></div>
+<div class="card-body">
+    <h2 class="h4">1. Administrator i kontakt</h2>
+    <p>Administratorem danych jest <strong>Platforma Nowoczesnej Edukacji Waldemar Grabowski</strong>, ul. Andrzeja Zamoyskiego 30/14, 09-320 Bieżuń, NIP 7392137630. Kontakt: <a href="mailto:kontakt@pnedu.pl">kontakt@pnedu.pl</a>, tel. +48 501 654 274.</p>
 
-    <h2>1. Administrator danych</h2>
-    <p><strong>Platforma Nowoczesnej Edukacji Waldemar Grabowski</strong>, ul.&nbsp;Andrzeja&nbsp;Zamoyskiego&nbsp;30/14, 09‑320&nbsp;Bieżuń, NIP&nbsp;7392137630 (dalej: „Administrator”).</p>
-
-    <h2>2. Dane kontaktowe</h2>
-    <p>E‑mail: <a href="mailto:kontakt@pnedu.pl">kontakt@pnedu.pl</a><br>
-       Tel.: <a href="tel:+48501654274">+48&nbsp;501&nbsp;654&nbsp;274</a></p>
-
-    <h3>2.1. Inspektor Ochrony Danych</h3>
-    <p>Administrator <strong>nie powołał</strong> Inspektora Ochrony Danych. We wszystkich sprawach związanych z&nbsp;przetwarzaniem danych prosimy o&nbsp;kontakt na ww.&nbsp;adres e‑mail.</p>
-
-    <h2>3. Cele, podstawy prawne i&nbsp;zakres przetwarzania</h2>
-    <table class="table table-bordered align-middle small">
-        <thead class="table-light"><tr><th>Cel</th><th>Podstawa prawna</th><th>Zakres danych</th></tr></thead>
-        <tbody>
-            <tr>
-                <td>Rejestracja konta użytkownika</td>
-                <td>art.&nbsp;6 ust.&nbsp;1 lit.&nbsp;b) RODO – wykonanie umowy</td>
-                <td>imię, nazwisko, e‑mail, hasło</td>
-            </tr>
-            <tr>
-                <td>Udział w&nbsp;szkoleniach (stacjonarnych i&nbsp;online)</td>
-                <td>art.&nbsp;6 ust.&nbsp;1 lit.&nbsp;b) RODO – wykonanie umowy</td>
-                <td>imię, nazwisko, e‑mail, telefon<sup>*</sup>, nazwa szkoły/pracodawcy, dane do faktury</td>
-            </tr>
-            <tr>
-                <td>Wystawianie certyfikatów/zaświadczeń</td>
-                <td>art.&nbsp;6 ust.&nbsp;1 lit.&nbsp;c) RODO – obowiązek prawny wynikający z&nbsp;§&nbsp;23 Rozp. MEN z&nbsp;23.03.2015&nbsp;r.</td>
-                <td>imię, nazwisko, data i&nbsp;miejsce urodzenia</td>
-            </tr>
-            <tr>
-                <td>Obsługa płatności i&nbsp;rozliczeń księgowych</td>
-                <td>art.&nbsp;6 ust.&nbsp;1 lit.&nbsp;b) RODO (umowa) oraz art.&nbsp;6 ust.&nbsp;1 lit.&nbsp;c) RODO (obowiązek prawny)</td>
-                <td>dane z&nbsp;faktury (nazwa, NIP, adres), identyfikator transakcji</td>
-            </tr>
-            <tr>
-                <td>Newsletter – przesyłanie materiałów edukacyjnych i&nbsp;informacji o&nbsp;nowych usługach Administratora</td>
-                <td>art.&nbsp;6 ust.&nbsp;1 lit.&nbsp;a) RODO – zgoda</td>
-                <td>imię, nazwisko, e‑mail, historia aktywności korespondencji</td>
-            </tr>
-            <tr>
-                <td>Marketing własny (remarketing, segmentacja odbiorców)</td>
-                <td>art.&nbsp;6 ust.&nbsp;1 lit.&nbsp;f) RODO – prawnie uzasadniony interes polegający na&nbsp;promocji usług Administratora</td>
-                <td>e‑mail (zaszyfrowany hash), cookies, identyfikatory reklamowe</td>
-            </tr>
-            <tr>
-                <td>Publikacja rekomendacji / opinii po szkoleniu na stronie Serwisu (po moderacji)</td>
-                <td>art.&nbsp;6 ust.&nbsp;1 lit.&nbsp;a) RODO – zgoda</td>
-                <td>treść opinii, ocena, imię i&nbsp;nazwisko, stanowisko/rola, miasto (opcjonalnie), zdjęcie lub awatar (opcjonalnie)</td>
-            </tr>
-            <tr>
-                <td>Ustalenie, dochodzenie lub obrona roszczeń</td>
-                <td>art.&nbsp;6 ust.&nbsp;1 lit.&nbsp;f) RODO – prawnie uzasadniony interes</td>
-                <td>wszystkie wyżej wymienione dane konieczne do wykazania roszczenia</td>
-            </tr>
-        </tbody>
-    </table>
-    <p class="small">
-        <sup>*</sup> podanie numeru telefonu jest dobrowolne, lecz ułatwia szybki kontakt w&nbsp;sprawach organizacyjnych.
-    </p>
-
-    <h2>4. Odbiorcy danych</h2>
-    <p>Dane mogą być przekazywane następującym kategoriom odbiorców, z&nbsp;którymi Administrator zawarł umowy powierzenia:</p>
+    <h2 class="h4">2. Cele i podstawy przetwarzania</h2>
     <ul>
-        <li><strong>SEOHOST Sp. z o.o.</strong> – hosting stron i&nbsp;baz danych (serwery w&nbsp;Polsce);</li>
-        <li><strong>Amazon Web Services Europe</strong> (Amazon SES Europe, region Frankfurt) – wysyłka wiadomości e‑mail (serwery w&nbsp;Unii Europejskiej);</li>
-        <li><strong>PayU S.A.</strong> oraz <strong>mElements S.A.</strong> (Paynow) – operatorzy płatności online;</li>
-        <li><strong>Publigo Sp. z o.o.</strong> – platforma kursów online (wersja GO);</li>
-        <li><strong>Biuro Rachunkowe MAKI</strong> – obsługa księgowa;</li>
-        <li><strong>Meta Platforms Ireland Ltd.</strong> (Facebook Pixel) oraz <strong>Google Ireland Ltd.</strong> (Google Analytics) – usługi marketingowe i&nbsp;analityczne.</li>
+        <li><strong>Zamówienie i realizacja szkolenia</strong> — zawarcie i wykonanie umowy albo działania przed jej zawarciem (art. 6 ust. 1 lit. b RODO), a dla osoby kontaktowej lub uczestnika niebędącego stroną umowy — uzasadniony interes administratora polegający na organizacji świadczenia zamówionego przez klienta (art. 6 ust. 1 lit. f RODO).</li>
+        <li><strong>Faktury, księgowość i obowiązki podatkowe</strong> — obowiązek prawny (art. 6 ust. 1 lit. c RODO).</li>
+        <li><strong>Kontakt organizacyjny, wyjaśnienie błędnego adresu e-mail, obsługa płatności i należności</strong> — wykonanie umowy oraz uzasadniony interes administratora (art. 6 ust. 1 lit. b i f RODO). Dlatego numer telefonu jest wymagany w płatnym formularzu.</li>
+        <li><strong>Konto uczestnika, dostęp do live, nagrania i materiałów, wystawienie zaświadczenia</strong> — wykonanie umowy lub uzasadniony interes związany z jej wykonaniem (art. 6 ust. 1 lit. b lub f RODO); obowiązki dokumentacyjne placówki doskonalenia — art. 6 ust. 1 lit. c RODO, jeżeli mają zastosowanie.</li>
+        <li><strong>Reklamacje, roszczenia, bezpieczeństwo i dowody złożonych oświadczeń</strong> — obowiązek prawny oraz uzasadniony interes administratora (art. 6 ust. 1 lit. c i f RODO).</li>
+        <li><strong>Newsletter i marketing elektroniczny</strong> — wyłącznie po odrębnej zgodzie, którą można wycofać w dowolnej chwili (art. 6 ust. 1 lit. a RODO oraz właściwe przepisy o komunikacji elektronicznej).</li>
+        <li><strong>Analityka serwisu</strong> — tylko po zgodzie na opcjonalne cookies lub podobne technologie (art. 6 ust. 1 lit. a RODO). Meta Pixel pozostaje wyłączony.</li>
     </ul>
 
-    <h2>5. Przekazywanie danych poza Europejski Obszar Gospodarczy</h2>
-    <p>Dane mogą być przesyłane do&nbsp;państw trzecich (USA) w&nbsp;związku z&nbsp;korzystaniem z&nbsp;Facebook&nbsp;Pixel oraz Google&nbsp;Analytics. Transfer odbywa się na&nbsp;podstawie <strong>standardowych klauzul umownych</strong> zatwierdzonych przez Komisję Europejską lub decyzji stwierdzających odpowiedni stopień ochrony.</p>
-    <p><strong>Uwaga:</strong> Amazon SES działa w&nbsp;regionie Europe (Frankfurt), więc dane e‑mailowe nie są przekazywane poza Europejski Obszar Gospodarczy.</p>
+    <h2 class="h4">3. Zakres i źródło danych</h2>
+    <p>Przetwarzamy dane podane w formularzu, w szczególności dane kontaktowe, dane do faktury i dane uczestnika, dane o szkoleniu i płatności oraz techniczne dane bezpieczeństwa. Dane uczestnika możemy otrzymać od szkoły, pracodawcy, firmy albo innego zamawiającego. Pełna informacja dla takich osób znajduje się na stronie <a href="{{ route('rodo.art14') }}">RODO — dane otrzymane od zamawiającego</a>.</p>
 
-    <h2>6. Okres przechowywania danych</h2>
-    <ul>
-        <li>dane związane z&nbsp;umową szkoleniową – przez okres trwania umowy, a&nbsp;następnie do&nbsp;6&nbsp;lat (przedawnienie roszczeń);</li>
-        <li>dokumenty księgowe – 5&nbsp;lat od końca roku podatkowego, w&nbsp;którym wystawiono fakturę;</li>
-        <li>dane newsletterowe – do czasu wycofania zgody;</li>
-        <li>dane z&nbsp;rekomendacji (w&nbsp;tym opcjonalne zdjęcie lub awatar) – do czasu wycofania zgody albo usunięcia opinii przez Administratora;</li>
-        <li>dane wykorzystywane w&nbsp;marketingu – do skutecznego wniesienia sprzeciwu;</li>
-        <li>dane niezbędne do obrony przed roszczeniami – do czasu ich prawomocnego zakończenia.</li>
-    </ul>
+    <h2 class="h4">4. Odbiorcy danych</h2>
+    <p>Dane mogą otrzymać podmioty wspierające nas jako procesorzy lub odrębni administratorzy: hosting i infrastruktura IT, poczta elektroniczna, system wysyłki wiadomości operacyjnych Sendy, platformy szkoleniowe i wideokonferencyjne, operatorzy płatności PayU i Paynow, księgowość i system fakturowy iFirma, dostawcy archiwizacji i obsługi prawnej oraz uprawnione organy publiczne. Zakres danych ograniczamy do niezbędnego.</p>
 
-    <h2>7. Zautomatyzowane decyzje i&nbsp;profilowanie</h2>
-    <p>Administrator stosuje <strong>profilowanie</strong> polegające na&nbsp;segmentacji odbiorców newslettera według kryteriów (np. ukończone kursy, zainteresowania). Profilowanie nie wywołuje skutków prawnych ani w&nbsp;istotny sposób nie wpływa na&nbsp;osoby, których dane dotyczą.</p>
+    <h2 class="h4">5. Transfer poza EOG</h2>
+    <p>Niektórzy dostawcy technologiczni mogą przetwarzać dane poza Europejskim Obszarem Gospodarczym. W takim przypadku stosujemy mechanizmy wymagane przez RODO, w szczególności decyzję stwierdzającą odpowiedni stopień ochrony albo standardowe klauzule umowne i odpowiednie zabezpieczenia.</p>
 
-    <h2>8. Prawa osób, których dane dotyczą</h2>
-    <p>Przysługuje Ci prawo do:</p>
-    <ol>
-        <li>dostępu do swoich danych i&nbsp;otrzymania ich kopii,</li>
-        <li>sprostowania (poprawiania) danych,</li>
-        <li>usunięcia danych (<em>prawo do bycia zapomnianym</em>),</li>
-        <li>ograniczenia przetwarzania,</li>
-        <li>przenoszenia danych,</li>
-        <li>sprzeciwu wobec przetwarzania opartego na art.&nbsp;6 ust.&nbsp;1 lit.&nbsp;f) RODO,</li>
-        <li>wycofania zgody w&nbsp;dowolnym momencie (bez wpływu na&nbsp;zgodność z&nbsp;prawem przetwarzania sprzed jej cofnięcia).</li>
-    </ol>
+    <h2 class="h4">6. Okres przechowywania</h2>
+    <p>Dane umowne i rozliczeniowe przechowujemy przez okres realizacji umowy, wymagany prawem okres dokumentacji podatkowej i księgowej oraz do upływu terminów przedawnienia roszczeń. Dane konta i dostępu — przez okres korzystania z usługi oraz uzasadniony okres archiwalny. Dane marketingowe — do wycofania zgody lub zgłoszenia sprzeciwu. Logi bezpieczeństwa i dowody oświadczeń — przez okres potrzebny do ochrony praw i wykazania zgodności.</p>
 
-    <h2>9. Prawo do cofnięcia zgody</h2>
-    <p>Zgodę na otrzymywanie newslettera możesz wycofać w&nbsp;każdej chwili, klikając link <em>„wypisz się”</em> w&nbsp;stopce każdej wiadomości lub pisząc na adres <a href="mailto:kontakt@pnedu.pl">kontakt@pnedu.pl</a>.</p>
-    <p>Zgodę na publikację rekomendacji możesz wycofać, pisząc na <a href="mailto:kontakt@pnedu.pl">kontakt@pnedu.pl</a> — wówczas usuniemy lub zaprzestaniemy publikacji opinii (oraz zdjęcia, jeśli było).</p>
+    <h2 class="h4">7. Prawa</h2>
+    <p>Masz prawo żądać dostępu do danych, ich sprostowania, usunięcia lub ograniczenia przetwarzania, przeniesienia danych, a przy podstawie z art. 6 ust. 1 lit. f RODO — wnieść sprzeciw. Zgodę można wycofać bez wpływu na zgodność wcześniejszego przetwarzania. Możesz wnieść skargę do Prezesa Urzędu Ochrony Danych Osobowych.</p>
 
-    <h2>10. Obowiązek / dobrowolność podania danych</h2>
-    <p>Podanie danych jest <strong>dobrowolne</strong>, lecz niezbędne do zawarcia umowy szkoleniowej lub otrzymywania newslettera. Konsekwencją niepodania danych będzie brak możliwości wzięcia udziału w&nbsp;szkoleniu lub otrzymywania materiałów marketingowych.</p>
-    <p>Podanie danych w&nbsp;formularzu rekomendacji jest <strong>dobrowolne</strong>; brak rekomendacji nie wpływa na udział w&nbsp;szkoleniu ani na wypełnienie ankiety.</p>
+    <h2 class="h4">8. Obowiązek podania danych</h2>
+    <p>Dane oznaczone jako wymagane są potrzebne do przyjęcia i realizacji zamówienia, rozliczenia i kontaktu organizacyjnego. Bez nich realizacja może być niemożliwa. Podanie danych marketingowych jest dobrowolne.</p>
 
-    <h2>11. Prawo wniesienia skargi</h2>
-    <p>Jeżeli uważasz, że przetwarzamy Twoje dane niezgodnie z&nbsp;prawem, przysługuje Ci prawo złożenia skargi do Prezesa Urzędu Ochrony Danych Osobowych (ul.&nbsp;Stawki&nbsp;2, 00‑193&nbsp;Warszawa, <a href="https://uodo.gov.pl" target="_blank" rel="noopener">uodo.gov.pl</a>).</p>
-
-    <h2>12. Źródło danych</h2>
-    <p>Dane pozyskujemy bezpośrednio od Ciebie poprzez formularze rejestracyjne, zapisu na newsletter, formularz rekomendacji po ankiecie szkoleniowej lub w&nbsp;ramach komunikacji e‑mailowej.</p>
-
-    <h2>13. Zmiany dokumentu</h2>
-    <p>Administrator może aktualizować niniejszą informację. Aktualna wersja będzie zawsze dostępna na stronie, a&nbsp;o&nbsp;istotnych zmianach poinformujemy e‑mailowo.</p>
-
-    <h2>14. Data obowiązywania</h2>
-    <p>Niniejszy dokument obowiązuje od <strong>9&nbsp;sierpnia&nbsp;2026&nbsp;r.</strong> (aktualizacja m.in. o&nbsp;rekomendacje po szkoleniu).</p>
-                </div>
-            </div>
-        </div>
-    </div>
+    <h2 class="h4">9. Zautomatyzowane decyzje</h2>
+    <p>Nie podejmujemy wobec klientów decyzji wywołujących skutki prawne wyłącznie w sposób zautomatyzowany, w tym w oparciu o profilowanie.</p>
 </div>
+</div>
+</div>
+</section>
 @endsection

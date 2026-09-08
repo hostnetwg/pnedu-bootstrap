@@ -13,6 +13,7 @@ class OrderFormAttributionService
     public const SESSION_KEY = 'marketing.form_attribution';
 
     public function __construct(
+        private readonly AnalyticsConsentService $consent,
         private readonly TrafficChannelClassifier $classifier,
         private readonly MarketingAttributionService $marketingAttribution,
         private readonly OrderEntryPlacementService $placement,
@@ -20,7 +21,7 @@ class OrderFormAttributionService
 
     public function captureFromRequest(Request $request): void
     {
-        if (! $request->hasSession()) {
+        if (! $this->consent->hasAnalyticsConsent($request) || ! $request->hasSession()) {
             return;
         }
 
@@ -49,7 +50,7 @@ class OrderFormAttributionService
 
     public function persistForFormSession(Request $request, string $formSessionId, int $courseId, ?int $priceVariantId = null): ?OrderFormAttribution
     {
-        if ($formSessionId === '') {
+        if ($formSessionId === '' || ! $this->consent->hasAnalyticsConsent($request)) {
             return null;
         }
 

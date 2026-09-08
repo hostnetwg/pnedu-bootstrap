@@ -3,6 +3,7 @@
 namespace App\Mail;
 
 use App\Models\FormOrder;
+use App\Services\LegalDocumentService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
@@ -58,6 +59,8 @@ class OrderNotificationMail extends Mailable
         ]);
 
         $fileName = 'zamowienie-'.$this->order->ident.'.pdf';
+        $legalDocuments = app(LegalDocumentService::class);
+        $termsVersion = $this->order->terms_version ?: (string) config('legal.terms.current_version');
 
         // Formatuj temat e-maila: "Twoje zamówienie #6312 - SZKOLENIE: Nazwa... (2026-03-19)"
         $courseTitle = str_replace('&nbsp;', ' ', strip_tags($this->order->product_name));
@@ -80,6 +83,16 @@ class OrderNotificationMail extends Mailable
             ->attachData($pdf->output(), $fileName, [
                 'mime' => 'application/pdf',
             ])
+            ->attachData(
+                $legalDocuments->termsPdf($termsVersion),
+                "regulamin-pnedu-{$termsVersion}.pdf",
+                ['mime' => 'application/pdf']
+            )
+            ->attachData(
+                $legalDocuments->withdrawalFormPdf(),
+                'wzor-odstapienia-od-umowy-pnedu.pdf',
+                ['mime' => 'application/pdf']
+            )
             ->with([
                 'order' => $this->order,
                 'course' => $this->course,

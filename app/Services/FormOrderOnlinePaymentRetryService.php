@@ -108,6 +108,12 @@ class FormOrderOnlinePaymentRetryService
             'total_amount' => $totalAmount,
             'currency' => 'PLN',
             'buyer_type' => $buyerType === 'organisation' ? 'organisation' : 'person',
+            'customer_profile' => $formOrder->customer_profile,
+            'terms_version' => $formOrder->terms_version,
+            'terms_hash' => $formOrder->terms_hash,
+            'early_performance_scope' => $formOrder->early_performance_scope,
+            'early_performance_statement_version' => $formOrder->early_performance_statement_version,
+            'early_performance_accepted_at' => $formOrder->early_performance_accepted_at,
             'email' => $email,
             'first_name' => $firstName,
             'last_name' => $lastName,
@@ -193,6 +199,7 @@ class FormOrderOnlinePaymentRetryService
         $deferredUrl = $this->signedConvertToDeferredUrl($formOrder);
         $pendingUrl = route('payment.pending', $onlineOrder->ident);
 
+        $confirmationSent = false;
         foreach ($emailsToSend as $email) {
             try {
                 Mail::to($email)->send(new OnlinePaymentStartedMail(
@@ -203,6 +210,7 @@ class FormOrderOnlinePaymentRetryService
                     $deferredUrl,
                     $pendingUrl
                 ));
+                $confirmationSent = true;
             } catch (\Throwable $exception) {
                 Log::error('Błąd wysyłki e-maila po starcie płatności online: '.$exception->getMessage(), [
                     'form_order_id' => $formOrder->id,
@@ -211,6 +219,10 @@ class FormOrderOnlinePaymentRetryService
                     'email' => $email,
                 ]);
             }
+        }
+
+        if ($confirmationSent && ! $formOrder->legal_confirmation_sent_at) {
+            $formOrder->update(['legal_confirmation_sent_at' => now()]);
         }
     }
 

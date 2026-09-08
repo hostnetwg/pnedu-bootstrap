@@ -66,6 +66,7 @@
                 <li class="list-inline-item"><a href="{{ route('polityka-prywatnosci') }}" class="text-light opacity-75 text-decoration-none hover-lift">Polityka prywatności</a></li>
                 <li class="list-inline-item"><a href="{{ route('regulamin') }}" class="text-light opacity-75 text-decoration-none hover-lift">Regulamin</a></li>
                 <li class="list-inline-item"><a href="{{ route('rodo') }}" class="text-light opacity-75 text-decoration-none hover-lift">RODO</a></li>
+                <li class="list-inline-item"><button type="button" class="btn btn-link btn-sm p-0 text-light opacity-75 text-decoration-none hover-lift align-baseline" data-cookie-settings>Ustawienia cookies</button></li>
             </ul>
         </div>
     </div>

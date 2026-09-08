@@ -175,6 +175,10 @@
                                 <input class="form-check-input @error('buyer_type') is-invalid @enderror" type="radio" name="buyer_type" id="buyer_type_company" value="company" {{ old('buyer_type') === 'company' ? 'checked' : '' }}>
                                 <label class="form-check-label" for="buyer_type_company">Firma</label>
                             </div>
+                            <div class="form-check">
+                                <input class="form-check-input @error('buyer_type') is-invalid @enderror" type="radio" name="buyer_type" id="buyer_type_jdg" value="jdg" {{ old('buyer_type') === 'jdg' ? 'checked' : '' }}>
+                                <label class="form-check-label" for="buyer_type_jdg">JDG — zakup niezawodowy</label>
+                            </div>
                         </div>
                         @error('buyer_type')
                             <div class="invalid-feedback d-block">{{ $message }}</div>
@@ -385,8 +389,13 @@
                     @enderror
                 </fieldset>
 
+                @include('courses.partials.paid-checkout-legal', [
+                    'defaultCustomerProfile' => 'person',
+                    'paymentLabel' => 'płatność online',
+                ])
+
                 <div class="d-flex flex-wrap gap-2 mt-3">
-                    <button type="submit" class="btn btn-primary btn-lg fw-bold">Przejdź do płatności</button>
+                    <button type="submit" class="btn btn-primary btn-lg fw-bold">Zamówienie z obowiązkiem zapłaty</button>
                     <a href="{{ route('courses.show', $course->id) }}" class="btn btn-secondary">Powrót do szczegółów szkolenia</a>
                 </div>
             </form>
@@ -402,7 +411,7 @@
     var typeForms = document.querySelectorAll('.buyer-type-form');
     var requiredFieldsByType = {
         person: [], // Osoba fizyczna - wszystkie pola opcjonalne
-        company: ['company_nip', 'company_country', 'company_name', 'company_street', 'company_building_no', 'company_postcode', 'company_city'], // Firma - wszystkie pola required (oprócz flat_no)
+        company: ['company_nip', 'company_country', 'company_name', 'company_street', 'company_building_no', 'company_postcode', 'company_city'], // Firma/JDG - wszystkie pola required (oprócz flat_no)
         organisation: {
             buyer: ['buyer_nip', 'buyer_country', 'buyer_name', 'buyer_street', 'buyer_building_no', 'buyer_postcode', 'buyer_city'], // NABYWCA - wszystkie required
             recipient: [] // ODBIORCA - wszystkie opcjonalne (ale jeśli podane dane, to recipient_nip required - sprawdzane w walidacji backend)
@@ -417,7 +426,8 @@
     function toggleForms() {
         var type = getCurrentType();
         typeForms.forEach(function(el) {
-            var visible = el.getAttribute('data-type') === type;
+            var formType = type === 'jdg' ? 'company' : type;
+            var visible = el.getAttribute('data-type') === formType;
             el.style.display = visible ? 'block' : 'none';
             
             var inputs = el.querySelectorAll('input, select');
@@ -427,7 +437,7 @@
                 if (type === 'person') {
                     // Osoba fizyczna - wszystkie pola opcjonalne
                     inp.required = false;
-                } else if (type === 'company') {
+                } else if (type === 'company' || type === 'jdg') {
                     // Firma - pola z listy required
                     inp.required = requiredFieldsByType.company.indexOf(inp.name) !== -1;
                 } else if (type === 'organisation') {
@@ -499,15 +509,22 @@
         checkRecipientNipRequirement();
     }
 
+    document.getElementById('email_confirmation').addEventListener('input', function () {
+        this.setCustomValidity('');
+    });
+
     form.addEventListener('submit', function(e) {
         var email = document.getElementById('email').value;
         var emailConf = document.getElementById('email_confirmation').value;
         if (email !== emailConf) {
             e.preventDefault();
-            alert('Adresy e-mail muszą być identyczne.');
-            document.getElementById('email_confirmation').focus();
+            var confirmationInput = document.getElementById('email_confirmation');
+            confirmationInput.setCustomValidity('Adresy e-mail muszą być identyczne.');
+            confirmationInput.reportValidity();
+            confirmationInput.focus();
             return false;
         }
+        document.getElementById('email_confirmation').setCustomValidity('');
         toggleForms();
     });
 })();

@@ -232,7 +232,7 @@
                 @endif
                 <div class="mt-3" style="font-size: 0.95rem; color: #333; line-height: 1.4;">
                     Niepubliczny Ośrodek Doskonalenia Nauczycieli "Platforma Nowoczesnej Edukacji",
-                    ul. A. Zamoyskiego 30/14, 09-320 Bieżuń, RSPO: 481379, NIP: 5691238763<br>
+                    ul. A. Zamoyskiego 30/14, 09-320 Bieżuń, RSPO: 481379, NIP: 7392137630<br>
                     Kontakt: e-mail: kontakt@pnedu.pl, tel. 501 654 274
                 </div>
             </div>
@@ -273,6 +273,10 @@
 
             <form method="POST" action="{{ route('payment.deferred.store', $course->id) }}">
                 @csrf
+                @php
+                    $deferredProfile = old('customer_profile', $testData['customer_profile'] ?? 'school');
+                @endphp
+                <input type="hidden" name="buyer_type" id="deferred-buyer-type" value="{{ $deferredProfile === 'person' ? 'person' : 'organisation' }}">
                 <!-- Hidden fields for publigo integration -->
                 {{-- Dla kursów z certgen_Publigo użyj id_old, w przeciwnym razie użyj publigo_product_id --}}
                 <input type="hidden" name="publigo_product_id" value="{{ ($course->source_id_old === 'certgen_Publigo' && $course->id_old) ? $course->id_old : $course->publigo_product_id }}">
@@ -290,6 +294,27 @@
                 <input type="hidden" name="fb_source" value="{{ old('fb_source', $testData['fb_source'] ?? ($fbSourceDefault ?? '')) }}">
                 <input type="hidden" name="conversion_placement" value="{{ old('conversion_placement', $testData['conversion_placement'] ?? ($conversionPlacementDefault ?? '')) }}">
                 <div class="form-sections-grid">
+                <fieldset class="order-form-section form-section-full-width">
+                    <legend>ZAMAWIAM JAKO</legend>
+                    <div class="d-flex flex-wrap gap-3">
+                        @foreach([
+                            'school' => 'Szkoła publiczna / JST',
+                            'organisation' => 'Placówka niepubliczna / firma',
+                            'person' => 'Osoba prywatna',
+                            'jdg' => 'JDG — zakup niezawodowy',
+                        ] as $value => $label)
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="customer_profile"
+                                    id="deferred-profile-{{ $value }}" value="{{ $value }}"
+                                    @checked($deferredProfile === $value) required>
+                                <label class="form-check-label" for="deferred-profile-{{ $value }}">{{ $label }}</label>
+                            </div>
+                        @endforeach
+                    </div>
+                    @error('customer_profile')
+                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                    @enderror
+                </fieldset>
                 <fieldset class="order-form-section">
                     <legend>DANE KONTAKTOWE ZAMAWIAJĄCEGO</legend>
                     <div class="mb-3">
@@ -347,14 +372,14 @@
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label for="buyer_nip" class="form-label">NIP <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control @error('buyer_nip') is-invalid @enderror" id="buyer_nip" name="buyer_nip" value="{{ $testData['buyer_nip'] ?? old('buyer_nip') }}" required>
+                        <label for="buyer_nip" class="form-label">NIP <span class="text-danger" id="deferred-buyer-nip-required">*</span></label>
+                        <input type="text" class="form-control @error('buyer_nip') is-invalid @enderror" id="buyer_nip" name="buyer_nip" value="{{ $testData['buyer_nip'] ?? old('buyer_nip') }}" @required($deferredProfile !== 'person')>
                         @error('buyer_nip')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
                 </fieldset>
-                <fieldset class="order-form-section">
+                <fieldset class="order-form-section" id="deferred-recipient-section" @if($deferredProfile === 'person') hidden @endif>
                     <legend>ODBIORCA (opcjonalnie, jeśli inny niż nabywca)</legend>
                     <div class="mb-3">
                         <label for="recipient_name" class="form-label">Nazwa odbiorcy</label>
@@ -441,8 +466,12 @@
                     </div>
                 </fieldset>
                 <div class="order-form-section form-section-full-width">
+                    @include('courses.partials.paid-checkout-legal', [
+                        'customerProfile' => $deferredProfile,
+                        'paymentLabel' => 'faktura z odroczonym terminem',
+                    ])
                     <div class="d-flex flex-column flex-md-row gap-3 mt-4">
-                        <button type="submit" class="btn btn-primary flex-fill" id="order-form-submit-btn" data-submitting-text="Wysyłanie…">Wyślij zamówienie</button>
+                        <button type="submit" class="btn btn-primary flex-fill" id="order-form-submit-btn" data-submitting-text="Wysyłanie zamówienia…">Zamówienie z obowiązkiem zapłaty</button>
                         <a href="{{ route('courses.show', $course->id) }}" class="btn btn-link flex-fill">Powrót do szczegółów szkolenia</a>
                     </div>
                 </div>
@@ -453,6 +482,29 @@
 </div>
 
 <script>
+(function () {
+    var form = document.querySelector('form[action*="/deferred-order"]');
+    if (!form) return;
+    var buyerType = document.getElementById('deferred-buyer-type');
+    var nip = document.getElementById('buyer_nip');
+    var nipRequired = document.getElementById('deferred-buyer-nip-required');
+    var recipient = document.getElementById('deferred-recipient-section');
+
+    function syncDeferredProfile() {
+        var selected = form.querySelector('[name="customer_profile"]:checked');
+        var person = selected && selected.value === 'person';
+        if (buyerType) buyerType.value = person ? 'person' : 'organisation';
+        if (nip) nip.required = !person;
+        if (nipRequired) nipRequired.hidden = person;
+        if (recipient) recipient.hidden = person;
+    }
+
+    form.querySelectorAll('[name="customer_profile"]').forEach(function (input) {
+        input.addEventListener('change', syncDeferredProfile);
+    });
+    syncDeferredProfile();
+})();
+
 (function() {
     var lookupPath = {!! json_encode(parse_url(route('courses.participant-lookup'), PHP_URL_PATH)) !!};
     if (!lookupPath) lookupPath = '/courses/participant-lookup-by-email';

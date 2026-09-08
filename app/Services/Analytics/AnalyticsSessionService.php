@@ -14,10 +14,14 @@ class AnalyticsSessionService
 
     private const PENDING_COOKIE_ATTRIBUTE = 'analytics_session_cookie_pending';
 
+    public function __construct(
+        private readonly AnalyticsConsentService $consent,
+    ) {}
+
     public function id(Request $request): ?string
     {
         try {
-            if (! config('analytics.enabled', true)) {
+            if (! config('analytics.enabled', true) || ! $this->consent->hasAnalyticsConsent($request)) {
                 return null;
             }
 
@@ -46,7 +50,8 @@ class AnalyticsSessionService
     public function appendCookie(Response $response, Request $request): void
     {
         try {
-            if ($request->attributes->get(self::PENDING_COOKIE_ATTRIBUTE) !== true) {
+            if (! $this->consent->hasAnalyticsConsent($request)
+                || $request->attributes->get(self::PENDING_COOKIE_ATTRIBUTE) !== true) {
                 return;
             }
 

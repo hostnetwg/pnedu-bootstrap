@@ -101,6 +101,8 @@
     </table>
     @endif
 
+    @include('emails.partials.legal-order-confirmation')
+
     <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 28px 0;">
 
     <p style="margin: 0 0 8px;">Z wyrazami szacunku,</p>

@@ -36,6 +36,7 @@ class OrderNotificationMailTest extends TestCase
         $this->assertStringContainsString('www.pnedu.pl', $html);
         $this->assertStringContainsString('https://pnedu.pl', $html);
         $this->assertStringContainsString('Z wyrazami szacunku', $html);
+        $this->assertStringContainsString('pnedu.pl/rodo-art-14', $html);
         $this->assertStringNotContainsString('All rights reserved.', $html);
 
         $pdfHtml = view('orders.pdf', [
@@ -76,12 +77,14 @@ class OrderNotificationMailTest extends TestCase
         ]);
 
         $order->id = 123;
-        $order->setRelation('primaryParticipant', new FormOrderParticipant([
+        $participant = new FormOrderParticipant([
             'participant_firstname' => 'Anna',
             'participant_lastname' => 'Nowak',
             'participant_email' => 'anna@example.test',
             'is_primary' => true,
-        ]));
+        ]);
+        $order->setRelation('primaryParticipant', $participant);
+        $order->setRelation('participants', collect([$participant]));
 
         return $order;
     }

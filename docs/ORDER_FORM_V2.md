@@ -11,13 +11,27 @@ Dokument opisuje **oba** publiczne formularze zamówienia na `pnedu.pl` oraz wsp
 | Aspekt | Legacy (uniwersalny) | V2 (kreator) |
 |--------|----------------------|--------------|
 | Widok | Jedna strona, wszystkie sekcje | 4 kroki: profil → kontakt → faktura → płatność |
-| Profil zamawiającego | Pola buyer/recipient na jednej stronie | Wybór: szkoła publiczna/JST, organizacja, osoba prywatna |
+| Profil zamawiającego | Pola buyer/recipient na jednej stronie | Wybór: szkoła publiczna/JST, organizacja, osoba prywatna, JDG — zakup niezawodowy |
 | Kontakt | Jak dotychczas | Szkoła/organizacja: jedno pole „Nazwa / imię nazwisko zamawiającego” → `contact_name`. Osoba prywatna: imię + nazwisko → składane do `contact_name` |
 | Przełącznik „Zamawiający = uczestnik” | Legacy UI | **Tylko profil osoba prywatna**; ukryty dla szkoły/firmy, bez kopiowania danych |
 | Limit terminu płatności odroczonej | 0–31 dni | 0–30 dni |
 | Edycja istniejącego zamówienia | Tak (`/order-form/edit/{ident}`) | **Nie** — edycja zawsze legacy |
 | POST (zapis) | `POST /courses/{id}/order-form` | `POST /courses/{id}/order-form-v2` |
 | Backend zapisu | Wspólny pipeline `FormOrder` | Ten sam kontrakt co legacy |
+
+---
+
+## Minimalny blok prawny checkoutu (2026-09-08)
+
+Wszystkie aktywne płatne formularze kończą się przyciskiem **„Zamówienie z obowiązkiem zapłaty”** i wspólnym podsumowaniem oferty, ceny oraz sposobu płatności.
+
+- Nie ma obowiązkowych checkboxów Regulaminu, RODO ani marketingu.
+- Jedyny warunkowy checkbox jest pokazywany osobie prywatnej lub profilowi **JDG — zakup niezawodowy**, gdy szkolenie rozpoczyna się najpóźniej z końcem 14. dnia od zamówienia (strefa `Europe/Warsaw`).
+- Backend ponownie wylicza warunek w `LegalCheckoutService`; manipulacja ukryciem pola po stronie przeglądarki nie omija walidacji.
+- Profil i dowód prawny są zapisywane w `form_orders` i powiązanym `online_payment_orders`: wersja/hash Regulaminu, wersja/zakres/czas oświadczenia oraz czas pierwszego potwierdzenia.
+- Edycja i ponowienie płatności zachowują już istniejący dowód.
+
+Dokumenty są wersjonowane w `resources/views/legal/terms/versions`, a bieżącą wersję wskazuje `config/legal.php`. Potwierdzenie e-mail zawiera właściwy Regulamin PDF i wzór odstąpienia. Szczegóły wdrożeniowe: `pneadm/docs/LEGAL_CHECKOUT.md`.
 
 ---
 

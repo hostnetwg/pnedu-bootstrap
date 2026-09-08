@@ -1,94 +1,45 @@
-{{-- Polityka prywatności --}}
 @extends('layouts.app')
 
-@section('title', 'Polityka prywatności')
-@section('meta_description', 'Polityka prywatności pnedu.pl: zasady przetwarzania danych, pliki cookie, analityka, newsletter i kontakt z administratorem danych.')
+@section('title', 'Polityka prywatności i cookies – pnedu.pl')
+@section('meta_description', 'Polityka prywatności pnedu.pl: dane osobowe, dostawcy, cookies niezbędne i analityczne oraz zarządzanie zgodą.')
 
 @section('content')
-<div class="container py-4">
-    <div class="row justify-content-center">
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-header">
-                    <h1 class="mb-0">Polityka prywatności</h1>
-                    <p class="small text-muted mb-0">Obowiązuje od 9&nbsp;sierpnia&nbsp;2026&nbsp;r.</p>
-                </div>
-                <div class="card-body">
+<section class="py-5">
+<div class="container">
+<div class="card">
+<div class="card-header"><h1 class="mb-0">Polityka prywatności i cookies</h1></div>
+<div class="card-body">
+    <p>Dbamy o ograniczenie danych i technologii śledzących do zakresu potrzebnego do działania serwisu i obsługi szkoleń. Szczegółowe podstawy prawne i prawa osób opisuje <a href="{{ route('rodo') }}">Informacja RODO</a>.</p>
 
-    <h2>1. Informacje ogólne</h2>
-    <p>Niniejszy dokument określa zasady przetwarzania danych osobowych oraz wykorzystywania plików cookies i&nbsp;podobnych technologii w&nbsp;serwisie <strong>pnedu.pl</strong> (dalej: „Serwis”), prowadzonym przez <em>Platforma Nowoczesnej Edukacji Waldemar Grabowski</em>, ul.&nbsp;Andrzeja&nbsp;Zamoyskiego&nbsp;30/14, 09‑320&nbsp;Bieżuń, NIP&nbsp;7392137630 (dalej: „Administrator”).</p>
+    <h2 class="h4">Administrator</h2>
+    <p>Platforma Nowoczesnej Edukacji Waldemar Grabowski, ul. Andrzeja Zamoyskiego 30/14, 09-320 Bieżuń, NIP 7392137630; <a href="mailto:kontakt@pnedu.pl">kontakt@pnedu.pl</a>; tel. +48 501 654 274.</p>
 
-    <h2>2. Definicje</h2>
-    <ul>
-        <li><strong>Użytkownik</strong> – każda osoba odwiedzająca Serwis lub korzystająca z&nbsp;usług online.</li>
-        <li><strong>Dane osobowe</strong> – informacje pozwalające na identyfikację osoby fizycznej w&nbsp;rozumieniu RODO.</li>
-        <li><strong>RODO</strong> – Rozporządzenie Parlamentu Europejskiego i&nbsp;Rady (UE) 2016/679 z&nbsp;27&nbsp;kwietnia&nbsp;2016&nbsp;r.</li>
-        <li><strong>Cookies</strong> – dane informatyczne zapisywane w&nbsp;urządzeniu końcowym Użytkownika, wykorzystywane przez Serwis.</li>
-    </ul>
+    <h2 class="h4">Dane w formularzach i podczas realizacji usług</h2>
+    <p>W formularzach zamówienia zbieramy dane kontaktowe, dane uczestników, dane do faktury, wybraną ofertę i płatność. Numer telefonu jest wymagany, ponieważ umożliwia pilny kontakt organizacyjny i rozliczeniowy, zwłaszcza gdy adres e-mail jest błędny, wiadomość nie dochodzi albo zamówienie z odroczoną płatnością wymaga wyjaśnienia.</p>
+    <p>Dane uczestnika służą do zapewnienia dostępu do szkolenia na żywo, konta, materiałów, nagrania i zaświadczenia. Gdy przekazuje je szkoła, firma lub inny zamawiający, uczestnik otrzymuje informację o źródle danych w pierwszej wiadomości. Zobacz <a href="{{ route('rodo.art14') }}">informację art. 14 RODO</a>.</p>
 
-    <h2>3. Administrator danych</h2>
-    <p>Dane Administratora oraz kontakt w&nbsp;sprawach prywatności:</p>
-    <ul>
-        <li>E‑mail: <a href="mailto:kontakt@pnedu.pl">kontakt@pnedu.pl</a></li>
-        <li>Tel.: <a href="tel:+48501654274">+48&nbsp;501&nbsp;654&nbsp;274</a></li>
-    </ul>
+    <h2 class="h4">Wiadomości e-mail i Sendy</h2>
+    <p>Listy przypisane do konkretnego szkolenia w Sendy służą do komunikacji operacyjnej: potwierdzeń, przypomnień, linków do transmisji, materiałów, nagrań i zaświadczeń. Zapis na taką listę nie oznacza zgody na newsletter. Wiadomości marketingowe wysyłamy wyłącznie na podstawie odrębnej zgody, z możliwością jej wycofania.</p>
 
-    <h2>4. Zakres i&nbsp;źródło danych</h2>
-    <p>Administrator przetwarza dane pozyskiwane bezpośrednio od Użytkowników poprzez formularze (rejestracja na szkolenie, newsletter, kontakt, rekomendacja po ankiecie szkoleniowej) oraz automatycznie za pośrednictwem plików cookies i&nbsp;narzędzi analitycznych.</p>
-    <p>Przetwarzane mogą być w&nbsp;szczególności: imię, nazwisko, e‑mail, telefon<sup>*</sup>, data i&nbsp;miejsce urodzenia (do certyfikatów), dane do faktury (nazwa, NIP, adres), treść rekomendacji / opinii, ocena szkolenia, stanowisko/rola, miasto oraz opcjonalne zdjęcie lub awatar przekazane w&nbsp;formularzu rekomendacji, adres IP, identyfikatory urządzeń, dane o&nbsp;aktywności w&nbsp;Serwisie.</p>
-    <p class="small"><sup>*</sup> Numer telefonu jest dobrowolny, ale ułatwia kontakt organizacyjny. Zdjęcie lub awatar w&nbsp;rekomendacji również są dobrowolne.</p>
+    <h2 class="h4">Płatności, faktury i pozostali dostawcy</h2>
+    <p>W zależności od wybranej usługi dane mogą być przekazywane operatorom PayU lub Paynow, systemowi fakturowemu iFirma, dostawcom hostingu, poczty, wideokonferencji, platformy szkoleniowej, kopii zapasowych oraz obsługi prawnej i księgowej. Każdy otrzymuje tylko zakres potrzebny do wykonania swojej roli.</p>
 
-    <h2>5. Cele i&nbsp;podstawy prawne przetwarzania</h2>
-    <table class="table table-bordered align-middle small">
-        <thead class="table-light"><tr><th>Cel</th><th>Podstawa prawna</th></tr></thead>
-        <tbody>
-            <tr><td>Realizacja umów szkoleniowych</td><td>art.&nbsp;6 ust.&nbsp;1 lit.&nbsp;b) RODO</td></tr>
-            <tr><td>Wystawianie certyfikatów/zaświadczeń</td><td>art.&nbsp;6 ust.&nbsp;1 lit.&nbsp;c) RODO</td></tr>
-            <tr><td>Rozliczenia księgowe</td><td>art.&nbsp;6 ust.&nbsp;1 lit.&nbsp;c) RODO</td></tr>
-            <tr><td>Wysyłka newslettera</td><td>art.&nbsp;6 ust.&nbsp;1 lit.&nbsp;a) RODO</td></tr>
-            <tr><td>Publikacja rekomendacji uczestników na stronie Serwisu (po moderacji)</td><td>art.&nbsp;6 ust.&nbsp;1 lit.&nbsp;a) RODO</td></tr>
-            <tr><td>Marketing własny (remarketing, segmentacja)</td><td>art.&nbsp;6 ust.&nbsp;1 lit.&nbsp;f) RODO</td></tr>
-            <tr><td>Analiza ruchu i&nbsp;statystyk Serwisu</td><td>art.&nbsp;6 ust.&nbsp;1 lit.&nbsp;f) RODO</td></tr>
-        </tbody>
-    </table>
+    <h2 class="h4">Cookies niezbędne</h2>
+    <p>Bez zgody możemy używać wyłącznie technologii koniecznych do działania serwisu, bezpieczeństwa, sesji, logowania, zachowania koszyka lub wznowienia rozpoczętego formularza. Nie służą one do niezależnego marketingowego śledzenia użytkownika.</p>
 
-    <h2>6. Odbiorcy danych</h2>
-    <p>Dane mogą być przekazywane zaufanym podmiotom przetwarzającym je na zlecenie Administratora, w&nbsp;tym: SEOHOST Sp.&nbsp;z&nbsp;o.o. (hosting), Amazon&nbsp;Web Services Inc. (Amazon SES), PayU&nbsp;S.A., mElements&nbsp;S.A. (Paynow), Publigo&nbsp;Sp.&nbsp;z&nbsp;o.o., Biuro Rachunkowe MAKI, Meta&nbsp;Platforms Ireland&nbsp;Ltd., Google&nbsp;Ireland&nbsp;Ltd.</p>
+    <h2 class="h4">Cookies analityczne</h2>
+    <p>Google Analytics lub Google Tag Manager uruchamiamy dopiero po wyborze „Akceptuję analityczne”. Zgoda obejmuje wyłącznie analitykę; sygnały reklamowe <code>ad_storage</code>, <code>ad_user_data</code> i <code>ad_personalization</code> pozostają wyłączone. Meta Pixel nie jest aktywny. Zgodę możesz w każdej chwili zmienić przez link „Ustawienia cookies” w stopce.</p>
 
-    <h2>7. Przekazywanie danych poza EOG</h2>
-    <p>W związku z&nbsp;korzystaniem z&nbsp;Amazon SES, Facebook Pixel i&nbsp;Google Analytics dane mogą trafić poza EOG (USA). Transfer odbywa się na podstawie standardowych klauzul umownych lub innych mechanizmów przewidzianych w&nbsp;art.&nbsp;46 RODO.</p>
+    <h2 class="h4">Logi techniczne</h2>
+    <p>Serwer może automatycznie zapisywać adres IP, czas żądania, adres zasobu, informacje o przeglądarce i wyniku operacji. Logi wykorzystujemy do bezpieczeństwa, diagnostyki błędów i ochrony przed nadużyciami, a następnie usuwamy lub anonimizujemy zgodnie z ustalonym okresem retencji.</p>
 
-    <h2>8. Bezpieczeństwo danych</h2>
-    <p>Administrator stosuje środki techniczne i&nbsp;organizacyjne zapewniające ochronę danych, w&nbsp;tym szyfrowanie transmisji (SSL), szyfrowanie haseł (bcrypt/argon2id), kopie zapasowe oraz politykę uprawnień dostępu.</p>
+    <h2 class="h4">Bezpieczeństwo i przechowywanie</h2>
+    <p>Stosujemy kontrolę dostępu, szyfrowane połączenia, kopie zapasowe i ograniczenie dostępu pracowników oraz dostawców. Dane przechowujemy przez czas realizacji celu, okres wymagany prawem i okres potrzebny do dochodzenia lub obrony roszczeń.</p>
 
-    <h2>9. Pliki cookies</h2>
-    <h3>9.1. Rodzaje wykorzystywanych plików cookies</h3>
-    <ul>
-        <li><strong>Niezbędne</strong> – umożliwiają prawidłowe działanie Serwisu.</li>
-        <li><strong>Analityczne</strong> – gromadzą anonimowe statystyki (Google&nbsp;Analytics).</li>
-        <li><strong>Marketingowe</strong> – personalizacja reklam (Facebook&nbsp;Pixel).</li>
-    </ul>
-    <h3>9.2. Zarządzanie cookies</h3>
-    <p>Użytkownik może samodzielnie zmieniać ustawienia przeglądarki, aby blokować lub usuwać cookies. Ograniczenie stosowania cookies może jednak wpłynąć na niektóre funkcje Serwisu.</p>
-    <p class="small text-muted">Serwis korzysta z Google Analytics 4 w trybie uzyskiwania zgody (Google Consent Mode v2). Przed wyrażeniem zgody dane analityczne nie są zapisywane w postaci plików cookies; mogą być przesyłane jedynie sygnały pomiarowe bez identyfikacji użytkownika. Po akceptacji zgody możliwy jest pełny pomiar statystyk.</p>
-
-    <h2>10. Logi serwera</h2>
-    <p>Korzystanie z&nbsp;Serwisu wiąże się z&nbsp;przesyłaniem zapytań do serwera, które zapisywane są w&nbsp;logach (adres&nbsp;IP, data, nagłówek HTTP itp.). Dane te są wykorzystywane wyłącznie w&nbsp;celu administrowania Serwisem oraz w&nbsp;celach statystycznych.</p>
-
-    <h2>11. Uprawnienia Użytkownika</h2>
-    <p>Osobom, których dane dotyczą, przysługuje prawo dostępu do danych, ich sprostowania, usunięcia, ograniczenia przetwarzania, przenoszenia, sprzeciwu oraz prawo cofnięcia zgody (newsletter, publikacja rekomendacji) w&nbsp;dowolnym momencie — w&nbsp;sprawie rekomendacji pisząc na <a href="mailto:kontakt@pnedu.pl">kontakt@pnedu.pl</a>.</p>
-
-    <h2>12. Prawo do skargi</h2>
-    <p>Przysługuje Ci prawo wniesienia skargi do Prezesa Urzędu Ochrony Danych Osobowych (ul.&nbsp;Stawki&nbsp;2, 00-193&nbsp;Warszawa).</p>
-
-    <h2>13. Zmiany w&nbsp;polityce prywatności</h2>
-    <p>Administrator może aktualizować niniejszy dokument. Zmiany będą publikowane w&nbsp;Serwisie, a&nbsp;jeśli będą istotne – Użytkownicy zostaną poinformowani drogą e‑mailową.</p>
-
-    <h2>14. Kontakt</h2>
-    <p>W razie pytań dotyczących niniejszej polityki prywatności skontaktuj się z&nbsp;Administratorem pod adresem <a href="mailto:kontakt@pnedu.pl">kontakt@pnedu.pl</a>.</p>
-                </div>
-            </div>
-        </div>
-    </div>
+    <h2 class="h4">Kontakt i prawa</h2>
+    <p>W sprawach prywatności napisz na <a href="mailto:kontakt@pnedu.pl">kontakt@pnedu.pl</a>. Możesz skorzystać z praw opisanych w Informacji RODO i złożyć skargę do Prezesa UODO.</p>
 </div>
+</div>
+</div>
+</section>
 @endsection

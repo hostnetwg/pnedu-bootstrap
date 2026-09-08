@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Services\Analytics\AnalyticsConsentService;
 use App\Services\Analytics\BackendAnalyticsTracker;
 use App\Services\Analytics\OrderFormAttributionService;
 use App\Services\CoursePageViewTracker;
@@ -16,6 +17,7 @@ class CaptureMarketingSource
 {
     public function __construct(
         private readonly MarketingAttributionService $attribution,
+        private readonly AnalyticsConsentService $consent,
         private readonly OrderEntryPlacementService $placement,
         private readonly MarketingCampaignLinkTracker $campaignLinkTracker,
         private readonly CoursePageViewTracker $coursePageViewTracker,
@@ -28,6 +30,10 @@ class CaptureMarketingSource
      */
     public function handle(Request $request, Closure $next): Response
     {
+        if (! $this->consent->hasAnalyticsConsent($request)) {
+            return $next($request);
+        }
+
         $payload = $this->attribution->captureFromRequest($request);
 
         if ($payload !== []) {

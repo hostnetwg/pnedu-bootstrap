@@ -48,5 +48,9 @@ class OrderFormCustomerProfileTest extends TestCase
         $this->assertSame('person', OrderFormCustomerProfile::buyerTypeForProfile('person'));
         $this->assertSame('organisation', OrderFormCustomerProfile::buyerTypeForProfile('school'));
         $this->assertSame('organisation', OrderFormCustomerProfile::buyerTypeForProfile('organisation'));
+        $this->assertSame('organisation', OrderFormCustomerProfile::buyerTypeForProfile('jdg'));
+        $this->assertTrue(OrderFormCustomerProfile::isConsumerProtected('jdg'));
+        $this->assertTrue(OrderFormCustomerProfile::isConsumerProtected('person'));
+        $this->assertFalse(OrderFormCustomerProfile::isConsumerProtected('organisation'));
     }
 }

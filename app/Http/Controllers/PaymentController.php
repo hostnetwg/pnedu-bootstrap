@@ -14,6 +14,7 @@ use App\Services\FormOrderOnlinePaymentRetryService;
 use App\Services\FormOrderOnlineToDeferredConversionService;
 use App\Services\PayNowService;
 use App\Services\PayUService;
+use App\Services\SendyService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -753,11 +754,28 @@ class PaymentController extends Controller
         }
 
         $paymentStatus = $this->mapOnlinePaymentStatusToFormOrder($sourceAttempt->status);
+        $becamePaid = $paymentStatus === FormOrder::PAYMENT_STATUS_PAID
+            && $formOrder->payment_status !== FormOrder::PAYMENT_STATUS_PAID;
         if ($formOrder->payment_status !== $paymentStatus) {
             $formOrder->update(['payment_status' => $paymentStatus]);
         }
 
         if ($paymentStatus === FormOrder::PAYMENT_STATUS_PAID) {
+            if ($becamePaid) {
+                try {
+                    $course = $formOrder->course;
+                    $sendy = SendyService::fromConfig();
+                    if ($course && $sendy) {
+                        $sendy->subscribeFormOrderOperational($course, $formOrder);
+                    }
+                } catch (\Throwable $exception) {
+                    Log::error('PaymentController: błąd operacyjnej synchronizacji Sendy po płatności', [
+                        'form_order_id' => $formOrder->id,
+                        'message' => $exception->getMessage(),
+                    ]);
+                }
+            }
+
             $resumeService = app(FormOrderCheckoutResumeService::class);
             $payload = $resumeService->readSessionPayload();
             if (
@@ -821,6 +839,8 @@ class PaymentController extends Controller
                     'email' => $order->email,
                 ]);
 
+                $this->subscribeStandaloneOnlineOrderToSendy($order);
+
                 return $existingParticipant;
             }
 
@@ -853,6 +873,8 @@ class PaymentController extends Controller
                 'access_expires_at' => $accessExpiresAt ? $accessExpiresAt->format('Y-m-d H:i:s') : 'bezterminowy',
             ]);
 
+            $this->subscribeStandaloneOnlineOrderToSendy($order);
+
             return $participant;
 
         } catch (\Exception $e) {
@@ -865,6 +887,14 @@ class PaymentController extends Controller
             ]);
 
             return null;
+        }
+    }
+
+    protected function subscribeStandaloneOnlineOrderToSendy(OnlinePaymentOrder $order): void
+    {
+        $sendy = SendyService::fromConfig();
+        if ($sendy && $order->course) {
+            $sendy->subscribeStandaloneOnlineOperational($order->course, $order);
         }
     }
 

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Enums\Analytics\AnalyticsEventName;
 use App\Models\Article;
+use App\Services\Analytics\AnalyticsConsentService;
 use App\Services\Analytics\AnalyticsModeResolver;
 use App\Services\Analytics\AnalyticsSessionService;
 use Illuminate\Http\Request;
@@ -14,6 +15,7 @@ class ArticlePageViewTracker
 {
     public function __construct(
         private readonly AnalyticsModeResolver $modeResolver,
+        private readonly AnalyticsConsentService $consent,
         private readonly AnalyticsSessionService $sessions,
         private readonly FunnelSkipService $funnelSkip,
         private readonly MarketingBotDetector $botDetector,
@@ -46,7 +48,7 @@ class ArticlePageViewTracker
 
     public function shouldTrack(Request $request): bool
     {
-        if (! config('analytics.enabled', true)) {
+        if (! config('analytics.enabled', true) || ! $this->consent->hasAnalyticsConsent($request)) {
             return false;
         }
 

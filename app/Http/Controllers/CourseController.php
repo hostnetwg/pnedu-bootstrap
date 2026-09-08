@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Mail\OrderNotificationMail;
+use App\Mail\StandaloneOnlineOrderConfirmationMail;
 use App\Models\Course;
 use App\Models\CoursePriceVariant;
 use App\Models\FormOrder;
@@ -12,10 +13,12 @@ use App\Services\Analytics\BackendAnalyticsTracker;
 use App\Services\CourseRegistrationAvailabilityService;
 use App\Services\FormOrderCheckoutResumeService;
 use App\Services\FormOrderOnlineAbandonmentService;
+use App\Services\LegalCheckoutService;
 use App\Services\OrderFormParticipantService;
 use App\Services\OrderFormRecipientIdentityService;
 use App\Services\SendyService;
 use App\Support\DeveloperOnlinePaymentTest;
+use App\Support\OrderFormCustomerProfile;
 use App\Support\OrderFormVariant;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Exception;
@@ -559,7 +562,7 @@ class CourseController extends Controller
         }
 
         $rules = [
-            'buyer_type' => 'nullable|in:person,company,organisation',
+            'buyer_type' => 'required|in:person,company,organisation,jdg',
             'payment_gateway' => 'required|in:paynow,payu',
             'email' => 'required|email',
             'email_confirmation' => 'required|email|same:email',
@@ -584,6 +587,12 @@ class CourseController extends Controller
         ];
 
         $buyerType = $request->input('buyer_type', 'person');
+        $customerProfile = $buyerType === 'company' ? OrderFormCustomerProfile::ORGANISATION : $buyerType;
+        app(LegalCheckoutService::class)->assertRequiredStatementAccepted(
+            $course,
+            $customerProfile,
+            $request->input('early_performance_accepted')
+        );
 
         // Logika walidacji faktury:
         // - Osoba fizyczna: faktura opcjonalna (wszystkie pola nullable)
@@ -599,7 +608,7 @@ class CourseController extends Controller
                 'person_city' => 'nullable|string|max:255',
                 'person_country' => 'nullable|string|max:255',
             ]);
-        } elseif ($buyerType === 'company') {
+        } elseif (in_array($buyerType, ['company', 'jdg'], true)) {
             // Firma - faktura obowiązkowa
             $rules = array_merge($rules, [
                 'company_nip' => 'required|string|max:20',
@@ -681,6 +690,14 @@ class CourseController extends Controller
 
         $addressData = $this->collectAddressData($request);
         $formData = $request->except(['_token', 'email_confirmation']);
+        $customerProfile = $request->input('buyer_type') === 'company'
+            ? OrderFormCustomerProfile::ORGANISATION
+            : (string) $request->input('buyer_type', OrderFormCustomerProfile::PERSON);
+        $legalEvidence = app(LegalCheckoutService::class)->evidence(
+            $course,
+            $customerProfile,
+            $request->boolean('early_performance_accepted')
+        );
 
         $order = \App\Models\OnlinePaymentOrder::create([
             'ident' => \App\Models\OnlinePaymentOrder::generateIdent(),
@@ -690,6 +707,7 @@ class CourseController extends Controller
             'total_amount' => $totalAmount,
             'currency' => 'PLN',
             'buyer_type' => $request->input('buyer_type'),
+            ...$legalEvidence,
             'email' => $request->input('email'),
             'first_name' => $request->input('first_name'),
             'last_name' => $request->input('last_name'),
@@ -721,6 +739,7 @@ class CourseController extends Controller
         // PayU może nie przekazywać parametrów w return URL
         session(['payu_order_ident' => $order->ident]);
         session(['payu_order_email' => $order->email]);
+        $this->sendStandaloneOnlineLegalConfirmation($order, $course);
 
         return redirect()->away($result['redirect_uri']);
     }
@@ -741,6 +760,14 @@ class CourseController extends Controller
 
         $addressData = $this->collectAddressData($request);
         $formData = $request->except(['_token', 'email_confirmation']);
+        $customerProfile = $request->input('buyer_type') === 'company'
+            ? OrderFormCustomerProfile::ORGANISATION
+            : (string) $request->input('buyer_type', OrderFormCustomerProfile::PERSON);
+        $legalEvidence = app(LegalCheckoutService::class)->evidence(
+            $course,
+            $customerProfile,
+            $request->boolean('early_performance_accepted')
+        );
 
         $order = \App\Models\OnlinePaymentOrder::create([
             'ident' => \App\Models\OnlinePaymentOrder::generateIdent(),
@@ -750,6 +777,7 @@ class CourseController extends Controller
             'total_amount' => $totalAmount,
             'currency' => 'PLN',
             'buyer_type' => $request->input('buyer_type'),
+            ...$legalEvidence,
             'email' => $request->input('email'),
             'first_name' => $request->input('first_name'),
             'last_name' => $request->input('last_name'),
@@ -777,7 +805,28 @@ class CourseController extends Controller
                 ->withInput();
         }
 
+        $this->sendStandaloneOnlineLegalConfirmation($order, $course);
+
         return redirect()->away($result['redirect_url']);
+    }
+
+    protected function sendStandaloneOnlineLegalConfirmation(
+        \App\Models\OnlinePaymentOrder $order,
+        Course $course
+    ): void {
+        if ($order->legal_confirmation_sent_at || ! $order->email) {
+            return;
+        }
+
+        try {
+            Mail::to($order->email)->send(new StandaloneOnlineOrderConfirmationMail($order, $course));
+            $order->update(['legal_confirmation_sent_at' => now()]);
+        } catch (\Throwable $exception) {
+            Log::error('Nie udało się wysłać trwałego potwierdzenia zamówienia online', [
+                'online_payment_order_id' => $order->id,
+                'error' => $exception->getMessage(),
+            ]);
+        }
     }
 
     /**
@@ -799,7 +848,7 @@ class CourseController extends Controller
             ];
         }
 
-        if ($type === 'company') {
+        if (in_array($type, ['company', 'jdg'], true)) {
             return [
                 'nip' => $request->input('company_nip'),
                 'country' => $request->input('company_country'),
@@ -882,6 +931,7 @@ class CourseController extends Controller
             $participantPrefill = $this->participantPrefillFromFormOrder($existingOrder);
             // Wczytaj dane z zamówienia
             $orderData = [
+                'customer_profile' => $this->inferCustomerProfileFromFormOrder($existingOrder),
                 'buyer_name' => $existingOrder->buyer_name,
                 'buyer_address' => $existingOrder->buyer_address,
                 'buyer_postcode' => $existingOrder->buyer_postal_code,
@@ -1265,10 +1315,14 @@ class CourseController extends Controller
     }
 
     /**
-     * Profil V2: person / school / organisation — wg NIP nabywcy i odbiorcy.
+     * Profil V2: w nowych zamówieniach zapisany jawnie; dla historii fallback wg danych faktury.
      */
     protected function inferCustomerProfileFromFormOrder(FormOrder $order): string
     {
+        if (in_array($order->customer_profile, OrderFormCustomerProfile::ALL, true)) {
+            return $order->customer_profile;
+        }
+
         return \App\Support\OrderFormCustomerProfile::fromBuyerAndRecipient(
             $order->buyer_nip,
             $order->recipient_nip,
@@ -1542,13 +1596,20 @@ class CourseController extends Controller
     public function storeDeferredOrder(Request $request, $id)
     {
         $course = Course::with(['priceVariants', 'registrationSuccessor'])->findOrFail($id);
+        $customerProfile = (string) $request->input('customer_profile', OrderFormCustomerProfile::SCHOOL);
+        if (! in_array($customerProfile, OrderFormCustomerProfile::ALL, true)) {
+            $customerProfile = OrderFormCustomerProfile::SCHOOL;
+        }
+        $buyerType = OrderFormCustomerProfile::buyerTypeForProfile($customerProfile);
+        $request->merge(['customer_profile' => $customerProfile, 'buyer_type' => $buyerType]);
 
         $rules = [
+            'customer_profile' => 'required|in:school,organisation,person,jdg',
             'buyer_name' => 'required|string|max:500',
             'buyer_address' => 'required|string|max:500',
             'buyer_postcode' => 'required|string|max:50',
             'buyer_city' => 'required|string|max:255',
-            'buyer_nip' => 'required|string|max:50',
+            'buyer_nip' => ($buyerType === 'person' ? 'nullable' : 'required').'|string|max:50',
             'recipient_name' => 'nullable|string|max:500',
             'recipient_address' => 'nullable|string|max:500',
             'recipient_postcode' => 'nullable|string|max:50',
@@ -1563,7 +1624,7 @@ class CourseController extends Controller
             'conversion_placement' => 'nullable|string|max:50',
         ];
         $this->addPriceVariantValidationRules($course, $rules);
-        $this->mergeOrderFormParticipantValidationRules($rules, 'organisation');
+        $this->mergeOrderFormParticipantValidationRules($rules, $buyerType);
 
         // Walidacja danych
         $validated = $request->validate($rules, array_merge([
@@ -1596,7 +1657,7 @@ class CourseController extends Controller
 
             // Sprawdź czy to edycja istniejącego zamówienia (w tym soft delete → restore przy zapisie)
             $checkoutResume = app(FormOrderCheckoutResumeService::class);
-            $participantRows = $this->parseOrderFormParticipants($request, 'organisation');
+            $participantRows = $this->parseOrderFormParticipants($request, $buyerType);
             $primaryParticipant = $participantRows[0];
             $order = $checkoutResume->resolveForSubmit(
                 (int) $id,
@@ -1618,6 +1679,13 @@ class CourseController extends Controller
                     ->route('payment.deferred.edit', ['id' => $course->id, 'ident' => $order->ident])
                     ->with('error', 'To zamówienie zostało już zakończone lub zafakturowane. Zmiany nie zostały zapisane.');
             }
+
+            $legalEvidence = $this->legalEvidenceForOrderSubmission(
+                $request,
+                $course,
+                $customerProfile,
+                $order
+            );
 
             $this->cancelSupersededOnlineOrdersBeforeDeferredSubmit(
                 (int) $course->id,
@@ -1649,18 +1717,19 @@ class CourseController extends Controller
                 'buyer_address' => $validated['buyer_address'],
                 'buyer_postal_code' => $validated['buyer_postcode'],
                 'buyer_city' => $validated['buyer_city'],
-                'buyer_nip' => $validated['buyer_nip'],
-                'recipient_name' => $validated['recipient_name'],
-                'recipient_address' => $validated['recipient_address'],
-                'recipient_postal_code' => $validated['recipient_postcode'],
-                'recipient_city' => $validated['recipient_city'],
-                'recipient_nip' => $validated['recipient_nip'],
+                'buyer_nip' => $buyerType === 'person' ? null : $validated['buyer_nip'],
+                'recipient_name' => $buyerType === 'person' ? null : $validated['recipient_name'],
+                'recipient_address' => $buyerType === 'person' ? null : $validated['recipient_address'],
+                'recipient_postal_code' => $buyerType === 'person' ? null : $validated['recipient_postcode'],
+                'recipient_city' => $buyerType === 'person' ? null : $validated['recipient_city'],
+                'recipient_nip' => $buyerType === 'person' ? null : $validated['recipient_nip'],
                 'invoice_notes' => $validated['invoice_notes'],
                 'invoice_payment_delay' => $validated['payment_terms'] ?? null,
                 'payment_mode' => FormOrder::PAYMENT_MODE_DEFERRED_INVOICE,
                 'payment_status' => FormOrder::PAYMENT_STATUS_SUBMITTED,
                 'submission_source' => FormOrder::SUBMISSION_SOURCE_PNEDU_ORDER_FORM,
                 'order_form_variant' => $this->resolveOrderFormVariantForStorage($request),
+                ...$legalEvidence,
                 'ip_address' => $request->ip(),
                 'fb_source' => $this->resolveFbSourceForFormOrder($validated, $order),
                 'conversion_placement' => $this->resolveConversionPlacementForFormOrder($validated, (int) $id, $order),
@@ -1706,6 +1775,8 @@ class CourseController extends Controller
                 ->with('success', 'Zamówienie zostało złożone pomyślnie!')
                 ->with('order_just_submitted', $order->ident);
 
+        } catch (ValidationException $e) {
+            throw $e;
         } catch (Exception $e) {
             Log::error('Error creating deferred order', [
                 'error' => $e->getMessage(),
@@ -1736,15 +1807,18 @@ class CourseController extends Controller
     {
         $course = Course::with(['priceVariants', 'registrationSuccessor'])->findOrFail($id);
 
-        $buyerType = $request->input('buyer_type', 'organisation');
-        if (! in_array($buyerType, ['organisation', 'person'], true)) {
-            $buyerType = 'organisation';
+        $requestedProfile = (string) $request->input('customer_profile', $request->input('buyer_type', OrderFormCustomerProfile::SCHOOL));
+        if (! in_array($requestedProfile, OrderFormCustomerProfile::ALL, true)) {
+            $requestedProfile = OrderFormCustomerProfile::SCHOOL;
         }
+        $buyerType = OrderFormCustomerProfile::buyerTypeForProfile($requestedProfile);
+        $request->merge(['buyer_type' => $buyerType, 'customer_profile' => $requestedProfile]);
 
         $paymentTermsMax = $request->routeIs('payment.order-form-v2.store') ? 30 : 31;
 
         $rules = [
             'buyer_type' => 'required|in:organisation,person',
+            'customer_profile' => 'required|in:school,organisation,person,jdg',
             'payment_type' => 'required|in:deferred,online',
 
             'contact_name' => 'required|string|max:255',
@@ -1902,6 +1976,13 @@ class CourseController extends Controller
                     ->with('error', 'To zamówienie zostało już zakończone lub zafakturowane. Zmiany nie zostały zapisane.');
             }
 
+            $legalEvidence = $this->legalEvidenceForOrderSubmission(
+                $request,
+                $course,
+                $requestedProfile,
+                $order
+            );
+
             $this->cancelSupersededOnlineOrdersBeforeDeferredSubmit(
                 (int) $course->id,
                 $participantRows,
@@ -1944,6 +2025,7 @@ class CourseController extends Controller
                 'payment_status' => FormOrder::PAYMENT_STATUS_SUBMITTED,
                 'submission_source' => FormOrder::SUBMISSION_SOURCE_PNEDU_ORDER_FORM,
                 'order_form_variant' => $this->resolveOrderFormVariantForStorage($request),
+                ...$legalEvidence,
                 'ip_address' => $request->ip(),
                 'fb_source' => $this->resolveFbSourceForFormOrder($validated, $order),
                 'conversion_placement' => $this->resolveConversionPlacementForFormOrder($validated, (int) $id, $order),
@@ -1969,7 +2051,7 @@ class CourseController extends Controller
             // Zapisz uczestników w form_order_participants
             app(OrderFormParticipantService::class)->sync($order, $participantRows);
 
-            $this->subscribeOrderFormContactsToSendyIfConfigured($course, $validated, $participantRows);
+            $this->subscribeOrderFormContactsToSendyIfConfigured($course, $validated, $participantRows, $order);
 
             app(\App\Services\OrderEntryPlacementService::class)->clear($request);
 
@@ -1988,6 +2070,8 @@ class CourseController extends Controller
                 ->route('orders.summary', ['ident' => $order->ident])
                 ->with('success', 'Zamówienie zostało złożone pomyślnie!')
                 ->with('order_just_submitted', $order->ident);
+        } catch (ValidationException $e) {
+            throw $e;
         } catch (Exception $e) {
             Log::error('Error creating order (order-form)', [
                 'error' => $e->getMessage(),
@@ -2065,6 +2149,14 @@ class CourseController extends Controller
                     ->with('error', 'To zamówienie zostało już zakończone lub zafakturowane. Zmiany nie zostały zapisane.');
             }
 
+            $customerProfile = (string) $request->input('customer_profile', $buyerType);
+            $legalEvidence = $this->legalEvidenceForOrderSubmission(
+                $request,
+                $course,
+                $customerProfile,
+                $formOrder
+            );
+
             $this->assertOrderFormParticipantEmails((int) $course->id, $participantRows, $formOrder?->id);
 
             $buyerName = $validated['buyer_name'] ?? null;
@@ -2100,6 +2192,7 @@ class CourseController extends Controller
                 'payment_status' => FormOrder::PAYMENT_STATUS_AWAITING_PAYMENT,
                 'submission_source' => FormOrder::SUBMISSION_SOURCE_PNEDU_ORDER_FORM,
                 'order_form_variant' => $this->resolveOrderFormVariantForStorage($request),
+                ...$legalEvidence,
                 'ip_address' => $request->ip(),
                 'fb_source' => $this->resolveFbSourceForFormOrder($validated, $formOrder),
                 'conversion_placement' => $this->resolveConversionPlacementForFormOrder($validated, (int) $course->id, $formOrder),
@@ -2124,8 +2217,6 @@ class CourseController extends Controller
 
             app(OrderFormParticipantService::class)->sync($formOrder, $participantRows);
 
-            $this->subscribeOrderFormContactsToSendyIfConfigured($course, $validated, $participantRows);
-
             app(\App\Services\OrderEntryPlacementService::class)->clear($request);
 
             $backendAnalyticsTracker->trackFormOrderCreated($request, $course, $formOrder, [
@@ -2142,6 +2233,12 @@ class CourseController extends Controller
                 'total_amount' => $totalAmount,
                 'currency' => 'PLN',
                 'buyer_type' => $buyerType === 'organisation' ? 'organisation' : 'person',
+                'customer_profile' => $formOrder->customer_profile,
+                'terms_version' => $formOrder->terms_version,
+                'terms_hash' => $formOrder->terms_hash,
+                'early_performance_scope' => $formOrder->early_performance_scope,
+                'early_performance_statement_version' => $formOrder->early_performance_statement_version,
+                'early_performance_accepted_at' => $formOrder->early_performance_accepted_at,
                 'email' => $email,
                 'first_name' => $firstName,
                 'last_name' => $lastName,
@@ -2170,6 +2267,8 @@ class CourseController extends Controller
                     'error' => $mailException->getMessage(),
                 ]);
             }
+        } catch (ValidationException $e) {
+            throw $e;
         } catch (Exception $e) {
             Log::error('Error creating FormOrder/OnlinePaymentOrder (order-form online)', [
                 'error' => $e->getMessage(),
@@ -2231,8 +2330,12 @@ class CourseController extends Controller
     /**
      * Zapis zamawiającego i (jeśli inny e-mail) uczestnika na listę Sendy przypisaną do kursu.
      */
-    protected function subscribeOrderFormContactsToSendyIfConfigured(Course $course, array $validated, array $participantRows = []): void
-    {
+    protected function subscribeOrderFormContactsToSendyIfConfigured(
+        Course $course,
+        array $validated,
+        array $participantRows = [],
+        ?FormOrder $order = null
+    ): void {
         if (trim((string) ($course->sendy_suppression_list_id ?? '')) === '') {
             return;
         }
@@ -2245,13 +2348,60 @@ class CourseController extends Controller
         }
 
         try {
-            $sendy->subscribeOrderFormContacts($course, $validated);
+            if ($order) {
+                $sendy->subscribeFormOrderOperational($course, $order);
+            } else {
+                $sendy->subscribeOrderFormContacts($course, $validated);
+            }
         } catch (\Throwable $e) {
             Log::error('Sendy order-form subscribe exception', [
                 'course_id' => $course->id,
                 'message' => $e->getMessage(),
             ]);
         }
+    }
+
+    /**
+     * Zachowuje istniejący dowód przy edycji, ale potrafi dopisać wymagane oświadczenie,
+     * jeśli klient zmieni profil na chroniony przed rozpoczęciem szkolenia.
+     *
+     * @return array<string, mixed>
+     */
+    protected function legalEvidenceForOrderSubmission(
+        Request $request,
+        Course $course,
+        string $customerProfile,
+        ?FormOrder $existingOrder
+    ): array {
+        $legalService = app(LegalCheckoutService::class);
+        if (! $existingOrder?->early_performance_accepted_at) {
+            $legalService->assertRequiredStatementAccepted(
+                $course,
+                $customerProfile,
+                $request->input('early_performance_accepted'),
+                $existingOrder?->order_date
+            );
+        }
+
+        $evidence = $legalService->evidence(
+            $course,
+            $customerProfile,
+            $request->boolean('early_performance_accepted'),
+            $existingOrder?->order_date
+        );
+
+        if ($existingOrder?->terms_version) {
+            unset($evidence['terms_version'], $evidence['terms_hash']);
+        }
+        if ($existingOrder?->early_performance_accepted_at) {
+            unset(
+                $evidence['early_performance_scope'],
+                $evidence['early_performance_statement_version'],
+                $evidence['early_performance_accepted_at']
+            );
+        }
+
+        return $evidence;
     }
 
     /**
@@ -2362,10 +2512,12 @@ class CourseController extends Controller
                 ]);
 
                 // Wyślij e-mail na wszystkie adresy
+                $legalConfirmationSent = false;
                 foreach ($emailsToSend as $email) {
                     try {
                         Mail::to($email)
                             ->send(new OrderNotificationMail($order, $course));
+                        $legalConfirmationSent = true;
 
                         Log::info('E-mail z zamówieniem został wysłany', [
                             'order_id' => $order->id,
@@ -2381,6 +2533,10 @@ class CourseController extends Controller
                             'exception' => $emailException->getTraceAsString(),
                         ]);
                     }
+                }
+
+                if ($legalConfirmationSent && ! $order->legal_confirmation_sent_at) {
+                    $order->update(['legal_confirmation_sent_at' => now()]);
                 }
             }
 

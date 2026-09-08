@@ -6,11 +6,11 @@ use App\Enums\Analytics\AnalyticsEventName;
 use App\Models\Course;
 use App\Models\FormOrder;
 use App\Models\OnlinePaymentOrder;
-use App\Support\OrderFormGateway;
-use App\Support\OrderFormVariant;
 use App\Services\FunnelSkipService;
 use App\Services\MarketingAttributionService;
 use App\Services\MarketingBotDetector;
+use App\Support\OrderFormGateway;
+use App\Support\OrderFormVariant;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use Ramsey\Uuid\Uuid;
@@ -21,6 +21,7 @@ class BackendAnalyticsTracker
 {
     public function __construct(
         private readonly AnalyticsService $analytics,
+        private readonly AnalyticsConsentService $consent,
         private readonly AnalyticsContextService $context,
         private readonly AnalyticsSessionService $sessions,
         private readonly OrderFormSessionService $orderFormSessions,
@@ -475,7 +476,7 @@ class BackendAnalyticsTracker
 
     private function shouldTrackGetRequest(Request $request): bool
     {
-        if (! config('analytics.enabled', true)) {
+        if (! config('analytics.enabled', true) || ! $this->consent->hasAnalyticsConsent($request)) {
             return false;
         }
 
@@ -496,7 +497,7 @@ class BackendAnalyticsTracker
 
     private function shouldTrackFormPostRequest(Request $request): bool
     {
-        if (! config('analytics.enabled', true)) {
+        if (! config('analytics.enabled', true) || ! $this->consent->hasAnalyticsConsent($request)) {
             return false;
         }
 

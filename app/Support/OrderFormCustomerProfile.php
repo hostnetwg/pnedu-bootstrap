@@ -3,7 +3,7 @@
 namespace App\Support;
 
 /**
- * Profil klienta formularza V2 (school / organisation / person)
+ * Profil klienta formularza V2 (school / organisation / person / jdg)
  * na podstawie NIP nabywcy i danych odbiorcy.
  */
 class OrderFormCustomerProfile
@@ -13,6 +13,15 @@ class OrderFormCustomerProfile
     public const ORGANISATION = 'organisation';
 
     public const PERSON = 'person';
+
+    public const JDG = 'jdg';
+
+    public const ALL = [
+        self::SCHOOL,
+        self::ORGANISATION,
+        self::PERSON,
+        self::JDG,
+    ];
 
     /**
      * @return self::SCHOOL|self::ORGANISATION|self::PERSON
@@ -43,5 +52,10 @@ class OrderFormCustomerProfile
     public static function buyerTypeForProfile(string $profile): string
     {
         return $profile === self::PERSON ? 'person' : 'organisation';
+    }
+
+    public static function isConsumerProtected(string $profile): bool
+    {
+        return in_array($profile, [self::PERSON, self::JDG], true);
     }
 }

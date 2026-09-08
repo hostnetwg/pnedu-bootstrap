@@ -3,6 +3,8 @@
 namespace App\Services;
 
 use App\Models\Course;
+use App\Models\FormOrder;
+use App\Models\OnlinePaymentOrder;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -128,7 +130,6 @@ class SendyService
         );
 
         $baseOptions = array_merge([
-            'gdpr' => 'true',
             'silent' => 'true',
             'boolean' => 'true',
             $fieldName => $trainingDate,
@@ -138,7 +139,6 @@ class SendyService
 
         if ($participantEmail !== $buyerEmail) {
             $pOpts = array_merge([
-                'gdpr' => 'true',
                 'silent' => 'true',
                 'boolean' => 'true',
                 $fieldName => $trainingDate,
@@ -161,7 +161,6 @@ class SendyService
             'email' => $email,
             'list' => $listId,
             'boolean' => 'true',
-            'gdpr' => 'true',
         ], $options);
 
         try {
@@ -311,12 +310,76 @@ class SendyService
     {
         $result = ['tik' => false, 'nauczyciele' => null];
 
-        $result['tik'] = $this->subscribe($email, self::LIST_TIK_NAUCZYCIEL);
+        $result['tik'] = $this->subscribe($email, self::LIST_TIK_NAUCZYCIEL, [
+            'silent' => 'true',
+        ]);
 
         if ($newsletterConsent === true) {
-            $result['nauczyciele'] = $this->subscribe($email, self::LIST_NAUCZYCIELE);
+            $result['nauczyciele'] = $this->subscribe($email, self::LIST_NAUCZYCIELE, [
+                'gdpr' => 'true',
+                'silent' => 'true',
+            ]);
         }
 
         return $result;
+    }
+
+    /**
+     * Lista kursowa służy wyłącznie wiadomościom związanym z realizacją umowy.
+     * To nie jest zapis marketingowy i nie zapisujemy pola gdpr jako pozornej zgody newsletterowej.
+     */
+    public function subscribeFormOrderOperational(Course $course, FormOrder $order): void
+    {
+        $listId = trim((string) ($course->sendy_suppression_list_id ?? ''));
+        if ($listId === '' || ! $this->validateListId($listId) || ! $course->start_date) {
+            return;
+        }
+
+        $fieldName = (string) config('services.sendy.training_date_field', 'data');
+        $trainingDate = $course->start_date
+            ->timezone(config('app.timezone'))
+            ->format('Y-m-d');
+        $order->loadMissing(['participants' => fn ($query) => $query->orderBy('id')]);
+
+        $contacts = collect([[
+            'email' => strtolower(trim((string) $order->orderer_email)),
+            'name' => trim((string) $order->orderer_name),
+        ]]);
+        foreach ($order->participants as $participant) {
+            $contacts->push([
+                'email' => strtolower(trim((string) $participant->participant_email)),
+                'name' => trim((string) $participant->participant_firstname.' '.(string) $participant->participant_lastname),
+            ]);
+        }
+
+        foreach ($contacts->filter(fn (array $contact) => filter_var($contact['email'], FILTER_VALIDATE_EMAIL))
+            ->unique('email') as $contact) {
+            $this->subscribe($contact['email'], $listId, [
+                'name' => $contact['name'],
+                'silent' => 'true',
+                $fieldName => $trainingDate,
+            ]);
+        }
+    }
+
+    public function subscribeStandaloneOnlineOperational(Course $course, OnlinePaymentOrder $order): void
+    {
+        $listId = trim((string) ($course->sendy_suppression_list_id ?? ''));
+        $email = strtolower(trim((string) $order->email));
+        if (
+            $listId === ''
+            || ! filter_var($email, FILTER_VALIDATE_EMAIL)
+            || ! $course->start_date
+            || ! $this->validateListId($listId)
+        ) {
+            return;
+        }
+
+        $fieldName = (string) config('services.sendy.training_date_field', 'data');
+        $this->subscribe($email, $listId, [
+            'name' => trim((string) $order->first_name.' '.(string) $order->last_name),
+            'silent' => 'true',
+            $fieldName => $course->start_date->timezone(config('app.timezone'))->format('Y-m-d'),
+        ]);
     }
 }

@@ -1,137 +1,182 @@
-{{--
-    resources/views/layouts/analytics-head.blade.php
-    Consent Mode v2 + opcjonalnie GTM (agencja) oraz własne GA4 (GOOGLE_ANALYTICS_ID).
-    Ładuje się tylko w produkcji. Przy opt-out lejka (pne_skip_funnel) — bez GA/GTM.
---}}
-@production
-    @unless($skipMarketingAnalytics ?? false)
-        @php
-            $gtmId = config('services.google_tag_manager.id');
-            $gaId = config('services.google_analytics.id');
-        @endphp
-        @if(!empty($gtmId) || !empty($gaId))
-            <script>
-                // Chrome/Opera: prompt „dostęp do innych aplikacji…” gdy strona łączy się z localhost.
-                // Główna blokada: HTTP Permissions-Policy (DenyLocalNetworkAccessPolicy).
-                // Ten skrypt to zapas: fetch/XHR/sendBeacon/WebSocket do hostów prywatnych.
-                (function () {
-                    function isPrivateOrLoopbackHost(hostname) {
-                        if (!hostname) { return false; }
-                        var h = String(hostname).toLowerCase();
-                        if (h === 'localhost') { return true; }
-                        if (h.endsWith('.local')) { return true; }
-                        // IPv4 private/loopback ranges
-                        if (/^127\./.test(h)) { return true; }
-                        if (/^10\./.test(h)) { return true; }
-                        if (/^192\.168\./.test(h)) { return true; }
-                        if (/^172\.(1[6-9]|2\d|3[0-1])\./.test(h)) { return true; }
-                        return false;
-                    }
+@php
+    $analyticsConsent = app(\App\Services\Analytics\AnalyticsConsentService::class);
+    $analyticsConsentGranted = ! ($skipMarketingAnalytics ?? false)
+        && $analyticsConsent->hasAnalyticsConsent(request());
+    $gtmId = app()->environment('production') && ! ($skipMarketingAnalytics ?? false)
+        ? config('services.google_tag_manager.id')
+        : null;
+    $gaId = app()->environment('production') && ! ($skipMarketingAnalytics ?? false)
+        ? config('services.google_analytics.id')
+        : null;
+@endphp
+<script>
+(function () {
+    'use strict';
 
-                    function shouldBlockUrl(input) {
-                        try {
-                            // Support Request objects + relative URLs.
-                            var urlString = (input && input.url) ? input.url : String(input);
-                            var u = new URL(urlString, window.location.href);
-                            if (u.protocol !== 'http:' && u.protocol !== 'https:') { return false; }
-                            return isPrivateOrLoopbackHost(u.hostname);
-                        } catch (e) {
-                            return false;
-                        }
-                    }
+    var CONSENT_COOKIE = @json($analyticsConsent->cookieName());
+    var ANALYTICS_VALUE = @json(\App\Services\Analytics\AnalyticsConsentService::ANALYTICS);
+    var ANALYTICS_ENDPOINT_PATH = @json('/'.ltrim(parse_url(route('analytics.client-events.store'), PHP_URL_PATH), '/'));
+    var GTM_ID;
+    var GA_ID;
+    var GOOGLE_ENABLED;
+    var googleLoaded = false;
 
-                    // fetch()
-                    if (typeof window.fetch === 'function') {
-                        var _fetch = window.fetch.bind(window);
-                        window.fetch = function (input, init) {
-                            if (shouldBlockUrl(input)) {
-                                return Promise.reject(new Error('Blocked local network request'));
-                            }
-                            return _fetch(input, init);
-                        };
-                    }
+    window.dataLayer = window.dataLayer || [];
+    window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
 
-                    // XMLHttpRequest
-                    if (typeof window.XMLHttpRequest === 'function' && window.XMLHttpRequest.prototype) {
-                        var _open = window.XMLHttpRequest.prototype.open;
-                        window.XMLHttpRequest.prototype.open = function (method, url) {
-                            if (shouldBlockUrl(url)) {
-                                throw new Error('Blocked local network request');
-                            }
-                            return _open.apply(this, arguments);
-                        };
-                    }
+    function consentState(analyticsGranted) {
+        return {
+            analytics_storage: analyticsGranted ? 'granted' : 'denied',
+            ad_storage: 'denied',
+            ad_user_data: 'denied',
+            ad_personalization: 'denied'
+        };
+    }
 
-                    // sendBeacon (częsty w tagach GA/GTM)
-                    if (navigator.sendBeacon) {
-                        var _beacon = navigator.sendBeacon.bind(navigator);
-                        navigator.sendBeacon = function (url, data) {
-                            if (shouldBlockUrl(url)) {
-                                return false;
-                            }
-                            return _beacon(url, data);
-                        };
-                    }
+    window.gtag('consent', 'default', consentState(false));
 
-                    // WebSocket → localhost
-                    if (typeof window.WebSocket === 'function') {
-                        var _WS = window.WebSocket;
-                        window.WebSocket = function (url, protocols) {
-                            if (shouldBlockUrl(url)) {
-                                throw new Error('Blocked local network request');
-                            }
-                            return protocols === undefined ? new _WS(url) : new _WS(url, protocols);
-                        };
-                        window.WebSocket.prototype = _WS.prototype;
-                        window.WebSocket.CONNECTING = _WS.CONNECTING;
-                        window.WebSocket.OPEN = _WS.OPEN;
-                        window.WebSocket.CLOSING = _WS.CLOSING;
-                        window.WebSocket.CLOSED = _WS.CLOSED;
-                    }
-                })();
-            </script>
+    window.pneHasAnalyticsConsent = function () {
+        try {
+            var prefix = encodeURIComponent(CONSENT_COOKIE) + '=';
+            var cookies = document.cookie ? document.cookie.split(';') : [];
+            for (var i = 0; i < cookies.length; i++) {
+                var item = cookies[i].trim();
+                if (item.indexOf(prefix) === 0) {
+                    return decodeURIComponent(item.substring(prefix.length)) === ANALYTICS_VALUE;
+                }
+            }
+        } catch (e) {}
+        return false;
+    };
 
-            <script>
-                window.dataLayer = window.dataLayer || [];
-                function gtag(){dataLayer.push(arguments);}
+    function isAnalyticsEndpoint(input) {
+        try {
+            var value = input && input.url ? input.url : String(input);
+            return new URL(value, window.location.href).pathname === ANALYTICS_ENDPOINT_PATH;
+        } catch (e) {
+            return false;
+        }
+    }
 
-                gtag('consent', 'default', {
-                    analytics_storage: 'denied',
-                    functionality_storage: 'granted',
-                    security_storage: 'granted',
-                    wait_for_update: 500
-                });
+    function isPrivateOrLoopbackHost(hostname) {
+        if (!hostname) { return false; }
+        var host = String(hostname).toLowerCase();
+        return host === 'localhost'
+            || host.slice(-6) === '.local'
+            || /^127\./.test(host)
+            || /^10\./.test(host)
+            || /^192\.168\./.test(host)
+            || /^172\.(1[6-9]|2\d|3[0-1])\./.test(host);
+    }
 
-                (function () {
-                    try {
-                        var consent = localStorage.getItem('cookie_consent');
-                        if (consent === 'accepted') {
-                            gtag('consent', 'update', { analytics_storage: 'granted' });
-                        }
-                    } catch (e) {}
-                })();
-            </script>
+    function isLocalNetworkRequest(input) {
+        try {
+            var value = input && input.url ? input.url : String(input);
+            var url = new URL(value, window.location.href);
+            return (url.protocol === 'http:' || url.protocol === 'https:')
+                && isPrivateOrLoopbackHost(url.hostname);
+        } catch (e) {
+            return false;
+        }
+    }
 
-            @if(!empty($gtmId))
-                <!-- Google Tag Manager (agencja) -->
-                <script>
-                (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-                new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-                j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-                'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-                })(window,document,'script','dataLayer',@json($gtmId));
-                </script>
-                <!-- End Google Tag Manager -->
-            @endif
+    function shouldBlock(input) {
+        return (GOOGLE_ENABLED && isLocalNetworkRequest(input))
+            || (isAnalyticsEndpoint(input) && !window.pneHasAnalyticsConsent());
+    }
 
-            @if(!empty($gaId))
-                <!-- Google Analytics 4 (właściciel) -->
-                <script async src="https://www.googletagmanager.com/gtag/js?id={{ $gaId }}"></script>
-                <script>
-                    gtag('config', @json($gaId));
-                </script>
-                <!-- End Google Analytics 4 -->
-            @endif
-        @endif
-    @endunless
-@endproduction
+    if (typeof window.fetch === 'function') {
+        var originalFetch = window.fetch.bind(window);
+        window.fetch = function (input, init) {
+            if (shouldBlock(input)) {
+                return Promise.reject(new Error(
+                    isAnalyticsEndpoint(input) ? 'Analytics consent required' : 'Blocked local network request'
+                ));
+            }
+            return originalFetch(input, init);
+        };
+    }
+
+    if (typeof window.XMLHttpRequest === 'function' && window.XMLHttpRequest.prototype) {
+        var originalOpen = window.XMLHttpRequest.prototype.open;
+        window.XMLHttpRequest.prototype.open = function (method, url) {
+            if (shouldBlock(url)) {
+                throw new Error(isAnalyticsEndpoint(url) ? 'Analytics consent required' : 'Blocked local network request');
+            }
+            return originalOpen.apply(this, arguments);
+        };
+    }
+
+    if (navigator.sendBeacon) {
+        var originalBeacon = navigator.sendBeacon.bind(navigator);
+        navigator.sendBeacon = function (url, data) {
+            return shouldBlock(url) ? false : originalBeacon(url, data);
+        };
+    }
+
+    if (typeof window.WebSocket === 'function') {
+        var OriginalWebSocket = window.WebSocket;
+        window.WebSocket = function (url, protocols) {
+            if (GOOGLE_ENABLED && isLocalNetworkRequest(url)) {
+                throw new Error('Blocked local network request');
+            }
+            return protocols === undefined
+                ? new OriginalWebSocket(url)
+                : new OriginalWebSocket(url, protocols);
+        };
+        window.WebSocket.prototype = OriginalWebSocket.prototype;
+        window.WebSocket.CONNECTING = OriginalWebSocket.CONNECTING;
+        window.WebSocket.OPEN = OriginalWebSocket.OPEN;
+        window.WebSocket.CLOSING = OriginalWebSocket.CLOSING;
+        window.WebSocket.CLOSED = OriginalWebSocket.CLOSED;
+    }
+
+    GTM_ID = @json($gtmId);
+    GA_ID = @json($gaId);
+    GOOGLE_ENABLED = Boolean(GTM_ID || GA_ID);
+
+    function appendGoogleScript(src, id) {
+        if (id && document.getElementById(id)) { return; }
+        var script = document.createElement('script');
+        script.async = true;
+        script.src = src;
+        if (id) { script.id = id; }
+        document.head.appendChild(script);
+    }
+
+    function loadGoogleAnalytics() {
+        if (googleLoaded || !window.pneHasAnalyticsConsent()) { return; }
+        googleLoaded = true;
+
+        @unless($skipMarketingAnalytics ?? false)
+        if (GTM_ID) {
+            window.dataLayer.push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
+            appendGoogleScript(
+                'https://www.googletagmanager.com/gtm.js?id=' + encodeURIComponent(GTM_ID),
+                'pne-gtm-script'
+            );
+        }
+
+        if (GA_ID) {
+            appendGoogleScript(
+                'https://www.googletagmanager.com/gtag/js?id=' + encodeURIComponent(GA_ID),
+                'pne-ga-script'
+            );
+            window.gtag('config', GA_ID);
+        }
+        @endunless
+    }
+
+    window.pneSetAnalyticsConsent = function (granted) {
+        window.gtag('consent', 'update', consentState(granted === true));
+        if (granted === true) {
+            loadGoogleAnalytics();
+            document.dispatchEvent(new CustomEvent('pne:analytics-consent-granted'));
+        }
+    };
+
+    @if($analyticsConsentGranted)
+        window.pneSetAnalyticsConsent(true);
+    @endif
+})();
+</script>

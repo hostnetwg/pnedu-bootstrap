@@ -38,6 +38,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->trustProxies(at: '*');
 
         $middleware->encryptCookies(except: [
+            'pne_cookie_consent',
             'pne_skip_funnel',
             'pne_skip_funnel_until',
             'pne_skip_analytics',

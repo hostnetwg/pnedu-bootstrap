@@ -34,7 +34,11 @@
                 return v2.value;
             }
             var checked = document.querySelector('input[name="buyer_type"]:checked');
-            return checked ? checked.value : 'organisation';
+            if (!checked) {
+                return 'organisation';
+            }
+
+            return checked.value === 'jdg' ? 'organisation' : checked.value;
         }
 
         function allowsMultiple() {

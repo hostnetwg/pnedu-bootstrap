@@ -46,6 +46,8 @@
     </td></tr>
     </table>
 
+    @include('emails.partials.legal-order-confirmation')
+
     <p style="margin: 0 0 24px;">W razie pytań proszę o kontakt: kontakt@pnedu.pl; tel. 501 654 274.</p>
 
     <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 28px 0;">

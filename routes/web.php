@@ -4,6 +4,7 @@ use App\Http\Controllers\BlogController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\ExternalSurveyGateController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\LegalDocumentController;
 use App\Http\Controllers\NewsletterController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SeoController;
@@ -86,10 +87,21 @@ Route::get('/ankieta/{token}/juz-wypelniona', [ExternalSurveyGateController::cla
 Route::get('/rodo', function () {
     return view('rodo');
 })->name('rodo');
+Route::get('/rodo-art-14', function () {
+    return view('rodo-art-14');
+})->name('rodo.art14');
 
-Route::get('/regulamin', function () {
-    return view('regulamin');
-})->name('regulamin');
+Route::get('/regulamin', [LegalDocumentController::class, 'terms'])->name('regulamin');
+Route::get('/regulamin/{version}', [LegalDocumentController::class, 'terms'])
+    ->where('version', '\d{4}-\d{2}-\d{2}')
+    ->name('regulamin.version');
+Route::get('/regulamin/{version}.pdf', [LegalDocumentController::class, 'termsPdf'])
+    ->where('version', '\d{4}-\d{2}-\d{2}')
+    ->name('regulamin.pdf');
+Route::get('/odstapienie-od-umowy', [LegalDocumentController::class, 'withdrawal'])
+    ->name('withdrawal');
+Route::get('/odstapienie-od-umowy/formularz.pdf', [LegalDocumentController::class, 'withdrawalPdf'])
+    ->name('withdrawal.pdf');
 
 Route::get('/po-szkoleniu', App\Http\Controllers\PostTrainingThankYouController::class)
     ->middleware('throttle:120,1')

@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\MarketingCampaignStatsDaily;
+use App\Services\Analytics\AnalyticsConsentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -13,6 +14,7 @@ class MarketingCampaignLinkTracker
     public function __construct(
         private readonly FunnelSkipService $funnelSkip,
         private readonly MarketingBotDetector $botDetector,
+        private readonly AnalyticsConsentService $consent,
     ) {}
 
     public function trackFromRequest(Request $request): void
@@ -48,7 +50,8 @@ class MarketingCampaignLinkTracker
 
     private function shouldTrack(Request $request): bool
     {
-        if ($this->funnelSkip->shouldSkipTracking($request)) {
+        if (! $this->consent->hasAnalyticsConsent($request)
+            || $this->funnelSkip->shouldSkipTracking($request)) {
             return false;
         }
 

@@ -457,7 +457,7 @@
                 @endif
                 <div class="mt-3" style="font-size: 0.95rem; color: #333; line-height: 1.4;">
                     Niepubliczny Ośrodek Doskonalenia Nauczycieli "Platforma Nowoczesnej Edukacji",
-                    ul. A. Zamoyskiego 30/14, 09-320 Bieżuń, RSPO: 481379, NIP: 5691238763<br>
+                    ul. A. Zamoyskiego 30/14, 09-320 Bieżuń, RSPO: 481379, NIP: 7392137630<br>
                     Kontakt: e-mail: kontakt@pnedu.pl, tel. 501 654 274
                 </div>
             </div>
@@ -499,7 +499,10 @@
             <form method="POST" action="{{ route('payment.order-form.store', $course->id) }}">
                 @csrf
                 @php
-                    $prefillBuyerType = old('buyer_type', $testData['buyer_type'] ?? 'organisation');
+                    $prefillBuyerType = old(
+                        'customer_profile',
+                        old('buyer_type', $testData['customer_profile'] ?? $testData['buyer_type'] ?? 'organisation')
+                    );
                     $prefillPaymentType = old('payment_type', $testData['payment_type'] ?? ($prefillBuyerType === 'person' ? 'online' : 'deferred'));
                 @endphp
                 <!-- Hidden fields for publigo integration -->
@@ -539,6 +542,20 @@
                                 >
                                 <label class="form-check-label" for="buyer_type_organisation">
                                     Szkoła / Instytucja / Firma
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input
+                                    class="form-check-input"
+                                    type="radio"
+                                    name="buyer_type"
+                                    id="buyer_type_jdg"
+                                    value="jdg"
+                                    {{ $prefillBuyerType === 'jdg' ? 'checked' : '' }}
+                                    required
+                                >
+                                <label class="form-check-label" for="buyer_type_jdg">
+                                    JDG — zakup niezawodowy
                                 </label>
                             </div>
                             <div class="form-check">
@@ -930,13 +947,19 @@
                         @enderror
                     </div>
                     <div class="visually-hidden" data-analytics-section-v2="consents" aria-hidden="true"></div>
+                    @include('courses.partials.paid-checkout-legal', [
+                        'customerProfile' => $prefillBuyerType,
+                        'priceInfo' => $course->getPriceInfoForOrderFormHeader(
+                            filled($prefillPriceVariantId ?? null) ? (int) $prefillPriceVariantId : null
+                        ),
+                    ])
                     <div class="d-flex flex-column flex-md-row gap-3 mt-3 flex-wrap" data-analytics-section-v2="submit">
                         @if($isTestMode)
                             <button type="button" class="btn btn-outline-secondary" id="fill-test-data-btn" title="Wypełnij formularz danymi testowymi (tylko w środowisku deweloperskim)">
                                 Wypełnij dane testowe
                             </button>
                         @endif
-                        <button type="submit" class="btn btn-primary flex-fill" id="order-form-submit-btn" data-analytics-cta="submit_order" data-submitting-text="{{ ($prefillPaymentType ?? 'deferred') === 'online' ? 'Przekierowanie do płatności…' : 'Wysyłanie…' }}">{{ ($prefillPaymentType ?? 'deferred') === 'online' ? 'Przejdź do płatności online' : 'Wyślij zamówienie' }}</button>
+                        <button type="submit" class="btn btn-primary flex-fill" id="order-form-submit-btn" data-analytics-cta="submit_order" data-submitting-text="Wysyłanie zamówienia…">Zamówienie z obowiązkiem zapłaty</button>
                         <a href="{{ route('courses.show', $course->id) }}" class="btn btn-link flex-fill" data-analytics-cta="back_to_course">Powrót do szczegółów szkolenia</a>
                     </div>
                 </div>
@@ -951,6 +974,7 @@
     // UI: przełączanie pól dla "Zamawiam jako"
     var buyerOrg = document.getElementById('buyer_type_organisation');
     var buyerPerson = document.getElementById('buyer_type_person');
+    var buyerJdg = document.getElementById('buyer_type_jdg');
     var groupName = document.getElementById('contact_name_group');
     var groupFirst = document.getElementById('contact_first_group');
     var groupLast = document.getElementById('contact_last_group');
@@ -1353,7 +1377,7 @@
         lookupGus('recipient');
     });
 
-    if (buyerOrg) buyerOrg.addEventListener('change', function () {
+    function handleOrganisationBuyerChange() {
         updateContactFieldsVisibility();
         setDefaultPaymentTypeForCurrentBuyerType();
         copyContactToBuyerPersonIfAllowed();
@@ -1367,7 +1391,9 @@
         if (participantCopyCheckbox) {
             participantCopyCheckbox.checked = false;
         }
-    });
+    }
+    if (buyerOrg) buyerOrg.addEventListener('change', handleOrganisationBuyerChange);
+    if (buyerJdg) buyerJdg.addEventListener('change', handleOrganisationBuyerChange);
     if (buyerPerson) buyerPerson.addEventListener('change', function () {
         updateContactFieldsVisibility();
         setDefaultPaymentTypeForCurrentBuyerType();
@@ -1527,6 +1553,7 @@
             if (inputNameDisplay) inputNameDisplay.value = testDataJson.contact_name || '';
             if (buyerOrg && testDataJson.buyer_type === 'organisation') buyerOrg.dispatchEvent(new Event('change', { bubbles: true }));
             if (buyerPerson && testDataJson.buyer_type === 'person') buyerPerson.dispatchEvent(new Event('change', { bubbles: true }));
+            if (buyerJdg && testDataJson.buyer_type === 'jdg') buyerJdg.dispatchEvent(new Event('change', { bubbles: true }));
             if (paymentTypeDeferred && testDataJson.payment_type === 'deferred') paymentTypeDeferred.dispatchEvent(new Event('change', { bubbles: true }));
             if (paymentTypeOnline && testDataJson.payment_type === 'online') paymentTypeOnline.dispatchEvent(new Event('change', { bubbles: true }));
             updateContactFieldsVisibility();

@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Services\Analytics\AnalyticsConsentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -10,8 +11,16 @@ class MarketingAttributionService
 {
     public const SESSION_KEY = 'marketing.attribution';
 
+    public function __construct(
+        private readonly AnalyticsConsentService $consent,
+    ) {}
+
     public function resolveCampaignCode(Request $request): ?string
     {
+        if (! $this->consent->hasAnalyticsConsent($request)) {
+            return null;
+        }
+
         $raw = $request->query('utm_campaign', $request->query('fb', $request->query('fb_source')));
 
         if (is_string($raw)) {
@@ -48,6 +57,10 @@ class MarketingAttributionService
      */
     public function captureFromRequest(Request $request): array
     {
+        if (! $this->consent->hasAnalyticsConsent($request)) {
+            return [];
+        }
+
         $campaignCode = null;
         $rawCampaign = $request->query('utm_campaign', $request->query('fb', $request->query('fb_source')));
         if (is_string($rawCampaign) && trim($rawCampaign) !== '') {
@@ -143,7 +156,7 @@ class MarketingAttributionService
 
     public function persist(Request $request, array $payload): void
     {
-        if ($payload === []) {
+        if ($payload === [] || ! $this->consent->hasAnalyticsConsent($request)) {
             return;
         }
 
@@ -162,6 +175,10 @@ class MarketingAttributionService
      */
     public function readCookiePayload(Request $request): array
     {
+        if (! $this->consent->hasAnalyticsConsent($request)) {
+            return [];
+        }
+
         $raw = $request->cookie((string) config('marketing.cookie_name', 'pne_marketing'));
         if (! is_string($raw) || $raw === '') {
             return [];

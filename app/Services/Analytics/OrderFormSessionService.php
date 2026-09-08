@@ -10,10 +10,16 @@ use Throwable;
 
 class OrderFormSessionService
 {
+    public function __construct(
+        private readonly AnalyticsConsentService $consent,
+    ) {}
+
     public function id(Request $request, int $courseId, ?string $preferredSessionId = null): ?string
     {
         try {
-            if (! config('analytics.enabled', true) || $courseId <= 0) {
+            if (! config('analytics.enabled', true)
+                || ! $this->consent->hasAnalyticsConsent($request)
+                || $courseId <= 0) {
                 return null;
             }
 
@@ -50,7 +56,8 @@ class OrderFormSessionService
     public function appendCookie(Response $response, Request $request, int $courseId): void
     {
         try {
-            if ($request->attributes->get($this->pendingCookieAttribute($courseId)) !== true) {
+            if (! $this->consent->hasAnalyticsConsent($request)
+                || $request->attributes->get($this->pendingCookieAttribute($courseId)) !== true) {
                 return;
             }
 
