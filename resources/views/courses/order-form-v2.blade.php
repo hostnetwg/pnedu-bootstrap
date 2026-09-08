@@ -341,7 +341,7 @@
                     </div>
                     <div class="col-12 col-lg-7" id="v2-recipient-internal-wrap" @if($recipientIdType !== 'internal') hidden @endif>
                         <label class="form-label" for="recipient_internal_id">Identyfikator wewnętrzny</label>
-                        <input class="form-control @error('recipient_internal_id') is-invalid @enderror" id="recipient_internal_id" name="recipient_internal_id" value="{{ $field('recipient_internal_id') }}" maxlength="20" inputmode="numeric" autocomplete="off" placeholder="np. 00001 lub 1234567890-00001" @disabled($recipientIdType !== 'internal')>
+                        <input class="form-control @error('recipient_internal_id') is-invalid @enderror" id="recipient_internal_id" name="recipient_internal_id" value="{{ $field('recipient_internal_id') }}" maxlength="20" inputmode="numeric" autocomplete="off" placeholder="np. 1234567890-00001" @disabled($recipientIdType !== 'internal')>
                         <div class="form-text">Dla oddziału lub jednostki wewnętrznej nabywcy — 5 cyfr (np. 00001) albo pełny IDWew z KSeF. GUS nie wyszukuje po tym identyfikatorze.</div>
                         @error('recipient_internal_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
