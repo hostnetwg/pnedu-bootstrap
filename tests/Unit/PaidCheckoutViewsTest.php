@@ -29,6 +29,12 @@ class PaidCheckoutViewsTest extends TestCase
             );
         }
 
+        $v2 = file_get_contents(resource_path('views/courses/order-form-v2.blade.php'));
+        $this->assertIsString($v2);
+        $this->assertStringContainsString('recipient_id_type', $v2);
+        $this->assertStringContainsString('Identyfikator wewnętrzny', $v2);
+        $this->assertStringContainsString('gusButton.hidden = !useNip', $v2);
+
         $guard = file_get_contents(resource_path('views/courses/partials/order-form-submit-guard.blade.php'));
         $this->assertIsString($guard);
         $this->assertStringContainsString('checkValidity', $guard);

@@ -47,10 +47,36 @@ class OrderFormRecipientIdentityServiceTest extends TestCase
         $this->assertSame('7392137630-00001', $payload['ksef_additional_entity_identifier']);
     }
 
-    public function test_validates_recipient_nip_when_recipient_data_present(): void
+    public function test_allows_recipient_data_without_nip(): void
     {
         $request = Request::create('/', 'POST', [
             'recipient_name' => 'Oddział',
+            'recipient_city' => 'Warszawa',
+        ]);
+
+        $this->assertNull($this->service->validateRecipientIdentity($request, '7392137630'));
+    }
+
+    public function test_allows_internal_id_without_recipient_nip(): void
+    {
+        $request = Request::create('/', 'POST', [
+            'recipient_name' => 'Oddział',
+            'recipient_internal_id' => '00001',
+        ]);
+
+        $error = $this->service->validateRecipientIdentity($request, '7392137630');
+        $payload = $this->service->resolveStoragePayload($request, '7392137630');
+
+        $this->assertNull($error);
+        $this->assertNull($payload['recipient_nip']);
+        $this->assertSame('7392137630-00001', $payload['ksef_additional_entity_identifier']);
+    }
+
+    public function test_validates_recipient_nip_format_when_filled(): void
+    {
+        $request = Request::create('/', 'POST', [
+            'recipient_name' => 'Oddział',
+            'recipient_nip' => '123',
         ]);
 
         $error = $this->service->validateRecipientIdentity($request, '7392137630');

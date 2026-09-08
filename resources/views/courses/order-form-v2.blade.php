@@ -306,23 +306,45 @@
                 <hr>
                 <h3 class="h6 text-uppercase text-success" id="v2-recipient-heading">Odbiorca</h3>
                 <div class="alert alert-light border small py-2 mb-3" id="v2-recipient-copy" role="note">
-                    Pola odbiorcy są opcjonalne. Uzupełnij je tylko wtedy, gdy na fakturze ma zostać wskazany inny podmiot niż nabywca.
+                    Pola odbiorcy są opcjonalne. Uzupełnij je tylko wtedy, gdy na fakturze ma zostać wskazany inny podmiot niż nabywca. NIP i identyfikator wewnętrzny też nie są wymagane.
                 </div>
+                @php
+                    $recipientIdType = old('recipient_id_type');
+                    if (! in_array($recipientIdType, ['nip', 'internal'], true)) {
+                        $recipientIdType = filled($field('recipient_internal_id')) && ! filled($field('recipient_nip'))
+                            ? 'internal'
+                            : 'nip';
+                    }
+                @endphp
+                <fieldset class="mb-3">
+                    <legend class="form-label">Identyfikator odbiorcy</legend>
+                    <div class="d-flex flex-wrap gap-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="recipient_id_type" id="recipient_id_type_nip" value="nip" @checked($recipientIdType === 'nip')>
+                            <label class="form-check-label" for="recipient_id_type_nip">NIP</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="recipient_id_type" id="recipient_id_type_internal" value="internal" @checked($recipientIdType === 'internal')>
+                            <label class="form-check-label" for="recipient_id_type_internal">Identyfikator wewnętrzny</label>
+                        </div>
+                    </div>
+                </fieldset>
                 <div class="row g-3">
-                    <div class="col-12 col-lg-7">
+                    <div class="col-12 col-lg-7" id="v2-recipient-nip-wrap" @if($recipientIdType !== 'nip') hidden @endif>
                         <label class="form-label" for="recipient_nip">NIP</label>
                         <div class="input-group">
-                            <input class="form-control" id="recipient_nip" name="recipient_nip" value="{{ $field('recipient_nip') }}" inputmode="numeric" autocomplete="off">
-                            <button class="btn gus-nip-button" type="button" data-gus-target="recipient">Wpisz NIP i pobierz dane z GUS</button>
+                            <input class="form-control @error('recipient_nip') is-invalid @enderror" id="recipient_nip" name="recipient_nip" value="{{ $field('recipient_nip') }}" inputmode="numeric" autocomplete="off" @disabled($recipientIdType !== 'nip')>
+                            <button class="btn gus-nip-button" type="button" data-gus-target="recipient" id="recipient_gus_button">Wpisz NIP i pobierz dane z GUS</button>
                         </div>
                         <div class="form-text" id="recipient-gus-status" aria-live="polite"></div>
+                        @error('recipient_nip')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                     </div>
-                    @if(config('order_form.show_recipient_internal_id'))
-                        <div class="col-12 col-lg-5">
-                            <label class="form-label" for="recipient_internal_id">Identyfikator wewnętrzny KSeF</label>
-                            <input class="form-control" id="recipient_internal_id" name="recipient_internal_id" value="{{ $field('recipient_internal_id') }}" maxlength="20">
-                        </div>
-                    @endif
+                    <div class="col-12 col-lg-7" id="v2-recipient-internal-wrap" @if($recipientIdType !== 'internal') hidden @endif>
+                        <label class="form-label" for="recipient_internal_id">Identyfikator wewnętrzny</label>
+                        <input class="form-control @error('recipient_internal_id') is-invalid @enderror" id="recipient_internal_id" name="recipient_internal_id" value="{{ $field('recipient_internal_id') }}" maxlength="20" inputmode="numeric" autocomplete="off" placeholder="np. 00001 lub 1234567890-00001" @disabled($recipientIdType !== 'internal')>
+                        <div class="form-text">Dla oddziału lub jednostki wewnętrznej nabywcy — 5 cyfr (np. 00001) albo pełny IDWew z KSeF. GUS nie wyszukuje po tym identyfikatorze.</div>
+                        @error('recipient_internal_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    </div>
                     <div class="col-12">
                         <label class="form-label" for="recipient_name">Nazwa</label>
                         <input class="form-control" id="recipient_name" name="recipient_name" value="{{ $field('recipient_name') }}" autocomplete="organization">
@@ -525,6 +547,33 @@
     function participantDefaultForProfile(profile) {
         return profile === 'person';
     }
+    function recipientIdType() {
+        var selected = form.querySelector('[name="recipient_id_type"]:checked');
+        return selected ? selected.value : 'nip';
+    }
+    function syncRecipientIdentity() {
+        var type = recipientIdType();
+        var nipWrap = document.getElementById('v2-recipient-nip-wrap');
+        var internalWrap = document.getElementById('v2-recipient-internal-wrap');
+        var nipInput = document.getElementById('recipient_nip');
+        var internalInput = document.getElementById('recipient_internal_id');
+        var gusButton = document.getElementById('recipient_gus_button');
+        var recipientVisible = recipient && !recipient.hidden;
+        var useNip = type === 'nip' && recipientVisible;
+        var useInternal = type === 'internal' && recipientVisible;
+
+        if (nipWrap) nipWrap.hidden = !useNip;
+        if (internalWrap) internalWrap.hidden = !useInternal;
+        if (nipInput) {
+            nipInput.disabled = !useNip;
+            nipInput.required = false;
+        }
+        if (internalInput) {
+            internalInput.disabled = !useInternal;
+            internalInput.required = false;
+        }
+        if (gusButton) gusButton.hidden = !useNip;
+    }
     function clearRecipientFields() {
         ['recipient_nip', 'recipient_name', 'recipient_postcode', 'recipient_city', 'recipient_address', 'recipient_internal_id'].forEach(function (id) {
             var input = document.getElementById(id);
@@ -534,6 +583,9 @@
         });
         var recipientGusStatus = document.getElementById('recipient-gus-status');
         if (recipientGusStatus) recipientGusStatus.textContent = '';
+        var nipType = document.getElementById('recipient_id_type_nip');
+        if (nipType) nipType.checked = true;
+        syncRecipientIdentity();
     }
     function recipientDefaultForProfile(profile) {
         return profile === 'school';
@@ -579,7 +631,8 @@
             recipient.hidden = !showRecipient;
             setEnabled(recipient, showRecipient);
         }
-        setRequired(['recipient_nip', 'recipient_name', 'recipient_postcode', 'recipient_city', 'recipient_address'], false);
+        setRequired(['recipient_nip', 'recipient_name', 'recipient_postcode', 'recipient_city', 'recipient_address', 'recipient_internal_id'], false);
+        syncRecipientIdentity();
         document.getElementById('v2-invoice-copy').textContent = person
             ? 'Podaj dane potrzebne do wystawienia faktury.'
             : 'Dane do wystawienia faktury.';
@@ -738,6 +791,23 @@
     if (contactNameDisplay) contactNameDisplay.addEventListener('input', syncContact);
     participantToggle.addEventListener('change', syncParticipant);
     recipientToggle.addEventListener('change', syncProfile);
+    form.querySelectorAll('[name="recipient_id_type"]').forEach(function (input) {
+        input.addEventListener('change', function () {
+            var nipInput = document.getElementById('recipient_nip');
+            var internalInput = document.getElementById('recipient_internal_id');
+            if (input.value === 'nip' && internalInput) {
+                internalInput.value = '';
+                internalInput.classList.remove('is-invalid');
+            }
+            if (input.value === 'internal' && nipInput) {
+                nipInput.value = '';
+                nipInput.classList.remove('is-invalid');
+                var status = document.getElementById('recipient-gus-status');
+                if (status) status.textContent = '';
+            }
+            syncRecipientIdentity();
+        });
+    });
     form.querySelectorAll('[name="payment_type"]').forEach(function (input) { input.addEventListener('change', function () { syncPaymentDefault(false); }); });
     form.querySelectorAll('[data-gus-target]').forEach(function (button) {
         button.addEventListener('click', function () { gusLookup(button.dataset.gusTarget, button); });

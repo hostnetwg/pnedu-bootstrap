@@ -1878,7 +1878,7 @@ class CourseController extends Controller
             throw $e;
         }
 
-        // ODBIORCA: jeśli podano dane odbiorcy, wymagany NIP lub identyfikator wewnętrzny (KSeF)
+        // ODBIORCA: NIP i identyfikator wewnętrzny są opcjonalne; walidujemy format, jeśli podano.
         if ($buyerType === 'organisation') {
             $buyerNipForRecipient = preg_replace('/\D+/', '', (string) ($validated['buyer_nip'] ?? ''));
             $recipientIdentityError = app(OrderFormRecipientIdentityService::class)

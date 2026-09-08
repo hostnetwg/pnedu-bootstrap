@@ -8,8 +8,8 @@ use Illuminate\Http\Request;
 /**
  * Identyfikacja odbiorcy (Podmiot3) w publicznym formularzu zamówienia PNEDU.
  *
- * NIP odbiorcy — zawsze (GUS, klasyczny odbiorca). Identyfikator wewnętrzny (IDWew) — opcjonalnie,
- * dodatkowo, gdy organizacja wymaga oznaczenia oddziału/jednostki w KSeF (FA(3)).
+ * NIP odbiorcy i identyfikator wewnętrzny (IDWew) są opcjonalne. GUS BIR wyszukuje wyłącznie po NIP,
+ * więc przy IDWew nie ma pobierania z GUS. IDWew (KSeF FA(3)) wymaga poprawnego NIP nabywcy.
  */
 class OrderFormRecipientIdentityService
 {
@@ -44,10 +44,10 @@ class OrderFormRecipientIdentityService
         }
 
         $nip = preg_replace('/\D+/', '', (string) $request->input('recipient_nip', ''));
-        if ($nip === '' || strlen($nip) !== 10) {
+        if ($nip !== '' && strlen($nip) !== 10) {
             return [
                 'field' => 'recipient_nip',
-                'message' => 'NIP odbiorcy jest wymagany (10 cyfr), jeśli podano dane odbiorcy.',
+                'message' => 'NIP odbiorcy musi składać się z 10 cyfr.',
             ];
         }
 

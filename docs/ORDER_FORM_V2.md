@@ -124,7 +124,7 @@ Partial: `resources/views/courses/partials/course-paid-actions-box.blade.php`.
 
 1. **Profil** — `customer_profile`: `school` \| `organisation` \| `person`
 2. **Kontakt i uczestnik** — e-mail/telefon, dane uczestnika
-3. **Dane do faktury** — NIP/GUS, nabywca, odbiorca (zależnie od profilu)
+3. **Dane do faktury** — NIP/GUS nabywcy, odbiorca (zależnie od profilu). Odbiorca ma opcjonalny przełącznik **NIP / Identyfikator wewnętrzny**; żadne z tych pól nie jest wymagane. Przycisk GUS jest tylko przy NIP — BIR nie wyszukuje po IDWew.
    - Pole **Adres** (wcześniej „Ulica i numer”): ulica + numer; gdy GUS nie zwraca ulicy — miejscowość + numer (np. `Węgój 7`). Logika w `GusBirService::formatAddress`.
 4. **Płatność i podsumowanie** — online / odroczona, gateway, termin
 
