@@ -469,9 +469,10 @@
                     @include('courses.partials.paid-checkout-legal', [
                         'customerProfile' => $deferredProfile,
                         'paymentLabel' => 'faktura z odroczonym terminem',
+                        'paymentMode' => 'deferred',
                     ])
                     <div class="d-flex flex-column flex-md-row gap-3 mt-4">
-                        <button type="submit" class="btn btn-primary flex-fill" id="order-form-submit-btn" data-submitting-text="Wysyłanie zamówienia…">Zamówienie z obowiązkiem zapłaty</button>
+                        <button type="submit" class="btn btn-primary flex-fill" id="order-form-submit-btn" data-submitting-text="Wysyłanie zamówienia…">Potwierdzam zakup</button>
                         <a href="{{ route('courses.show', $course->id) }}" class="btn btn-link flex-fill">Powrót do szczegółów szkolenia</a>
                     </div>
                 </div>

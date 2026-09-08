@@ -949,6 +949,7 @@
                     <div class="visually-hidden" data-analytics-section-v2="consents" aria-hidden="true"></div>
                     @include('courses.partials.paid-checkout-legal', [
                         'customerProfile' => $prefillBuyerType,
+                        'paymentMode' => $prefillPaymentType,
                         'priceInfo' => $course->getPriceInfoForOrderFormHeader(
                             filled($prefillPriceVariantId ?? null) ? (int) $prefillPriceVariantId : null
                         ),
@@ -959,7 +960,7 @@
                                 Wypełnij dane testowe
                             </button>
                         @endif
-                        <button type="submit" class="btn btn-primary flex-fill" id="order-form-submit-btn" data-analytics-cta="submit_order" data-submitting-text="Wysyłanie zamówienia…">Zamówienie z obowiązkiem zapłaty</button>
+                        <button type="submit" class="btn btn-primary flex-fill" id="order-form-submit-btn" data-analytics-cta="submit_order" data-submitting-text="Wysyłanie zamówienia…">Potwierdzam zakup</button>
                         <a href="{{ route('courses.show', $course->id) }}" class="btn btn-link flex-fill" data-analytics-cta="back_to_course">Powrót do szczegółów szkolenia</a>
                     </div>
                 </div>

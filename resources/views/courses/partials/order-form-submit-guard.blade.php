@@ -9,7 +9,7 @@
     function showSubmittingState(btn) {
         btn.disabled = true;
         btn.dataset.originalText = (btn.dataset.originalText || btn.textContent || '').trim()
-            || 'Zamówienie z obowiązkiem zapłaty';
+            || 'Potwierdzam zakup';
         btn.replaceChildren();
 
         var spinner = document.createElement('span');

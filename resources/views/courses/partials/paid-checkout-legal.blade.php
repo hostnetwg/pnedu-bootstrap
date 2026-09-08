@@ -13,6 +13,7 @@
 <section class="border rounded bg-light p-3 mt-4 paid-checkout-legal"
     data-early-window="{{ $earlyWindow ? '1' : '0' }}"
     data-unit-price="{{ $legalUnitPrice !== null ? number_format($legalUnitPrice, 2, '.', '') : '' }}"
+    data-payment-mode="{{ $paymentMode ?? '' }}"
     aria-labelledby="paid-checkout-summary-title">
     <h3 class="h6 mb-3" id="paid-checkout-summary-title">Podsumowanie zamówienia</h3>
     <dl class="row small mb-3">
@@ -30,7 +31,12 @@
             <dd class="col-sm-8">{{ $course->recording_access }}</dd>
         @endif
         <dt class="col-sm-4">Płatność</dt>
-        <dd class="col-sm-8"><span data-legal-payment-label>{{ $paymentLabel ?? 'zgodnie z wybraną opcją' }}</span></dd>
+        <dd class="col-sm-8">
+            <span data-legal-payment-label>{{ $paymentLabel ?? 'zgodnie z wybraną opcją' }}</span>
+            <p class="small text-muted mb-0 mt-1" data-online-payment-hint @if(($paymentMode ?? null) !== 'online') hidden @endif>
+                Po potwierdzeniu zakupu przejdziesz do bezpiecznej płatności online.
+            </p>
+        </dd>
         <dt class="col-sm-4">Do zapłaty</dt>
         <dd class="col-sm-8 fw-bold">
             <span data-legal-total-price>{{ $legalUnitPrice !== null ? number_format($legalUnitPrice, 2, ',', ' ') : 'zgodnie z ofertą' }}</span>
@@ -87,7 +93,9 @@
             var countOutput = box.querySelector('[data-legal-participant-count]');
             var totalOutput = box.querySelector('[data-legal-total-price]');
             var paymentOutput = box.querySelector('[data-legal-payment-label]');
+            var onlineHint = box.querySelector('[data-online-payment-hint]');
             var unitPrice = parseFloat(box.dataset.unitPrice || '');
+            var forcedPaymentMode = box.dataset.paymentMode || '';
 
             function profile() {
                 var selectedProfile = form.querySelector('[name="customer_profile"]:checked');
@@ -124,12 +132,20 @@
 
                 var payment = form.querySelector('[name="payment_type"]:checked');
                 var gateway = form.querySelector('[name="payment_gateway"]:checked');
-                if (paymentOutput && payment) {
+                var isOnline = forcedPaymentMode === 'online'
+                    || (!forcedPaymentMode && payment && payment.value === 'online');
+                var isDeferred = forcedPaymentMode === 'deferred'
+                    || (!forcedPaymentMode && payment && payment.value === 'deferred');
+                if (onlineHint) onlineHint.hidden = !isOnline;
+                if (paymentOutput && (payment || forcedPaymentMode)) {
                     var terms = form.querySelector('[name="payment_terms"]');
-                    paymentOutput.textContent = payment.value === 'deferred'
-                        ? 'faktura z odroczonym terminem'
-                            + (terms && terms.value !== '' ? ' (' + terms.value + ' dni)' : '')
-                        : 'płatność online' + (gateway ? ' (' + gateway.value.toUpperCase() + ')' : '');
+                    if (isDeferred) {
+                        paymentOutput.textContent = 'faktura z odroczonym terminem'
+                            + (terms && terms.value !== '' ? ' (' + terms.value + ' dni)' : '');
+                    } else if (isOnline) {
+                        paymentOutput.textContent = 'płatność online'
+                            + (gateway ? ' (' + gateway.value.toUpperCase() + ')' : '');
+                    }
                 }
             }
 

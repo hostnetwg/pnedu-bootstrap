@@ -392,10 +392,11 @@
                 @include('courses.partials.paid-checkout-legal', [
                     'defaultCustomerProfile' => 'person',
                     'paymentLabel' => 'płatność online',
+                    'paymentMode' => 'online',
                 ])
 
                 <div class="d-flex flex-wrap gap-2 mt-3">
-                    <button type="submit" class="btn btn-primary btn-lg fw-bold">Zamówienie z obowiązkiem zapłaty</button>
+                    <button type="submit" class="btn btn-primary btn-lg fw-bold">Potwierdzam zakup</button>
                     <a href="{{ route('courses.show', $course->id) }}" class="btn btn-secondary">Powrót do szczegółów szkolenia</a>
                 </div>
             </form>

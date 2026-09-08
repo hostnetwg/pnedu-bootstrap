@@ -23,7 +23,7 @@ Dokument opisuje **oba** publiczne formularze zamówienia na `pnedu.pl` oraz wsp
 
 ## Minimalny blok prawny checkoutu (2026-09-08)
 
-Wszystkie aktywne płatne formularze kończą się przyciskiem **„Zamówienie z obowiązkiem zapłaty”** i wspólnym podsumowaniem oferty, ceny oraz sposobu płatności.
+Wszystkie aktywne płatne formularze kończą się przyciskiem **„Potwierdzam zakup”** i wspólnym podsumowaniem oferty, ceny oraz sposobu płatności. Przy płatności online podsumowanie dopowiada, że po potwierdzeniu nastąpi przekierowanie do bramki.
 
 - Nie ma obowiązkowych checkboxów Regulaminu, RODO ani marketingu.
 - Jedyny warunkowy checkbox jest pokazywany osobie prywatnej lub profilowi **JDG — zakup niezawodowy**, gdy szkolenie rozpoczyna się najpóźniej z końcem 14. dnia od zamówienia (strefa `Europe/Warsaw`).

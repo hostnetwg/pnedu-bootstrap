@@ -422,6 +422,7 @@
             @include('courses.partials.paid-checkout-legal', [
                 'customerProfile' => $profile,
                 'priceInfo' => $priceInfo,
+                'paymentMode' => $paymentType,
             ])
         </section>
 
@@ -432,7 +433,7 @@
                 <button type="button" class="btn btn-outline-secondary" id="v2-fill-test">Wypełnij dane testowe</button>
             @endif
             <button type="button" class="btn btn-success ms-auto px-4" id="v2-next">Dalej</button>
-            <button type="submit" class="btn btn-success ms-auto px-4" id="order-form-submit-btn" data-analytics-cta="submit_order" data-submitting-text="Wysyłanie zamówienia…" hidden>Zamówienie z obowiązkiem zapłaty</button>
+            <button type="submit" class="btn btn-success ms-auto px-4" id="order-form-submit-btn" data-analytics-cta="submit_order" data-submitting-text="Wysyłanie zamówienia…" hidden>Potwierdzam zakup</button>
         </div>
     </form>
 </main>
@@ -689,6 +690,7 @@
         document.getElementById('v2-payment-gateway').hidden = isDeferred;
         form.querySelectorAll('[name="payment_gateway"]').forEach(function (input) { input.disabled = isDeferred; });
         document.getElementById('v2-review-payment').textContent = isDeferred ? 'faktura z odroczonym terminem' : 'płatność online';
+        form.dispatchEvent(new Event('change'));
     }
     function updateReview() {
         var labels = {
@@ -894,7 +896,7 @@
                 submitBtn.disabled = false;
                 submitBtn.removeAttribute('aria-busy');
                 submitBtn.textContent = submitBtn.dataset.originalText
-                    || 'Zamówienie z obowiązkiem zapłaty';
+                    || 'Potwierdzam zakup';
             }
             var invalid = form.querySelector(':invalid');
             var panel = invalid ? invalid.closest('[data-v2-step]') : null;
