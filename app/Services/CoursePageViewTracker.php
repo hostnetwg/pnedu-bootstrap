@@ -19,7 +19,7 @@ class CoursePageViewTracker
 
     public function shouldTrack(Request $request): bool
     {
-        if (! $this->consent->hasAnalyticsConsent($request)
+        if (! $this->consent->allowsFirstPartyOperationalTracking($request)
             || $this->funnelSkip->shouldSkipTracking($request)) {
             return false;
         }
@@ -88,7 +88,7 @@ class CoursePageViewTracker
 
     public function funnelSessionCookie(Request $request): ?\Symfony\Component\HttpFoundation\Cookie
     {
-        if (! $this->consent->hasAnalyticsConsent($request)) {
+        if (! $this->consent->allowsFirstPartyOperationalTracking($request)) {
             return null;
         }
 

@@ -21,6 +21,19 @@ class AnalyticsConsentService
         return hash_equals(self::ANALYTICS, (string) $request->cookie($this->cookieName(), ''));
     }
 
+    /**
+     * Własny lejek operacyjny (wejście na kurs/formularz, GUS, „Aktywni teraz”)
+     * nie wymaga zgody na Google Analytics / GTM.
+     */
+    public function allowsFirstPartyOperationalTracking(?Request $request = null): bool
+    {
+        if (! config('consent.first_party_operational_without_analytics_consent', true)) {
+            return $this->hasAnalyticsConsent($request);
+        }
+
+        return true;
+    }
+
     public function cookieName(): string
     {
         return (string) config('consent.cookie.name', 'pne_cookie_consent');

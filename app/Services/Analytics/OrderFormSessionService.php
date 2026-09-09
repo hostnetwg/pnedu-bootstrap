@@ -18,7 +18,7 @@ class OrderFormSessionService
     {
         try {
             if (! config('analytics.enabled', true)
-                || ! $this->consent->hasAnalyticsConsent($request)
+                || ! $this->consent->allowsFirstPartyOperationalTracking($request)
                 || $courseId <= 0) {
                 return null;
             }
@@ -56,7 +56,7 @@ class OrderFormSessionService
     public function appendCookie(Response $response, Request $request, int $courseId): void
     {
         try {
-            if (! $this->consent->hasAnalyticsConsent($request)
+            if (! $this->consent->allowsFirstPartyOperationalTracking($request)
                 || $request->attributes->get($this->pendingCookieAttribute($courseId)) !== true) {
                 return;
             }

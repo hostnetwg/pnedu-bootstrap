@@ -50,7 +50,7 @@ class MarketingCampaignLinkTracker
 
     private function shouldTrack(Request $request): bool
     {
-        if (! $this->consent->hasAnalyticsConsent($request)
+        if (! $this->consent->allowsFirstPartyOperationalTracking($request)
             || $this->funnelSkip->shouldSkipTracking($request)) {
             return false;
         }

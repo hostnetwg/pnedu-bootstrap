@@ -25,10 +25,10 @@
     <p>W zależności od wybranej usługi dane mogą być przekazywane operatorom PayU lub Paynow, systemowi fakturowemu iFirma, dostawcom hostingu, poczty, wideokonferencji, platformy szkoleniowej, kopii zapasowych oraz obsługi prawnej i księgowej. Każdy otrzymuje tylko zakres potrzebny do wykonania swojej roli.</p>
 
     <h2 class="h4">Cookies niezbędne</h2>
-    <p>Bez zgody możemy używać wyłącznie technologii koniecznych do działania serwisu, bezpieczeństwa, sesji, logowania, zachowania koszyka lub wznowienia rozpoczętego formularza. Nie służą one do niezależnego marketingowego śledzenia użytkownika.</p>
+    <p>Bez zgody możemy używać wyłącznie technologii koniecznych do działania serwisu, bezpieczeństwa, sesji, logowania, zachowania koszyka lub wznowienia rozpoczętego formularza. W tym samym zakresie zapisujemy własne, pierwszostronne zdarzenia lejka zamówienia (wejście na opis szkolenia i formularz, interakcje techniczne, złożenie zamówienia), aby obsłużyć zakup i panel operacyjny. Te dane nie są wysyłane do Google ani innych narzędzi reklamowych.</p>
 
     <h2 class="h4">Cookies analityczne</h2>
-    <p>Google Analytics lub Google Tag Manager uruchamiamy dopiero po wyborze „Akceptuję analityczne”. Zgoda obejmuje wyłącznie analitykę; sygnały reklamowe <code>ad_storage</code>, <code>ad_user_data</code> i <code>ad_personalization</code> pozostają wyłączone. Meta Pixel nie jest aktywny. Zgodę możesz w każdej chwili zmienić przez link „Ustawienia cookies” w stopce.</p>
+    <p>Google Analytics lub Google Tag Manager uruchamiamy dopiero po wyborze „Akceptuję analityczne”. Zgoda obejmuje wyłącznie analitykę Google; sygnały reklamowe <code>ad_storage</code>, <code>ad_user_data</code> i <code>ad_personalization</code> pozostają wyłączone. Meta Pixel nie jest aktywny. Zgodę możesz w każdej chwili zmienić przez link „Ustawienia cookies” w stopce.</p>
 
     <h2 class="h4">Logi techniczne</h2>
     <p>Serwer może automatycznie zapisywać adres IP, czas żądania, adres zasobu, informacje o przeglądarce i wyniku operacji. Logi wykorzystujemy do bezpieczeństwa, diagnostyki błędów i ochrony przed nadużyciami, a następnie usuwamy lub anonimizujemy zgodnie z ustalonym okresem retencji.</p>

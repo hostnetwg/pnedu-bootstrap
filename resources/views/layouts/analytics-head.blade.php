@@ -15,7 +15,6 @@
 
     var CONSENT_COOKIE = @json($analyticsConsent->cookieName());
     var ANALYTICS_VALUE = @json(\App\Services\Analytics\AnalyticsConsentService::ANALYTICS);
-    var ANALYTICS_ENDPOINT_PATH = @json('/'.ltrim(parse_url(route('analytics.client-events.store'), PHP_URL_PATH), '/'));
     var GTM_ID;
     var GA_ID;
     var GOOGLE_ENABLED;
@@ -49,15 +48,6 @@
         return false;
     };
 
-    function isAnalyticsEndpoint(input) {
-        try {
-            var value = input && input.url ? input.url : String(input);
-            return new URL(value, window.location.href).pathname === ANALYTICS_ENDPOINT_PATH;
-        } catch (e) {
-            return false;
-        }
-    }
-
     function isPrivateOrLoopbackHost(hostname) {
         if (!hostname) { return false; }
         var host = String(hostname).toLowerCase();
@@ -81,17 +71,14 @@
     }
 
     function shouldBlock(input) {
-        return (GOOGLE_ENABLED && isLocalNetworkRequest(input))
-            || (isAnalyticsEndpoint(input) && !window.pneHasAnalyticsConsent());
+        return GOOGLE_ENABLED && isLocalNetworkRequest(input);
     }
 
     if (typeof window.fetch === 'function') {
         var originalFetch = window.fetch.bind(window);
         window.fetch = function (input, init) {
             if (shouldBlock(input)) {
-                return Promise.reject(new Error(
-                    isAnalyticsEndpoint(input) ? 'Analytics consent required' : 'Blocked local network request'
-                ));
+                return Promise.reject(new Error('Blocked local network request'));
             }
             return originalFetch(input, init);
         };
@@ -101,7 +88,7 @@
         var originalOpen = window.XMLHttpRequest.prototype.open;
         window.XMLHttpRequest.prototype.open = function (method, url) {
             if (shouldBlock(url)) {
-                throw new Error(isAnalyticsEndpoint(url) ? 'Analytics consent required' : 'Blocked local network request');
+                throw new Error('Blocked local network request');
             }
             return originalOpen.apply(this, arguments);
         };

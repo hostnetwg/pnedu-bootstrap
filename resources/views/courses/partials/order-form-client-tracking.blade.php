@@ -97,11 +97,6 @@
         var lastActivityTimer = null;
         var lastActivityPending = null;
 
-        function analyticsAllowed() {
-            return typeof window.pneHasAnalyticsConsent === 'function'
-                && window.pneHasAnalyticsConsent();
-        }
-
         function uuid() {
             try {
                 if (window.crypto && typeof window.crypto.randomUUID === 'function') {
@@ -134,10 +129,6 @@
 
         function send(useBeacon) {
             try {
-                if (!analyticsAllowed()) {
-                    queue = [];
-                    return;
-                }
                 if (queue.length === 0) { return; }
                 var batch = queue.splice(0, maxBatch);
                 var body = buildBody(batch);
@@ -170,7 +161,6 @@
 
         function enqueue(name, fields) {
             try {
-                if (!analyticsAllowed()) { return; }
                 var ev = { event_name: name };
                 var id = uuid();
                 if (id) { ev.event_uuid = id; }

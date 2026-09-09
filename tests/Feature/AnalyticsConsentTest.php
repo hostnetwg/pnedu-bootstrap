@@ -25,6 +25,7 @@ class AnalyticsConsentTest extends TestCase
 
         config([
             'consent.required' => true,
+            'consent.first_party_operational_without_analytics_consent' => true,
             'consent.cookie.name' => 'pne_cookie_consent',
             'consent.cookie.days' => 180,
             'analytics.enabled' => true,
@@ -70,6 +71,7 @@ class AnalyticsConsentTest extends TestCase
         $html = Blade::render("@include('layouts.footer') @include('layouts.cookie-consent') @stack('scripts')");
 
         $this->assertStringContainsString('Akceptuję analityczne', $html);
+        $this->assertStringContainsString('Google Analytics włączamy dopiero po zgodzie', $html);
         $this->assertStringContainsString('Tylko niezbędne', $html);
         $this->assertStringContainsString('Ustawienia cookies', $html);
         $this->assertStringContainsString('data-cookie-settings', $html);
@@ -79,8 +81,26 @@ class AnalyticsConsentTest extends TestCase
         $this->assertStringNotContainsString("localStorage.getItem('cookie_consent')", $html);
     }
 
-    public function test_client_event_endpoint_is_silent_and_creates_no_identifiers_without_consent(): void
+    public function test_client_event_endpoint_tracks_first_party_funnel_without_marketing_consent(): void
     {
+        $response = $this->postJson(route('analytics.client-events.store'), $this->validClientBatch(), [
+            'User-Agent' => $this->browserUserAgent(),
+        ]);
+
+        $response->assertNoContent();
+        Queue::assertPushed(StoreAnalyticsEventJob::class, function (StoreAnalyticsEventJob $job): bool {
+            return ($job->payload['event_name'] ?? null) === 'order_form_started'
+                && Str::isUuid($job->payload['analytics_session_id'] ?? '')
+                && Str::isUuid($job->payload['order_form_session_id'] ?? '');
+        });
+        $response->assertCookie(config('analytics.session.cookie'));
+        $response->assertCookie(config('analytics.order_form_session.cookie_prefix').'_123');
+    }
+
+    public function test_client_event_endpoint_is_silent_when_first_party_funnel_requires_marketing_consent(): void
+    {
+        config(['consent.first_party_operational_without_analytics_consent' => false]);
+
         $response = $this->postJson(route('analytics.client-events.store'), $this->validClientBatch(), [
             'User-Agent' => $this->browserUserAgent(),
         ]);
@@ -109,29 +129,36 @@ class AnalyticsConsentTest extends TestCase
         });
     }
 
-    public function test_first_party_analytics_and_marketing_ids_are_not_created_without_consent(): void
+    public function test_first_party_funnel_ids_are_created_but_marketing_ids_are_not_without_consent(): void
     {
         $request = Request::create('/courses/123?utm_source=newsletter&utm_campaign=autumn', 'GET');
+        $request->headers->set('User-Agent', $this->browserUserAgent());
 
-        $this->assertNull(app(AnalyticsSessionService::class)->id($request));
-        $this->assertNull(app(OrderFormSessionService::class)->id($request, 123));
+        $this->assertTrue(Str::isUuid((string) app(AnalyticsSessionService::class)->id($request)));
+        $this->assertTrue(Str::isUuid((string) app(OrderFormSessionService::class)->id($request, 123)));
         $this->assertSame([], app(MarketingAttributionService::class)->captureFromRequest($request));
 
         $response = new Response;
         app(AnalyticsSessionService::class)->appendCookie($response, $request);
         app(OrderFormSessionService::class)->appendCookie($response, $request, 123);
 
-        $this->assertSame([], $response->headers->getCookies());
+        $cookieNames = array_map(fn ($cookie) => $cookie->getName(), $response->headers->getCookies());
+        $this->assertContains(config('analytics.session.cookie'), $cookieNames);
+        $this->assertContains(config('analytics.order_form_session.cookie_prefix').'_123', $cookieNames);
     }
 
-    public function test_order_form_collector_gates_ids_and_endpoint_calls_before_consent(): void
+    public function test_order_form_collector_sends_first_party_events_without_marketing_consent(): void
     {
         $source = file_get_contents(resource_path('views/courses/partials/order-form-client-tracking.blade.php'));
 
         $this->assertIsString($source);
-        $this->assertStringContainsString("if (!analyticsAllowed()) { return; }\n                var ev =", $source);
-        $this->assertStringContainsString("if (!analyticsAllowed()) {\n                    queue = [];", $source);
-        $this->assertStringContainsString("typeof window.pneHasAnalyticsConsent === 'function'", $source);
+        $this->assertStringNotContainsString('pneHasAnalyticsConsent', $source);
+        $this->assertStringNotContainsString('analyticsAllowed', $source);
+        $this->assertStringContainsString('fetch(endpoint, {', $source);
+
+        $head = $this->renderAnalyticsHeadInProduction();
+        $this->assertStringNotContainsString('Analytics consent required', $head);
+        $this->assertStringContainsString('return GOOGLE_ENABLED && isLocalNetworkRequest(input);', $head);
     }
 
     /**

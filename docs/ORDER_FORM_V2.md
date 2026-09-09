@@ -33,6 +33,8 @@ Wszystkie aktywne płatne formularze kończą się przyciskiem **„Potwierdzam 
 
 Dokumenty są wersjonowane w `resources/views/legal/terms/versions`, a bieżącą wersję wskazuje `config/legal.php`. Potwierdzenie e-mail zawiera właściwy Regulamin PDF i wzór odstąpienia. Szczegóły wdrożeniowe: `pneadm/docs/LEGAL_CHECKOUT.md`.
 
+Własny lejek formularza (`order_form_viewed`, interakcje, „Aktywni teraz”) jest first-party i nie czeka na „Akceptuję analityczne”. Google Analytics / GTM nadal tylko po zgodzie.
+
 ---
 
 ## Ustawienia (baza `pneadm`, panel adm)

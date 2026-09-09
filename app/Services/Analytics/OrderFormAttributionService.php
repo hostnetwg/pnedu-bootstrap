@@ -312,6 +312,10 @@ class OrderFormAttributionService
      */
     private function getState(Request $request): array
     {
+        if (! $request->hasSession()) {
+            return [];
+        }
+
         $state = $request->session()->get(self::SESSION_KEY, []);
 
         return is_array($state) ? $state : [];
@@ -322,6 +326,10 @@ class OrderFormAttributionService
      */
     private function saveState(Request $request, array $state): void
     {
+        if (! $request->hasSession()) {
+            return;
+        }
+
         $request->session()->put(self::SESSION_KEY, $state);
     }
 

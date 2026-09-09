@@ -47,7 +47,7 @@ class ClientEventController extends Controller
         $noContent = response()->noContent();
 
         try {
-            if (! config('analytics.enabled', true) || ! $this->consent->hasAnalyticsConsent($request)) {
+            if (! config('analytics.enabled', true) || ! $this->consent->allowsFirstPartyOperationalTracking($request)) {
                 return $noContent;
             }
 

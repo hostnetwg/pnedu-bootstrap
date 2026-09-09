@@ -4,7 +4,7 @@
 <div id="cookie-consent-banner" class="fixed-bottom bg-dark text-white p-3 d-none" style="z-index: 2000;" role="dialog" aria-live="polite" aria-label="Ustawienia cookies">
     <div class="container d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
         <div class="mb-2 mb-md-0 opacity-75">
-            Niezbędne cookies zapewniają działanie serwisu. Analityczne pomagają nam go ulepszać.
+            Niezbędne cookies zapewniają działanie serwisu i formularza zamówienia. Google Analytics włączamy dopiero po zgodzie.
         </div>
         <div class="d-flex gap-2 flex-shrink-0">
             <button id="reject-cookies" type="button" class="btn btn-outline-light btn-sm">Tylko niezbędne</button>

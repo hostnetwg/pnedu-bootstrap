@@ -21,7 +21,7 @@ class AnalyticsSessionService
     public function id(Request $request): ?string
     {
         try {
-            if (! config('analytics.enabled', true) || ! $this->consent->hasAnalyticsConsent($request)) {
+            if (! config('analytics.enabled', true) || ! $this->consent->allowsFirstPartyOperationalTracking($request)) {
                 return null;
             }
 
@@ -50,7 +50,7 @@ class AnalyticsSessionService
     public function appendCookie(Response $response, Request $request): void
     {
         try {
-            if (! $this->consent->hasAnalyticsConsent($request)
+            if (! $this->consent->allowsFirstPartyOperationalTracking($request)
                 || $request->attributes->get(self::PENDING_COOKIE_ATTRIBUTE) !== true) {
                 return;
             }

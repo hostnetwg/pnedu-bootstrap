@@ -48,7 +48,7 @@ class ArticlePageViewTracker
 
     public function shouldTrack(Request $request): bool
     {
-        if (! config('analytics.enabled', true) || ! $this->consent->hasAnalyticsConsent($request)) {
+        if (! config('analytics.enabled', true) || ! $this->consent->allowsFirstPartyOperationalTracking($request)) {
             return false;
         }
 
