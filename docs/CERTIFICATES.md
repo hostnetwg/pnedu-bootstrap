@@ -63,6 +63,8 @@ Szczegóły tokenów: `pneadm/docs/CERTIFICATE_DOWNLOAD_LINKS.md`.
 | `OnlineCourseCertificateService` | Kontekst UI (czy pokazać CTA, linki) |
 | `UserCertificateProfileService` | Imię, nazwisko, data/miejsce urodzenia z konta |
 
+Import CSV w panelu adm nadaje tylko dostęp (e-mail, imię, telefon, ID Publigo). Na PDF przy pobraniu przez uczestnika i tak idą dane z konta pnedu.pl.
+
 Model `Certificate` i `OnlineCourse` — connection `pneadm`.
 
 ---

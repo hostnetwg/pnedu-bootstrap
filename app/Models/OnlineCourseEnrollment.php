@@ -18,8 +18,10 @@ class OnlineCourseEnrollment extends Model
         'email',
         'first_name',
         'last_name',
+        'phone',
         'access_expires_at',
         'access_source',
+        'legacy_publigo_user_id',
         'notes',
     ];
 
