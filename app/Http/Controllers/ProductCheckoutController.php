@@ -25,14 +25,14 @@ class ProductCheckoutController extends Controller
     public function create(Request $request, Product $product): View
     {
         [$product, $offer] = $this->availableProduct($product);
-        $paidPrices = $offer->activePrices->reject(fn (ProductPrice $price) => $price->isComplimentary())->values();
+        $prices = $offer->activePrices->reject(fn (ProductPrice $price) => $price->isComplimentary())->values();
         $requestedId = (int) $request->query('price');
         if ($requestedId > 0) {
             $requested = $offer->activePrices->firstWhere('id', $requestedId);
             abort_unless($requested instanceof ProductPrice && ! $requested->isComplimentary(), 404);
             $selectedPrice = $requested;
         } else {
-            $selectedPrice = $paidPrices->first();
+            $selectedPrice = $prices->first();
         }
 
         abort_unless($selectedPrice instanceof ProductPrice, 404);
