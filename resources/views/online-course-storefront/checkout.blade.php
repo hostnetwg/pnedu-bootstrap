@@ -5,7 +5,14 @@
     $isEditMode = $isEditMode ?? false;
     $prefill = $prefill ?? [];
     $loggedInUser = $loggedInUser ?? auth()->user();
-    $profile = old('customer_profile', $prefill['customer_profile'] ?? 'school');
+    $profile = old('customer_profile', $prefill['customer_profile'] ?? 'person');
+    $canPayOnline = $offer->allow_payu || $offer->allow_paynow;
+    $defaultPayment = $prefill['payment_type']
+        ?? (($profile === 'person' && $canPayOnline) ? 'online' : 'deferred');
+    if (! $offer->allow_deferred_invoice && $canPayOnline) {
+        $defaultPayment = 'online';
+    }
+    $paymentType = old('payment_type', $defaultPayment);
     $oldParticipants = old('participants', $prefill['participants'] ?? [[
         'first_name' => $loggedInUser?->first_name ?? '',
         'last_name' => $loggedInUser?->last_name ?? '',
@@ -339,7 +346,7 @@
                     <div class="col-md-6">
                         <label class="order-v2__choice d-block p-3" for="paymentDeferred">
                             <input type="radio" class="form-check-input me-2" name="payment_type" id="paymentDeferred" value="deferred"
-                                   @checked(old('payment_type', $prefill['payment_type'] ?? 'deferred') === 'deferred')
+                                   @checked($paymentType === 'deferred')
                                    @if($isEditMode) disabled @endif>
                             <strong>Faktura z odroczonym terminem</strong>
                             <span class="d-block small text-muted mt-1">Standardowy wybór dla szkół i organizacji.</span>
@@ -350,7 +357,7 @@
                     <div class="col-md-6">
                         <label class="order-v2__choice d-block p-3" for="paymentOnline">
                             <input type="radio" class="form-check-input me-2" name="payment_type" id="paymentOnline" value="online"
-                                   @checked(old('payment_type', $prefill['payment_type'] ?? null) === 'online' || (!$offer->allow_deferred_invoice && !($prefill['payment_type'] ?? null)))
+                                   @checked($paymentType === 'online')
                                    @if($isEditMode) disabled @endif>
                             <strong>Płatność online</strong>
                             <span class="d-block small text-muted mt-1">Szybkie przekierowanie do bezpiecznej bramki.</span>
@@ -479,7 +486,7 @@
     var earlyInput = document.getElementById('earlyPerformanceAccepted');
 
     function profile() {
-        return form.querySelector('[name="customer_profile"]:checked')?.value || 'school';
+        return form.querySelector('[name="customer_profile"]:checked')?.value || 'person';
     }
     function selectedPriceInput() {
         return form.querySelector('[name="product_price_id"]:checked')

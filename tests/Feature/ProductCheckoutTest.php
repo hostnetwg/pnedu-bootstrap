@@ -78,7 +78,7 @@ class ProductCheckoutTest extends TestCase
             ->assertSee('30 dni gwarancji satysfakcji od rozpoczęcia dostępu do kursu')
             ->assertSee('Zwrot zgłosisz');
 
-        $this->get(route('online-courses.checkout.create', [
+        $checkoutHtml = $this->get(route('online-courses.checkout.create', [
             'product' => $product->slug,
             'price' => $price->id,
         ]))
@@ -94,7 +94,9 @@ class ProductCheckoutTest extends TestCase
             ->assertSee('PayU')
             ->assertSee('Wpisz NIP i pobierz dane z GUS')
             ->assertSee('data-gus-target="buyer"', false)
-            ->assertSee('data-gus-target="recipient"', false);
+            ->assertSee('data-gus-target="recipient"', false)
+            ->getContent();
+        $this->assertMatchesRegularExpression('/id="profilePerson"[^>]*\bchecked\b/', $checkoutHtml);
     }
 
     public function test_two_paid_variants_keep_this_variant_button(): void
