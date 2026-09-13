@@ -47,6 +47,8 @@ Nie tworzymy sztucznego zapisu w `online_course_enrollments`. To osobna karta na
 
 Rezygnacja oznacza tylko kartę tego uczestnika (`order_item_recipients.status = cancelled`). Pozostali na tym samym zamówieniu nadal widzą swoją kartę. Całe `form_orders.cancelled_at` ustawiane jest dopiero, gdy nie zostanie nikt aktywny. Konto pnedu nie jest ruszane. Licznik „Kursy online” w menu wlicza też karty oczekujące, żeby nie pokazywać zera przy widocznej kafelce.
 
+Lista kursów na `/dashboard/kursy-online` jest liczona na żywo. Licznik w menu (`Kursy online (N)`) jest cache’owany 120 s (`DashboardResourceCounts`). Po bezpłatnym zapisie i po fulfillmentcie płatnym cache jest czyszczony od razu — inaczej kafelka kursu pojawia się, a menu jeszcze pokazuje 0.
+
 ## Dostawa dostępu
 
 `ProductOrderFulfillmentService`:

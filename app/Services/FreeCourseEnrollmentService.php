@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Models\ProductPrice;
 use App\Models\User;
 use App\Notifications\OnlineCourseProductAccessGranted;
+use App\Support\DashboardResourceCounts;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -43,6 +44,8 @@ class FreeCourseEnrollmentService
             ->first();
 
         if ($existing && $this->hasUsableAccess($existing)) {
+            $this->forgetDashboardCounts($email);
+
             return [
                 'enrollment' => $existing,
                 'created' => false,
@@ -113,6 +116,8 @@ class FreeCourseEnrollmentService
             ));
         }
 
+        $this->forgetDashboardCounts($email);
+
         return [
             'enrollment' => $enrollment->fresh(),
             'created' => ! $userExisted,
@@ -126,6 +131,12 @@ class FreeCourseEnrollmentService
         abort_unless($price->isComplimentary() && $price->is_active, 404);
         abort_unless((int) $price->offer?->product_id === (int) $product->id, 404);
         abort_unless($price->offer?->is_active && $price->offer?->is_public, 404);
+    }
+
+    private function forgetDashboardCounts(string $email): void
+    {
+        $user = User::query()->where('email', $email)->first();
+        DashboardResourceCounts::forgetForUser($user);
     }
 
     private function hasUsableAccess(OnlineCourseEnrollment $enrollment): bool

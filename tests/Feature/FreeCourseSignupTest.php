@@ -9,6 +9,7 @@ use App\Models\ProductOffer;
 use App\Models\ProductPrice;
 use App\Models\User;
 use App\Notifications\OnlineCourseProductAccessGranted;
+use App\Support\DashboardResourceCounts;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
@@ -144,6 +145,32 @@ class FreeCourseSignupTest extends TestCase
                 ->count()
         );
         Notification::assertNothingSent();
+    }
+
+    public function test_dashboard_count_updates_after_logged_in_free_signup(): void
+    {
+        [$product, , $free] = $this->createMixedOffer();
+        $user = User::factory()->create([
+            'email' => 'licznik.kursu@example.test',
+            'first_name' => 'Ala',
+            'last_name' => 'Licznik',
+        ]);
+
+        $this->actingAs($user);
+        $this->assertSame(0, DashboardResourceCounts::forUser($user)['online_courses']);
+
+        $this->post(route('online-courses.free-signup.store', $product->slug), [
+            'product_price_id' => $free->id,
+            'first_name' => 'Ala',
+            'last_name' => 'Licznik',
+            'email' => $user->email,
+        ])->assertRedirect();
+
+        $this->assertSame(1, DashboardResourceCounts::forUser($user)['online_courses']);
+        $this->get(route('dashboard.online-courses.index'))
+            ->assertOk()
+            ->assertSee('Kurs darmowy testowy')
+            ->assertSee('Kursy online (1)');
     }
 
     public function test_presale_free_signup_keeps_scheduled_start(): void

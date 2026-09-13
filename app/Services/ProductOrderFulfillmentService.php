@@ -11,6 +11,7 @@ use App\Models\OrderItemRecipient;
 use App\Models\Product;
 use App\Models\User;
 use App\Notifications\OnlineCourseProductAccessGranted;
+use App\Support\DashboardResourceCounts;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -249,6 +250,7 @@ class ProductOrderFulfillmentService
                 $user,
                 $userExisted
             );
+            DashboardResourceCounts::forgetForUser($user);
             $fulfillment->refresh();
             $this->notifyRecipient($fulfillment, $user, $course->title, $userExisted);
 
