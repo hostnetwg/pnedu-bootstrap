@@ -84,12 +84,11 @@
                                                     <div class="d-flex flex-wrap align-items-baseline gap-2">
                                                         <span class="text-muted text-decoration-line-through" style="font-size: 0.85rem;">{{ number_format((float) $featuredPrice->price, 2, ',', ' ') }} PLN</span>
                                                         <strong class="text-danger">od {{ number_format((float) $lowestPrice, 2, ',', ' ') }} PLN</strong>
-                                                        <span class="text-danger" style="font-size: 0.9rem;">/ osoba</span>
                                                     </div>
                                                     @include('online-course-storefront.partials.promotion-notice', ['price' => $featuredPrice])
                                                 </div>
                                             @elseif($ownerAccess?->state !== \App\Support\StorefrontCourseAccess::STATE_SCHEDULED && $lowestPrice !== null)
-                                                <p class="mb-3"><strong>od {{ number_format((float) $lowestPrice, 2, ',', ' ') }} zł / osoba</strong></p>
+                                                <p class="mb-3"><strong>od {{ number_format((float) $lowestPrice, 2, ',', ' ') }} zł</strong></p>
                                             @elseif($ownerAccess?->state !== \App\Support\StorefrontCourseAccess::STATE_SCHEDULED && $hasComplimentary)
                                                 <p class="mb-3"><strong>Bezpłatny dostęp</strong></p>
                                             @endif

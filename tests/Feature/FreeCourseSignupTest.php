@@ -64,7 +64,8 @@ class FreeCourseSignupTest extends TestCase
 
         $this->get(route('online-courses.catalog.index'))
             ->assertOk()
-            ->assertSee('od 199,00 zł / osoba')
+            ->assertSee('od 199,00 zł')
+            ->assertDontSee('/ osoba')
             ->assertDontSee('od 0,00');
     }
 
