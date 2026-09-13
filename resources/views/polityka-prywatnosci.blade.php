@@ -16,13 +16,13 @@
 
     <h2 class="h4">Dane w formularzach i podczas realizacji usług</h2>
     <p>W formularzach zamówienia zbieramy dane kontaktowe, dane uczestników, dane do faktury, wybraną ofertę i płatność. Numer telefonu jest wymagany, ponieważ umożliwia pilny kontakt organizacyjny i rozliczeniowy, zwłaszcza gdy adres e-mail jest błędny, wiadomość nie dochodzi albo zamówienie z odroczoną płatnością wymaga wyjaśnienia.</p>
-    <p>Dane uczestnika służą do zapewnienia dostępu do szkolenia na żywo, konta, materiałów, nagrania i zaświadczenia. Gdy przekazuje je szkoła, firma lub inny zamawiający, uczestnik otrzymuje informację o źródle danych w pierwszej wiadomości. Zobacz <a href="{{ route('rodo.art14') }}">informację art. 14 RODO</a>.</p>
+    <p>Dane uczestnika służą do zapewnienia dostępu do szkolenia na żywo albo kursu nagranego, konta, materiałów, nagrania i — gdy oferta to obejmuje — zaświadczenia. Gdy przekazuje je szkoła, firma lub inny zamawiający, uczestnik otrzymuje informację o źródle danych w pierwszej właściwej wiadomości. Zobacz <a href="{{ route('rodo.art14') }}">informację art. 14 RODO</a>.</p>
 
     <h2 class="h4">Wiadomości e-mail i Sendy</h2>
-    <p>Listy przypisane do konkretnego szkolenia w Sendy służą do komunikacji operacyjnej: potwierdzeń, przypomnień, linków do transmisji, materiałów, nagrań i zaświadczeń. Zapis na taką listę nie oznacza zgody na newsletter. Wiadomości marketingowe wysyłamy wyłącznie na podstawie odrębnej zgody, z możliwością jej wycofania.</p>
+    <p>Do przesyłania wiadomości dotyczących konkretnego zamówienia, szkolenia lub kursu możemy wykorzystywać system Sendy. Wiadomości te obejmują informacje niezbędne do realizacji zamówienia, dostępu i rozliczeń. Przypisanie adresu do listy operacyjnej nie oznacza zapisania go do newslettera marketingowego. Neutralne powiadomienie o końcu dostępu nie jest automatycznie ofertą przedłużenia. Wiadomości marketingowe wysyłamy wyłącznie na podstawie odrębnej zgody, z możliwością jej wycofania.</p>
 
     <h2 class="h4">Płatności, faktury i pozostali dostawcy</h2>
-    <p>W zależności od wybranej usługi dane mogą być przekazywane operatorom PayU lub Paynow, systemowi fakturowemu iFirma, dostawcom hostingu, poczty, wideokonferencji, platformy szkoleniowej, kopii zapasowych oraz obsługi prawnej i księgowej. Każdy otrzymuje tylko zakres potrzebny do wykonania swojej roli.</p>
+    <p>W zależności od wybranej usługi dane mogą być przekazywane operatorom PayU lub Paynow, systemowi fakturowemu iFirma, dostawcom hostingu, poczty, kopii zapasowych oraz obsługi prawnej i księgowej. Przy szkoleniu na żywo — także dostawcy wideokonferencji. Przy kursie nagranym nagrania są osadzane z YouTube lub Vimeo; ci dostawcy mogą przetwarzać dane techniczne odtwarzania. Każdy otrzymuje tylko zakres potrzebny do wykonania swojej roli.</p>
 
     <h2 class="h4">Cookies niezbędne</h2>
     <p>Bez zgody możemy używać wyłącznie technologii koniecznych do działania serwisu, bezpieczeństwa, sesji, logowania, zachowania koszyka lub wznowienia rozpoczętego formularza. W tym samym zakresie zapisujemy własne, pierwszostronne zdarzenia lejka zamówienia (wejście na opis szkolenia i formularz, interakcje techniczne, złożenie zamówienia), aby obsłużyć zakup i panel operacyjny. Te dane nie są wysyłane do Google ani innych narzędzi reklamowych.</p>

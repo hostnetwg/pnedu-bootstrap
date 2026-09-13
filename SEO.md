@@ -84,6 +84,18 @@ Docelowe długości (audyt 2026-08-23): title **~50–65 znaków**, description 
 
 ---
 
+## 3c. Nagrywane kursy online (`/kursy`)
+
+- katalog `/kursy` i oferty, które da się kupić (`/kursy/{slug}`), są dodawane dynamicznie przez `SitemapUrlBuilder`,
+- karta z wyłączoną sprzedażą zostaje na `/kursy`, ale ma `noindex, nofollow` i nie trafia do sitemapy,
+- `products.meta_title` i `products.meta_description` są konfigurowane w ADM w zakładce **Sprzedaż**,
+- brak własnych meta uruchamia fallback z nazwy i opisu kursu,
+- checkout `/kursy/{slug}/zamowienie`, edycja `/kursy/{slug}/zamowienie/{ident}` i podsumowanie `/zamowienia-kursow/{ident}` mają `noindex,nofollow`,
+- kursy nagrane nie są obecnie dodawane na homepage,
+- kanon funkcjonalny: [`docs/PRODUCT_COMMERCE.md`](docs/PRODUCT_COMMERCE.md).
+
+---
+
 ## 4. Audyt SEO 2026-08-23 — wdrożone i otwarte
 
 **Wdrożone (techniczne):**

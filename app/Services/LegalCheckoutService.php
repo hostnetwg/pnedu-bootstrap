@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\Course;
 use App\Support\OrderFormCustomerProfile;
-use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Illuminate\Validation\ValidationException;
 
@@ -23,14 +22,10 @@ final class LegalCheckoutService
             return false;
         }
 
-        $timezone = config('app.timezone', 'Europe/Warsaw');
-        $orderMoment = CarbonImmutable::instance($orderedAt ?? now())->setTimezone($timezone);
-        $withdrawalDeadline = $orderMoment
-            ->addDays((int) config('legal.early_performance.window_days', 14))
-            ->endOfDay();
-        $liveStart = CarbonImmutable::instance($course->start_date)->setTimezone($timezone);
-
-        return $liveStart->lessThanOrEqualTo($withdrawalDeadline);
+        return app(WithdrawalWindowService::class)->startsWithinWindow(
+            $course->start_date,
+            $orderedAt
+        );
     }
 
     public function assertRequiredStatementAccepted(
@@ -69,17 +64,25 @@ final class LegalCheckoutService
         $required = $this->requiresEarlyPerformanceStatement($course, $customerProfile, $orderedAt);
         $termsVersion = (string) config('legal.terms.current_version');
 
+        $storeAccepted = $required && $accepted;
+        $statement = $this->statement();
+
         return [
             'customer_profile' => $customerProfile,
             'terms_version' => $termsVersion,
             'terms_hash' => $this->termsHash($termsVersion),
-            'early_performance_scope' => $required && $accepted
+            'contract_concluded_at' => now('UTC'),
+            'early_performance_kind' => $storeAccepted
                 ? (string) config('legal.early_performance.scope')
                 : null,
-            'early_performance_statement_version' => $required && $accepted
+            'early_performance_scope' => $storeAccepted
+                ? (string) config('legal.early_performance.scope')
+                : null,
+            'early_performance_statement_version' => $storeAccepted
                 ? (string) config('legal.early_performance.statement_version')
                 : null,
-            'early_performance_accepted_at' => $required && $accepted ? now() : null,
+            'early_performance_statement_text' => $storeAccepted ? $statement : null,
+            'early_performance_accepted_at' => $storeAccepted ? now() : null,
         ];
     }
 

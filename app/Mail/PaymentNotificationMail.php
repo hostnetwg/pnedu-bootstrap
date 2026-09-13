@@ -21,7 +21,6 @@ class PaymentNotificationMail extends Mailable
     /**
      * Create a new message instance.
      *
-     * @param  \App\Models\OnlinePaymentOrder  $order
      * @return void
      */
     public function __construct(OnlinePaymentOrder $order)
@@ -36,8 +35,9 @@ class PaymentNotificationMail extends Mailable
      */
     public function build()
     {
-        $courseTitle = $this->order->course ? strip_tags($this->order->course->title) : 'Nieznane szkolenie';
-        $subject = 'Nowa płatność online #' . $this->order->ident . ' - ' . $courseTitle;
+        $this->order->loadMissing(['course', 'formOrder.orderItems']);
+        $productTitle = strip_tags($this->order->displayProductName());
+        $subject = 'Nowa płatność online #'.$this->order->ident.' - '.$productTitle;
 
         return $this
             ->from(
@@ -53,6 +53,7 @@ class PaymentNotificationMail extends Mailable
             ->with([
                 'order' => $this->order,
                 'course' => $this->order->course,
+                'productTitle' => $productTitle,
             ]);
     }
 }

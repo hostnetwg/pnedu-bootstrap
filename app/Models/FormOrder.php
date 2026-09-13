@@ -66,6 +66,7 @@ class FormOrder extends Model
         'ident',
         'ptw',
         'order_date',
+        'order_kind',
         'product_id',
         'product_name',
         'product_price',
@@ -108,10 +109,15 @@ class FormOrder extends Model
         'customer_profile',
         'terms_version',
         'terms_hash',
+        'contract_concluded_at',
         'early_performance_scope',
+        'early_performance_kind',
         'early_performance_statement_version',
+        'early_performance_statement_text',
         'early_performance_accepted_at',
         'legal_confirmation_sent_at',
+        'legal_confirmation_failed_at',
+        'legal_confirmation_error',
         'status_completed',
         'notes',
         'updated_manually_at',
@@ -135,8 +141,10 @@ class FormOrder extends Model
         'updated_manually_at' => 'datetime',
         'cancelled_at' => 'datetime',
         'online_payment_recovery_sent_at' => 'datetime',
+        'contract_concluded_at' => 'datetime',
         'early_performance_accepted_at' => 'datetime',
         'legal_confirmation_sent_at' => 'datetime',
+        'legal_confirmation_failed_at' => 'datetime',
         'product_price' => 'decimal:2',
         'course_price_variant_id' => 'integer',
         'publigo_sent' => 'boolean',
@@ -206,6 +214,16 @@ class FormOrder extends Model
     public function participants()
     {
         return $this->hasMany(FormOrderParticipant::class, 'form_order_id');
+    }
+
+    public function orderItems()
+    {
+        return $this->hasMany(OrderItem::class, 'form_order_id');
+    }
+
+    public function isProductOrder(): bool
+    {
+        return $this->order_kind === 'product';
     }
 
     /**

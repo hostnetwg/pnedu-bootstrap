@@ -43,7 +43,8 @@ Szczegóły tokenów: `pneadm/docs/CERTIFICATE_DOWNLOAD_LINKS.md`.
 
 | Trasa | Kontroler | Opis |
 |-------|-----------|------|
-| `GET /dashboard/kursy-online` | `DashboardOnlineCoursesController@index` | Lista zapisów |
+| `GET /dashboard/kursy-online` | `DashboardOnlineCoursesController@index` | Lista zapisów i kart oczekujących na dostęp / płatność |
+| `POST /dashboard/kursy-online/oczekujace/{ident}/rezygnacja` | `resignPending` | Rezygnacja uczestnika z nieopłaconego zamówienia online |
 | `GET /dashboard/kursy-online/{enrollment}` | `show` | Strona kursu |
 | `GET /dashboard/kursy-online/{enrollment}/zaswiadczenie` | `OnlineCourseCertificateController@show` | Profil + podgląd |
 | `POST …/zaswiadczenie/profil` | `updateProfile` | Dane urodzenia (profil) |

@@ -1,0 +1,261 @@
+@extends('layouts.app')
+
+@php
+    $item = $order->orderItems->first();
+    $product = $item?->product;
+    $latestPayment = $order->onlinePaymentOrders->sortByDesc('id')->first();
+    $isDeferred = $order->payment_mode === \App\Models\FormOrder::PAYMENT_MODE_DEFERRED_INVOICE;
+    $orderEditLocked = $orderEditLocked ?? $order->isEditLocked();
+    $summaryParticipants = $order->relationLoaded('participants')
+        ? $order->participants->sortBy('id')->values()
+        : $order->participants()->orderBy('id')->get();
+    if ($summaryParticipants->isEmpty() && $item?->recipients) {
+        $summaryParticipants = $item->recipients;
+    }
+    $participantEmails = $summaryParticipants
+        ->map(fn ($p) => trim((string) ($p->participant_email ?? $p->email ?? '')))
+        ->filter()
+        ->unique()
+        ->values();
+    $participantEmailsLabel = $participantEmails->isNotEmpty()
+        ? $participantEmails->implode(', ')
+        : ($order->orderer_email);
+@endphp
+
+@section('title', 'Podsumowanie zamówienia - '.$order->ident)
+@section('meta_description', 'Podsumowanie zamówienia kursu online.')
+@section('robots', 'noindex,nofollow')
+
+@push('styles')
+<style>
+    .order-summary-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 18px rgba(25, 118, 210, 0.1);
+        padding: 2.5rem;
+        margin-bottom: 2rem;
+    }
+    .success-header {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 12px 12px 0 0;
+        text-align: center;
+        margin: -2.5rem -2.5rem 2rem -2.5rem;
+    }
+    .success-header h1 {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+    .success-header p {
+        font-size: 1.1rem;
+        margin-bottom: 0;
+        opacity: 0.95;
+    }
+    .order-info-box {
+        background: #f8f9fa;
+        border-left: 4px solid #1976d2;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        border-radius: 4px;
+    }
+    .order-info-box h3 {
+        color: #1976d2;
+        font-size: 1.3rem;
+        margin-bottom: 1rem;
+    }
+    .info-row {
+        display: flex;
+        margin-bottom: 0.75rem;
+        flex-wrap: wrap;
+    }
+    .info-label {
+        font-weight: 600;
+        min-width: 150px;
+        color: #495057;
+    }
+    .info-value {
+        color: #212529;
+    }
+    .pdf-container {
+        border: 2px solid #dee2e6;
+        border-radius: 8px;
+        overflow: hidden;
+        margin: 2rem 0;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .pdf-container iframe {
+        width: 100%;
+        height: 800px;
+        border: none;
+    }
+    .action-buttons {
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 2px solid #dee2e6;
+    }
+    .btn-download {
+        background: #1976d2;
+        color: white;
+        padding: 0.75rem 2rem;
+        border-radius: 6px;
+        text-decoration: none;
+        display: inline-block;
+        transition: background 0.3s;
+    }
+    .btn-download:hover {
+        background: #1565c0;
+        color: white;
+    }
+    .alert-info-custom {
+        background: #e3f2fd;
+        border-left: 4px solid #1976d2;
+        padding: 1.5rem;
+        border-radius: 4px;
+        margin-top: 2rem;
+    }
+    .course-details-box {
+        background: linear-gradient(135deg, #f4f7fa 0%, #e3e9f3 100%);
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin-top: 1rem;
+    }
+    .course-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #1976d2;
+        margin-bottom: 0.75rem;
+    }
+</style>
+@endpush
+
+@section('content')
+<div class="container py-5">
+    @if(session('success'))
+        <div class="alert alert-success">{{ session('success') }}</div>
+    @endif
+    @if(session('error'))
+        <div class="alert alert-danger">{{ session('error') }}</div>
+    @endif
+
+    <div class="order-summary-card">
+        <div class="success-header">
+            <h1><i class="bi bi-check-circle-fill me-2"></i>PODSUMOWANIE ZŁOŻONEGO ZAMÓWIENIA</h1>
+            <p>Dziękujemy za złożenie zamówienia!</p>
+        </div>
+
+        <div class="order-info-box">
+            <h3><i class="bi bi-info-circle me-2"></i>Informacje o zamówieniu</h3>
+            <div class="info-row">
+                <span class="info-label">Numer zamówienia:</span>
+                <span class="info-value"><strong>{{ $order->id }}</strong></span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Data złożenia:</span>
+                <span class="info-value">{{ $order->formatOrderDateLocal() }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">E-mail kontaktowy:</span>
+                <span class="info-value">{{ $order->orderer_email }}</span>
+            </div>
+            @if($order->ip_address)
+                <div class="info-row">
+                    <span class="info-label">Adres IP:</span>
+                    <span class="info-value">{{ $order->ip_address }}</span>
+                </div>
+            @endif
+        </div>
+
+        <div class="course-details-box">
+            <div class="course-title"><i class="bi bi-play-circle me-2"></i>Zamówiony kurs online</div>
+            <p class="mb-2"><strong>{{ $item?->product_name ?? $order->product_name }}</strong></p>
+            @if(!empty($item?->metadata['price_name']))
+                <p class="mb-2"><i class="bi bi-tag me-2"></i>Wariant: {{ $item->metadata['price_name'] }}</p>
+            @endif
+            @if($order->product_price)
+                <p class="mb-0"><i class="bi bi-currency-exchange me-2"></i>Cena: <strong>{{ number_format((float) $order->product_price, 2, ',', ' ') }} PLN (brutto)</strong></p>
+            @endif
+        </div>
+
+        @if($summaryParticipants->isNotEmpty())
+            <div class="order-info-box mt-3">
+                <h3><i class="bi bi-people me-2"></i>Uczestnik{{ $summaryParticipants->count() > 1 ? 'cy' : '' }} kursu</h3>
+                @foreach($summaryParticipants as $p)
+                    <div class="info-row">
+                        <span class="info-label">{{ $summaryParticipants->count() > 1 ? 'Uczestnik '.$loop->iteration.':' : 'Uczestnik:' }}</span>
+                        <span class="info-value">
+                            <strong>{{ trim(($p->participant_firstname ?? $p->first_name ?? '').' '.($p->participant_lastname ?? $p->last_name ?? '')) ?: '—' }}</strong>
+                            @if(trim((string) ($p->participant_email ?? $p->email ?? '')) !== '')
+                                — {{ $p->participant_email ?? $p->email }}
+                            @endif
+                        </span>
+                    </div>
+                @endforeach
+            </div>
+        @endif
+
+        <div class="alert-info-custom">
+            <h5 class="mb-3"><i class="bi bi-envelope-check me-2"></i>Dalsze kroki</h5>
+            @if($isDeferred)
+                <p class="mb-2">Po nadaniu dostępu prześlemy dane do kursu na adres{{ $participantEmails->count() > 1 ? 'y' : '' }} e-mail uczestnik{{ $participantEmails->count() > 1 ? 'ów' : 'a' }} (<strong>{{ $participantEmailsLabel }}</strong>).</p>
+                <p class="mb-2">Fakturę lub informacje dotyczące rozliczenia prześlemy na adres e-mail kontaktowy (<strong>{{ $order->orderer_email }}</strong>).</p>
+                <p class="mb-0"><strong>Prosimy o zapisanie lub wydrukowanie poniższego dokumentu.</strong></p>
+            @elseif($order->payment_status === \App\Models\FormOrder::PAYMENT_STATUS_PAID)
+                <p class="mb-2">Płatność została potwierdzona. Dostęp do kursu jest nadawany automatycznie na adres{{ $participantEmails->count() > 1 ? 'y' : '' }} uczestnik{{ $participantEmails->count() > 1 ? 'ów' : 'a' }} (<strong>{{ $participantEmailsLabel }}</strong>).</p>
+                <p class="mb-0">Fakturę prześlemy na adres e-mail kontaktowy (<strong>{{ $order->orderer_email }}</strong>).</p>
+            @else
+                <p class="mb-2">Płatność nie została jeszcze potwierdzona. Dostęp zostanie nadany automatycznie po potwierdzeniu przez bramkę.</p>
+                @if($latestPayment && ! $latestPayment->isPaid())
+                    <p class="mb-0"><a href="{{ route('payment.pending', $latestPayment->ident) }}">Przejdź do płatności</a></p>
+                @endif
+            @endif
+        </div>
+
+        @if($isDeferred)
+            <h4 class="mt-4 mb-3"><i class="bi bi-file-pdf me-2"></i>Potwierdzenie zamówienia (PDF)</h4>
+
+            <div class="alert {{ $orderEditLocked ? 'alert-secondary border-secondary' : 'alert-warning border-warning' }} mb-3" style="border-left-width: 4px;">
+                @if($orderEditLocked)
+                    <h5 class="mb-2"><i class="bi bi-lock-fill me-2"></i>Edycja zamówienia jest wyłączona</h5>
+                    <p class="mb-0">
+                        @if(trim((string) ($order->invoice_number ?? '')) !== '')
+                            Do tego zamówienia wystawiono fakturę nr <strong>{{ $order->invoice_number }}</strong>. Zmiany danych możliwe są wyłącznie po kontakcie z biurem.
+                        @else
+                            Zamówienie zostało zamknięte. Zmiany danych możliwe są wyłącznie po kontakcie z biurem.
+                        @endif
+                    </p>
+                @else
+                    <h5 class="mb-2"><i class="bi bi-exclamation-triangle me-2"></i>Sprawdź dane na zamówieniu w poniżej wygenerowanym dokumencie PDF</h5>
+                    <p class="mb-2">Jeżeli zauważysz błąd, kliknij w <strong>„EDYTUJ”</strong> i dokonaj poprawki.</p>
+                    @if($product)
+                        <a href="{{ route('online-courses.checkout.edit', ['product' => $product->slug, 'ident' => $order->ident]) }}" class="btn btn-warning">
+                            <i class="bi bi-pencil me-2"></i>EDYTUJ
+                        </a>
+                    @endif
+                @endif
+            </div>
+
+            <div class="pdf-container">
+                <iframe src="{{ route('orders.pdf', ['ident' => $order->ident]) }}" title="Potwierdzenie zamówienia"></iframe>
+            </div>
+        @endif
+
+        <div class="action-buttons text-center">
+            @if($isDeferred)
+                <a href="{{ route('orders.pdf', ['ident' => $order->ident]) }}" class="btn btn-primary btn-lg btn-download" target="_blank">
+                    <i class="bi bi-download me-2"></i>Pobierz PDF
+                </a>
+            @endif
+            @if($product)
+                <a href="{{ route('online-courses.catalog.show', $product->slug) }}" class="btn btn-outline-secondary btn-lg @if($isDeferred) ms-3 @endif">
+                    <i class="bi bi-arrow-left me-2"></i>Powrót do kursu
+                </a>
+            @endif
+            @auth
+                <a href="{{ route('dashboard.online-courses.index') }}" class="btn btn-outline-primary btn-lg ms-3">Moje kursy online</a>
+            @endauth
+        </div>
+    </div>
+</div>
+@endsection

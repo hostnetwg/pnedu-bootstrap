@@ -11,7 +11,8 @@ final class LegalDocumentController extends Controller
     public function terms(?string $version = null): View
     {
         $termsVersion = $version ?: (string) config('legal.terms.current_version');
-        abort_unless(is_array(config("legal.terms.versions.{$termsVersion}")), 404);
+        $definition = config("legal.terms.versions.{$termsVersion}");
+        abort_unless(is_array($definition) && ($definition['published'] ?? true), 404);
 
         return view('regulamin', compact('termsVersion'));
     }
@@ -19,7 +20,7 @@ final class LegalDocumentController extends Controller
     public function termsPdf(string $version): Response
     {
         $definition = config("legal.terms.versions.{$version}");
-        abort_unless(is_array($definition), 404);
+        abort_unless(is_array($definition) && ($definition['published'] ?? true), 404);
 
         return Pdf::loadView('legal.terms.pdf', [
             'version' => $version,

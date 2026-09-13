@@ -111,6 +111,7 @@ class OnlineCourseLessonCertificateController extends Controller
     {
         abort_unless($enrollment->emailMatchesUser(Auth::user()->email ?? ''), 403);
         abort_if($enrollment->hasExpiredAccess(), 403, 'Dostęp do tego kursu wygasł.');
+        abort_unless($enrollment->hasAccessStarted(), 403, 'Dostęp do tego kursu jeszcze się nie rozpoczął.');
 
         $course = $enrollment->onlineCourse;
         abort_unless($course->is_active && $course->visible_in_dashboard, 404);

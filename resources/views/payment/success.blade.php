@@ -11,7 +11,25 @@
                     <h1><i class="bi bi-check-circle-fill me-2"></i>Płatność zrealizowana pomyślnie</h1>
                     <p>Twoje zamówienie zostało opłacone. Dziękujemy!</p>
                 </div>
-                @if($order->course)
+                @if($order->formOrder?->isProductOrder())
+                    @php $item = $order->formOrder->orderItems->first(); @endphp
+                    <div class="order-info-box">
+                        <h3>Kurs online</h3>
+                        <div class="info-row">
+                            <span class="info-label">Nazwa:</span>
+                            <span class="info-value">{{ $item?->product_name }}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Uczestnicy:</span>
+                            <span class="info-value">{{ $item?->quantity }}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Kwota:</span>
+                            <span class="info-value">{{ number_format($order->total_amount, 2, ',', ' ') }} PLN</span>
+                        </div>
+                    </div>
+                    <div class="alert alert-success">Dostęp jest nadawany automatycznie. Każdy uczestnik otrzyma oddzielną wiadomość e-mail.</div>
+                @elseif($order->course)
                     <div class="order-info-box">
                         <h3>Szkolenie</h3>
                         <div class="info-row">
@@ -30,7 +48,11 @@
                 @endif
                 <p class="text-muted mb-0">Potwierdzenie płatności zostało wysłane na adres <strong>{{ $order->email }}</strong>.</p>
                 <div class="mt-4">
-                    <a href="{{ route('courses.show', $order->course_id) }}" class="btn btn-primary">Powrót do szczegółów szkolenia</a>
+                    @if($order->formOrder?->isProductOrder())
+                        <a href="{{ route('online-courses.checkout.summary', $order->formOrder->ident) }}" class="btn btn-primary">Podsumowanie zamówienia</a>
+                    @elseif($order->course_id)
+                        <a href="{{ route('courses.show', $order->course_id) }}" class="btn btn-primary">Powrót do szczegółów szkolenia</a>
+                    @endif
                     <a href="{{ route('home') }}" class="btn btn-secondary ms-2">Strona główna</a>
                 </div>
             </div>

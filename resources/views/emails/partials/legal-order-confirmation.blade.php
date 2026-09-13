@@ -25,7 +25,7 @@
     @if($order->early_performance_accepted_at)
         <p style="margin: 0; font-size: 13px;">
             <strong>Złożone oświadczenie:</strong>
-            {{ config('legal.early_performance.statement') }}
+            {{ $order->early_performance_statement_text ?: config('legal.early_performance.statement') }}
             ({{ $order->early_performance_accepted_at->timezone(config('app.timezone'))->format('d.m.Y H:i') }}).
         </p>
     @endif

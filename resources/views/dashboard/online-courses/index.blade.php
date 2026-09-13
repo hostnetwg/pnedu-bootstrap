@@ -12,12 +12,19 @@
             <div class="card border-0 shadow-sm rounded-4">
                 <div class="card-body py-4">
                     <h2 class="h4 mb-3">Kursy online</h2>
-                    <p class="text-muted mb-4">Materiały z kursów zakupionych wcześniej (np. na nowoczesna-edukacja.pl). Dostęp po zalogowaniu na ten sam adres e-mail.</p>
-                    @if($enrollments->isEmpty())
+                    <p class="text-muted mb-4">Materiały z kursów zakupionych na pnedu.pl albo przeniesionych ze starej platformy. Dostęp po zalogowaniu na ten sam adres e-mail, który jest e-mailem uczestnika.</p>
+                    @if($enrollments->isEmpty() && $pendingAccesses->isEmpty())
                         <p class="text-muted mb-0">Nie masz jeszcze przypisanych kursów online. Jeśli kupiłeś kurs wcześniej na starej platformie, po migracji dostępu pojawi się on tutaj — na ten sam adres e-mail co konto PNEDU.</p>
                     @else
                         <div class="row row-cols-1 row-cols-sm-2 row-cols-xl-3 g-4">
+                            @foreach($pendingAccesses as $pending)
+                                @include('dashboard.online-courses.partials.pending-course-tile', ['pending' => $pending])
+                            @endforeach
                             @foreach($enrollments as $enrollment)
+                                @if(! $enrollment->hasAccessStarted())
+                                    @include('dashboard.online-courses.partials.scheduled-course-tile', ['enrollment' => $enrollment])
+                                    @continue
+                                @endif
                                 @php($p = $lessonProgressByEnrollment[$enrollment->id] ?? ['completed' => 0, 'total' => 0])
                                 @php($pctRow = (($p['total'] ?? 0) > 0) ? min(100, (int) round(100 * (int) ($p['completed'] ?? 0) / (int) $p['total'])) : 0)
                                 @php($imgUrl = $enrollment->onlineCourse->publicImageUrl())
@@ -104,6 +111,20 @@
     }
     .stretched-link-title:hover {
         text-decoration: underline !important;
+    }
+    .pending-course-tile-img {
+        opacity: 0.45;
+        filter: grayscale(0.35);
+    }
+    .pending-course-tile-lock {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #212529;
+        font-size: 2rem;
+        background: rgba(255, 255, 255, 0.18);
     }
 </style>
 @endpush

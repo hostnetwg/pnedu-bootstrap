@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\FormOrder;
 use App\Models\OnlineCourse;
 use App\Models\OnlineCourseEnrollment;
 use App\Models\OnlineCourseLesson;
@@ -9,6 +10,8 @@ use App\Models\OnlineCourseLessonCompletion;
 use App\Models\OnlineCourseLessonNote;
 use App\Services\OnlineCourseCertificateService;
 use App\Services\OnlineCourseLessonCertificateService;
+use App\Services\PendingProductCourseAccessService;
+use App\Support\DashboardResourceCounts;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -17,10 +20,13 @@ use Illuminate\View\View;
 
 class DashboardOnlineCoursesController extends Controller
 {
-    public function index(OnlineCourseCertificateService $certificateService): View
-    {
+    public function index(
+        OnlineCourseCertificateService $certificateService,
+        PendingProductCourseAccessService $pendingAccess
+    ): View {
         $email = OnlineCourseEnrollment::normalizeEmail(Auth::user()->email);
         $enrollments = collect();
+        $pendingAccesses = collect();
         $lessonProgressByEnrollment = [];
         $certificateContextByEnrollment = [];
         if ($email) {
@@ -42,13 +48,39 @@ class DashboardOnlineCoursesController extends Controller
                 $lessonProgressByEnrollment[$enrollment->id] = $progress;
                 $certificateContextByEnrollment[$enrollment->id] = $certificateService->contextForEnrollment($enrollment);
             }
+
+            $pendingAccesses = $pendingAccess->listForEmail($email);
         }
 
         return view('dashboard.online-courses.index', compact(
             'enrollments',
+            'pendingAccesses',
             'lessonProgressByEnrollment',
             'certificateContextByEnrollment'
         ));
+    }
+
+    public function resignPending(
+        string $ident,
+        PendingProductCourseAccessService $pendingAccess
+    ): RedirectResponse {
+        $order = FormOrder::query()
+            ->where('ident', $ident)
+            ->where('order_kind', 'product')
+            ->firstOrFail();
+
+        $result = $pendingAccess->resignUnpaidOrder($order, Auth::user()->email);
+        DashboardResourceCounts::forgetForUser(Auth::user());
+
+        if (! $result['success']) {
+            return redirect()
+                ->route('dashboard.online-courses.index')
+                ->with('error', $result['error'] ?? 'Nie udało się anulować zamówienia.');
+        }
+
+        return redirect()
+            ->route('dashboard.online-courses.index')
+            ->with('success', 'Twoja karta zamówienia zniknęła z listy. Jeśli zmienisz zdanie, złóż nowe zamówienie.');
     }
 
     public function show(OnlineCourseEnrollment $enrollment, OnlineCourseCertificateService $certificateService): View
@@ -272,6 +304,7 @@ class DashboardOnlineCoursesController extends Controller
     {
         abort_unless($enrollment->emailMatchesUser(Auth::user()->email ?? ''), 403);
         abort_if($enrollment->hasExpiredAccess(), 403, 'Dostęp do tego kursu wygasł.');
+        abort_unless($enrollment->hasAccessStarted(), 403, 'Dostęp do tego kursu jeszcze się nie rozpoczął.');
     }
 
     /**

@@ -350,7 +350,7 @@ class Course extends Model
     }
 
     /**
-     * @return array{price: float, original_price: float|null, is_promotion: bool, promotion_end: mixed, promotion_type: mixed, price_variant_id: int, variant_name: string|null}
+     * @return array{price: float, original_price: float|null, omnibus_lowest_price: float|null, is_promotion: bool, promotion_end: mixed, promotion_type: mixed, price_variant_id: int, variant_name: string|null}
      */
     protected function priceInfoFromVariant(CoursePriceVariant $priceVariant): array
     {
@@ -365,9 +365,14 @@ class Course extends Model
 
         $name = $priceVariant->name;
 
+        $omnibus = $isPromotionActive
+            ? app(\App\Services\PriceOmnibusService::class)->lowestFor($priceVariant)
+            : null;
+
         return [
             'price' => round($currentPrice, 2),
             'original_price' => $originalPrice ? round($originalPrice, 2) : null,
+            'omnibus_lowest_price' => $omnibus !== null ? (float) $omnibus : null,
             'is_promotion' => $isPromotionActive,
             'promotion_end' => $promotionEndDate,
             'promotion_type' => $priceVariant->promotion_type,

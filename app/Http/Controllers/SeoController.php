@@ -72,6 +72,7 @@ class SeoController extends Controller
             '- Strona główna: '.$base.'/',
             '- Blog: '.route('blog.index'),
             '- Szkolenia indywidualne: '.route('courses.individual'),
+            '- Kursy nagrane online: '.route('online-courses.catalog.index'),
             '- Szkolenia online LIVE: '.route('courses.online-live'),
             '- Szkolenia rad pedagogicznych: '.route('training-offers.pedagogical-councils.index'),
             '- Bezpłatne webinary TIK: '.route('courses.free'),

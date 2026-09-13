@@ -6,7 +6,6 @@ use App\Models\Course;
 use App\Models\OnlinePaymentOrder;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Exception;
 
 class PayUService
 {
@@ -52,6 +51,7 @@ class PayUService
 
         if (empty($clientId) || empty($clientSecret)) {
             Log::error('PayU: brak client_id lub client_secret w konfiguracji. Sprawdź .env: PAYU_CLIENT_ID, PAYU_CLIENT_SECRET');
+
             return null;
         }
 
@@ -69,22 +69,24 @@ class PayUService
                 'message' => $e->getMessage(),
                 'base_url' => $this->baseUrl,
             ]);
+
             return null;
         }
 
-        if (!$response->successful()) {
+        if (! $response->successful()) {
             Log::error('PayU OAuth error', [
                 'status' => $response->status(),
                 'body' => $response->body(),
                 'base_url' => $this->baseUrl,
             ]);
+
             return null;
         }
 
         $data = $response->json();
         $this->accessToken = $data['access_token'] ?? null;
 
-        if (!$this->accessToken) {
+        if (! $this->accessToken) {
             Log::error('PayU OAuth: brak access_token w odpowiedzi', ['response' => $data]);
         }
 
@@ -99,7 +101,7 @@ class PayUService
     public function createOrder(OnlinePaymentOrder $order, string $notifyUrl, string $continueUrl): array
     {
         $token = $this->getAccessToken();
-        if (!$token) {
+        if (! $token) {
             return ['success' => false, 'error' => 'Nie udało się uzyskać tokenu PayU'];
         }
 
@@ -108,20 +110,26 @@ class PayUService
             return ['success' => false, 'error' => 'Brak POS ID PayU w konfiguracji'];
         }
 
+        $order->loadMissing(['course', 'formOrder.orderItems']);
         $course = $order->course;
-        if (!$course instanceof Course) {
+        if (! $course instanceof Course) {
             $course = Course::on('pneadm')->find($order->course_id);
         }
+        $item = $order->formOrder?->orderItems?->first();
 
         $amountGross = (float) $order->total_amount;
         if ($amountGross <= 0) {
-            $priceInfo = $course?->getCurrentPrice();
-            $amountGross = (float) ($priceInfo['price'] ?? 0);
+            $amountGross = (float) ($item?->line_total ?? 0);
+            if ($amountGross <= 0) {
+                $priceInfo = $course?->getCurrentPrice();
+                $amountGross = (float) ($priceInfo['price'] ?? 0);
+            }
         }
         $amountGrosze = (int) round($amountGross * 100); // PayU wymaga groszy
 
         if ($amountGrosze <= 0) {
             Log::error('PayU: zamówienie z zerową kwotą', ['course_id' => $order->course_id, 'amount' => $amountGross]);
+
             return ['success' => false, 'error' => 'PayU nie akceptuje zamówień za 0 PLN. Szkolenie nie ma ustawionej ceny – skontaktuj się z organizatorem lub sprawdź warianty cenowe kursu.'];
         }
 
@@ -133,11 +141,16 @@ class PayUService
             'language' => 'pl',
         ];
 
+        $productName = (string) ($item?->product_name ?: $course?->title ?: 'Kurs online');
+        $quantity = max(1, (int) ($item?->quantity ?? 1));
+        $unitAmountGrosze = $item
+            ? (int) round(((float) $item->unit_price) * 100)
+            : $amountGrosze;
         $products = [
             [
-                'name' => $course?->title ?? 'Szkolenie online',
-                'unitPrice' => (string) $amountGrosze,
-                'quantity' => '1',
+                'name' => $productName,
+                'unitPrice' => (string) $unitAmountGrosze,
+                'quantity' => (string) $quantity,
             ],
         ];
 
@@ -146,7 +159,7 @@ class PayUService
             'continueUrl' => $continueUrl,
             'customerIp' => $order->ip_address ?? request()->ip() ?? '127.0.0.1',
             'merchantPosId' => $posId,
-            'description' => 'Szkolenie: ' . ($course?->title ?? 'Online'),
+            'description' => ($item ? 'Kurs online: ' : 'Szkolenie: ').$productName,
             'currencyCode' => 'PLN',
             'totalAmount' => (string) $amountGrosze,
             'extOrderId' => $order->ident,
@@ -161,15 +174,16 @@ class PayUService
         // PayU może zwrócić 201 (Created) lub 302 (Found) – bez allow_redirects otrzymujemy JSON
         $ok = in_array($response->status(), [201, 302], true);
 
-        if (!$ok) {
+        if (! $ok) {
             Log::error('PayU create order error', [
                 'status' => $response->status(),
                 'body' => $response->body(),
                 'extOrderId' => $order->ident,
             ]);
+
             return [
                 'success' => false,
-                'error' => 'PayU odmówił utworzenia zamówienia: ' . ($response->json('status.statusDesc') ?? $response->body()),
+                'error' => 'PayU odmówił utworzenia zamówienia: '.($response->json('status.statusDesc') ?? $response->body()),
             ];
         }
 
@@ -185,6 +199,7 @@ class PayUService
                 'body' => $response->body(),
                 'extOrderId' => $order->ident,
             ]);
+
             return ['success' => false, 'error' => 'Brak redirectUri w odpowiedzi PayU'];
         }
 
@@ -206,14 +221,14 @@ class PayUService
     public function getOrderStatus(string $payuOrderId): ?array
     {
         $token = $this->getAccessToken();
-        if (!$token) {
+        if (! $token) {
             return null;
         }
 
         $response = Http::withToken($token)
             ->get("{$this->baseUrl}/api/v2_1/orders/{$payuOrderId}");
 
-        if (!$response->successful()) {
+        if (! $response->successful()) {
             return null;
         }
 

@@ -120,7 +120,7 @@
                     </small>
                 @endif
                 <small style="font-size: 0.75rem; color: #aaa;">
-                    Najniższa cena z ostatnich 30 dni przed obniżką wynosiła: <strong style="color: #aaa;">{{ number_format($priceInfo['original_price'], 2, ',', ' ') }} PLN</strong>
+                    Najniższa cena z 30 dni przed obniżką: <strong style="color: #aaa;">{{ number_format($priceInfo['omnibus_lowest_price'] ?? $priceInfo['original_price'], 2, ',', ' ') }} PLN</strong>
                 </small>
             </div>
         @else

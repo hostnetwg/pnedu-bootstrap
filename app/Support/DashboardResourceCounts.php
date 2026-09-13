@@ -4,6 +4,7 @@ namespace App\Support;
 
 use App\Models\OnlineCourseEnrollment;
 use App\Models\Participant;
+use App\Services\PendingProductCourseAccessService;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Support\Facades\Cache;
 
@@ -139,6 +140,7 @@ class DashboardResourceCounts
                     $q->where('is_active', true)->where('visible_in_dashboard', true);
                 })
                 ->count();
+            $onlineCoursesCount += app(PendingProductCourseAccessService::class)->countForEmail($onlineEmail);
         }
 
         $szkoleniaCount = $participantStats['all'];

@@ -10,7 +10,9 @@
                 <div class="pending-header {{ $paymentFailed ? 'pending-header-failed' : '' }}">
                     @if($paymentFailed)
                         <h1><i class="bi bi-exclamation-triangle me-2"></i>Płatność nie została zrealizowana</h1>
-                        <p>Płatność online nie została dokończona. Możesz spróbować ponownie lub wybrać fakturę z odroczonym terminem płatności.</p>
+                        <p>
+                            Płatność online nie została dokończona. Możesz spróbować ponownie{{ $deferredOrderFormUrl ? ' lub wybrać fakturę z odroczonym terminem płatności' : '' }}.
+                        </p>
                     @else
                         <h1><i class="bi bi-clock-history me-2"></i>Płatność w realizacji</h1>
                         <p>Twoje zamówienie jest w trakcie realizacji. Otrzymasz potwierdzenie na adres e-mail po zaksięgowaniu płatności.</p>
@@ -62,6 +64,14 @@
                             </div>
                         @endif
                     </div>
+                @elseif($formOrder?->isProductOrder())
+                    <div class="order-info-box">
+                        <h3>Kurs online</h3>
+                        <div class="info-row">
+                            <span class="info-label">Nazwa:</span>
+                            <span class="info-value">{{ $formOrder->orderItems->first()?->product_name }}</span>
+                        </div>
+                    </div>
                 @endif
 
                 @if($canRetryPayment && $retryPaymentUrl)
@@ -81,6 +91,8 @@
                 <div class="mt-4">
                     @if($order->course_id)
                         <a href="{{ route('courses.show', $order->course_id) }}" class="btn btn-secondary">Powrót do szczegółów szkolenia</a>
+                    @elseif($formOrder?->isProductOrder())
+                        <a href="{{ route('online-courses.checkout.summary', $formOrder->ident) }}" class="btn btn-secondary">Podsumowanie zamówienia</a>
                     @endif
                     <a href="{{ route('home') }}" class="btn btn-outline-secondary ms-2">Strona główna</a>
                 </div>

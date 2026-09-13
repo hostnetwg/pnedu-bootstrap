@@ -4,6 +4,7 @@ namespace App\Services\Seo;
 
 use App\Models\Article;
 use App\Models\Course;
+use App\Models\Product;
 use App\Models\TrainingOffer;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
@@ -21,6 +22,7 @@ class SitemapUrlBuilder
             return array_merge(
                 $this->staticUrls(),
                 $this->safeSection('courses', fn (): array => $this->courseUrls()),
+                $this->safeSection('online_course_products', fn (): array => $this->onlineCourseProductUrls()),
                 $this->safeSection('training_offers', fn (): array => $this->trainingOfferUrls()),
                 $this->safeSection('articles', fn (): array => $this->articleUrls()),
             );
@@ -93,6 +95,7 @@ class SitemapUrlBuilder
             ['route' => 'about.team', 'changefreq' => 'monthly', 'priority' => '0.6'],
             ['route' => 'about.accreditation', 'changefreq' => 'yearly', 'priority' => '0.5'],
             ['route' => 'courses.individual', 'changefreq' => 'weekly', 'priority' => '0.8'],
+            ['route' => 'online-courses.catalog.index', 'changefreq' => 'weekly', 'priority' => '0.8'],
             ['route' => 'training-offers.pedagogical-councils.index', 'changefreq' => 'weekly', 'priority' => '0.8'],
             ['route' => 'courses.free', 'changefreq' => 'weekly', 'priority' => '0.8'],
             ['route' => 'courses.office365', 'changefreq' => 'weekly', 'priority' => '0.8'],
@@ -191,6 +194,34 @@ class SitemapUrlBuilder
                 'priority' => '0.7',
             ];
         })->all();
+    }
+
+    /**
+     * @return array<int, array{loc: string, lastmod: string, changefreq: string, priority: string}>
+     */
+    private function onlineCourseProductUrls(): array
+    {
+        if (
+            ! $this->pneadmHasTable('products')
+            || ! $this->pneadmHasTable('product_offers')
+            || ! $this->pneadmHasTable('product_prices')
+            || ! Route::has('online-courses.catalog.show')
+        ) {
+            return [];
+        }
+
+        return Product::query()
+            ->purchasableOnlineCourses()
+            ->whereHas('defaultOffer.activePrices')
+            ->orderBy('slug')
+            ->get(['id', 'slug', 'updated_at'])
+            ->map(fn (Product $product): array => [
+                'loc' => route('online-courses.catalog.show', $product->slug),
+                'lastmod' => $product->updated_at?->toAtomString() ?? now()->toAtomString(),
+                'changefreq' => 'monthly',
+                'priority' => '0.7',
+            ])
+            ->all();
     }
 
     /**

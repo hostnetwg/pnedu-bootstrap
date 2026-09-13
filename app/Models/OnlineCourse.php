@@ -6,6 +6,7 @@ use App\Support\PneadmMedia;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class OnlineCourse extends Model
@@ -60,6 +61,12 @@ class OnlineCourse extends Model
     public function enrollments(): HasMany
     {
         return $this->hasMany(OnlineCourseEnrollment::class);
+    }
+
+    public function salesProduct(): HasOne
+    {
+        return $this->hasOne(Product::class, 'resource_id')
+            ->where('type', Product::TYPE_ONLINE_COURSE);
     }
 
     public function modulesWithPublishedLessons(): HasMany

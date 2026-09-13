@@ -73,6 +73,9 @@
                                                 $priceInfo = [
                                                     'price' => round((float) $currentPrice, 2),
                                                     'original_price' => $isPromotionActive ? round((float) $firstVariant->price, 2) : null,
+                                                    'omnibus_lowest_price' => $isPromotionActive
+                                                        ? (float) app(\App\Services\PriceOmnibusService::class)->lowestFor($firstVariant)
+                                                        : null,
                                                     'is_promotion' => $isPromotionActive,
                                                     'promotion_end' => $isPromotionActive && $firstVariant->promotion_type === 'time_limited' ? $firstVariant->promotion_end : null,
                                                     'promotion_type' => $firstVariant->promotion_type,
@@ -95,7 +98,7 @@
                                                     </small>
                                                 @endif
                                                 <small style="font-size: 0.75rem; color: #aaa;">
-                                                    Najniższa cena z ostatnich 30 dni przed obniżką wynosiła: <strong style="color: #aaa;">{{ number_format($priceInfo['original_price'], 2, ',', ' ') }} PLN</strong>
+                                                    Najniższa cena z 30 dni przed obniżką: <strong style="color: #aaa;">{{ number_format($priceInfo['omnibus_lowest_price'] ?? $priceInfo['original_price'], 2, ',', ' ') }} PLN</strong>
                                                 </small>
                                             </div>
                                         @else

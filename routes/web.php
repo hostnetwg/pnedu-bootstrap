@@ -6,6 +6,8 @@ use App\Http\Controllers\ExternalSurveyGateController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LegalDocumentController;
 use App\Http\Controllers\NewsletterController;
+use App\Http\Controllers\OnlineCourseStorefrontController;
+use App\Http\Controllers\ProductCheckoutController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SeoController;
 use App\Http\Controllers\SesNotificationWebhookController;
@@ -38,6 +40,16 @@ Route::get('/api/internal/form-orders/{id}/preview-online-payment-recovery', [Ap
     ->middleware('internal.api')
     ->whereNumber('id')
     ->name('internal.form-orders.preview-online-payment-recovery');
+
+Route::post('/api/internal/form-orders/{id}/fulfill-product', [App\Http\Controllers\Internal\ProductOrderFulfillmentController::class, 'fulfill'])
+    ->middleware('internal.api')
+    ->whereNumber('id')
+    ->name('internal.form-orders.fulfill-product');
+
+Route::post('/api/internal/form-orders/{id}/revoke-product', [App\Http\Controllers\Internal\ProductOrderFulfillmentController::class, 'revoke'])
+    ->middleware('internal.api')
+    ->whereNumber('id')
+    ->name('internal.form-orders.revoke-product');
 
 Route::get('/l/{campaign_code}', App\Http\Controllers\MarketingCampaignShortLinkController::class)
     ->where('campaign_code', '[A-Za-z0-9._-]+')
@@ -131,6 +143,21 @@ Route::get('/szkolenia-online-live', [App\Http\Controllers\CourseController::cla
 // Szkolenia indywidualne
 Route::get('/szkolenia-indywidualne', [App\Http\Controllers\CourseController::class, 'individualCourses'])
     ->name('courses.individual');
+
+// Kursy nagrane dostępne do zakupu (oddzielnie od szkoleń terminowych).
+Route::get('/kursy', [OnlineCourseStorefrontController::class, 'index'])
+    ->name('online-courses.catalog.index');
+Route::get('/kursy/{product:slug}/zamowienie', [ProductCheckoutController::class, 'create'])
+    ->name('online-courses.checkout.create');
+Route::get('/kursy/{product:slug}/zamowienie/{ident}', [ProductCheckoutController::class, 'edit'])
+    ->name('online-courses.checkout.edit');
+Route::post('/kursy/{product:slug}/zamowienie', [ProductCheckoutController::class, 'store'])
+    ->middleware('throttle:10,1')
+    ->name('online-courses.checkout.store');
+Route::get('/kursy/{product:slug}', [OnlineCourseStorefrontController::class, 'show'])
+    ->name('online-courses.catalog.show');
+Route::get('/zamowienia-kursow/{ident}', [ProductCheckoutController::class, 'summary'])
+    ->name('online-courses.checkout.summary');
 
 // Szkolenia rad pedagogicznych - oferty bez ustalonego terminu
 Route::get('/szkolenia-rad-pedagogicznych', [TrainingOfferController::class, 'pedagogicalCouncils'])
@@ -229,6 +256,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('/dashboard/kursy-online', [App\Http\Controllers\DashboardOnlineCoursesController::class, 'index'])
         ->name('dashboard.online-courses.index');
+    Route::post('/dashboard/kursy-online/oczekujace/{ident}/rezygnacja', [App\Http\Controllers\DashboardOnlineCoursesController::class, 'resignPending'])
+        ->middleware('throttle:10,1')
+        ->name('dashboard.online-courses.pending.resign');
     Route::get('/dashboard/kursy-online/{enrollment}', [App\Http\Controllers\DashboardOnlineCoursesController::class, 'show'])
         ->name('dashboard.online-courses.show');
     Route::get('/dashboard/kursy-online/{enrollment}/lekcje/{lesson}', [App\Http\Controllers\DashboardOnlineCoursesController::class, 'lesson'])

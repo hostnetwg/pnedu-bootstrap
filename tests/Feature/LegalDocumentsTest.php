@@ -33,4 +33,18 @@ class LegalDocumentsTest extends TestCase
     {
         $this->get('/regulamin/2000-01-01')->assertNotFound();
     }
+
+    public function test_unpublished_draft_terms_are_not_public(): void
+    {
+        $this->get('/regulamin/draft-pending-approval')->assertNotFound();
+        $this->get('/regulamin/draft-pending-approval.pdf')->assertNotFound();
+    }
+
+    public function test_withdrawal_covers_recorded_courses(): void
+    {
+        $this->get(route('withdrawal'))
+            ->assertOk()
+            ->assertSee('kursów nagranych')
+            ->assertSee('14 dni od jej zawarcia');
+    }
 }

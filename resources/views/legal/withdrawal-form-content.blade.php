@@ -3,7 +3,7 @@ Platforma Nowoczesnej Edukacji Waldemar Grabowski<br>
 ul. Andrzeja Zamoyskiego 30/14, 09-320 Bieżuń<br>
 kontakt@pnedu.pl</p>
 
-<p>Ja/My ........................................................ informuję/informujemy o odstąpieniu od umowy dotyczącej szkolenia/usługi:</p>
+<p>Ja/My ........................................................ informuję/informujemy o odstąpieniu od umowy dotyczącej szkolenia / kursu nagranego / treści cyfrowej / usługi cyfrowej / przedłużenia dostępu:</p>
 <p>....................................................................................................</p>
 <p>Data zawarcia umowy: ....................................</p>
 <p>Numer zamówienia: ........................................</p>

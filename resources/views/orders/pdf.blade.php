@@ -269,7 +269,7 @@
             <tr>
                 <td>1</td>
                 <td>
-                    SZKOLENIE: {{ str_replace('&nbsp;', ' ', strip_tags($order->product_name)) }}
+                    {{ $order->isProductOrder() ? 'KURS ONLINE' : 'SZKOLENIE' }}: {{ str_replace('&nbsp;', ' ', strip_tags($order->product_name)) }}
                 </td>
                 <td>{{ $orderQty }}</td>
                 <td>{{ number_format($order->product_price, 0, ',', ' ') }} PLN</td>
@@ -375,7 +375,7 @@
     </table>
 
     <div class="info-text" style="margin-top: 0; font-style: italic;">
-        * na {{ $pdfParticipants->count() > 1 ? 'powyższe adresy e-mail' : 'powyższy e-mail' }} zostaną przesłane dane dostępowe do szkolenia.
+        * na {{ $pdfParticipants->count() > 1 ? 'powyższe adresy e-mail' : 'powyższy e-mail' }} zostaną przesłane dane dostępowe do {{ $order->isProductOrder() ? 'kursu online' : 'szkolenia' }}.
     </div>
 
     <!-- Sekcja z pieczątką i podpisem -->

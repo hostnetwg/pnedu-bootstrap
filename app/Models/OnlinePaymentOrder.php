@@ -149,6 +149,20 @@ class OnlinePaymentOrder extends Model
         };
     }
 
+    public function displayProductName(): string
+    {
+        $item = $this->formOrder?->orderItems?->first();
+
+        return (string) ($item?->product_name ?: $this->course?->title ?: 'Produkt');
+    }
+
+    public function displayProductQuantity(): int
+    {
+        $item = $this->formOrder?->orderItems?->first();
+
+        return max(1, (int) ($item?->quantity ?? 1));
+    }
+
     public function buyerTypeLabel(): string
     {
         return match ($this->buyer_type) {

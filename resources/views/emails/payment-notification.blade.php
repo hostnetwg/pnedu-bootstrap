@@ -254,10 +254,10 @@
         @endif
 
         <div class="section">
-            <div class="section-title">🎓 Informacje o szkoleniu</div>
+            <div class="section-title">🎓 Informacje o produkcie</div>
             <div class="info-row">
-                <span class="info-label">Nazwa szkolenia:</span>
-                <span class="info-value"><strong>{{ $course ? strip_tags($course->title) : 'Nieznane szkolenie' }}</strong></span>
+                <span class="info-label">Nazwa:</span>
+                <span class="info-value"><strong>{{ $productTitle ?? ($course ? strip_tags($course->title) : 'Nieznany produkt') }}</strong></span>
             </div>
             @if($course && $course->start_date)
             <div class="info-row">

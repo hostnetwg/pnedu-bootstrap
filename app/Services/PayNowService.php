@@ -132,15 +132,20 @@ class PayNowService
             return ['success' => false, 'error' => 'Brak konfiguracji PayNow. Sprawdź .env: PAYNOW_API_KEY, PAYNOW_SIGNATURE_KEY'];
         }
 
+        $order->loadMissing(['course', 'formOrder.orderItems']);
         $course = $order->course;
         if (! $course instanceof Course) {
             $course = Course::on('pneadm')->find($order->course_id);
         }
+        $item = $order->formOrder?->orderItems?->first();
 
         $amountGross = (float) $order->total_amount;
         if ($amountGross <= 0) {
-            $priceInfo = $course?->getCurrentPrice();
-            $amountGross = (float) ($priceInfo['price'] ?? 0);
+            $amountGross = (float) ($item?->line_total ?? 0);
+            if ($amountGross <= 0) {
+                $priceInfo = $course?->getCurrentPrice();
+                $amountGross = (float) ($priceInfo['price'] ?? 0);
+            }
         }
         $amountGrosze = (int) round($amountGross * 100); // PayNow wymaga groszy
 
@@ -224,17 +229,19 @@ class PayNowService
         }
 
         // Przygotuj pozycje zamówienia (PayNow: orderItems[].name max 120 znaków)
-        $itemName = Str::limit($course?->title ?? 'Szkolenie online', 120, '');
+        $itemName = Str::limit((string) ($item?->product_name ?: $course?->title ?: 'Kurs online'), 120, '');
         $orderItems = [
             [
                 'name' => $itemName,
                 'category' => 'Szkolenia i kursy',
-                'quantity' => 1,
-                'price' => $amountGrosze,
+                'quantity' => max(1, (int) ($item?->quantity ?? 1)),
+                'price' => $item
+                    ? (int) round(((float) $item->unit_price) * 100)
+                    : $amountGrosze,
             ],
         ];
 
-        $description = 'Szkolenie: '.($course?->title ?? 'Online');
+        $description = ($item ? 'Kurs online: ' : 'Szkolenie: ').$itemName;
         $description = Str::limit($description, 255, '');
 
         // Przygotuj body żądania jako tablicę

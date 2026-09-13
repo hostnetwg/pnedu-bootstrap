@@ -329,7 +329,9 @@ class PaymentController extends Controller
      */
     public function success(string $ident)
     {
-        $order = OnlinePaymentOrder::where('ident', $ident)->with('course')->firstOrFail();
+        $order = OnlinePaymentOrder::where('ident', $ident)
+            ->with(['course', 'formOrder.orderItems.product'])
+            ->firstOrFail();
 
         return view('payment.success', compact('order'));
     }
@@ -339,7 +341,9 @@ class PaymentController extends Controller
      */
     public function pending(string $ident)
     {
-        $order = OnlinePaymentOrder::where('ident', $ident)->with(['course', 'formOrder'])->firstOrFail();
+        $order = OnlinePaymentOrder::where('ident', $ident)
+            ->with(['course', 'formOrder.orderItems.product'])
+            ->firstOrFail();
 
         if ($order->isPaid()) {
             return redirect()->route('payment.success', $order->ident);
@@ -350,7 +354,9 @@ class PaymentController extends Controller
 
         $canRetryPayment = $formOrder !== null && $retryService->canRetryPayment($formOrder);
         $retryPaymentUrl = $canRetryPayment ? $retryService->signedRetryUrl($formOrder) : null;
-        $deferredOrderFormUrl = $canRetryPayment ? $retryService->signedConvertToDeferredUrl($formOrder) : null;
+        $deferredOrderFormUrl = $canRetryPayment && ! $formOrder->isProductOrder()
+            ? $retryService->signedConvertToDeferredUrl($formOrder)
+            : null;
 
         $paymentFailed = $formOrder !== null && in_array($formOrder->payment_status, [
             FormOrder::PAYMENT_STATUS_CANCELLED,
@@ -377,14 +383,19 @@ class PaymentController extends Controller
 
         if (! $retryService->canRetryPayment($formOrder)) {
             return redirect()
-                ->route('courses.show', $formOrder->product_id)
+                ->route(
+                    $formOrder->isProductOrder() ? 'online-courses.checkout.summary' : 'courses.show',
+                    $formOrder->isProductOrder() ? $formOrder->ident : $formOrder->product_id
+                )
                 ->with('error', 'To zamówienie nie kwalifikuje się już do ponowienia płatności online.');
         }
 
         try {
             $onlineOrder = $retryService->createRetryPaymentAttempt($formOrder, $request->ip());
-            $course = $formOrder->course ?? \App\Models\Course::findOrFail($formOrder->product_id);
-            $retryService->sendPaymentStartedMail($formOrder, $course, $onlineOrder);
+            if (! $formOrder->isProductOrder()) {
+                $course = $formOrder->course ?? \App\Models\Course::findOrFail($formOrder->product_id);
+                $retryService->sendPaymentStartedMail($formOrder, $course, $onlineOrder);
+            }
         } catch (\Throwable $exception) {
             Log::error('retryFormOrderPayment: błąd tworzenia próby płatności', [
                 'form_order_ident' => $ident,
@@ -403,7 +414,10 @@ class PaymentController extends Controller
             }
 
             return redirect()
-                ->route('courses.show', $formOrder->product_id)
+                ->route(
+                    $formOrder->isProductOrder() ? 'online-courses.checkout.summary' : 'courses.show',
+                    $formOrder->isProductOrder() ? $formOrder->ident : $formOrder->product_id
+                )
                 ->with('error', 'Nie udało się przygotować płatności. Skontaktuj się z nami: kontakt@pnedu.pl');
         }
 
@@ -806,6 +820,19 @@ class PaymentController extends Controller
     protected function registerParticipant(OnlinePaymentOrder $order): ?Participant
     {
         if ($order->form_order_id) {
+            $formOrder = $order->formOrder()->first();
+            if ($formOrder?->isProductOrder()) {
+                $result = app(\App\Services\ProductOrderFulfillmentService::class)
+                    ->fulfillOrder($formOrder->id, 'online_payment');
+                Log::info('PaymentController: fulfillment zamówienia produktowego', [
+                    'online_payment_order_id' => $order->id,
+                    'form_order_id' => $formOrder->id,
+                    'result' => $result,
+                ]);
+
+                return null;
+            }
+
             Log::info('PaymentController: pominięto automatyczną rejestrację uczestnika — zamówienie z formularza www (obsługa ręczna w PNEADM)', [
                 'online_payment_order_id' => $order->id,
                 'form_order_id' => $order->form_order_id,

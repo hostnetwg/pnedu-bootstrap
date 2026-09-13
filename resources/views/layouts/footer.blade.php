@@ -34,7 +34,7 @@
                     <li class="mb-2"><a href="{{ route('courses.director-academy') }}" class="text-light opacity-75 text-decoration-none hover-lift">Dla dyrektorów</a></li>
                     <li class="mb-2"><a href="{{ route('training-offers.pedagogical-councils.index') }}" class="text-light opacity-75 text-decoration-none hover-lift">Rady pedagogiczne</a></li>
                     <li class="mb-2"><a href="{{ route('courses.free') }}" class="text-light opacity-75 text-decoration-none hover-lift">Webinary</a></li>
-                    <li class="mb-2"><a href="{{ route('dashboard.online-courses.index') }}" class="text-light opacity-75 text-decoration-none hover-lift">Kursy online</a></li>
+                    <li class="mb-2"><a href="{{ route('online-courses.catalog.index') }}" class="text-light opacity-75 text-decoration-none hover-lift">Kursy online</a></li>
                 </ul>
             </div>
             

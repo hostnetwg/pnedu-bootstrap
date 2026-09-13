@@ -41,6 +41,14 @@
                     </ul>
                 </li>
 
+                {{-- KURSY NAGRANE --}}
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('online-courses.catalog.*', 'online-courses.checkout.*') ? 'active fw-semibold' : '' }}"
+                       href="{{ route('online-courses.catalog.index') }}">
+                        Kursy
+                    </a>
+                </li>
+
                 {{-- BEZPŁATNE (dropdown) --}}
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="freeDropdown" role="button"
