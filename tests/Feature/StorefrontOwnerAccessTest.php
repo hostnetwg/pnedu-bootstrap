@@ -47,8 +47,9 @@ class StorefrontOwnerAccessTest extends TestCase
 
         $this->get(route('online-courses.catalog.show', $product->slug))
             ->assertOk()
-            ->assertSee('Wybierz dostęp')
-            ->assertSee('Zamawiam ten wariant')
+            ->assertSee('Zamawiam kurs')
+            ->assertDontSee('Wybierz dostęp')
+            ->assertDontSee('Zamawiam ten wariant')
             ->assertDontSee('Przejdź do kursu')
             ->assertDontSee('Przedłuż dostęp');
     }
@@ -72,6 +73,7 @@ class StorefrontOwnerAccessTest extends TestCase
             ->assertSee('Masz dostęp bezterminowy')
             ->assertSee('Przejdź do kursu')
             ->assertDontSee('Wybierz dostęp')
+            ->assertDontSee('Zamawiam kurs')
             ->assertDontSee('Zamawiam ten wariant')
             ->assertDontSee('Przedłuż dostęp');
     }
@@ -102,6 +104,7 @@ class StorefrontOwnerAccessTest extends TestCase
             ->assertSee('Przejdź do kursu')
             ->assertSee('Chcesz dłużej?')
             ->assertSee('Przedłuż dostęp')
+            ->assertDontSee('Zamawiam kurs')
             ->assertDontSee('Zamawiam ten wariant');
     }
 
@@ -129,7 +132,8 @@ class StorefrontOwnerAccessTest extends TestCase
             ->get(route('online-courses.catalog.show', $product->slug))
             ->assertOk()
             ->assertSee('Dostęp od')
-            ->assertSee('Zamawiam ten wariant')
+            ->assertSee('Zamawiam kurs')
+            ->assertDontSee('Zamawiam ten wariant')
             ->assertDontSee('Przejdź do kursu');
     }
 
@@ -154,7 +158,8 @@ class StorefrontOwnerAccessTest extends TestCase
             ->get(route('online-courses.catalog.show', $product->slug))
             ->assertOk()
             ->assertSee('Twój dostęp skończył się')
-            ->assertSee('Zamawiam ten wariant')
+            ->assertSee('Zamawiam kurs')
+            ->assertDontSee('Zamawiam ten wariant')
             ->assertDontSee('Przedłuż dostęp');
     }
 
@@ -167,7 +172,8 @@ class StorefrontOwnerAccessTest extends TestCase
         $this->actingAs($stranger)
             ->get(route('online-courses.catalog.show', $product->slug))
             ->assertOk()
-            ->assertSee('Zamawiam ten wariant')
+            ->assertSee('Zamawiam kurs')
+            ->assertDontSee('Zamawiam ten wariant')
             ->assertDontSee('Masz dostęp bezterminowy');
     }
 

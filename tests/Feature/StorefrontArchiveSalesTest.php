@@ -44,12 +44,14 @@ class StorefrontArchiveSalesTest extends TestCase
                 'product' => $product->slug,
                 'price' => $price->id,
             ]), false)
+            ->assertDontSee('Zamawiam kurs')
             ->assertDontSee('Zamawiam ten wariant');
 
         $this->get(route('online-courses.catalog.show', $product->slug))
             ->assertOk()
             ->assertSee('Sprzedaż wyłączona')
             ->assertSee('<meta name="robots" content="noindex, nofollow">', false)
+            ->assertDontSee('Zamawiam kurs')
             ->assertDontSee('Zamawiam ten wariant')
             ->assertDontSee('Wybierz dostęp');
 

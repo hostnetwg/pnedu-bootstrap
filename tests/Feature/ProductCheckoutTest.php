@@ -72,6 +72,9 @@ class ProductCheckoutTest extends TestCase
             ->assertSee('Autor: Łukasz Grabowski')
             ->assertDontSee('Prowadzący: Łukasz Grabowski')
             ->assertSee('Dostęp na rok')
+            ->assertSee('Zamawiam kurs')
+            ->assertDontSee('Zamawiam ten wariant')
+            ->assertDontSee('Wybierz dostęp')
             ->assertSee('30 dni gwarancji satysfakcji od rozpoczęcia dostępu do kursu')
             ->assertSee('Zwrot zgłosisz');
 
@@ -85,6 +88,30 @@ class ProductCheckoutTest extends TestCase
             ->assertSee('Wpisz NIP i pobierz dane z GUS')
             ->assertSee('data-gus-target="buyer"', false)
             ->assertSee('data-gus-target="recipient"', false);
+    }
+
+    public function test_two_paid_variants_keep_this_variant_button(): void
+    {
+        [$product] = $this->createOffer();
+        ProductPrice::query()->forceCreate([
+            'product_offer_id' => $product->defaultOffer->id,
+            'name' => 'Dostęp na 2 lata',
+            'is_active' => true,
+            'sort_order' => 20,
+            'price' => '299.00',
+            'currency' => 'PLN',
+            'tax_treatment' => ProductPrice::TAX_EXEMPT,
+            'is_promotion' => false,
+            'access_policy' => ProductPrice::ACCESS_DURATION_FROM_GRANT,
+            'access_duration_value' => 2,
+            'access_duration_unit' => 'years',
+        ]);
+
+        $this->get(route('online-courses.catalog.show', $product->slug))
+            ->assertOk()
+            ->assertSee('Wybierz dostęp')
+            ->assertSee('Zamawiam ten wariant')
+            ->assertDontSee('Zamawiam kurs');
     }
 
     public function test_checkout_copy_stays_short_without_terms_checkbox(): void

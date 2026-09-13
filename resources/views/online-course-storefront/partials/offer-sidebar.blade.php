@@ -1,5 +1,10 @@
 @php
     $accessState = $viewerAccess?->state;
+    $paidPrices = collect($prices)->reject(fn ($price) => $price->isComplimentary());
+    $paidVariantCount = $paidPrices->count();
+    $purchaseLabel = $viewerAccess?->buyButtonLabel($paidVariantCount)
+        ?? \App\Support\StorefrontCourseAccess::purchaseButtonLabel($paidVariantCount);
+    $choiceHeading = $paidVariantCount > 1 ? 'Wybierz dostęp' : 'Dostęp';
 @endphp
 
 @if($viewerAccess?->isUnlimited())
@@ -40,16 +45,16 @@
         <div class="alert alert-info">
             Dostęp od <strong>{{ $viewerAccess->startsLabel() }}</strong>. Lekcje otworzą się w tym dniu.
         </div>
-        <h2 class="h4">Wybierz dostęp</h2>
+        <h2 class="h4">{{ $choiceHeading }}</h2>
         <p class="text-muted small">Cena za jednego uczestnika. Szkoła lub firma może kupić dostęp dla wielu osób.</p>
     @elseif($accessState === 'expired')
         <div class="alert alert-warning">
             Twój dostęp skończył się <strong>{{ $viewerAccess->endsLabel() }}</strong>.
         </div>
-        <h2 class="h4">Wybierz dostęp</h2>
+        <h2 class="h4">{{ $choiceHeading }}</h2>
         <p class="text-muted small">Cena za jednego uczestnika. Szkoła lub firma może kupić dostęp dla wielu osób.</p>
     @else
-        <h2 class="h4">Wybierz dostęp</h2>
+        <h2 class="h4">{{ $choiceHeading }}</h2>
         <p class="text-muted small">Cena za jednego uczestnika. Szkoła lub firma może kupić dostęp dla wielu osób.</p>
     @endif
 
@@ -58,7 +63,7 @@
             @include('online-course-storefront.partials.price-variant-card', [
                 'product' => $product,
                 'price' => $price,
-                'buttonLabel' => $viewerAccess?->buyButtonLabel() ?? 'Zamawiam ten wariant',
+                'buttonLabel' => $purchaseLabel,
             ])
         @endforeach
     </div>

@@ -49,11 +49,18 @@ class StorefrontCourseAccess
         return $this->state !== self::STATE_UNLIMITED;
     }
 
-    public function buyButtonLabel(): string
+    public static function purchaseButtonLabel(int $paidVariantCount): string
+    {
+        return $paidVariantCount > 1
+            ? 'Zamawiam ten wariant'
+            : 'Zamawiam kurs';
+    }
+
+    public function buyButtonLabel(int $paidVariantCount = 1): string
     {
         return $this->state === self::STATE_ACTIVE
             ? 'Przedłuż dostęp'
-            : 'Zamawiam ten wariant';
+            : self::purchaseButtonLabel($paidVariantCount);
     }
 
     public function dashboardUrl(): string

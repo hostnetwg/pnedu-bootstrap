@@ -45,7 +45,8 @@ class FreeCourseSignupTest extends TestCase
 
         $html = $this->get(route('online-courses.catalog.show', $product->slug))
             ->assertOk()
-            ->assertSee('Zamawiam ten wariant')
+            ->assertSee('Zamawiam kurs')
+            ->assertDontSee('Zamawiam ten wariant')
             ->assertSee('Zapisz się bezpłatnie')
             ->assertSee('Bezpłatny dostęp')
             ->assertSee('199,00')

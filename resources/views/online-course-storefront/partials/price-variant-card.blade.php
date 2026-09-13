@@ -2,7 +2,7 @@
     $isComplimentary = $price->isComplimentary();
     $buttonLabel = $isComplimentary
         ? 'Zapisz się bezpłatnie'
-        : ($buttonLabel ?? 'Zamawiam ten wariant');
+        : ($buttonLabel ?? \App\Support\StorefrontCourseAccess::purchaseButtonLabel(1));
     $buttonUrl = $isComplimentary
         ? route('online-courses.free-signup.create', ['product' => $product->slug, 'price' => $price->id])
         : route('online-courses.checkout.create', ['product' => $product->slug, 'price' => $price->id]);
