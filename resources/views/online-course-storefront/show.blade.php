@@ -34,7 +34,7 @@
                     <h1 class="display-5 fw-bold">{{ $product->name }}</h1>
                     @if($course?->instructor)
                         <p class="lead text-muted">
-                            Prowadzący: {{ trim($course->instructor->first_name.' '.$course->instructor->last_name) }}
+                            Autor: {{ trim($course->instructor->first_name.' '.$course->instructor->last_name) }}
                         </p>
                     @endif
                     <p class="lead">{{ $course?->description }}</p>

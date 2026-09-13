@@ -37,7 +37,8 @@ class StorefrontOwnerAccessTest extends TestCase
 
         $this->get(route('online-courses.catalog.index'))
             ->assertOk()
-            ->assertSee('od 199,00 zł')
+            ->assertSee('199,00 zł')
+            ->assertDontSee('od 199,00')
             ->assertSee('Zobacz kurs')
             ->assertDontSee('Przejdź do kursu');
 
@@ -60,7 +61,7 @@ class StorefrontOwnerAccessTest extends TestCase
             ->assertOk()
             ->assertSee('Masz dostęp bezterminowy')
             ->assertSee('Przejdź do kursu')
-            ->assertDontSee('od 199,00 zł');
+            ->assertDontSee('199,00 zł');
 
         $this->actingAs($user)
             ->get(route('online-courses.catalog.show', $product->slug))
@@ -133,7 +134,8 @@ class StorefrontOwnerAccessTest extends TestCase
             ->get(route('online-courses.catalog.index'))
             ->assertOk()
             ->assertSee('Dostęp skończył się 10.01.2026')
-            ->assertSee('od 199,00 zł')
+            ->assertSee('199,00 zł')
+            ->assertDontSee('od 199,00')
             ->assertSee('Zobacz kurs')
             ->assertDontSee('Przejdź do kursu');
 

@@ -5,8 +5,8 @@ Status: wdrożone lokalnie, przed produkcją wymagany przegląd prawny
 
 ## Publiczne trasy
 
-- `GET /kursy` — katalog aktywnych ofert (cena bez dopisku „/ osoba”),
-- `GET /kursy/{product:slug}` — opis i warianty dostępu,
+- `GET /kursy` — katalog aktywnych ofert (sama kwota, bez „od” i bez „/ osoba”),
+- `GET /kursy/{product:slug}` — opis i warianty dostępu (etykieta autora: „Autor”, nie „Prowadzący”),
 - `GET|POST /kursy/{product:slug}/zapis` — bezpłatny zapis (flaga `is_complimentary`, bez checkoutu i FV),
 - `GET|POST /kursy/{product:slug}/zamowienie` — checkout płatnych wariantów (bezpłatne idą na `/zapis`; widok dostaje listę `$prices` po odfiltrowaniu complimentary),
 - `GET /kursy/{product:slug}/zamowienie/{ident}` — edycja odroczonego zamówienia,

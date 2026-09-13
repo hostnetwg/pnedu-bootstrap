@@ -56,7 +56,7 @@
                                     </h2>
                                     @if($course?->instructor)
                                         <p class="small text-muted mb-2">
-                                            Prowadzący: {{ trim($course->instructor->first_name.' '.$course->instructor->last_name) }}
+                                            Autor: {{ trim($course->instructor->first_name.' '.$course->instructor->last_name) }}
                                         </p>
                                     @endif
                                     <p class="text-muted">{{ \Illuminate\Support\Str::limit(strip_tags($course?->description ?? ''), 180) }}</p>
@@ -83,12 +83,12 @@
                                                 <div class="d-flex flex-column gap-1 mb-3">
                                                     <div class="d-flex flex-wrap align-items-baseline gap-2">
                                                         <span class="text-muted text-decoration-line-through" style="font-size: 0.85rem;">{{ number_format((float) $featuredPrice->price, 2, ',', ' ') }} PLN</span>
-                                                        <strong class="text-danger">od {{ number_format((float) $lowestPrice, 2, ',', ' ') }} PLN</strong>
+                                                        <strong class="text-danger">{{ number_format((float) $lowestPrice, 2, ',', ' ') }} PLN</strong>
                                                     </div>
                                                     @include('online-course-storefront.partials.promotion-notice', ['price' => $featuredPrice])
                                                 </div>
                                             @elseif($ownerAccess?->state !== \App\Support\StorefrontCourseAccess::STATE_SCHEDULED && $lowestPrice !== null)
-                                                <p class="mb-3"><strong>od {{ number_format((float) $lowestPrice, 2, ',', ' ') }} zł</strong></p>
+                                                <p class="mb-3"><strong>{{ number_format((float) $lowestPrice, 2, ',', ' ') }} zł</strong></p>
                                             @elseif($ownerAccess?->state !== \App\Support\StorefrontCourseAccess::STATE_SCHEDULED && $hasComplimentary)
                                                 <p class="mb-3"><strong>Bezpłatny dostęp</strong></p>
                                             @endif

@@ -36,7 +36,8 @@ class StorefrontArchiveSalesTest extends TestCase
             ->assertOk()
             ->assertSee('Kurs archiwalny testowy')
             ->assertSee('Sprzedaż wyłączona')
-            ->assertDontSee('od 199,00 zł')
+            ->assertDontSee('199,00 zł')
+            ->assertDontSee('od 199,00')
             ->assertDontSee('/ osoba')
             ->assertDontSee('Zamawiam ten wariant');
 

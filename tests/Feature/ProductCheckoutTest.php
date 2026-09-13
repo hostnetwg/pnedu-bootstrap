@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\FormOrder;
+use App\Models\Instructor;
 use App\Models\OnlineCourse;
 use App\Models\OnlinePaymentOrder;
 use App\Models\OrderItem;
@@ -48,14 +49,28 @@ class ProductCheckoutTest extends TestCase
     public function test_public_catalog_offer_and_checkout_are_visible(): void
     {
         [$product, $price] = $this->createOffer();
+        if (Schema::connection('pneadm')->hasTable('instructors')) {
+            $instructor = Instructor::query()->create([
+                'first_name' => 'Łukasz',
+                'last_name' => 'Grabowski',
+                'email' => 'autor-kursu-'.uniqid().'@example.test',
+                'gender' => 'male',
+                'is_active' => true,
+            ]);
+            $product->onlineCourse->forceFill(['instructor_id' => $instructor->id])->save();
+        }
 
         $this->get(route('online-courses.catalog.index'))
             ->assertOk()
-            ->assertSee('Kurs sprzedażowy testowy');
+            ->assertSee('Kurs sprzedażowy testowy')
+            ->assertSee('Autor: Łukasz Grabowski')
+            ->assertDontSee('Prowadzący: Łukasz Grabowski');
 
         $this->get(route('online-courses.catalog.show', $product->slug))
             ->assertOk()
             ->assertSee('Kurs sprzedażowy testowy')
+            ->assertSee('Autor: Łukasz Grabowski')
+            ->assertDontSee('Prowadzący: Łukasz Grabowski')
             ->assertSee('Dostęp na rok')
             ->assertSee('30 dni gwarancji satysfakcji od rozpoczęcia dostępu do kursu')
             ->assertSee('Zwrot zgłosisz');
