@@ -30,7 +30,7 @@ class StorefrontArchiveSalesTest extends TestCase
 
     public function test_catalog_shows_archived_course_without_purchase(): void
     {
-        [$product] = $this->createArchivedOffer();
+        [$product, $price] = $this->createArchivedOffer();
 
         $this->get(route('online-courses.catalog.index'))
             ->assertOk()
@@ -39,6 +39,11 @@ class StorefrontArchiveSalesTest extends TestCase
             ->assertDontSee('199,00 zł')
             ->assertDontSee('od 199,00')
             ->assertDontSee('/ osoba')
+            ->assertSee('Zobacz szczegóły')
+            ->assertDontSee(route('online-courses.checkout.create', [
+                'product' => $product->slug,
+                'price' => $price->id,
+            ]), false)
             ->assertDontSee('Zamawiam ten wariant');
 
         $this->get(route('online-courses.catalog.show', $product->slug))

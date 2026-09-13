@@ -37,6 +37,14 @@
                             $hasComplimentary = $prices->contains(fn ($price) => $price->isComplimentary());
                             $salesOpen = $product->isSalesOpen() && $prices->isNotEmpty();
                             $ownerAccess = ($accessByCourseId ?? [])[(int) $product->resource_id] ?? null;
+                            $detailsUrl = route('online-courses.catalog.show', $product->slug);
+                            $complimentaryPrice = $prices->first(fn ($price) => $price->isComplimentary());
+                            $orderUrl = $featuredPrice
+                                ? route('online-courses.checkout.create', ['product' => $product->slug, 'price' => $featuredPrice->id])
+                                : ($complimentaryPrice
+                                    ? route('online-courses.free-signup.create', ['product' => $product->slug, 'price' => $complimentaryPrice->id])
+                                    : null);
+                            $orderLabel = $featuredPrice ? 'Zamawiam dostęp' : 'Zapisz się bezpłatnie';
                         @endphp
                         <article class="col-md-6 col-xl-4">
                             <div class="card h-100 shadow-sm border-0">
@@ -68,11 +76,11 @@
                                             <p class="mb-2">Dostęp do <strong>{{ $ownerAccess->endsLabel() }}</strong></p>
                                             <div class="d-grid gap-2">
                                                 <a href="{{ $ownerAccess->dashboardUrl() }}" class="btn btn-primary">Przejdź do kursu</a>
-                                                <a href="{{ route('online-courses.catalog.show', $product->slug) }}" class="btn btn-outline-primary">Zobacz kurs</a>
+                                                <a href="{{ $detailsUrl }}" class="btn btn-outline-primary">Zobacz szczegóły</a>
                                             </div>
                                         @elseif(! $salesOpen)
                                             <p class="mb-3">Sprzedaż wyłączona</p>
-                                            <a href="{{ route('online-courses.catalog.show', $product->slug) }}" class="btn btn-primary">Zobacz kurs</a>
+                                            <a href="{{ $detailsUrl }}" class="btn btn-primary">Zobacz szczegóły</a>
                                         @else
                                             @if($ownerAccess?->state === \App\Support\StorefrontCourseAccess::STATE_SCHEDULED)
                                                 <p class="mb-3">Dostęp od <strong>{{ $ownerAccess->startsLabel() }}</strong></p>
@@ -92,7 +100,12 @@
                                             @elseif($ownerAccess?->state !== \App\Support\StorefrontCourseAccess::STATE_SCHEDULED && $hasComplimentary)
                                                 <p class="mb-3"><strong>Bezpłatny dostęp</strong></p>
                                             @endif
-                                            <a href="{{ route('online-courses.catalog.show', $product->slug) }}" class="btn btn-primary">Zobacz kurs</a>
+                                            <div class="d-grid gap-2">
+                                                @if($orderUrl)
+                                                    <a href="{{ $orderUrl }}" class="btn {{ $featuredPrice ? 'btn-primary' : 'btn-success' }}">{{ $orderLabel }}</a>
+                                                @endif
+                                                <a href="{{ $detailsUrl }}" class="btn btn-outline-primary">Zobacz szczegóły</a>
+                                            </div>
                                         @endif
                                     </div>
                                 </div>

@@ -67,7 +67,10 @@ class FreeCourseSignupTest extends TestCase
             ->assertSee('199,00 zł')
             ->assertDontSee('od 199,00')
             ->assertDontSee('/ osoba')
-            ->assertDontSee('od 0,00');
+            ->assertDontSee('od 0,00')
+            ->assertSee('Zobacz szczegóły')
+            ->assertSee('Zamawiam dostęp')
+            ->assertDontSee('Zobacz kurs');
     }
 
     public function test_complimentary_checkout_is_not_available(): void

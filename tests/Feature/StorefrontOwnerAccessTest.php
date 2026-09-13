@@ -33,14 +33,17 @@ class StorefrontOwnerAccessTest extends TestCase
 
     public function test_guest_still_sees_catalog_price_and_order_buttons(): void
     {
-        [$product] = $this->createOffer();
+        [$product, $price] = $this->createOffer();
 
         $this->get(route('online-courses.catalog.index'))
             ->assertOk()
             ->assertSee('199,00 zł')
             ->assertDontSee('od 199,00')
-            ->assertSee('Zobacz kurs')
-            ->assertDontSee('Przejdź do kursu');
+            ->assertSee('Zobacz szczegóły')
+            ->assertSee('Zamawiam dostęp')
+            ->assertDontSee('Zobacz kurs')
+            ->assertDontSee('Przejdź do kursu')
+            ->assertSee(route('online-courses.checkout.create', ['product' => $product->slug, 'price' => $price->id]), false);
 
         $this->get(route('online-courses.catalog.show', $product->slug))
             ->assertOk()
@@ -75,7 +78,7 @@ class StorefrontOwnerAccessTest extends TestCase
 
     public function test_timed_access_shows_end_date_and_extend_buttons(): void
     {
-        [$product, , $course] = $this->createOffer();
+        [$product, $price, $course] = $this->createOffer();
         $user = User::factory()->create(['email' => 'wlasciciel-rok@example.test']);
         $this->enroll($course, $user->email, expiresAt: CarbonImmutable::parse('2027-03-15 12:00:00', 'UTC'));
 
@@ -85,7 +88,11 @@ class StorefrontOwnerAccessTest extends TestCase
             ->assertSee('Dostęp do')
             ->assertSee('15.03.2027')
             ->assertSee('Przejdź do kursu')
-            ->assertSee('Zobacz kurs');
+            ->assertSee('Zobacz szczegóły')
+            ->assertDontSee(route('online-courses.checkout.create', [
+                'product' => $product->slug,
+                'price' => $price->id,
+            ]), false);
 
         $this->actingAs($user)
             ->get(route('online-courses.catalog.show', $product->slug))
@@ -114,6 +121,8 @@ class StorefrontOwnerAccessTest extends TestCase
             ->assertOk()
             ->assertSee('Dostęp od')
             ->assertSee('01.10.2026')
+            ->assertSee('Zobacz szczegóły')
+            ->assertSee('Zamawiam dostęp')
             ->assertDontSee('Przejdź do kursu');
 
         $this->actingAs($user)
@@ -136,7 +145,9 @@ class StorefrontOwnerAccessTest extends TestCase
             ->assertSee('Dostęp skończył się 10.01.2026')
             ->assertSee('199,00 zł')
             ->assertDontSee('od 199,00')
-            ->assertSee('Zobacz kurs')
+            ->assertSee('Zobacz szczegóły')
+            ->assertSee('Zamawiam dostęp')
+            ->assertDontSee('Zobacz kurs')
             ->assertDontSee('Przejdź do kursu');
 
         $this->actingAs($user)
