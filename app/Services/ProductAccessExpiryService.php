@@ -60,4 +60,22 @@ class ProductAccessExpiryService
             'years' => $base->addYearsNoOverflow($value),
         };
     }
+
+    public function resolveForPrice(
+        ProductPrice $price,
+        bool $hasExistingEnrollment,
+        ?CarbonImmutable $previousExpiry,
+        ?CarbonImmutable $grantedAt = null
+    ): ?CarbonImmutable {
+        $item = new OrderItem;
+        $item->forceFill([
+            'access_policy' => $price->access_policy,
+            'access_starts_at' => $price->access_starts_at,
+            'access_expires_at' => $price->access_expires_at,
+            'access_duration_value' => $price->access_duration_value,
+            'access_duration_unit' => $price->access_duration_unit,
+        ]);
+
+        return $this->resolve($item, $hasExistingEnrollment, $previousExpiry, $grantedAt);
+    }
 }

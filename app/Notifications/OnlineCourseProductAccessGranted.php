@@ -64,8 +64,10 @@ class OnlineCourseProductAccessGranted extends Notification
                 .'Szczegółowe informacje o przetwarzaniu Twoich danych znajdziesz w informacji dla uczestników zgłoszonych przez inny podmiot: '
                 .route('rodo.art14')
             );
-        } else {
+        } elseif ($this->order) {
             $mail->line('Jeśli zamówienie składała szkoła lub inna osoba, dostęp jest przypisany do adresu e-mail, na który otrzymujesz tę wiadomość.');
+        } else {
+            $mail->line('Dostęp jest przypisany do adresu e-mail, na który otrzymujesz tę wiadomość.');
         }
 
         return $mail;

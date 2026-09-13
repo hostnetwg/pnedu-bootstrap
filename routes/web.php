@@ -3,6 +3,7 @@
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\ExternalSurveyGateController;
+use App\Http\Controllers\FreeCourseSignupController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LegalDocumentController;
 use App\Http\Controllers\NewsletterController;
@@ -147,6 +148,11 @@ Route::get('/szkolenia-indywidualne', [App\Http\Controllers\CourseController::cl
 // Kursy nagrane dostępne do zakupu (oddzielnie od szkoleń terminowych).
 Route::get('/kursy', [OnlineCourseStorefrontController::class, 'index'])
     ->name('online-courses.catalog.index');
+Route::get('/kursy/{product:slug}/zapis', [FreeCourseSignupController::class, 'create'])
+    ->name('online-courses.free-signup.create');
+Route::post('/kursy/{product:slug}/zapis', [FreeCourseSignupController::class, 'store'])
+    ->middleware('throttle:10,1')
+    ->name('online-courses.free-signup.store');
 Route::get('/kursy/{product:slug}/zamowienie', [ProductCheckoutController::class, 'create'])
     ->name('online-courses.checkout.create');
 Route::get('/kursy/{product:slug}/zamowienie/{ident}', [ProductCheckoutController::class, 'edit'])

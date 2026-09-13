@@ -29,10 +29,12 @@
                         @php
                             $course = $product->onlineCourse;
                             $prices = $product->defaultOffer?->activePrices ?? collect();
-                            $featuredPrice = $prices
+                            $paidPrices = $prices->reject(fn ($price) => $price->isComplimentary());
+                            $featuredPrice = $paidPrices
                                 ->sortBy(fn ($price) => (float) $price->currentPrice())
                                 ->first();
                             $lowestPrice = $featuredPrice ? (float) $featuredPrice->currentPrice() : null;
+                            $hasComplimentary = $prices->contains(fn ($price) => $price->isComplimentary());
                             $salesOpen = $product->isSalesOpen() && $prices->isNotEmpty();
                             $ownerAccess = ($accessByCourseId ?? [])[(int) $product->resource_id] ?? null;
                         @endphp
@@ -86,8 +88,10 @@
                                                     </div>
                                                     @include('online-course-storefront.partials.promotion-notice', ['price' => $featuredPrice])
                                                 </div>
-                                            @elseif($ownerAccess?->state !== \App\Support\StorefrontCourseAccess::STATE_SCHEDULED)
+                                            @elseif($ownerAccess?->state !== \App\Support\StorefrontCourseAccess::STATE_SCHEDULED && $lowestPrice !== null)
                                                 <p class="mb-3"><strong>od {{ number_format((float) $lowestPrice, 2, ',', ' ') }} zł / osoba</strong></p>
+                                            @elseif($ownerAccess?->state !== \App\Support\StorefrontCourseAccess::STATE_SCHEDULED && $hasComplimentary)
+                                                <p class="mb-3"><strong>Bezpłatny dostęp</strong></p>
                                             @endif
                                             <a href="{{ route('online-courses.catalog.show', $product->slug) }}" class="btn btn-primary">Zobacz kurs</a>
                                         @endif

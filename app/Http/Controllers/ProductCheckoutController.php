@@ -25,10 +25,17 @@ class ProductCheckoutController extends Controller
     public function create(Request $request, Product $product): View
     {
         [$product, $offer] = $this->availableProduct($product);
-        $prices = $offer->activePrices;
-        $selectedPrice = $prices->firstWhere('id', (int) $request->query('price')) ?? $prices->first();
+        $paidPrices = $offer->activePrices->reject(fn (ProductPrice $price) => $price->isComplimentary())->values();
+        $requestedId = (int) $request->query('price');
+        if ($requestedId > 0) {
+            $requested = $offer->activePrices->firstWhere('id', $requestedId);
+            abort_unless($requested instanceof ProductPrice && ! $requested->isComplimentary(), 404);
+            $selectedPrice = $requested;
+        } else {
+            $selectedPrice = $paidPrices->first();
+        }
 
-        abort_unless($selectedPrice, 404);
+        abort_unless($selectedPrice instanceof ProductPrice, 404);
 
         return view('online-course-storefront.checkout', $this->checkoutViewData(
             $product,
@@ -51,10 +58,10 @@ class ProductCheckoutController extends Controller
                 ->with('error', 'Edycja tego zamówienia jest już wyłączona. Zmiany danych są możliwe po kontakcie z biurem.');
         }
 
-        $prices = $offer->activePrices;
+        $prices = $offer->activePrices->reject(fn (ProductPrice $price) => $price->isComplimentary())->values();
         $selectedPrice = $prices->firstWhere('id', (int) $order->orderItems->first()?->product_price_id)
             ?? $prices->first();
-        abort_unless($selectedPrice, 404);
+        abort_unless($selectedPrice && ! $selectedPrice->isComplimentary(), 404);
 
         return view('online-course-storefront.checkout', $this->checkoutViewData(
             $product,
@@ -76,7 +83,10 @@ class ProductCheckoutController extends Controller
         $buyerType = OrderFormCustomerProfile::buyerTypeForProfile($profile);
         $request->merge(['buyer_type' => $buyerType]);
 
-        $allowedPriceIds = $offer->activePrices->pluck('id')->all();
+        $allowedPriceIds = $offer->activePrices
+            ->reject(fn (ProductPrice $price) => $price->isComplimentary())
+            ->pluck('id')
+            ->all();
         $allowedGateways = collect([
             $offer->allow_payu ? 'payu' : null,
             $offer->allow_paynow ? 'paynow' : null,

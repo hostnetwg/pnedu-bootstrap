@@ -7,6 +7,7 @@ Status: wdrożone lokalnie, przed produkcją wymagany przegląd prawny
 
 - `GET /kursy` — katalog aktywnych ofert,
 - `GET /kursy/{product:slug}` — opis i warianty dostępu,
+- `GET|POST /kursy/{product:slug}/zapis` — bezpłatny zapis (flaga `is_complimentary`, bez checkoutu i FV),
 - `GET|POST /kursy/{product:slug}/zamowienie` — checkout,
 - `GET /kursy/{product:slug}/zamowienie/{ident}` — edycja odroczonego zamówienia,
 - `GET /zamowienia-kursow/{ident}` — podsumowanie (numer ID, PDF i EDYTUJ jak przy szkoleniach),

@@ -52,6 +52,9 @@
 
     <section class="py-5">
         <div class="container">
+            @if(session('success'))
+                <div class="alert alert-success">{{ session('success') }}</div>
+            @endif
             <div class="row g-5">
                 <div class="col-lg-7">
                     <h2 class="h3 mb-3">O kursie</h2>

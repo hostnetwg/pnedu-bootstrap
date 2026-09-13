@@ -1,5 +1,11 @@
 @php
-    $buttonLabel = $buttonLabel ?? 'Zamawiam ten wariant';
+    $isComplimentary = $price->isComplimentary();
+    $buttonLabel = $isComplimentary
+        ? 'Zapisz się bezpłatnie'
+        : ($buttonLabel ?? 'Zamawiam ten wariant');
+    $buttonUrl = $isComplimentary
+        ? route('online-courses.free-signup.create', ['product' => $product->slug, 'price' => $price->id])
+        : route('online-courses.checkout.create', ['product' => $product->slug, 'price' => $price->id]);
 @endphp
 <div class="border rounded p-3">
     <div class="d-flex justify-content-between align-items-start gap-3">
@@ -8,7 +14,9 @@
             <div class="small text-muted">{{ $price->accessLabel() }}</div>
         </div>
         <div class="text-end text-nowrap">
-            @if($price->isPromotionActive())
+            @if($isComplimentary)
+                <strong class="fs-5">Bezpłatny dostęp</strong>
+            @elseif($price->isPromotionActive())
                 <small class="text-decoration-line-through text-muted d-block">{{ number_format((float) $price->price, 2, ',', ' ') }} PLN</small>
                 <strong class="fs-5 text-danger">{{ number_format((float) $price->currentPrice(), 2, ',', ' ') }} PLN</strong>
             @else
@@ -27,8 +35,8 @@
     @if(filled($price->access_note))
         <p class="small text-muted mt-2 mb-0">{{ $price->access_note }}</p>
     @endif
-    <a href="{{ route('online-courses.checkout.create', ['product' => $product->slug, 'price' => $price->id]) }}"
-       class="btn btn-primary w-100 mt-3">
+    <a href="{{ $buttonUrl }}"
+       class="btn {{ $isComplimentary ? 'btn-success' : 'btn-primary' }} w-100 mt-3">
         {{ $buttonLabel }}
     </a>
 </div>

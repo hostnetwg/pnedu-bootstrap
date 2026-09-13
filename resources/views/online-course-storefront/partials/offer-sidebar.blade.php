@@ -63,7 +63,7 @@
         @endforeach
     </div>
 
-    @if($offer?->hasSatisfactionGuarantee())
+    @if($offer?->hasSatisfactionGuarantee() && $prices->contains(fn ($price) => ! $price->isComplimentary()))
         <hr>
         @include('online-course-storefront.partials.satisfaction-guarantee', ['offer' => $offer])
     @endif

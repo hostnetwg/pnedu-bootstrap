@@ -29,6 +29,7 @@ class ProductPrice extends Model
         'name',
         'description',
         'is_active',
+        'is_complimentary',
         'sort_order',
         'price',
         'currency',
@@ -50,6 +51,7 @@ class ProductPrice extends Model
 
     protected $casts = [
         'is_active' => 'boolean',
+        'is_complimentary' => 'boolean',
         'price' => 'decimal:2',
         'tax_rate' => 'decimal:4',
         'is_promotion' => 'boolean',
@@ -67,9 +69,14 @@ class ProductPrice extends Model
         return $this->belongsTo(ProductOffer::class, 'product_offer_id');
     }
 
+    public function isComplimentary(): bool
+    {
+        return (bool) $this->is_complimentary;
+    }
+
     public function isPromotionActive(?CarbonInterface $at = null): bool
     {
-        if (! $this->is_promotion || $this->promotion_price === null) {
+        if ($this->isComplimentary() || ! $this->is_promotion || $this->promotion_price === null) {
             return false;
         }
 
