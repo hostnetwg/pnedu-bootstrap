@@ -52,7 +52,7 @@
                                     <a href="{{ route('online-courses.catalog.show', $product->slug) }}">
                                         <img src="{{ $course->publicImageUrl() }}"
                                              class="card-img-top"
-                                             style="height: 220px; object-fit: cover;"
+                                             style="width: 100%; height: auto; object-fit: contain; display: block;"
                                              alt="Okładka kursu {{ $product->name }}">
                                     </a>
                                 @endif
