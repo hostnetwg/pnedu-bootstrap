@@ -154,7 +154,11 @@ class ProductPrice extends Model
             default => '',
         };
 
-        return trim("Dostęp przez {$value} {$unit} od ".($start ?? 'nadania'));
+        if ($start !== null) {
+            return "Dostęp przez {$value} {$unit} od {$start}";
+        }
+
+        return "Dostęp przez {$value} {$unit}";
     }
 
     public function accessStartsInFuture(?CarbonInterface $at = null): bool

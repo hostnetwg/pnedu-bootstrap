@@ -5,7 +5,7 @@ Status: wdrożone lokalnie, przed produkcją wymagany przegląd prawny
 
 ## Publiczne trasy
 
-- `GET /kursy` — katalog aktywnych ofert (sama kwota, bez „od” i bez „/ osoba”; niezakupione: „Zamawiam dostęp” + „Zobacz szczegóły”),
+- `GET /kursy` — katalog aktywnych ofert (sama kwota, bez „od” i bez „/ osoba”; niezakupione: „Zamawiam dostęp” + „Zobacz szczegóły”; sprzedaż wyłączona: wyszarzony, nieaktywny „Zamawiam dostęp”; 25 kursów na stronę; najpierw sprzedaż otwarta, potem wyłączona, w kolejności z ADM),
 - `GET /kursy/{product:slug}` — opis i warianty dostępu (etykieta autora: „Autor”; jeden wariant płatny → „Zamawiam kurs”, kilka → „Zamawiam ten wariant”),
 - `GET|POST /kursy/{product:slug}/zapis` — bezpłatny zapis (flaga `is_complimentary`, bez checkoutu i FV),
 - `GET|POST /kursy/{product:slug}/zamowienie` — checkout płatnych wariantów w 4 krokach jak szkolenie V2 (profil → kontakt → faktura → płatność); nowy zakup startuje od „Osoba prywatna” i płatności online, gdy bramka jest dostępna; jeden wariant jest w podsumowaniu, nie jako osobny krok,
@@ -14,7 +14,7 @@ Status: wdrożone lokalnie, przed produkcją wymagany przegląd prawny
 - menu **Kursy** znajduje się bezpośrednio po **Szkolenia**,
 - kursy nagrane nie są pokazywane na stronie głównej.
 
-Katalog pokazuje kursy z publiczną ofertą. **Można kupić** i **pokazuj w katalogu** są niezależne: kurs może być w `/kursy` ze statusem „Sprzedaż wyłączona” (portfolio / nieaktualna wersja). Taka strona ma `noindex` i nie trafia do sitemapy. Checkout jest zablokowany. Osoba z aktywnym dostępem nadal widzi „Przejdź do kursu”.
+Katalog pokazuje kursy z publiczną ofertą. **Można kupić** i **pokazuj w katalogu** są niezależne: kurs może być w `/kursy` z wyszarzonym, nieaktywnym przyciskiem „Zamawiam dostęp” (portfolio / nieaktualna wersja). Taka strona oferty ma `noindex` i nie trafia do sitemapy. Checkout jest zablokowany. Osoba z aktywnym dostępem nadal widzi „Przejdź do kursu”. Kolejność na `/kursy` ustawiasz w ADM na `/online-courses` (przeciąganie / strzałki). Lista publiczna najpierw pokazuje kursy ze sprzedażą, potem wyłączone.
 
 Aktywna promocja z datą końcową pokazuje na katalogu, ofercie i checkoutcie te same informacje co szkolenia: „Promocja trwa do” i **najniższą cenę z 30 dni przed obniżką** (z `price_offer_histories` w bazie `pneadm`; gdy brak historii — cena regularna wariantu). Licznik do końca promocji jest opcjonalny (`product_prices.show_promotion_countdown`). Korekta wpisów (test / pomyłka) jest tylko w ADM.
 
@@ -68,6 +68,7 @@ Wymagany jest identyczny token `PNEDU_INTERNAL_API_TOKEN` w obu aplikacjach. Wyc
 
 ## Przedsprzedaż i gwarancja satysfakcji
 
+- etykieta okresu na ofercie: „Dostęp przez 1 rok” (bez „od nadania”); data startu tylko przy `access_starts_at`,
 - start dostępu: od nadania albo od `access_starts_at` wariantu (snapshot na zamówieniu),
 - okres czasowy liczy się od późniejszej daty: nadanie albo zaplanowany start,
 - oferta pokazuje `satisfaction_guarantee_days` (domyślnie 30); zwrot tylko e-mailem/telefonem, bez przycisku na koncie,

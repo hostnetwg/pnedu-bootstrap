@@ -64,7 +64,9 @@ class ProductCheckoutTest extends TestCase
             ->assertOk()
             ->assertSee('Kurs sprzedażowy testowy')
             ->assertSee('Autor: Łukasz Grabowski')
-            ->assertDontSee('Prowadzący: Łukasz Grabowski');
+            ->assertDontSee('Prowadzący: Łukasz Grabowski')
+            ->assertDontSee('pagination.previous')
+            ->assertDontSee('Showing 1 to');
 
         $this->get(route('online-courses.catalog.show', $product->slug))
             ->assertOk()
@@ -72,6 +74,8 @@ class ProductCheckoutTest extends TestCase
             ->assertSee('Autor: Łukasz Grabowski')
             ->assertDontSee('Prowadzący: Łukasz Grabowski')
             ->assertSee('Dostęp na rok')
+            ->assertSee('Dostęp przez 1 rok')
+            ->assertDontSee('od nadania')
             ->assertSee('Zamawiam kurs')
             ->assertDontSee('Zamawiam ten wariant')
             ->assertDontSee('Wybierz dostęp')

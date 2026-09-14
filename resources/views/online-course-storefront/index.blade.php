@@ -79,8 +79,15 @@
                                                 <a href="{{ $detailsUrl }}" class="btn btn-outline-primary">Zobacz szczegóły</a>
                                             </div>
                                         @elseif(! $salesOpen)
-                                            <p class="mb-3">Sprzedaż wyłączona</p>
-                                            <a href="{{ $detailsUrl }}" class="btn btn-primary">Zobacz szczegóły</a>
+                                            <div class="d-grid gap-2">
+                                                <button type="button"
+                                                        class="btn btn-primary"
+                                                        disabled
+                                                        aria-disabled="true">
+                                                    Zamawiam dostęp
+                                                </button>
+                                                <a href="{{ $detailsUrl }}" class="btn btn-outline-primary">Zobacz szczegóły</a>
+                                            </div>
                                         @else
                                             @if($ownerAccess?->state === \App\Support\StorefrontCourseAccess::STATE_SCHEDULED)
                                                 <p class="mb-3">Dostęp od <strong>{{ $ownerAccess->startsLabel() }}</strong></p>
@@ -114,7 +121,11 @@
                     @endforeach
                 </div>
 
-                <div class="mt-4">{{ $products->links() }}</div>
+                @if($products->hasPages())
+                    <div class="d-flex justify-content-center mt-4">
+                        {{ $products->links('pagination::bootstrap-5') }}
+                    </div>
+                @endif
             @endif
         </div>
     </section>

@@ -17,8 +17,8 @@ class OnlineCourseStorefrontController extends Controller
                 'onlineCourse.instructor',
                 'defaultOffer.activePrices',
             ])
-            ->orderBy('name')
-            ->paginate(12);
+            ->orderForPublicCatalog()
+            ->paginate(25);
 
         $accessByCourseId = $access->mapForUser(
             Auth::user(),

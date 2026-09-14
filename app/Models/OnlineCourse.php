@@ -27,6 +27,7 @@ class OnlineCourse extends Model
         'image',
         'is_active',
         'visible_in_dashboard',
+        'catalog_sort_order',
         'internal_notes',
         'legacy_publigo_product_id',
         'certificate_download_status',
@@ -42,6 +43,7 @@ class OnlineCourse extends Model
     protected $casts = [
         'is_active' => 'boolean',
         'visible_in_dashboard' => 'boolean',
+        'catalog_sort_order' => 'integer',
         'certificate_issue_date' => 'date',
         'certificate_duration_minutes' => 'integer',
         'certificate_collect_birth_data' => 'boolean',
