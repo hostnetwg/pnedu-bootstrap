@@ -84,7 +84,7 @@
                                                         class="btn btn-primary"
                                                         disabled
                                                         aria-disabled="true">
-                                                    Zamawiam dostęp
+                                                    Sprzedaż zamknięta
                                                 </button>
                                                 <a href="{{ $detailsUrl }}" class="btn btn-outline-primary">Zobacz szczegóły</a>
                                             </div>

@@ -35,7 +35,7 @@ class StorefrontArchiveSalesTest extends TestCase
         $this->get(route('online-courses.catalog.index'))
             ->assertOk()
             ->assertSee('Kurs archiwalny testowy')
-            ->assertSee('Zamawiam dostęp')
+            ->assertSee('Sprzedaż zamknięta')
             ->assertSee('aria-disabled="true"', false)
             ->assertDontSee('199,00 zł')
             ->assertDontSee('od 199,00')
