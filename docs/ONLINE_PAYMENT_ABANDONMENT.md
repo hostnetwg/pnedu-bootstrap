@@ -105,8 +105,8 @@ Brak migracji.
 
 - Komenda: `form-orders:send-online-payment-recovery-emails` (co godzinę przez `schedule:run`).
 - Wysyła **jeden** recovery e-mail na zamówienie (`online_payment_recovery_sent_at`).
-- Kandydaci: porzucone nieopłacone online (`FormOrderOnlineAbandonmentService::isAbandonedUnpaidOnline`) — failed/cancelled od razu, `awaiting_payment` po ≥ 60 min.
-- Mail: `OnlinePaymentRecoveryMail` — linki **Zapłać ponownie** + **FV odroczona** + pending.
+- Kandydaci: porzucone nieopłacone online (`FormOrderOnlineAbandonmentService::isAbandonedUnpaidOnline`) — failed/cancelled od razu, `awaiting_payment` po ≥ 60 min. **Tylko szkolenia live** (`order_kind` ≠ `product`).
+- Mail: `OnlinePaymentRecoveryMail` — linki **Zapłać ponownie** + **FV odroczona** + pending (szkolenia).
 - Konfiguracja: `online_recovery_enabled` (env: `ORDER_FORM_ONLINE_RECOVERY_ENABLED`).
 
 ```bash
@@ -117,6 +117,7 @@ sail artisan form-orders:send-online-payment-recovery-emails --dry-run
 ### 2. Ręcznie z adm (pneadm)
 
 - Przycisk na stronie zamówienia: **Wyślij mail recovery płatności** (pasek „Rozliczenie”).
+- Działa też dla **kursów online** (`order_kind=product`): ten sam przycisk, mail tylko z **Zapłać ponownie** (bez FV odroczonej). Cron ich nie obejmuje.
 - Wywołanie server-to-server: `POST /api/internal/form-orders/{id}/send-online-payment-recovery` (pnedu, token `PNEDU_INTERNAL_API_TOKEN`).
 - Ręczna wysyłka **może powtórzyć** mail (`allow_resend=true`).
 - **Podgląd przed wysyłką** (jak mail PNEDU): modal ładuje temat, odbiorców i HTML z `GET …/preview-online-payment-recovery` (pnedu) / `form-orders/{id}/online-payment/recovery-email-preview` (adm).

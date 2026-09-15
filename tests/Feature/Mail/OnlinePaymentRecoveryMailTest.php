@@ -47,6 +47,36 @@ class OnlinePaymentRecoveryMailTest extends TestCase
         $this->assertStringContainsString('prefill_from=TEST', $html);
     }
 
+    public function test_product_order_recovery_mail_has_retry_without_deferred_invoice(): void
+    {
+        config([
+            'mail.system.from_address' => 'info@system.pnedu.pl',
+            'mail.system.from_name' => 'Platforma Nowoczesnej Edukacji',
+            'mail.system.reply_to_address' => 'kontakt@pnedu.pl',
+            'mail.brand.public_url' => 'https://pnedu.pl',
+            'mail.brand.public_label' => 'www.pnedu.pl',
+        ]);
+
+        $order = $this->formOrder();
+        $order->order_kind = 'product';
+        $order->product_name = 'TIK w pracy nauczyciela';
+
+        $html = (new OnlinePaymentRecoveryMail(
+            $order,
+            null,
+            $this->onlinePaymentOrder(),
+            'https://pnedu.pl/orders/TEST/retry-payment?signature=abc',
+            '',
+            'https://pnedu.pl/payment/pending/OPO1'
+        ))->render();
+
+        $this->assertStringContainsString('Zapłać ponownie', $html);
+        $this->assertStringContainsString('płatność online za kurs', $html);
+        $this->assertStringContainsString('retry-payment?signature=abc', $html);
+        $this->assertStringNotContainsString('fakturę z odroczonym terminem', $html);
+        $this->assertStringNotContainsString('prefill_from=TEST', $html);
+    }
+
     private function formOrder(): FormOrder
     {
         $order = new FormOrder([

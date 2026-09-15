@@ -62,6 +62,17 @@ class FormOrderOnlinePaymentRecoveryServiceTest extends TestCase
         $this->assertFalse($this->service->eligibleForManualRecovery($order));
     }
 
+    public function test_product_order_is_eligible_for_manual_recovery_but_not_automatic(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-08-22 12:00:00', 'UTC'));
+        $order = $this->onlineOrder(FormOrder::PAYMENT_STATUS_CANCELLED, now('UTC')->subMinutes(5));
+        $order->order_kind = 'product';
+
+        $this->assertTrue($this->service->eligibleForManualRecovery($order));
+        $this->assertFalse($this->service->eligibleForAutomaticRecovery($order));
+        Carbon::setTestNow();
+    }
+
     private function onlineOrder(string $paymentStatus, Carbon $orderDate): FormOrder
     {
         return FormOrder::make([

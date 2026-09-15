@@ -28,6 +28,10 @@ class FormOrderOnlinePaymentRecoveryService
 
     public function eligibleForAutomaticRecovery(FormOrder $order, ?Carbon $now = null): bool
     {
+        if ($order->isProductOrder()) {
+            return false;
+        }
+
         if ($order->online_payment_recovery_sent_at !== null) {
             return false;
         }
@@ -189,7 +193,7 @@ class FormOrderOnlinePaymentRecoveryService
      *     error?: string,
      *     code?: string,
      *     emails?: list<string>,
-     *     course?: Course,
+     *     course?: Course|null,
      *     online_payment_order?: OnlinePaymentOrder,
      *     retry_url?: string,
      *     deferred_url?: string,
@@ -198,13 +202,18 @@ class FormOrderOnlinePaymentRecoveryService
      */
     private function buildRecoveryMail(FormOrder $order): array
     {
-        $course = Course::find($order->product_id);
-        if (! $course) {
-            return [
-                'success' => false,
-                'error' => 'Nie znaleziono kursu powiązanego z zamówieniem.',
-                'code' => 'course_missing',
-            ];
+        $isProductOrder = $order->isProductOrder();
+        $course = null;
+
+        if (! $isProductOrder) {
+            $course = Course::find($order->product_id);
+            if (! $course) {
+                return [
+                    'success' => false,
+                    'error' => 'Nie znaleziono kursu powiązanego z zamówieniem.',
+                    'code' => 'course_missing',
+                ];
+            }
         }
 
         $onlinePaymentOrder = OnlinePaymentOrder::query()
@@ -235,7 +244,9 @@ class FormOrderOnlinePaymentRecoveryService
             'course' => $course,
             'online_payment_order' => $onlinePaymentOrder,
             'retry_url' => $this->retryService->signedRetryUrl($order),
-            'deferred_url' => $this->retryService->signedConvertToDeferredUrl($order),
+            'deferred_url' => $isProductOrder
+                ? ''
+                : $this->retryService->signedConvertToDeferredUrl($order),
             'pending_url' => route('payment.pending', $onlinePaymentOrder->ident),
         ];
     }
@@ -319,6 +330,10 @@ class FormOrderOnlinePaymentRecoveryService
         return FormOrder::query()
             ->whereNull('cancelled_at')
             ->whereNull('deleted_at')
+            ->where(function (Builder $kind) {
+                $kind->whereNull('order_kind')
+                    ->orWhere('order_kind', '!=', 'product');
+            })
             ->where('payment_mode', FormOrder::PAYMENT_MODE_ONLINE_GATEWAY)
             ->where('payment_status', '!=', FormOrder::PAYMENT_STATUS_PAID)
             ->whereNull('online_payment_recovery_sent_at')

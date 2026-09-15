@@ -15,7 +15,7 @@ class OnlinePaymentRecoveryMail extends Mailable
 
     public function __construct(
         public FormOrder $order,
-        public Course $course,
+        public ?Course $course,
         public OnlinePaymentOrder $onlinePaymentOrder,
         public string $retryPaymentUrl,
         public string $deferredOrderFormUrl,

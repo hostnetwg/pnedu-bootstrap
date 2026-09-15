@@ -12,7 +12,11 @@
 <tr><td style="padding: 40px 48px;">
 
     <p style="margin: 0 0 16px;">Dzień dobry,</p>
-    <p style="margin: 0 0 16px;">zauważyliśmy, że płatność online za szkolenie nie została dokończona. Twoje zamówienie nadal czeka — możesz dokończyć płatność lub wybrać fakturę z odroczonym terminem płatności.</p>
+    @if($order->isProductOrder())
+        <p style="margin: 0 0 16px;">zauważyliśmy, że płatność online za kurs nie została dokończona. Twoje zamówienie nadal czeka — możesz dokończyć płatność.</p>
+    @else
+        <p style="margin: 0 0 16px;">zauważyliśmy, że płatność online za szkolenie nie została dokończona. Twoje zamówienie nadal czeka — możesz dokończyć płatność lub wybrać fakturę z odroczonym terminem płatności.</p>
+    @endif
     <p style="margin: 0 0 8px; font-size: 17px; font-weight: bold; color: #1a1a1a;">{{ str_replace('&nbsp;', ' ', strip_tags($order->product_name)) }}</p>
     @if($course && $course->start_date)
         @php
@@ -30,13 +34,15 @@
 
     <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: 24px 0; background-color: #f0f7ff; border-radius: 6px; border: 1px solid #cce5ff;">
     <tr><td style="padding: 20px 24px;">
-        <p style="margin: 0 0 12px;">Wybierz dogodną opcję:</p>
+        <p style="margin: 0 0 12px;">{{ $deferredOrderFormUrl ? 'Wybierz dogodną opcję:' : 'Dokończ płatność:' }}</p>
         <p style="margin: 0 0 16px;">
             <a href="{{ $retryPaymentUrl }}" style="display: inline-block; padding: 12px 20px; background-color: #0066cc; color: #ffffff !important; text-decoration: none; font-weight: bold; font-size: 15px; border-radius: 6px;">Zapłać ponownie</a>
         </p>
+        @if($deferredOrderFormUrl)
         <p style="margin: 0;">
             <a href="{{ $deferredOrderFormUrl }}" style="color: #0066cc; text-decoration: underline;">Wolę fakturę z odroczonym terminem płatności</a>
         </p>
+        @endif
         <p style="margin: 16px 0 0; font-size: 13px; color: #666;">
             Status płatności: <a href="{{ $pendingPageUrl }}" style="color: #0066cc; text-decoration: underline;">strona oczekiwania</a>
         </p>
