@@ -82,6 +82,15 @@ class ProductCheckoutController extends Controller
         $profile = (string) $request->input('customer_profile', OrderFormCustomerProfile::SCHOOL);
         $buyerType = OrderFormCustomerProfile::buyerTypeForProfile($profile);
         $request->merge(['buyer_type' => $buyerType]);
+        if ($profile === OrderFormCustomerProfile::PERSON) {
+            $composedContactName = trim(implode(' ', array_filter([
+                trim((string) $request->input('contact_first_name')),
+                trim((string) $request->input('contact_last_name')),
+            ], fn (string $part) => $part !== '')));
+            if ($composedContactName !== '') {
+                $request->merge(['contact_name' => $composedContactName]);
+            }
+        }
 
         $allowedPriceIds = $offer->activePrices
             ->reject(fn (ProductPrice $price) => $price->isComplimentary())
@@ -109,8 +118,11 @@ class ProductCheckoutController extends Controller
             'customer_profile' => ['required', Rule::in(OrderFormCustomerProfile::ALL)],
             'buyer_type' => ['required', 'in:person,organisation'],
             'contact_name' => ['required', 'string', 'max:255'],
+            'contact_first_name' => ['nullable', 'string', 'max:255'],
+            'contact_last_name' => ['nullable', 'string', 'max:255'],
             'contact_email' => ['required', 'email', 'max:255'],
             'contact_phone' => ['nullable', 'string', 'max:50'],
+            'participant_is_contact' => ['nullable', 'boolean'],
             'participants' => ['required', 'array', 'min:1', 'max:'.$maxParticipants],
             'participants.*.first_name' => ['required', 'string', 'max:255'],
             'participants.*.last_name' => ['required', 'string', 'max:255'],

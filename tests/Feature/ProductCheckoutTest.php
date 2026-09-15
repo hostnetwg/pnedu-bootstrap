@@ -101,6 +101,8 @@ class ProductCheckoutTest extends TestCase
             ->assertSee('data-gus-target="recipient"', false)
             ->getContent();
         $this->assertMatchesRegularExpression('/id="profilePerson"[^>]*\bchecked\b/', $checkoutHtml);
+        $this->assertStringContainsString('Zamawiający jest równocześnie uczestnikiem kursu', $checkoutHtml);
+        $this->assertMatchesRegularExpression('/id="participantIsContact"[^>]*\bchecked\b/', $checkoutHtml);
     }
 
     public function test_two_paid_variants_keep_this_variant_button(): void
@@ -560,6 +562,29 @@ class ProductCheckoutTest extends TestCase
         $price->refresh();
         $this->assertTrue($price->accessStartsInFuture());
         $this->assertTrue($item->access_starts_at?->equalTo($price->access_starts_at));
+    }
+
+    public function test_person_checkout_composes_contact_name_from_first_and_last(): void
+    {
+        [$product, $price] = $this->createOffer();
+        $price->update([
+            'access_starts_at' => CarbonImmutable::parse('2026-12-01 08:00:00', 'UTC'),
+        ]);
+
+        $payload = $this->personCheckoutPayload($price);
+        unset($payload['contact_name']);
+        $payload['contact_first_name'] = 'Anna';
+        $payload['contact_last_name'] = 'Prywatna';
+        $payload['participant_is_contact'] = '1';
+
+        $this->post(route('online-courses.checkout.store', $product->slug), $payload)
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('form_orders', [
+            'orderer_email' => $payload['contact_email'],
+            'orderer_name' => 'Anna Prywatna',
+            'order_kind' => 'product',
+        ], 'pneadm');
     }
 
     public function test_person_presale_in_three_days_requires_waiver(): void

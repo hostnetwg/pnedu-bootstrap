@@ -18,6 +18,30 @@
         'last_name' => $loggedInUser?->last_name ?? '',
         'email' => $loggedInUser?->email ?? '',
     ]]);
+    $contactName = old('contact_name', $prefill['contact_name'] ?? '');
+    $contactFirstName = old('contact_first_name', $prefill['contact_first_name'] ?? '');
+    $contactLastName = old('contact_last_name', $prefill['contact_last_name'] ?? '');
+    if ($profile === 'person' && $contactFirstName === '' && $contactLastName === '') {
+        $nameSource = $contactName !== ''
+            ? $contactName
+            : trim(($loggedInUser?->first_name ?? '').' '.($loggedInUser?->last_name ?? ''));
+        if ($nameSource !== '') {
+            $nameParts = preg_split('/\s+/u', trim($nameSource), 2) ?: [];
+            $contactFirstName = $nameParts[0] ?? '';
+            $contactLastName = $nameParts[1] ?? '';
+        }
+    }
+    $firstParticipant = $oldParticipants[0] ?? [];
+    $participantMirrorsContact = $profile === 'person'
+        && trim((string) ($firstParticipant['first_name'] ?? '')) === trim($contactFirstName)
+        && trim((string) ($firstParticipant['last_name'] ?? '')) === trim($contactLastName)
+        && trim((string) ($firstParticipant['email'] ?? '')) === trim((string) old('contact_email', $prefill['contact_email'] ?? ''));
+    $participantIsContact = $profile === 'person' && (bool) old(
+        'participant_is_contact',
+        $isEditMode
+            ? $participantMirrorsContact
+            : \App\Support\OrderFormV2ParticipantDefaults::isParticipantSameAsContactDefault($profile)
+    );
     $hasMultiplePrices = $prices->count() > 1;
 @endphp
 
@@ -204,19 +228,33 @@
         <section class="order-v2__panel p-3 mb-4" data-checkout-step="2" hidden aria-labelledby="checkout-step-2-title">
             <h2 class="h4 mb-2" id="checkout-step-2-title">Kontakt i uczestnicy</h2>
             <p class="text-muted">Na e-mail kontaktowy wyślemy potwierdzenie. Każdy uczestnik dostaje dostęp na swój adres.</p>
-            <div class="row g-3 mb-4">
-                <div class="col-md-5">
+            <input type="hidden" id="contactNameHidden" name="contact_name" value="{{ $contactName }}">
+            <div class="row g-3 mb-3">
+                <div class="col-md-5" id="contactNameGroup" @if($profile === 'person') hidden @endif>
                     <label class="form-label order-v2__required" for="contactName">Nazwa / imię i nazwisko zamawiającego</label>
-                    <input id="contactName" name="contact_name" class="form-control" required value="{{ old('contact_name', $prefill['contact_name'] ?? '') }}">
+                    <input id="contactName" class="form-control" value="{{ $profile === 'person' ? '' : $contactName }}" autocomplete="name" @required($profile !== 'person')>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3" id="contactFirstGroup" @if($profile !== 'person') hidden @endif>
+                    <label class="form-label order-v2__required" for="contactFirstName">Imię</label>
+                    <input id="contactFirstName" name="contact_first_name" class="form-control" value="{{ $contactFirstName }}" autocomplete="given-name" @required($profile === 'person')>
+                </div>
+                <div class="col-md-3" id="contactLastGroup" @if($profile !== 'person') hidden @endif>
+                    <label class="form-label order-v2__required" for="contactLastName">Nazwisko</label>
+                    <input id="contactLastName" name="contact_last_name" class="form-control" value="{{ $contactLastName }}" autocomplete="family-name" @required($profile === 'person')>
+                </div>
+                <div class="col-md-4" id="contactEmailGroup">
                     <label class="form-label order-v2__required" for="contactEmail">E-mail kontaktowy</label>
-                    <input id="contactEmail" type="email" name="contact_email" class="form-control" required value="{{ old('contact_email', $prefill['contact_email'] ?? '') }}">
+                    <input id="contactEmail" type="email" name="contact_email" class="form-control" required value="{{ old('contact_email', $prefill['contact_email'] ?? $loggedInUser?->email ?? '') }}" autocomplete="email">
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-3" id="contactPhoneGroup">
                     <label class="form-label" for="contactPhone">Telefon — opcjonalnie</label>
-                    <input id="contactPhone" type="tel" name="contact_phone" class="form-control" value="{{ old('contact_phone', $prefill['contact_phone'] ?? '') }}">
+                    <input id="contactPhone" type="tel" name="contact_phone" class="form-control" value="{{ old('contact_phone', $prefill['contact_phone'] ?? '') }}" autocomplete="tel">
                 </div>
+            </div>
+            <div class="form-check form-switch my-4" id="participantIsContactWrap" @if($profile !== 'person') hidden @endif>
+                <input class="form-check-input" type="checkbox" role="switch" id="participantIsContact" name="participant_is_contact" value="1" @checked($participantIsContact)>
+                <label class="form-check-label fw-semibold" for="participantIsContact">Zamawiający jest równocześnie uczestnikiem kursu</label>
+                <p class="form-text mb-0 mt-1">Dane uczestnika i nabywcy na fakturze są kopiowane z kontaktu. Odznacz, jeśli dostęp ma dostać inna osoba — pola wyczyszczą się, gdy nadal są takie same.</p>
             </div>
 
             <div class="d-flex justify-content-between align-items-center gap-3 mb-2">
@@ -484,9 +522,114 @@
     var gatewayWrap = document.getElementById('paymentGatewayWrap');
     var earlyWrap = document.getElementById('earlyPerformanceWrap');
     var earlyInput = document.getElementById('earlyPerformanceAccepted');
+    var participantToggle = document.getElementById('participantIsContact');
+    var participantToggleWrap = document.getElementById('participantIsContactWrap');
+    var contactName = document.getElementById('contactName');
+    var contactNameHidden = document.getElementById('contactNameHidden');
+    var contactFirst = document.getElementById('contactFirstName');
+    var contactLast = document.getElementById('contactLastName');
+    var contactEmail = document.getElementById('contactEmail');
+    var contactNameGroup = document.getElementById('contactNameGroup');
+    var contactFirstGroup = document.getElementById('contactFirstGroup');
+    var contactLastGroup = document.getElementById('contactLastGroup');
+    var buyerPersonFirst = document.getElementById('buyerPersonFirstName');
+    var buyerPersonLast = document.getElementById('buyerPersonLastName');
 
     function profile() {
         return form.querySelector('[name="customer_profile"]:checked')?.value || 'person';
+    }
+    function normalizeSpaces(value) {
+        return (value || '').replace(/\s+/g, ' ').trim();
+    }
+    function isPersonProfile() {
+        return profile() === 'person';
+    }
+    function firstParticipantInputs() {
+        var row = rows.querySelector('.product-participant-row');
+        if (!row) return {};
+        return {
+            first: row.querySelector('input[name*="[first_name]"]'),
+            last: row.querySelector('input[name*="[last_name]"]'),
+            email: row.querySelector('input[name*="[email]"]')
+        };
+    }
+    function contactValuesForCopy() {
+        return {
+            first: normalizeSpaces(contactFirst && contactFirst.value),
+            last: normalizeSpaces(contactLast && contactLast.value),
+            email: normalizeSpaces(contactEmail && contactEmail.value)
+        };
+    }
+    function syncContactNameHidden() {
+        if (!contactNameHidden) return;
+        if (isPersonProfile()) {
+            contactNameHidden.value = normalizeSpaces([
+                contactFirst && contactFirst.value,
+                contactLast && contactLast.value
+            ].filter(Boolean).join(' '));
+            return;
+        }
+        contactNameHidden.value = normalizeSpaces(contactName && contactName.value);
+    }
+    function updateContactFieldsVisibility() {
+        var isPerson = isPersonProfile();
+        if (contactNameGroup) contactNameGroup.hidden = isPerson;
+        if (contactFirstGroup) contactFirstGroup.hidden = !isPerson;
+        if (contactLastGroup) contactLastGroup.hidden = !isPerson;
+        if (contactName) contactName.required = !isPerson;
+        if (contactFirst) contactFirst.required = isPerson;
+        if (contactLast) contactLast.required = isPerson;
+        syncContactNameHidden();
+    }
+    function participantMirrorsContact() {
+        if (!isPersonProfile()) return false;
+        var values = contactValuesForCopy();
+        var inputs = firstParticipantInputs();
+        return inputs.first && inputs.last && inputs.email
+            && normalizeSpaces(inputs.first.value) === values.first
+            && normalizeSpaces(inputs.last.value) === values.last
+            && normalizeSpaces(inputs.email.value) === values.email;
+    }
+    function clearFirstParticipant() {
+        var inputs = firstParticipantInputs();
+        ['first', 'last', 'email'].forEach(function (key) {
+            if (!inputs[key]) return;
+            inputs[key].value = '';
+            inputs[key].classList.remove('is-invalid');
+        });
+    }
+    function copyContactToParticipantAndInvoice() {
+        syncContactNameHidden();
+        if (!isPersonProfile() || !participantToggle || !participantToggle.checked) return;
+        var values = contactValuesForCopy();
+        var inputs = firstParticipantInputs();
+        if (inputs.first) inputs.first.value = values.first;
+        if (inputs.last) inputs.last.value = values.last;
+        if (inputs.email) inputs.email.value = values.email;
+        if (buyerPersonFirst) buyerPersonFirst.value = values.first;
+        if (buyerPersonLast) buyerPersonLast.value = values.last;
+    }
+    function syncParticipantToggle() {
+        var isPerson = isPersonProfile();
+        if (participantToggleWrap) participantToggleWrap.hidden = !isPerson;
+        if (!isPerson && participantToggle) {
+            participantToggle.checked = false;
+        }
+        if (isPerson && participantToggle && !participantToggle.checked && participantMirrorsContact()) {
+            clearFirstParticipant();
+        }
+        var inputs = firstParticipantInputs();
+        var lock = isPerson && participantToggle && participantToggle.checked;
+        ['first', 'last', 'email'].forEach(function (key) {
+            if (inputs[key]) inputs[key].readOnly = lock;
+        });
+        copyContactToParticipantAndInvoice();
+        updateLoggedInEmailWarning();
+    }
+    function applyParticipantDefaultForProfile() {
+        if (!participantToggle) return;
+        participantToggle.checked = isPersonProfile();
+        syncParticipantToggle();
     }
     function selectedPriceInput() {
         return form.querySelector('[name="product_price_id"]:checked')
@@ -535,7 +678,7 @@
     }
     function stepForField(name) {
         if (name.indexOf('customer_profile') === 0 || name.indexOf('product_price_id') === 0) return 1;
-        if (name.indexOf('contact_') === 0 || name.indexOf('participants') === 0) return 2;
+        if (name.indexOf('contact_') === 0 || name.indexOf('participants') === 0 || name === 'participant_is_contact') return 2;
         if (name.indexOf('buyer_') === 0 || name.indexOf('recipient_') === 0) return 3;
         return 4;
     }
@@ -588,6 +731,8 @@
         }
         enableFields(recipientFields, !isPerson && recipientToggle.checked);
         addButton.hidden = isPerson || !allowsMultiple;
+        updateContactFieldsVisibility();
+        syncParticipantToggle();
         var protectedProfile = ['person', 'jdg'].indexOf(profile()) !== -1;
         var selectedPrice = selectedPriceInput();
         var requiresWaiver = selectedPrice && selectedPrice.dataset.requiresWaiver === '1';
@@ -619,7 +764,22 @@
         reindex();
     });
     recipientToggle.addEventListener('change', updateProfile);
-    form.querySelectorAll('[name="customer_profile"]').forEach(function (input) { input.addEventListener('change', updateProfile); });
+    form.querySelectorAll('[name="customer_profile"]').forEach(function (input) {
+        input.addEventListener('change', function () {
+            applyParticipantDefaultForProfile();
+            updateProfile();
+        });
+    });
+    if (participantToggle) {
+        participantToggle.addEventListener('change', syncParticipantToggle);
+    }
+    [contactName, contactFirst, contactLast, contactEmail].forEach(function (input) {
+        if (!input) return;
+        input.addEventListener('input', function () {
+            copyContactToParticipantAndInvoice();
+            updateLoggedInEmailWarning();
+        });
+    });
     form.querySelectorAll('[name="payment_type"]').forEach(function (input) { input.addEventListener('change', updatePayment); });
     form.querySelectorAll('[name="product_price_id"]').forEach(function (input) {
         input.addEventListener('change', function () {
