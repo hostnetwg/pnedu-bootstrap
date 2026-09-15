@@ -107,6 +107,7 @@ class ProductCheckoutTest extends TestCase
         $this->assertStringContainsString('col-12 col-md-3" id="contactLastGroup"', $checkoutHtml);
         $this->assertStringContainsString('col-12 col-md-3" id="contactEmailGroup"', $checkoutHtml);
         $this->assertStringContainsString('col-12 col-md-3" id="contactPhoneGroup"', $checkoutHtml);
+        $this->assertStringContainsString('data-submitting-text="Wysyłanie zamówienia…"', $checkoutHtml);
     }
 
     public function test_two_paid_variants_keep_this_variant_button(): void
@@ -159,6 +160,7 @@ class ProductCheckoutTest extends TestCase
         $this->assertStringNotContainsString('automatycznie', $html);
         $this->assertStringNotContainsString('pełna kwota', $html);
         $this->assertStringContainsString('Potwierdzam zakup', $html);
+        $this->assertStringNotContainsString('Tryb developerski', $html);
         $this->assertSame(1, substr_count($html, 'name="early_performance_accepted"'));
         $this->assertDoesNotMatchRegularExpression('/id="earlyPerformanceAccepted"[^>]*\bchecked\b/', $html);
         $this->assertStringNotContainsString('akceptuję regulamin', mb_strtolower($html));
@@ -690,6 +692,102 @@ class ProductCheckoutTest extends TestCase
         $price->offer->forceFill(['satisfaction_guarantee_days' => 7])->save();
         $item = OrderItem::query()->where('product_id', $product->id)->latest('id')->firstOrFail();
         $this->assertSame(30, (int) $item->satisfaction_guarantee_days);
+    }
+
+    public function test_repeat_deferred_checkout_reuses_unpaid_order_and_sends_one_mail(): void
+    {
+        [$product, $price] = $this->createOffer();
+        $payload = $this->personCheckoutPayload($price);
+        $payload['early_performance_accepted'] = '1';
+
+        $this->post(route('online-courses.checkout.store', $product->slug), $payload)->assertRedirect();
+        $this->post(route('online-courses.checkout.store', $product->slug), $payload)->assertRedirect();
+
+        $this->assertSame(1, FormOrder::query()->where('orderer_email', $payload['contact_email'])->count());
+        Mail::assertSent(\App\Mail\ProductOrderConfirmationMail::class, 1);
+    }
+
+    public function test_repeat_online_checkout_reuses_unpaid_order(): void
+    {
+        Notification::fake();
+        config([
+            'services.payu.sandbox' => false,
+            'services.payu.client_id' => 'client-id',
+            'services.payu.client_secret' => 'client-secret',
+            'services.payu.pos_id' => 'pos-id',
+        ]);
+        Http::fake([
+            'https://secure.payu.com/pl/standard/user/oauth/authorize' => Http::response([
+                'access_token' => 'test-token',
+            ]),
+            'https://secure.payu.com/api/v2_1/orders' => Http::response([
+                'redirectUri' => 'https://payu.example.test/payment',
+                'orderId' => 'PAYU-REPEAT',
+            ], 201),
+        ]);
+        [$product, $price] = $this->createOffer();
+        $payload = array_merge($this->checkoutPayload($price), [
+            'payment_type' => 'online',
+            'payment_gateway' => 'payu',
+        ]);
+
+        $this->post(route('online-courses.checkout.store', $product->slug), $payload)
+            ->assertRedirect('https://payu.example.test/payment');
+        $this->post(route('online-courses.checkout.store', $product->slug), $payload)
+            ->assertRedirect('https://payu.example.test/payment');
+
+        $this->assertSame(1, FormOrder::query()->where('orderer_email', $payload['contact_email'])->count());
+        $this->assertSame(2, OnlinePaymentOrder::query()->where('email', $payload['participants'][0]['email'])->count());
+        Mail::assertSent(\App\Mail\ProductOrderConfirmationMail::class, 1);
+
+        $this->get(route('online-courses.checkout.create', [
+            'product' => $product->slug,
+            'price' => $price->id,
+        ]))->assertOk()->assertSee('name="order_ident"', false);
+    }
+
+    public function test_failed_payu_keeps_one_order_and_skips_confirmation(): void
+    {
+        config([
+            'services.payu.sandbox' => false,
+            'services.payu.client_id' => 'client-id',
+            'services.payu.client_secret' => 'client-secret',
+            'services.payu.pos_id' => 'pos-id',
+        ]);
+        Http::fake([
+            'https://secure.payu.com/pl/standard/user/oauth/authorize' => Http::response([
+                'access_token' => 'test-token',
+            ]),
+            'https://secure.payu.com/api/v2_1/orders' => Http::response(['status' => ['statusDesc' => 'Rejected']], 400),
+        ]);
+        [$product, $price] = $this->createOffer();
+        $payload = array_merge($this->checkoutPayload($price), [
+            'payment_type' => 'online',
+            'payment_gateway' => 'payu',
+        ]);
+
+        $this->from(route('online-courses.checkout.create', [
+            'product' => $product->slug,
+            'price' => $price->id,
+        ]))->post(route('online-courses.checkout.store', $product->slug), $payload)
+            ->assertRedirect(route('online-courses.checkout.create', [
+                'product' => $product->slug,
+                'price' => $price->id,
+            ]))
+            ->assertSessionHas('error');
+
+        $this->assertSame(1, FormOrder::query()->where('orderer_email', $payload['contact_email'])->count());
+        Mail::assertNothingSent();
+
+        $this->post(route('online-courses.checkout.store', $product->slug), $payload)
+            ->assertRedirect(route('online-courses.checkout.create', [
+                'product' => $product->slug,
+                'price' => $price->id,
+            ]));
+
+        $this->assertSame(1, FormOrder::query()->where('orderer_email', $payload['contact_email'])->count());
+        $this->assertSame(2, OnlinePaymentOrder::query()->where('email', $payload['participants'][0]['email'])->count());
+        Mail::assertNothingSent();
     }
 
     /**

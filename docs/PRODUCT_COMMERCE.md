@@ -1,7 +1,7 @@
 # Publiczna sprzedaż kursów nagranych
 
 Data: 2026-09-12
-Status: wdrożone lokalnie, przed produkcją wymagany przegląd prawny
+Status: sprzedaż publiczna na pnedu.pl; checkout bez banera „tryb developerski”
 
 ## Publiczne trasy
 
@@ -31,6 +31,8 @@ Zalogowany uczestnik (ten sam e-mail co `online_course_enrollments`) widzi na `/
 - `online_payment_orders` z pustym `course_id` przy PayU/PayNow.
 
 Kwota = cena aktualnego wariantu × liczba uczestników. Zmiana późniejszej ceny lub promocji nie zmienia istniejącego zamówienia.
+
+Ponowne „Potwierdzam zakup” przy tym samym kursie i e-mailu (60 min, nieopłacone) aktualizuje to samo `form_orders` zamiast tworzyć kopię — jak formularz szkolenia. Mail potwierdzenia idzie raz: po fakturze odroczonej albo po udanym starcie PayU/PayNow. Błąd bramki wraca do formularza z tym samym numerem.
 
 Przy NIP nabywcy i odbiorcy jest ten sam przycisk **Wpisz NIP i pobierz dane z GUS** co w zamówieniu szkolenia (`POST /courses/gus-lookup-by-nip`).
 

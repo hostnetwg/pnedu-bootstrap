@@ -154,7 +154,8 @@ class ProductOrderService
         ProductPrice $price,
         array $validated,
         array $participants,
-        array $legalEvidence
+        array $legalEvidence,
+        bool $refreshPayment = false
     ): FormOrder {
         return DB::connection('pneadm')->transaction(function () use (
             $order,
@@ -162,7 +163,8 @@ class ProductOrderService
             $price,
             $validated,
             $participants,
-            $legalEvidence
+            $legalEvidence,
+            $refreshPayment
         ) {
             $price->loadMissing('offer');
             $participantCount = count($participants);
@@ -172,7 +174,9 @@ class ProductOrderService
             $buyerName = $buyerType === 'person'
                 ? trim($validated['buyer_person_first_name'].' '.$validated['buyer_person_last_name'])
                 : $validated['buyer_name'];
-            $isDeferred = $order->payment_mode === FormOrder::PAYMENT_MODE_DEFERRED_INVOICE;
+            $isDeferred = $refreshPayment
+                ? ($validated['payment_type'] === 'deferred')
+                : ($order->payment_mode === FormOrder::PAYMENT_MODE_DEFERRED_INVOICE);
 
             $order->fill([
                 'product_name' => $product->name,
@@ -199,6 +203,18 @@ class ProductOrderService
                 'ptw' => $isDeferred ? (int) ($validated['payment_terms'] ?? $order->ptw) : $order->ptw,
                 'updated_manually_at' => now('UTC'),
             ]);
+            if ($refreshPayment) {
+                $order->fill([
+                    'invoice_payment_delay' => $isDeferred ? (int) ($validated['payment_terms'] ?? $order->invoice_payment_delay) : null,
+                    'ptw' => $isDeferred ? (int) ($validated['payment_terms'] ?? $order->ptw) : null,
+                    'payment_mode' => $isDeferred
+                        ? FormOrder::PAYMENT_MODE_DEFERRED_INVOICE
+                        : FormOrder::PAYMENT_MODE_ONLINE_GATEWAY,
+                    'payment_status' => $isDeferred
+                        ? FormOrder::PAYMENT_STATUS_SUBMITTED
+                        : FormOrder::PAYMENT_STATUS_AWAITING_PAYMENT,
+                ]);
+            }
             if (! filled($order->terms_version)) {
                 $order->fill($legalEvidence);
             }

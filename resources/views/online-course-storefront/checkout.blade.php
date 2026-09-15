@@ -3,6 +3,7 @@
 @php
     $course = $product->onlineCourse;
     $isEditMode = $isEditMode ?? false;
+    $resumeIdent = $resumeIdent ?? null;
     $prefill = $prefill ?? [];
     $loggedInUser = $loggedInUser ?? auth()->user();
     $profile = old('customer_profile', $prefill['customer_profile'] ?? 'person');
@@ -120,12 +121,6 @@
         </ol>
     </nav>
 
-    @if(!app()->environment('production'))
-        <div class="alert alert-warning">
-            Tryb developerski: checkout kursów cyfrowych korzysta obecnie z obowiązującego Regulaminu. Zapisy prawne dla treści cyfrowych będą dopracowane przed wdrożeniem produkcyjnym.
-        </div>
-    @endif
-
     @if($errors->any())
         <div class="alert alert-danger" role="alert" id="product-checkout-errors">
             <strong>Sprawdź formularz:</strong>
@@ -142,7 +137,10 @@
         @csrf
         @if($isEditMode && $order)
             <input type="hidden" name="order_ident" value="{{ $order->ident }}">
+            <input type="hidden" name="order_edit_intent" value="1">
             <input type="hidden" name="payment_type" value="{{ old('payment_type', $prefill['payment_type'] ?? 'deferred') }}">
+        @elseif($resumeIdent)
+            <input type="hidden" name="order_ident" value="{{ $resumeIdent }}">
         @endif
 
         @include('online-course-storefront.partials.checkout-offer-summary')
@@ -485,7 +483,8 @@
             <button type="button" class="btn btn-outline-secondary" id="checkout-back" hidden>Wstecz</button>
             <a href="{{ route('online-courses.catalog.show', $product->slug) }}" class="btn btn-link text-secondary" id="checkout-cancel">Wróć do oferty</a>
             <button type="button" class="btn btn-success ms-auto px-4" id="checkout-next">Dalej</button>
-            <button type="submit" class="btn btn-success btn-lg ms-auto" id="product-checkout-submit" hidden>
+            <button type="submit" class="btn btn-success btn-lg ms-auto" id="product-checkout-submit"
+                    data-submitting-text="Wysyłanie zamówienia…" hidden>
                 {{ $isEditMode ? 'Zapisz poprawki' : 'Potwierdzam zakup' }}
             </button>
         </div>
@@ -896,6 +895,56 @@
 
     form.querySelectorAll('[data-gus-target]').forEach(function (button) {
         button.addEventListener('click', function () { gusLookup(button.dataset.gusTarget, button); });
+    });
+
+    var submitBtn = document.getElementById('product-checkout-submit');
+    function submittingLabel(btn) {
+        return btn.getAttribute('data-submitting-text') || 'Wysyłanie zamówienia…';
+    }
+    function showSubmittingState(btn) {
+        btn.disabled = true;
+        btn.dataset.originalText = (btn.dataset.originalText || btn.textContent || '').trim() || 'Potwierdzam zakup';
+        btn.replaceChildren();
+        var spinner = document.createElement('span');
+        spinner.className = 'spinner-border spinner-border-sm me-2';
+        spinner.setAttribute('role', 'status');
+        spinner.setAttribute('aria-hidden', 'true');
+        var label = document.createElement('span');
+        label.textContent = submittingLabel(btn);
+        btn.append(spinner, label);
+        btn.setAttribute('aria-busy', 'true');
+    }
+    function resetSubmitButton() {
+        if (!submitBtn) return;
+        submitBtn.disabled = false;
+        if (submitBtn.dataset.originalText) {
+            submitBtn.textContent = submitBtn.dataset.originalText;
+        }
+        submitBtn.removeAttribute('aria-busy');
+    }
+    form.addEventListener('submit', function (event) {
+        if (!submitBtn) return;
+        if (event.defaultPrevented || (typeof form.checkValidity === 'function' && !form.checkValidity())) {
+            resetSubmitButton();
+            return;
+        }
+        if (submitBtn.disabled) {
+            event.preventDefault();
+            return;
+        }
+        showSubmittingState(submitBtn);
+    });
+    window.addEventListener('pageshow', function (event) {
+        if (event.persisted) {
+            resetSubmitButton();
+            return;
+        }
+        try {
+            var nav = performance.getEntriesByType('navigation')[0];
+            if (nav && nav.type === 'back_forward') {
+                resetSubmitButton();
+            }
+        } catch (e) {}
     });
 })();
 </script>

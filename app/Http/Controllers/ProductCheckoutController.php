@@ -9,12 +9,14 @@ use App\Models\Product;
 use App\Models\ProductPrice;
 use App\Services\PayNowService;
 use App\Services\PayUService;
+use App\Services\ProductCheckoutResumeService;
 use App\Services\ProductLegalCheckoutService;
 use App\Services\ProductOrderService;
 use App\Services\StorefrontCourseAccessService;
 use App\Support\OrderFormCustomerProfile;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
@@ -178,31 +180,88 @@ class ProductCheckoutController extends Controller
             'early_performance_accepted_at',
         ]);
 
-        if ($existingIdent !== '') {
-            $order = $this->findProductOrder($product, $existingIdent);
-            if ($this->isProductOrderEditLocked($order)) {
-                return redirect()
-                    ->route('online-courses.checkout.summary', $order->ident)
-                    ->with('error', 'Edycja tego zamówienia jest już wyłączona. Zmiany danych są możliwe po kontakcie z biurem.');
+        $resume = app(ProductCheckoutResumeService::class);
+        $participantEmail = $participants[0]['email'] ?? $validated['contact_email'];
+        $isExplicitEdit = $request->boolean('order_edit_intent');
+        $lockKey = sprintf(
+            'product_checkout_submit:%d:%s',
+            $product->id,
+            hash('sha256', $resume->normalizeEmail($participantEmail))
+        );
+
+        $resolved = Cache::lock($lockKey, 20)->block(15, function () use (
+            $resume,
+            $product,
+            $existingIdent,
+            $participantEmail,
+            $isExplicitEdit,
+            $orders,
+            $price,
+            $validated,
+            $participants,
+            $request,
+            $legalEvidence
+        ) {
+            $reusable = $resume->findReusable($product->id, $existingIdent, $participantEmail);
+            if ($reusable instanceof FormOrder) {
+                if ($isExplicitEdit && $this->isProductOrderEditLocked($reusable)) {
+                    return ['locked' => $reusable];
+                }
+
+                return [
+                    'order' => $orders->update(
+                        $reusable,
+                        $product,
+                        $price,
+                        $validated,
+                        $participants,
+                        $legalEvidence,
+                        refreshPayment: ! $isExplicitEdit
+                    ),
+                ];
             }
 
-            $order = $orders->update($order, $product, $price, $validated, $participants, $legalEvidence);
+            if ($existingIdent !== '') {
+                $order = $this->findProductOrder($product, $existingIdent);
+                if ($this->isProductOrderEditLocked($order)) {
+                    return ['locked' => $order];
+                }
 
+                return [
+                    'order' => $orders->update($order, $product, $price, $validated, $participants, $legalEvidence),
+                ];
+            }
+
+            return [
+                'order' => $orders->create($product, $price, $validated, $participants, $request, $legalEvidence),
+            ];
+        });
+
+        if (isset($resolved['locked'])) {
+            return redirect()
+                ->route('online-courses.checkout.summary', $resolved['locked']->ident)
+                ->with('error', 'Edycja tego zamówienia jest już wyłączona. Zmiany danych są możliwe po kontakcie z biurem.');
+        }
+
+        /** @var FormOrder $order */
+        $order = $resolved['order'];
+        $resume->storeAfterSubmit($product->id, $order, $participantEmail);
+
+        if ($isExplicitEdit) {
             return redirect()
                 ->route('online-courses.checkout.summary', $order->ident)
                 ->with('success', 'Dane zamówienia zostały zaktualizowane.');
         }
 
-        $order = $orders->create($product, $price, $validated, $participants, $request, $legalEvidence);
-        $this->sendOrderConfirmationSafely($order);
-
         if ($validated['payment_type'] === 'deferred') {
+            $this->sendOrderConfirmationSafely($order);
+
             return redirect()
                 ->route('online-courses.checkout.summary', $order->ident)
                 ->with('success', 'Zamówienie zostało złożone. Dostęp zostanie nadany po obsłudze zamówienia przez operatora.');
         }
 
-        return $this->startOnlinePayment($request, $order, $validated, $paymentLegalEvidence);
+        return $this->startOnlinePayment($request, $product, $order, $validated, $paymentLegalEvidence);
     }
 
     public function summary(string $ident): View
@@ -221,64 +280,87 @@ class ProductCheckoutController extends Controller
 
     private function startOnlinePayment(
         Request $request,
+        Product $product,
         FormOrder $order,
         array $validated,
         array $legalEvidence
     ): RedirectResponse {
-        $item = $order->orderItems->firstOrFail();
-        $primary = $item->recipients->firstOrFail();
-        $gateway = $validated['payment_gateway'];
+        $failRedirect = function (string $message) use ($request, $product, $order, $validated): RedirectResponse {
+            $priceId = (int) ($validated['product_price_id'] ?? $order->orderItems->first()?->product_price_id);
 
-        $onlineOrder = OnlinePaymentOrder::query()->create([
-            'form_order_id' => $order->id,
-            'ident' => OnlinePaymentOrder::generateIdent(),
-            'course_id' => null,
-            'payment_gateway' => $gateway,
-            'status' => OnlinePaymentOrder::STATUS_PENDING,
-            'total_amount' => $item->line_total,
-            'currency' => $item->currency,
-            'buyer_type' => $validated['buyer_type'],
-            ...$legalEvidence,
-            'email' => $primary->email,
-            'first_name' => $primary->first_name,
-            'last_name' => $primary->last_name,
-            'phone' => $validated['contact_phone'],
-            'order_comment' => $validated['invoice_notes'] ?? null,
-            'address_data' => [
-                'street' => $validated['buyer_address'],
-                'postcode' => $validated['buyer_postcode'],
-                'city' => $validated['buyer_city'],
-                'country' => 'PL',
-            ],
-            'form_data' => $request->except('_token'),
-            'ip_address' => $request->ip(),
-        ]);
-        $onlineOrder->load(['formOrder.orderItems', 'course']);
+            return redirect()
+                ->route('online-courses.checkout.create', array_filter([
+                    'product' => $product->slug,
+                    'price' => $priceId > 0 ? $priceId : null,
+                ]))
+                ->withInput(array_merge($request->except('_token'), ['order_ident' => $order->ident]))
+                ->with('error', $message);
+        };
 
-        if ($gateway === 'payu') {
-            $result = app(PayUService::class)->createOrder(
-                $onlineOrder,
-                route('payment.payu.notify'),
-                route('payment.payu.return')
-            );
-            $redirectUrl = $result['redirect_uri'] ?? null;
-        } else {
-            $result = app(PayNowService::class)->createOrder(
-                $onlineOrder,
-                route('payment.paynow.notify'),
-                route('payment.paynow.return')
-            );
-            $redirectUrl = $result['redirect_url'] ?? null;
+        try {
+            $order->loadMissing(['orderItems.recipients']);
+            $item = $order->orderItems->firstOrFail();
+            $primary = $item->recipients->firstOrFail();
+            $gateway = $validated['payment_gateway'];
+
+            $onlineOrder = OnlinePaymentOrder::query()->create([
+                'form_order_id' => $order->id,
+                'ident' => OnlinePaymentOrder::generateIdent(),
+                'course_id' => null,
+                'payment_gateway' => $gateway,
+                'status' => OnlinePaymentOrder::STATUS_PENDING,
+                'total_amount' => $item->line_total,
+                'currency' => $item->currency,
+                'buyer_type' => $validated['buyer_type'],
+                ...$legalEvidence,
+                'email' => $primary->email,
+                'first_name' => $primary->first_name,
+                'last_name' => $primary->last_name,
+                'phone' => $validated['contact_phone'],
+                'order_comment' => $validated['invoice_notes'] ?? null,
+                'address_data' => [
+                    'street' => $validated['buyer_address'],
+                    'postcode' => $validated['buyer_postcode'],
+                    'city' => $validated['buyer_city'],
+                    'country' => 'PL',
+                ],
+                'form_data' => $request->except('_token'),
+                'ip_address' => $request->ip(),
+            ]);
+            $onlineOrder->load(['formOrder.orderItems', 'course']);
+
+            if ($gateway === 'payu') {
+                $result = app(PayUService::class)->createOrder(
+                    $onlineOrder,
+                    route('payment.payu.notify'),
+                    route('payment.payu.return')
+                );
+                $redirectUrl = $result['redirect_uri'] ?? null;
+            } else {
+                $result = app(PayNowService::class)->createOrder(
+                    $onlineOrder,
+                    route('payment.paynow.notify'),
+                    route('payment.paynow.return')
+                );
+                $redirectUrl = $result['redirect_url'] ?? null;
+            }
+        } catch (\Throwable $exception) {
+            Log::error('Product checkout online payment failed', [
+                'form_order_id' => $order->id,
+                'error' => $exception->getMessage(),
+            ]);
+
+            return $failRedirect('Nie udało się rozpocząć płatności online. Spróbuj ponownie — zamówienie nie zostało zduplikowane.');
         }
 
         if (! ($result['success'] ?? false) || ! $redirectUrl) {
             $onlineOrder->update(['status' => OnlinePaymentOrder::STATUS_FAILED]);
             $order->update(['payment_status' => FormOrder::PAYMENT_STATUS_FAILED]);
 
-            return redirect()
-                ->route('online-courses.checkout.summary', $order->ident)
-                ->with('error', $result['error'] ?? 'Nie udało się rozpocząć płatności online.');
+            return $failRedirect($result['error'] ?? 'Nie udało się rozpocząć płatności online. Spróbuj ponownie — zamówienie nie zostało zduplikowane.');
         }
+
+        $this->sendOrderConfirmationSafely($order);
 
         session([
             'payu_order_ident' => $onlineOrder->ident,
@@ -301,6 +383,12 @@ class ProductCheckoutController extends Controller
         $user = auth()->user();
         $isEditMode = $order !== null;
         $prefill = $isEditMode ? $this->prefillFromOrder($order) : [];
+        $resumeIdent = $isEditMode
+            ? null
+            : app(ProductCheckoutResumeService::class)->resumableIdentForForm(
+                (int) $product->id,
+                old('order_ident')
+            );
 
         return [
             'product' => $product,
@@ -309,6 +397,7 @@ class ProductCheckoutController extends Controller
             'selectedPrice' => $selectedPrice,
             'order' => $order,
             'isEditMode' => $isEditMode,
+            'resumeIdent' => $resumeIdent,
             'loggedInUser' => $user,
             'prefill' => $prefill,
             'legalStatement' => app(ProductLegalCheckoutService::class)->statement(),
@@ -411,6 +500,10 @@ class ProductCheckoutController extends Controller
 
     private function sendOrderConfirmationSafely(FormOrder $order): void
     {
+        if ($order->legal_confirmation_sent_at) {
+            return;
+        }
+
         try {
             Mail::to($order->orderer_email)->send(new ProductOrderConfirmationMail($order));
             $order->update([
