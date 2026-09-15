@@ -103,6 +103,10 @@ class ProductCheckoutTest extends TestCase
         $this->assertMatchesRegularExpression('/id="profilePerson"[^>]*\bchecked\b/', $checkoutHtml);
         $this->assertStringContainsString('Zamawiający jest równocześnie uczestnikiem kursu', $checkoutHtml);
         $this->assertMatchesRegularExpression('/id="participantIsContact"[^>]*\bchecked\b/', $checkoutHtml);
+        $this->assertStringContainsString('col-12 col-md-3" id="contactFirstGroup"', $checkoutHtml);
+        $this->assertStringContainsString('col-12 col-md-3" id="contactLastGroup"', $checkoutHtml);
+        $this->assertStringContainsString('col-12 col-md-3" id="contactEmailGroup"', $checkoutHtml);
+        $this->assertStringContainsString('col-12 col-md-3" id="contactPhoneGroup"', $checkoutHtml);
     }
 
     public function test_two_paid_variants_keep_this_variant_button(): void

@@ -229,24 +229,24 @@
             <h2 class="h4 mb-2" id="checkout-step-2-title">Kontakt i uczestnicy</h2>
             <p class="text-muted">Na e-mail kontaktowy wyślemy potwierdzenie. Każdy uczestnik dostaje dostęp na swój adres.</p>
             <input type="hidden" id="contactNameHidden" name="contact_name" value="{{ $contactName }}">
-            <div class="row g-3 mb-3">
-                <div class="col-md-5" id="contactNameGroup" @if($profile === 'person') hidden @endif>
+            <div class="row g-3 mb-3" id="contactInputsRow">
+                <div class="col-12 col-md-6" id="contactNameGroup" @if($profile === 'person') hidden @endif>
                     <label class="form-label order-v2__required" for="contactName">Nazwa / imię i nazwisko zamawiającego</label>
                     <input id="contactName" class="form-control" value="{{ $profile === 'person' ? '' : $contactName }}" autocomplete="name" @required($profile !== 'person')>
                 </div>
-                <div class="col-md-3" id="contactFirstGroup" @if($profile !== 'person') hidden @endif>
+                <div class="col-12 col-md-3" id="contactFirstGroup" @if($profile !== 'person') hidden @endif>
                     <label class="form-label order-v2__required" for="contactFirstName">Imię</label>
                     <input id="contactFirstName" name="contact_first_name" class="form-control" value="{{ $contactFirstName }}" autocomplete="given-name" @required($profile === 'person')>
                 </div>
-                <div class="col-md-3" id="contactLastGroup" @if($profile !== 'person') hidden @endif>
+                <div class="col-12 col-md-3" id="contactLastGroup" @if($profile !== 'person') hidden @endif>
                     <label class="form-label order-v2__required" for="contactLastName">Nazwisko</label>
                     <input id="contactLastName" name="contact_last_name" class="form-control" value="{{ $contactLastName }}" autocomplete="family-name" @required($profile === 'person')>
                 </div>
-                <div class="col-md-4" id="contactEmailGroup">
+                <div class="col-12 col-md-3" id="contactEmailGroup">
                     <label class="form-label order-v2__required" for="contactEmail">E-mail kontaktowy</label>
                     <input id="contactEmail" type="email" name="contact_email" class="form-control" required value="{{ old('contact_email', $prefill['contact_email'] ?? $loggedInUser?->email ?? '') }}" autocomplete="email">
                 </div>
-                <div class="col-md-3" id="contactPhoneGroup">
+                <div class="col-12 col-md-3" id="contactPhoneGroup">
                     <label class="form-label" for="contactPhone">Telefon — opcjonalnie</label>
                     <input id="contactPhone" type="tel" name="contact_phone" class="form-control" value="{{ old('contact_phone', $prefill['contact_phone'] ?? '') }}" autocomplete="tel">
                 </div>
@@ -532,6 +532,8 @@
     var contactNameGroup = document.getElementById('contactNameGroup');
     var contactFirstGroup = document.getElementById('contactFirstGroup');
     var contactLastGroup = document.getElementById('contactLastGroup');
+    var contactEmailGroup = document.getElementById('contactEmailGroup');
+    var contactPhoneGroup = document.getElementById('contactPhoneGroup');
     var buyerPersonFirst = document.getElementById('buyerPersonFirstName');
     var buyerPersonLast = document.getElementById('buyerPersonLastName');
 
@@ -579,6 +581,21 @@
         if (contactName) contactName.required = !isPerson;
         if (contactFirst) contactFirst.required = isPerson;
         if (contactLast) contactLast.required = isPerson;
+        function setCol(el, mdSize) {
+            if (!el) return;
+            el.classList.remove('col-md-3', 'col-md-6');
+            el.classList.add('col-md-' + mdSize);
+        }
+        if (isPerson) {
+            setCol(contactFirstGroup, 3);
+            setCol(contactLastGroup, 3);
+            setCol(contactEmailGroup, 3);
+            setCol(contactPhoneGroup, 3);
+        } else {
+            setCol(contactNameGroup, 6);
+            setCol(contactEmailGroup, 3);
+            setCol(contactPhoneGroup, 3);
+        }
         syncContactNameHidden();
     }
     function participantMirrorsContact() {
