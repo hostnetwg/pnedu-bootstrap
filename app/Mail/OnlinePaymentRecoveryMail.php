@@ -16,7 +16,7 @@ class OnlinePaymentRecoveryMail extends Mailable
     public function __construct(
         public FormOrder $order,
         public ?Course $course,
-        public OnlinePaymentOrder $onlinePaymentOrder,
+        public ?OnlinePaymentOrder $onlinePaymentOrder,
         public string $retryPaymentUrl,
         public string $deferredOrderFormUrl,
         public string $pendingPageUrl,
@@ -34,6 +34,7 @@ class OnlinePaymentRecoveryMail extends Mailable
             ? \Carbon\Carbon::parse($this->course->start_date)->format('Y-m-d')
             : '';
         $subject = 'Przypomnienie o płatności — zamówienie #'.$this->order->id.' — '.$courseTitle.($courseDate ? ' ('.$courseDate.')' : '');
+        $payableAmount = (float) ($this->onlinePaymentOrder?->total_amount ?? $this->order->product_price ?? 0);
 
         return $this
             ->from(
@@ -50,6 +51,7 @@ class OnlinePaymentRecoveryMail extends Mailable
                 'order' => $this->order,
                 'course' => $this->course,
                 'onlinePaymentOrder' => $this->onlinePaymentOrder,
+                'payableAmount' => $payableAmount,
                 'retryPaymentUrl' => $this->retryPaymentUrl,
                 'deferredOrderFormUrl' => $this->deferredOrderFormUrl,
                 'pendingPageUrl' => $this->pendingPageUrl,

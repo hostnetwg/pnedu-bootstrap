@@ -118,6 +118,7 @@ sail artisan form-orders:send-online-payment-recovery-emails --dry-run
 
 - Przycisk na stronie zamówienia: **Wyślij mail recovery płatności** (pasek „Rozliczenie”).
 - Działa też dla **kursów online** (`order_kind=product`): ten sam przycisk, mail tylko z **Zapłać ponownie** (bez FV odroczonej). Cron ich nie obejmuje.
+- Brak rekordu w `online_payment_orders` (zamówienie zapisane, bramka nie wystartowała) **nie blokuje** maila — kwota z `form_orders.product_price`, bez linku do strony oczekiwania; „Zapłać ponownie” tworzy pierwszą próbę.
 - Wywołanie server-to-server: `POST /api/internal/form-orders/{id}/send-online-payment-recovery` (pnedu, token `PNEDU_INTERNAL_API_TOKEN`).
 - Ręczna wysyłka **może powtórzyć** mail (`allow_resend=true`).
 - **Podgląd przed wysyłką** (jak mail PNEDU): modal ładuje temat, odbiorców i HTML z `GET …/preview-online-payment-recovery` (pnedu) / `form-orders/{id}/online-payment/recovery-email-preview` (adm).

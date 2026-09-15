@@ -28,7 +28,7 @@
     <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: 24px 0; border: 1px solid #e0e0e0; border-radius: 6px; background-color: #fafafa;">
     <tr><td style="padding: 20px 24px;">
         <p style="margin: 0 0 8px;"><strong>Numer zamówienia:</strong> {{ $order->ident }}</p>
-        <p style="margin: 0;"><strong>Do zapłaty:</strong> {{ number_format((float) $onlinePaymentOrder->total_amount, 2, ',', ' ') }} PLN</p>
+        <p style="margin: 0;"><strong>Do zapłaty:</strong> {{ number_format((float) $payableAmount, 2, ',', ' ') }} PLN</p>
     </td></tr>
     </table>
 
@@ -43,9 +43,11 @@
             <a href="{{ $deferredOrderFormUrl }}" style="color: #0066cc; text-decoration: underline;">Wolę fakturę z odroczonym terminem płatności</a>
         </p>
         @endif
+        @if($pendingPageUrl)
         <p style="margin: 16px 0 0; font-size: 13px; color: #666;">
             Status płatności: <a href="{{ $pendingPageUrl }}" style="color: #0066cc; text-decoration: underline;">strona oczekiwania</a>
         </p>
+        @endif
     </td></tr>
     </table>
 

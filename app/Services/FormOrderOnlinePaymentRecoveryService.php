@@ -194,7 +194,7 @@ class FormOrderOnlinePaymentRecoveryService
      *     code?: string,
      *     emails?: list<string>,
      *     course?: Course|null,
-     *     online_payment_order?: OnlinePaymentOrder,
+     *     online_payment_order?: OnlinePaymentOrder|null,
      *     retry_url?: string,
      *     deferred_url?: string,
      *     pending_url?: string
@@ -221,14 +221,6 @@ class FormOrderOnlinePaymentRecoveryService
             ->orderByDesc('id')
             ->first();
 
-        if (! $onlinePaymentOrder) {
-            return [
-                'success' => false,
-                'error' => 'Brak powiązanej próby płatności online.',
-                'code' => 'online_payment_missing',
-            ];
-        }
-
         $emailsToSend = $this->collectRecipientEmails($order);
         if ($emailsToSend === []) {
             return [
@@ -247,7 +239,9 @@ class FormOrderOnlinePaymentRecoveryService
             'deferred_url' => $isProductOrder
                 ? ''
                 : $this->retryService->signedConvertToDeferredUrl($order),
-            'pending_url' => route('payment.pending', $onlinePaymentOrder->ident),
+            'pending_url' => $onlinePaymentOrder
+                ? route('payment.pending', $onlinePaymentOrder->ident)
+                : '',
         ];
     }
 
