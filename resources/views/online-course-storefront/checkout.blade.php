@@ -245,8 +245,9 @@
                     <input id="contactEmail" type="email" name="contact_email" class="form-control" required value="{{ old('contact_email', $prefill['contact_email'] ?? $loggedInUser?->email ?? '') }}" autocomplete="email">
                 </div>
                 <div class="col-12 col-md-3" id="contactPhoneGroup">
-                    <label class="form-label" for="contactPhone">Telefon — opcjonalnie</label>
-                    <input id="contactPhone" type="tel" name="contact_phone" class="form-control" value="{{ old('contact_phone', $prefill['contact_phone'] ?? '') }}" autocomplete="tel">
+                    <label class="form-label order-v2__required" for="contactPhone">Telefon kontaktowy</label>
+                    <input id="contactPhone" type="tel" name="contact_phone" class="form-control @error('contact_phone') is-invalid @enderror" value="{{ old('contact_phone', $prefill['contact_phone'] ?? '') }}" autocomplete="tel" inputmode="tel" required>
+                    @error('contact_phone')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
             </div>
             <div class="form-check form-switch my-4" id="participantIsContactWrap" @if($profile !== 'person') hidden @endif>

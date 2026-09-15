@@ -107,6 +107,9 @@ class ProductCheckoutTest extends TestCase
         $this->assertStringContainsString('col-12 col-md-3" id="contactLastGroup"', $checkoutHtml);
         $this->assertStringContainsString('col-12 col-md-3" id="contactEmailGroup"', $checkoutHtml);
         $this->assertStringContainsString('col-12 col-md-3" id="contactPhoneGroup"', $checkoutHtml);
+        $this->assertStringContainsString('Telefon kontaktowy', $checkoutHtml);
+        $this->assertStringNotContainsString('Telefon — opcjonalnie', $checkoutHtml);
+        $this->assertMatchesRegularExpression('/id="contactPhone"[^>]*\brequired\b/', $checkoutHtml);
         $this->assertStringContainsString('data-submitting-text="Wysyłanie zamówienia…"', $checkoutHtml);
     }
 
@@ -609,12 +612,26 @@ class ProductCheckoutTest extends TestCase
             ->assertSessionHasErrors('early_performance_accepted');
     }
 
-    public function test_person_waiver_stores_exact_statement_and_phone_may_be_empty(): void
+    public function test_contact_phone_is_required(): void
+    {
+        [$product, $price] = $this->createOffer();
+        $payload = $this->personCheckoutPayload($price);
+        $payload['contact_phone'] = '';
+
+        $this->from(route('online-courses.checkout.create', [
+            'product' => $product->slug,
+            'price' => $price->id,
+        ]))
+            ->post(route('online-courses.checkout.store', $product->slug), $payload)
+            ->assertRedirect()
+            ->assertSessionHasErrors('contact_phone');
+    }
+
+    public function test_person_waiver_stores_exact_statement(): void
     {
         [$product, $price] = $this->createOffer();
         $payload = $this->personCheckoutPayload($price);
         $payload['early_performance_accepted'] = '1';
-        $payload['contact_phone'] = '';
 
         $this->post(route('online-courses.checkout.store', $product->slug), $payload)
             ->assertRedirect();
@@ -668,6 +685,7 @@ class ProductCheckoutTest extends TestCase
                 'customer_profile' => 'jdg',
                 'contact_name' => 'Jan Jdg',
                 'contact_email' => 'jdg-'.uniqid().'@example.test',
+                'contact_phone' => '501002003',
                 'participants' => [
                     ['first_name' => 'Jan', 'last_name' => 'Jdg', 'email' => 'jdg-u-'.uniqid().'@example.test'],
                 ],

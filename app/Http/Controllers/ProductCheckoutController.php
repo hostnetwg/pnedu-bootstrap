@@ -123,7 +123,7 @@ class ProductCheckoutController extends Controller
             'contact_first_name' => ['nullable', 'string', 'max:255'],
             'contact_last_name' => ['nullable', 'string', 'max:255'],
             'contact_email' => ['required', 'email', 'max:255'],
-            'contact_phone' => ['nullable', 'string', 'max:50'],
+            'contact_phone' => ['required', 'string', 'max:50'],
             'participant_is_contact' => ['nullable', 'boolean'],
             'participants' => ['required', 'array', 'min:1', 'max:'.$maxParticipants],
             'participants.*.first_name' => ['required', 'string', 'max:255'],
@@ -146,6 +146,8 @@ class ProductCheckoutController extends Controller
             'payment_gateway' => ['nullable', 'required_if:payment_type,online', Rule::in($allowedGateways)],
             'invoice_notes' => ['nullable', 'string', 'max:2000'],
             'early_performance_accepted' => ['nullable', 'boolean'],
+        ], [
+            'contact_phone.required' => 'Telefon kontaktowy jest wymagany.',
         ]);
 
         $participants = collect($validated['participants'])
