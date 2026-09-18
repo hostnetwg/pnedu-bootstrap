@@ -14,6 +14,8 @@ Zasada obowiązuje w projekcie `pnedu` i na każdym komputerze deweloperskim.
 
 **Po znaczącym etapie:** raport 11-punktowy + podsumowanie dla Waldemara. Prompt do ChatGPT przygotowuj tylko wtedy, gdy Waldemar wyraźnie napisze, że robi zewnętrzną konsultację i poprosi o taki prompt.
 
+**Wersje:** po znaczącym etapie zasugeruj wpis w `CHANGELOG.md` (hotfix do bieżącej wersji albo nowy numer). Numer tylko po potwierdzeniu Waldemara. Widok w ADM, nie na froncie pnedu.pl.
+
 **Deploy analityki:** migracje `pneadm` → potem `pnedu` → test → backfill.
 
 Pełny opis: `pneadm/docs/AI_HUMAN_COMMUNICATION.md`.

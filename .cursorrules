@@ -246,7 +246,7 @@ Schema::create('users', ...); // Domyślnie baza pnedu
 
 ## 💬 Forma komunikacji Waldemar ↔ ChatGPT ↔ Cursor (OBOWIĄZKOWE)
 
-Pełny opis: `docs/AI_HUMAN_COMMUNICATION.md` (kanon: `pneadm/docs/AI_HUMAN_COMMUNICATION.md`, wersja 2.2).
+Pełny opis: `docs/AI_HUMAN_COMMUNICATION.md` (kanon: `pneadm/docs/AI_HUMAN_COMMUNICATION.md`, wersja 2.3).
 
 **Role:** Waldemar — decyzje; ChatGPT — konsultant tylko na wyraźną prośbę Waldemara; Cursor — kod, testy, fakty z repo.
 
@@ -254,4 +254,4 @@ Pełny opis: `docs/AI_HUMAN_COMMUNICATION.md` (kanon: `pneadm/docs/AI_HUMAN_COMM
 
 **Tryby:** A wdrażaj | B pytaj | C diagnozuj.
 
-Po znaczącym etapie: raport 11-punktów + podsumowanie dla Waldemara. Prompt ChatGPT dodawaj tylko wtedy, gdy Waldemar wyraźnie napisze, że chce zewnętrzną konsultację i poprosi o prompt. Drobne akcje — skrót. Nie commituj bez prośby Waldemara.
+Po znaczącym etapie: raport 11-punktów + podsumowanie dla Waldemara. Prompt ChatGPT dodawaj tylko wtedy, gdy Waldemar wyraźnie napisze, że chce zewnętrzną konsultację i poprosi o prompt. Drobne akcje — skrót. Nie commituj bez prośby Waldemara. Po znaczącym etapie **zaproponuj** wpis w `CHANGELOG.md` (hotfix albo nowy numer) — **nie nadawaj numeru bez potwierdzenia Waldemara**. Kanon: `pneadm/docs/CHANGELOG_VERSIONING.md`.
