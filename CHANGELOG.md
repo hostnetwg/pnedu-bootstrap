@@ -2,6 +2,15 @@
 
 Krótka numeracja frontu. Szczegóły w `docs/` tego repo i w kanonie `pneadm/docs/`. Nowy numer wersji tylko po potwierdzeniu Waldemara. Hotfixy dopisujemy do bieżącej wersji.
 
+## 1.1 — 2026-09-19
+
+Belka zasobów i oferta na `/transmisja`.
+
+- Na osadzonym live przyciski **Pobierz materiały**, **Wypełnij ankietę** i **Pobierz zaświadczenie** (ikona dyplomu) wchodzą i schodzą bez odświeżania strony. Klik: nowa karta + zejście z pełnego ekranu.
+- Druga belka: oferta kolejnego szkolenia, przycisk **Zamawiam szkolenie** otwiera opis kursu (nie od razu formularz).
+- **Rejestracja: lista obecności** na belce jest ukryta, dopóki wejście wymaga konta pnedu i wpisu na liście.
+- Kanon: [DASHBOARD_LIVE_EMBED.md](docs/DASHBOARD_LIVE_EMBED.md), [LIVE_EMBED_RESOURCE_BAR.md](../pneadm/docs/LIVE_EMBED_RESOURCE_BAR.md)
+
 ## 1.0 — 2026-09-18
 
 Start numeracji. Stan produkcji z 18.09.2026.

@@ -26,6 +26,8 @@ Obie ścieżki korzystają z tego samego rekordu `participant_live_access` (toke
 | 7 | Embed widoczny dla **wszystkich** uczestników kursu (wg radio w adm). `CLICKMEETING_EMBED_ALLOWLIST` opcjonalny; pusty/brak = bez ograniczenia |
 | 8 | Przy trybie embed admin ma checkbox **Link w e-mailu do osadzonego w PNEDU pokoju** (domyślnie ON). ON = główny link maila do `/transmisja` + alternatywny bezpośredni CM; OFF = mail jak dotychczas (bezpośredni CM). |
 
+Belka zasobów na transmisji (materiały / ankieta / zaświadczenie, włączana z ADM `/courses/{id}/live`; rejestracja listy obecności zaparkowana na obecnym osadzonym live): kanon etapu 1 — `pneadm/docs/LIVE_EMBED_RESOURCE_BAR.md`. Portal prowadzącego: `pneadm/docs/INSTRUCTOR_PORTAL.md`.
+
 ## Adm (pneadm)
 
 Edycja / tworzenie kursu → sekcja ID wydarzenia ClickMeeting → **Wejście do pokoju dla uczestnika** (radio):
@@ -83,7 +85,7 @@ Szczegóły maila provision: `pneadm/docs/FORM_ORDERS_PNEDU_PROVISION.md`.
 4. Desktop embed: iframe CM (`?bare=1`), auto pełny ekran (gate modal). Strona `/transmisja` **bez menu i stopki pnedu** (layout `transmisja-bare`) — tylko zielony pasek PNE + okno CM. **Widok normalny:** branding po lewej, przyciski po prawej. **Pełny ekran:** ten sam pasek + „Wyjdź z pełnego ekranu” / „Zamknij”.
 5. Esc / „Wyjdź z pełnego ekranu” = tylko wyjście z FS (pokój zostaje).
 6. „Zamknij transmisję” = modal → zwolnienie slotu obecności + **przekierowanie na** `/po-szkoleniu?course={id}` (strona podziękowania). Modal i backdrop Bootstrapa są **wewnątrz** `#cm-embed-shell`, żeby były widoczne także w natywnym Fullscreen API. W trybie fullscreen host (`bare=1`) parent dostaje `postMessage` i też idzie na tę stronę.
-7. **Auto po „Zakończ dla wszystkich”:** `/transmisja` polluje `GET …/transmisja/meeting-status` (co ~12 s, cache CM 12 s). Gdy API CM ma `status=inactive`, uczestnik jest automatycznie kierowany na `/po-szkoleniu`.
+7. **Auto po „Zakończ dla wszystkich”:** `/transmisja` polluje `GET …/transmisja/meeting-status` (pierwszy odczyt ~0,4 s, potem co ~12 s, cache CM 12 s). Gdy API CM ma `status=inactive`, uczestnik jest automatycznie kierowany na `/po-szkoleniu`. Ten sam JSON ma `resource_links` (materiały / ankieta / zaświadczenie; rejestracja listy obecności nie wychodzi na obecnym osadzonym live) oraz `live_offer` (druga belka oferty kolejnego szkolenia). Ikony belki zasobów rzadko migają do pierwszego kliknięcia (ciasteczko); kanon: `pneadm/docs/LIVE_EMBED_RESOURCE_BAR.md`.
 
 **Uwaga (embed vs CM full page):** ustawienie thank-you URL w CM przekierowuje przeglądarkę tylko w pełnym oknie ClickMeeting. W **iframe** na pnedu CM często zostawia czarny ekran końca — dlatego pnedu:
 - przy zamykaniu transmisji sam prowadzi na `/po-szkoleniu`;
@@ -122,6 +124,7 @@ Szkolenia **zamknięte** (kategoria w adm) zwykle nie idą przez embed na koncie
 | Przycisk wspólny | `resources/views/partials/live-join-button.blade.php` |
 | Strona embed | `resources/views/dashboard/szkolenia-transmisja.blade.php` |
 | Serwis embed / token | `app/Services/LiveTransmissionService.php` |
+| Belka zasobów (lista / materiały / ankieta) | `app/Services/LiveTransmissionResourceBarService.php`; sterowanie ADM: `/courses/{id}/live` |
 | API CM | `app/Services/ClickMeetingService.php` (`deactivateTokens` itd.) |
 | Obecność | `app/Services/LiveTransmissionPresenceService.php` |
 | Allowlista (opcjonalna) | `CLICKMEETING_EMBED_ALLOWLIST` — domyślnie pusta = wszyscy |
@@ -162,6 +165,8 @@ W ustawieniach wydarzenia CM (**Edycja → Ustawienia → Działania follow-up �
 ```bash
 # pnedu
 sail test --filter=LiveTransmission
+sail test --filter=LiveTransmissionResourceBar
+sail test --filter=LiveTransmissionMeetingStatusResourceBar
 sail test --filter=DashboardCourseLiveAccessServiceTest
 sail test --filter=PostTrainingThankYouPageTest
 

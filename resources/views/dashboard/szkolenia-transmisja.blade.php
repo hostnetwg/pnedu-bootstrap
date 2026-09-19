@@ -11,6 +11,7 @@
         {{-- Belka PNE — tylko w trybie pełnoekranowym --}}
         <div id="cm-transmisja-brand-bar" class="cm-transmisja-brand-bar">
             @include('dashboard.partials.transmisja-pne-brand')
+            <div class="cm-live-resource-links" data-live-resource-links hidden></div>
             <div class="cm-transmisja-brand-bar__actions">
             <button type="button"
                     class="btn btn-sm btn-light flex-shrink-0"
@@ -30,11 +31,13 @@
             </button>
             </div>
         </div>
+        @include('dashboard.partials.transmisja-live-offer-bar', ['variant' => 'fs'])
 
         <div class="transmisja-toolbar" id="cm-page-toolbar">
             <div class="transmisja-toolbar__brand">
                 @include('dashboard.partials.transmisja-pne-brand')
             </div>
+            <div class="cm-live-resource-links" data-live-resource-links hidden></div>
             <div class="transmisja-toolbar__actions">
                 <a href="{{ $rejoinUrl }}"
                    class="btn btn-sm btn-light transmisja-toolbar__btn"
@@ -61,6 +64,7 @@
                 </button>
             </div>
         </div>
+        @include('dashboard.partials.transmisja-live-offer-bar', ['variant' => 'page'])
 
         <div class="cm-embed-body">
             <div id="cm-embed-container">
@@ -129,6 +133,51 @@
         border-bottom: 1px solid rgba(255, 255, 255, 0.12);
         flex: 0 0 auto;
         overflow: hidden;
+    }
+    .cm-live-resource-links {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.35rem;
+        min-width: 0;
+        flex: 1 1 auto;
+        justify-content: center;
+    }
+    .cm-live-resource-links[hidden] {
+        display: none !important;
+    }
+    .cm-live-resource-link {
+        white-space: nowrap;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+    .cm-live-resource-link__icon {
+        font-size: 0.95em;
+        line-height: 1;
+        display: inline-flex;
+        transform-origin: center;
+    }
+    .cm-live-resource-link__icon--diploma {
+        width: 1.1em;
+        height: 1.1em;
+        flex-shrink: 0;
+    }
+    .cm-live-resource-link.is-attention .cm-live-resource-link__icon {
+        animation: cm-live-icon-nudge 10s ease-in-out infinite;
+    }
+    @keyframes cm-live-icon-nudge {
+        0%, 76%, 100% { opacity: 1; transform: scale(1); }
+        80% { opacity: 0.4; transform: scale(1.18); }
+        84% { opacity: 1; transform: scale(1); }
+        88% { opacity: 0.4; transform: scale(1.18); }
+        92% { opacity: 1; transform: scale(1); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .cm-live-resource-link.is-attention .cm-live-resource-link__icon {
+            animation: none;
+        }
     }
     .transmisja-toolbar__brand {
         flex: 1 1 auto;
@@ -257,7 +306,7 @@
     }
     .cm-transmisja-brand-bar {
         display: none;
-        grid-template-columns: minmax(0, 1fr) auto;
+        grid-template-columns: minmax(0, auto) minmax(0, 1fr) auto;
         align-items: center;
         column-gap: 0.75rem;
         padding: 0.4rem 1rem;
@@ -319,6 +368,116 @@
     }
     .transmisja-page.is-browser-fullscreen #cm-page-toolbar {
         display: none;
+    }
+    .cm-live-offer-bar {
+        display: grid;
+        grid-template-rows: 0fr;
+        opacity: 0;
+        pointer-events: none;
+        background: linear-gradient(90deg, #f7e7b4 0%, #fff8e1 48%, #f3d98a 100%);
+        color: #1c1910;
+        border-bottom: 1px solid rgba(122, 88, 12, 0.22);
+        box-shadow: 0 8px 18px rgba(0, 0, 0, 0.16);
+        flex: 0 0 auto;
+        z-index: 1;
+        transition: grid-template-rows 0.42s ease, opacity 0.28s ease;
+    }
+    .cm-live-offer-bar.is-visible {
+        grid-template-rows: 1fr;
+        opacity: 1;
+        pointer-events: auto;
+    }
+    .cm-live-offer-bar__clip {
+        overflow: hidden;
+        min-height: 0;
+    }
+    .cm-live-offer-bar__inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.85rem 1.25rem;
+        padding: 0.55rem 1rem;
+        min-width: 0;
+    }
+    .cm-live-offer-bar__copy {
+        min-width: 0;
+        flex: 1 1 auto;
+    }
+    .cm-live-offer-bar__kicker {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #7a580c;
+        margin-bottom: 0.1rem;
+    }
+    .cm-live-offer-bar__title {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        font-size: 0.98rem;
+        font-weight: 700;
+        line-height: 1.3;
+        color: #1a1408;
+    }
+    .cm-live-offer-bar__meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem 0.9rem;
+        margin-top: 0.2rem;
+        font-size: 0.82rem;
+        color: #4a3d1c;
+    }
+    .cm-live-offer-bar__meta-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        min-width: 0;
+    }
+    .cm-live-offer-bar__cta {
+        flex-shrink: 0;
+        background: #0b3d2e;
+        border-color: #0b3d2e;
+        color: #fff;
+        font-weight: 600;
+        padding: 0.4rem 0.9rem;
+        box-shadow: 0 2px 0 rgba(0, 0, 0, 0.12);
+    }
+    .cm-live-offer-bar__cta:hover,
+    .cm-live-offer-bar__cta:focus-visible {
+        background: #0f5240;
+        border-color: #0f5240;
+        color: #fff;
+    }
+    .cm-live-offer-bar--fs {
+        display: none;
+    }
+    #cm-embed-shell.is-fullscreen .cm-live-offer-bar--fs {
+        display: grid;
+    }
+    .transmisja-page.is-browser-fullscreen .cm-live-offer-bar--page {
+        display: none;
+    }
+    @media (max-width: 767.98px) {
+        .cm-live-offer-bar__inner {
+            flex-wrap: wrap;
+            padding: 0.5rem 0.75rem;
+        }
+        .cm-live-offer-bar__cta {
+            width: 100%;
+        }
+        .cm-live-offer-bar__title {
+            font-size: 0.9rem;
+        }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .cm-live-offer-bar {
+            transition: none;
+        }
     }
     body.cm-transmisja-fs {
         overflow: hidden;
@@ -555,8 +714,256 @@
     }
 
     // Auto: prezenter zakończył wydarzenie (CM status=inactive) → podziękowanie.
+    // Ten sam poll dociąga belkę zasobów (lista / materiały / ankieta) bez odświeżania strony.
     const meetingStatusUrl = @json($meetingStatusUrl ?? null);
     let meetingEndedHandled = false;
+
+    const liveBarCourseId = {{ (int) ($course?->id ?? 0) }};
+    const liveBarSeenCookie = 'pne_live_bar_seen_' + liveBarCourseId;
+    const liveBarSeenMaxAge = 60 * 60 * 18;
+    let lastResourceSignature = null;
+    let lastOfferSignature = null;
+
+    function liveBarIconClass(key) {
+        const k = typeof key === 'string' ? key : '';
+        if (k === 'attendance' || k.indexOf('attendance') === 0) {
+            return 'bi bi-person-check-fill';
+        }
+        if (k.indexOf('material') === 0) {
+            return 'bi bi-file-earmark-text-fill';
+        }
+        if (k.indexOf('survey') === 0) {
+            return 'bi bi-clipboard-data-fill';
+        }
+        return 'bi bi-box-arrow-up-right';
+    }
+
+    function liveBarIconElement(key) {
+        const k = typeof key === 'string' ? key : '';
+        if (k === 'certificate' || k.indexOf('certificate') === 0) {
+            const ns = 'http://www.w3.org/2000/svg';
+            const svg = document.createElementNS(ns, 'svg');
+            svg.setAttribute('viewBox', '0 0 16 16');
+            svg.setAttribute('aria-hidden', 'true');
+            svg.setAttribute('focusable', 'false');
+            svg.classList.add('cm-live-resource-link__icon', 'cm-live-resource-link__icon--diploma');
+
+            const paperFill = document.createElementNS(ns, 'rect');
+            paperFill.setAttribute('x', '1.2');
+            paperFill.setAttribute('y', '2.6');
+            paperFill.setAttribute('width', '13.6');
+            paperFill.setAttribute('height', '10.8');
+            paperFill.setAttribute('rx', '1.2');
+            paperFill.setAttribute('fill', 'currentColor');
+            paperFill.setAttribute('opacity', '0.18');
+
+            const paper = document.createElementNS(ns, 'rect');
+            paper.setAttribute('x', '1.2');
+            paper.setAttribute('y', '2.6');
+            paper.setAttribute('width', '13.6');
+            paper.setAttribute('height', '10.8');
+            paper.setAttribute('rx', '1.2');
+            paper.setAttribute('fill', 'none');
+            paper.setAttribute('stroke', 'currentColor');
+            paper.setAttribute('stroke-width', '1.25');
+
+            const lines = document.createElementNS(ns, 'path');
+            lines.setAttribute('d', 'M3.6 5.4h8.8M3.6 7.5h8.8M3.6 9.6h5.2');
+            lines.setAttribute('fill', 'none');
+            lines.setAttribute('stroke', 'currentColor');
+            lines.setAttribute('stroke-width', '1.15');
+            lines.setAttribute('stroke-linecap', 'round');
+
+            const seal = document.createElementNS(ns, 'circle');
+            seal.setAttribute('cx', '11.7');
+            seal.setAttribute('cy', '10.7');
+            seal.setAttribute('r', '1.85');
+            seal.setAttribute('fill', 'currentColor');
+
+            const ribbon = document.createElementNS(ns, 'path');
+            ribbon.setAttribute('d', 'M11.7 12.4l-.55 1.7.55-.35.55.35z');
+            ribbon.setAttribute('fill', 'currentColor');
+
+            svg.appendChild(paperFill);
+            svg.appendChild(paper);
+            svg.appendChild(lines);
+            svg.appendChild(seal);
+            svg.appendChild(ribbon);
+            return svg;
+        }
+        const icon = document.createElement('i');
+        icon.className = liveBarIconClass(key) + ' cm-live-resource-link__icon';
+        icon.setAttribute('aria-hidden', 'true');
+        return icon;
+    }
+
+    function readLiveBarSeenKeys() {
+        const prefix = liveBarSeenCookie + '=';
+        const parts = document.cookie.split(';');
+        for (let i = 0; i < parts.length; i++) {
+            const part = parts[i].trim();
+            if (part.indexOf(prefix) !== 0) {
+                continue;
+            }
+            try {
+                return decodeURIComponent(part.slice(prefix.length))
+                    .split(',')
+                    .map(function (k) { return k.trim(); })
+                    .filter(Boolean)
+                    .reduce(function (acc, k) {
+                        acc[k] = true;
+                        return acc;
+                    }, {});
+            } catch (e) {
+                return {};
+            }
+        }
+        return {};
+    }
+
+    function markLiveBarLinkSeen(key) {
+        if (!key || liveBarCourseId < 1) {
+            return;
+        }
+        const seen = readLiveBarSeenKeys();
+        seen[key] = true;
+        document.cookie = liveBarSeenCookie + '=' + encodeURIComponent(Object.keys(seen).join(','))
+            + '; path=/; max-age=' + liveBarSeenMaxAge + '; SameSite=Lax';
+        document.querySelectorAll('[data-live-resource-key="' + key + '"]').forEach(function (el) {
+            el.classList.remove('is-attention');
+        });
+    }
+
+    function resourceLinksSignature(links) {
+        return links.map(function (link) {
+            return [link.key || '', link.url || '', link.label || ''].join('\t');
+        }).join('\n');
+    }
+
+    function renderLiveResourceLinks(links) {
+        const slots = document.querySelectorAll('[data-live-resource-links]');
+        const items = Array.isArray(links) ? links : [];
+        const signature = resourceLinksSignature(items);
+        if (signature === lastResourceSignature) {
+            return;
+        }
+        lastResourceSignature = signature;
+        const seen = readLiveBarSeenKeys();
+        slots.forEach(function (slot) {
+            slot.replaceChildren();
+            items.forEach(function (link) {
+                if (!link || typeof link.url !== 'string' || link.url === '') {
+                    return;
+                }
+                const key = typeof link.key === 'string' ? link.key : '';
+                const a = document.createElement('a');
+                a.className = 'btn btn-sm btn-warning cm-live-resource-link';
+                a.href = link.url;
+                a.target = '_blank';
+                a.rel = 'noopener noreferrer';
+                if (key) {
+                    a.setAttribute('data-live-resource-key', key);
+                }
+                if (key && !seen[key]) {
+                    a.classList.add('is-attention');
+                }
+                const icon = liveBarIconElement(key);
+                const label = document.createElement('span');
+                label.textContent = typeof link.label === 'string' && link.label !== '' ? link.label : 'Link';
+                a.appendChild(icon);
+                a.appendChild(label);
+                a.addEventListener('click', function () {
+                    if (key) {
+                        markLiveBarLinkSeen(key);
+                    }
+                    exitNativeFullscreenOnly();
+                });
+                slot.appendChild(a);
+            });
+            if (items.length === 0) {
+                slot.setAttribute('hidden', 'hidden');
+            } else {
+                slot.removeAttribute('hidden');
+            }
+        });
+    }
+
+    function liveOfferSignature(offer) {
+        if (!offer || typeof offer !== 'object') {
+            return '';
+        }
+        return [
+            offer.course_id || '',
+            offer.title || '',
+            offer.start_date || '',
+            offer.instructor || '',
+            offer.order_url || '',
+        ].join('\t');
+    }
+
+    function renderLiveOffer(offer) {
+        const bars = document.querySelectorAll('[data-live-offer-bar]');
+        const item = offer && typeof offer === 'object' && typeof offer.order_url === 'string' && offer.order_url !== ''
+            ? offer
+            : null;
+        const signature = liveOfferSignature(item);
+        if (signature === lastOfferSignature) {
+            return;
+        }
+        lastOfferSignature = signature;
+
+        bars.forEach(function (bar) {
+            const titleEl = bar.querySelector('[data-live-offer-title]');
+            const dateWrap = bar.querySelector('[data-live-offer-date-wrap]');
+            const dateEl = bar.querySelector('[data-live-offer-date]');
+            const instructorWrap = bar.querySelector('[data-live-offer-instructor-wrap]');
+            const instructorEl = bar.querySelector('[data-live-offer-instructor]');
+            const cta = bar.querySelector('[data-live-offer-cta]');
+
+            if (!item) {
+                bar.classList.remove('is-visible');
+                bar.setAttribute('aria-hidden', 'true');
+                if (cta) {
+                    cta.removeAttribute('href');
+                }
+                return;
+            }
+
+            if (titleEl) {
+                titleEl.textContent = item.title || 'Szkolenie';
+            }
+            if (dateWrap && dateEl) {
+                if (item.start_date) {
+                    dateEl.textContent = item.start_date;
+                    dateWrap.removeAttribute('hidden');
+                } else {
+                    dateEl.textContent = '';
+                    dateWrap.setAttribute('hidden', 'hidden');
+                }
+            }
+            if (instructorWrap && instructorEl) {
+                if (item.instructor) {
+                    instructorEl.textContent = item.instructor;
+                    instructorWrap.removeAttribute('hidden');
+                } else {
+                    instructorEl.textContent = '';
+                    instructorWrap.setAttribute('hidden', 'hidden');
+                }
+            }
+            if (cta) {
+                cta.href = item.order_url;
+                if (!cta.dataset.offerBound) {
+                    cta.dataset.offerBound = '1';
+                    cta.addEventListener('click', function () {
+                        exitNativeFullscreenOnly();
+                    });
+                }
+            }
+            bar.classList.add('is-visible');
+            bar.setAttribute('aria-hidden', 'false');
+        });
+    }
+
     function pollMeetingEnded() {
         if (!meetingStatusUrl || meetingEndedHandled) {
             return;
@@ -574,6 +981,12 @@
             }
             return res.json();
         }).then(function (data) {
+            if (data && Array.isArray(data.resource_links)) {
+                renderLiveResourceLinks(data.resource_links);
+            }
+            if (data && Object.prototype.hasOwnProperty.call(data, 'live_offer')) {
+                renderLiveOffer(data.live_offer);
+            }
             if (!data || !data.ended) {
                 return;
             }
@@ -598,7 +1011,7 @@
         }).catch(function () {});
     }
     if (meetingStatusUrl) {
-        setTimeout(pollMeetingEnded, 8000);
+        setTimeout(pollMeetingEnded, 400);
         setInterval(pollMeetingEnded, 12000);
     }
 

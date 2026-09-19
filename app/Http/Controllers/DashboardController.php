@@ -9,6 +9,7 @@ use App\Models\PneadmCourseSurveyLink;
 use App\Services\ClickMeetingService;
 use App\Services\DashboardCourseLiveAccessService;
 use App\Services\LiveTransmissionPresenceService;
+use App\Services\LiveTransmissionResourceBarService;
 use App\Services\LiveTransmissionService;
 use App\Services\NativeSurveyDuplicateGuard;
 use App\Support\ClickMeetingConferenceEndedCache;
@@ -373,8 +374,6 @@ class DashboardController extends Controller
         $liveTransmissionService->recordEmbedEntry($participant);
 
         $courseId = (int) ($participant->course_id ?? $participant->course?->id ?? 0);
-        $participant->loadMissing('course.onlineDetail');
-        $eventId = trim((string) ($participant->course?->onlineDetail?->clickmeeting_event_id ?? ''));
 
         return view('dashboard.szkolenia-transmisja', [
             'participant' => $participant,
@@ -393,9 +392,7 @@ class DashboardController extends Controller
             'postTrainingThankYouUrl' => $courseId > 0
                 ? route('post-training.thank-you', ['course' => $courseId])
                 : route('post-training.thank-you'),
-            'meetingStatusUrl' => $eventId !== ''
-                ? route('dashboard.szkolenia.transmisja.meeting-status', $participant)
-                : null,
+            'meetingStatusUrl' => route('dashboard.szkolenia.transmisja.meeting-status', $participant),
             'presenceHeartbeatUrl' => route('dashboard.szkolenia.transmisja.heartbeat', $participant),
             'presenceLeaveUrl' => route('dashboard.szkolenia.transmisja.leave', $participant),
             'presenceHeartbeatMs' => $presenceService->heartbeatIntervalSeconds() * 1000,
@@ -418,26 +415,37 @@ class DashboardController extends Controller
     public function szkoleniaTransmisjaMeetingStatus(
         Request $request,
         Participant $participant,
-        ClickMeetingService $clickMeeting
+        ClickMeetingService $clickMeeting,
+        LiveTransmissionResourceBarService $resourceBar
     ): JsonResponse {
         if ($redirect = $this->redirectToLoginWhenTrainingEmailMismatch($request, $participant)) {
-            return response()->json(['ok' => false, 'ended' => false, 'error' => 'auth'], 401);
+            return response()->json([
+                'ok' => false,
+                'ended' => false,
+                'error' => 'auth',
+                'resource_links' => [],
+                'live_offer' => null,
+            ], 401);
         }
 
         $this->assertParticipantBelongsToUser($participant);
 
-        $participant->loadMissing('course.onlineDetail');
+        $participant->loadMissing('course.onlineDetail', 'course.fileLinks');
         $eventId = trim((string) ($participant->course?->onlineDetail?->clickmeeting_event_id ?? ''));
         $courseId = (int) ($participant->course_id ?? $participant->course?->id ?? 0);
         $thankYouUrl = $courseId > 0
             ? route('post-training.thank-you', ['course' => $courseId])
             : route('post-training.thank-you');
+        $resourceLinks = $resourceBar->visibleLinks($participant->course);
+        $liveOffer = $resourceBar->visibleOffer($participant->course);
 
         if ($eventId === '') {
             return response()->json([
                 'ok' => true,
                 'ended' => false,
                 'thank_you_url' => $thankYouUrl,
+                'resource_links' => $resourceLinks,
+                'live_offer' => $liveOffer,
             ]);
         }
 
@@ -462,6 +470,8 @@ class DashboardController extends Controller
             'status' => $status['status'] ?? null,
             'thank_you_url' => $thankYouUrl,
             'error' => $status['error'] ?? null,
+            'resource_links' => $resourceLinks,
+            'live_offer' => $liveOffer,
         ]);
     }
 
