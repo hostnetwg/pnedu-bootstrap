@@ -11,6 +11,9 @@
 ## ⚠️ CRITICAL: Command Execution Rules
 
 ### Always use `sail` prefix for Laravel/PHP commands:
+
+**Destructive DB:** NEVER `sail artisan migrate:fresh` / `db:wipe` on `pnedu` or `pneadm`. Only database `testing` (or `ALLOW_DESTRUCTIVE_DB=true` locally). `--env=testing` is not phpunit.xml. See `pneadm/docs/DATA_SAFETY.md`.
+
 ```bash
 # ✅ CORRECT - Always use these patterns:
 sail artisan [command]

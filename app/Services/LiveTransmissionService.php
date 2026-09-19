@@ -60,9 +60,21 @@ class LiveTransmissionService
 
         $conferenceResult = $this->clickMeeting->getConference($eventId);
         if (! ($conferenceResult['success'] ?? false)) {
+            $raw = (string) ($conferenceResult['error'] ?? 'Nie udało się pobrać wydarzenia ClickMeeting.');
+            Log::error('LiveTransmissionService: GET conference failed', [
+                'participant_id' => $participant->id,
+                'event_id' => $eventId,
+                'error' => $raw,
+            ]);
+
+            $error = $raw;
+            if (str_contains($raw, 'Brak konfiguracji ClickMeeting API token')) {
+                $error = 'Nie można otworzyć transmisji: platforma nie ma klucza API ClickMeeting. To nie jest token uczestnika — trzeba uzupełnić konfigurację pnedu.';
+            }
+
             return [
                 'ok' => false,
-                'error' => (string) ($conferenceResult['error'] ?? 'Nie udało się pobrać wydarzenia ClickMeeting.'),
+                'error' => $error,
             ];
         }
 
@@ -76,6 +88,8 @@ class LiveTransmissionService
         if ($roomUrl === '' || $roomPin === null) {
             return ['ok' => false, 'error' => 'Brak room_url lub room_pin z ClickMeeting.'];
         }
+
+        $this->persistConferenceSnapshot($participant, $eventId, $roomUrl, $accessType);
 
         $token = null;
         $tokenRotated = false;
@@ -360,5 +374,47 @@ class LiveTransmissionService
         );
 
         $participant->setRelation('liveAccess', $created);
+    }
+
+    private function persistConferenceSnapshot(
+        Participant $participant,
+        string $eventId,
+        string $roomUrl,
+        ?int $accessType
+    ): void {
+        $liveAccess = $participant->liveAccess;
+        if (! $liveAccess instanceof ParticipantLiveAccess) {
+            $liveAccess = ParticipantLiveAccess::query()->firstOrNew([
+                'participant_id' => $participant->id,
+            ]);
+            $liveAccess->course_id = $participant->course_id;
+            $liveAccess->platform = 'clickmeeting';
+        }
+
+        $payload = [
+            'clickmeeting_event_id' => $eventId,
+            'status' => 'success',
+            'synced_at' => now(),
+        ];
+        if ($roomUrl !== '') {
+            $payload['room_url'] = $roomUrl;
+        }
+        if ($accessType !== null) {
+            $payload['access_type'] = $accessType;
+            if ($accessType !== ClickMeetingService::ACCESS_TYPE_TOKEN) {
+                $payload['message'] = 'Typ dostępu ClickMeeting zsynchronizowany przy transmisji.';
+            }
+        }
+
+        try {
+            $liveAccess->forceFill($payload)->save();
+            $participant->setRelation('liveAccess', $liveAccess->fresh());
+        } catch (\Throwable $e) {
+            Log::warning('LiveTransmissionService: nie udało się zapisać snapshotu konferencji', [
+                'participant_id' => $participant->id,
+                'event_id' => $eventId,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 }

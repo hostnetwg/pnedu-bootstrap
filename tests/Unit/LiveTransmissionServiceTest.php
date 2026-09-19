@@ -179,6 +179,60 @@ class LiveTransmissionServiceTest extends TestCase
         $this->assertStringContainsString('nie jest włączony', (string) ($result['error'] ?? ''));
     }
 
+    public function test_open_access_room_skips_token_and_updates_snapshot(): void
+    {
+        if (! $this->pneadmReady()) {
+            $this->markTestSkipped('Brak tabel/kolumn pneadm.');
+        }
+
+        Http::fake([
+            'api.clickmeeting.com/v1/conferences/10164812' => Http::response([
+                'conference' => [
+                    'id' => 10164812,
+                    'access_type' => 1,
+                    'room_pin' => '225723416',
+                    'room_url' => 'https://pnedu.clickmeeting.com/testowy-webinar',
+                ],
+            ], 200),
+            'api.clickmeeting.com/v1/conferences/10164812/room/autologin_hash' => Http::response([
+                'autologin_hash' => 'HASH_OPEN',
+            ], 200),
+        ]);
+
+        [$participant] = $this->seedParticipant();
+
+        $result = app(LiveTransmissionService::class)->buildForParticipant($participant);
+
+        $this->assertTrue($result['ok']);
+        $this->assertSame(1, (int) $participant->fresh()->liveAccess?->access_type);
+        $this->assertStringContainsString('l=HASH_OPEN', (string) $result['iframe_src']);
+
+        Http::assertNotSent(fn ($request) => str_contains($request->url(), '/tokens'));
+        Http::assertSent(function ($request) {
+            if (! str_contains($request->url(), 'autologin_hash')) {
+                return false;
+            }
+
+            return ! isset($request['token']);
+        });
+    }
+
+    public function test_missing_api_token_explains_platform_config(): void
+    {
+        if (! $this->pneadmReady()) {
+            $this->markTestSkipped('Brak tabel/kolumn pneadm.');
+        }
+
+        config(['services.clickmeeting.token' => '']);
+        [$participant] = $this->seedParticipant();
+
+        $result = app(LiveTransmissionService::class)->buildForParticipant($participant);
+
+        $this->assertFalse($result['ok']);
+        $this->assertStringContainsString('klucza API ClickMeeting', (string) ($result['error'] ?? ''));
+        $this->assertStringContainsString('nie jest token uczestnika', (string) ($result['error'] ?? ''));
+    }
+
     public function test_record_embed_entry_persists_first_and_last_timestamps(): void
     {
         if (! $this->pneadmReady()) {

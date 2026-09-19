@@ -105,6 +105,10 @@ Szczegóły maila provision: `pneadm/docs/FORM_ORDERS_PNEDU_PROVISION.md`.
 
 Limit CM (dokumentacja vendor): max tokenów na wydarzenie ≈ **4 ×** max uczestników planu; miejsca w pokoju = concurrent attendees (np. 350).
 
+`/transmisja` zawsze robi `GET conferences/{id}` i zapisuje aktualny `access_type` / `room_url` w `participant_live_access`. Gdy operator zmieni pokój z tokenów na **Dla wszystkich**, embed nie wymaga tokenu. Brak `CLICKMEETING_API_TOKEN` w `.env` pnedu to **klucz API platformy**, nie token uczestnika — komunikat na `/transmisja` to rozróżnia.
+
+Szkolenia **zamknięte** (kategoria w adm) zwykle nie idą przez embed na koncie: dyrektor rozsyła bezpośredni link CM (dostęp „Dla wszystkich”). Embed bez logowania na pnedu.pl nie jest wdrożony. Kanon: `pneadm/docs/CLICKMEETING_TRAININGS.md`.
+
 ### Anty-sharing
 
 - `LiveTransmissionPresenceService` — 1 sesja Laravel na `participant_id` (drugie urządzenie na `/transmisja` → odmowa z komunikatem).

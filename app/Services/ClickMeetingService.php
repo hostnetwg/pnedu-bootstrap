@@ -11,9 +11,11 @@ use Illuminate\Support\Facades\Log;
  */
 class ClickMeetingService
 {
-    public const ACCESS_TYPE_TOKEN = 3;
+    public const ACCESS_TYPE_OPEN = 1;
 
     public const ACCESS_TYPE_PASSWORD = 2;
+
+    public const ACCESS_TYPE_TOKEN = 3;
 
     /**
      * @return array{success: bool, error?: string, access_type?: int|null, conference?: array}
