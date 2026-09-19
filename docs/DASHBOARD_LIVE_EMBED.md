@@ -43,7 +43,8 @@ Kolumny:
 - `course_online_details.embed_on_pnedu` (bool, default **false**)
 - `course_online_details.embed_email_link_enabled` (bool, default **true**) — działa tylko gdy `embed_on_pnedu = true`
 - `participant_live_access.embed_token_consumed_at` — lokalna flaga „ten token już wpuszczono w embed” (bez czekania na `first_use_date` CM)
-- `participant_live_access.embed_first_entered_at`, `embed_last_entered_at` — rejestr wejść przez `/transmisja` (badge **CM pnedu** w kolumnie data wygaśnięcia dostępu, adm)
+- `participant_live_access.embed_first_entered_at`, `embed_last_entered_at` — rejestr wejść przez `/transmisja` (badge **CM pnedu**)
+- `participant_live_access.embed_last_seen_at` — heartbeat „jest teraz” (panel live ADM)
 
 Migracje (pneadm):
 
@@ -85,7 +86,7 @@ Szczegóły maila provision: `pneadm/docs/FORM_ORDERS_PNEDU_PROVISION.md`.
 4. Desktop embed: iframe CM (`?bare=1`), auto pełny ekran (gate modal). Strona `/transmisja` **bez menu i stopki pnedu** (layout `transmisja-bare`) — tylko zielony pasek PNE + okno CM. **Widok normalny:** branding po lewej, przyciski po prawej. **Pełny ekran:** ten sam pasek + „Wyjdź z pełnego ekranu” / „Zamknij”.
 5. Esc / „Wyjdź z pełnego ekranu” = tylko wyjście z FS (pokój zostaje).
 6. „Zamknij transmisję” = modal → zwolnienie slotu obecności + **przekierowanie na** `/po-szkoleniu?course={id}` (strona podziękowania). Modal i backdrop Bootstrapa są **wewnątrz** `#cm-embed-shell`, żeby były widoczne także w natywnym Fullscreen API. W trybie fullscreen host (`bare=1`) parent dostaje `postMessage` i też idzie na tę stronę.
-7. **Auto po „Zakończ dla wszystkich”:** `/transmisja` polluje `GET …/transmisja/meeting-status` (pierwszy odczyt ~0,4 s, potem co ~12 s, cache CM 12 s). Gdy API CM ma `status=inactive`, uczestnik jest automatycznie kierowany na `/po-szkoleniu`. Ten sam JSON ma `resource_links` (materiały / ankieta / zaświadczenie; rejestracja listy obecności nie wychodzi na obecnym osadzonym live) oraz `live_offer` (druga belka oferty kolejnego szkolenia). Ikony belki zasobów rzadko migają do pierwszego kliknięcia (ciasteczko); kanon: `pneadm/docs/LIVE_EMBED_RESOURCE_BAR.md`.
+7. **Auto po „Zakończ dla wszystkich”:** `/transmisja` polluje `GET …/transmisja/meeting-status` (pierwszy odczyt ~0,4 s, potem co **5 s**, pauza przy ukrytej karcie). API ClickMeeting ma cache 12 s. Belka+oferta: cache 2 s na szkolenie. Gdy API CM ma `status=inactive`, uczestnik jest automatycznie kierowany na `/po-szkoleniu`. Ten sam JSON ma `resource_links` (materiały / ankieta / zaświadczenie; rejestracja listy obecności nie wychodzi na obecnym osadzonym live) oraz `live_offer`. Heartbeat (~25 s) zapisuje `embed_last_seen_at` (throttling 20 s) — panel ADM widzi kto jest teraz. Ikony belki rzadko migają do pierwszego kliknięcia; kanon: `pneadm/docs/LIVE_EMBED_RESOURCE_BAR.md`.
 
 **Uwaga (embed vs CM full page):** ustawienie thank-you URL w CM przekierowuje przeglądarkę tylko w pełnym oknie ClickMeeting. W **iframe** na pnedu CM często zostawia czarny ekran końca — dlatego pnedu:
 - przy zamykaniu transmisji sam prowadzi na `/po-szkoleniu`;

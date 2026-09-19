@@ -180,6 +180,9 @@ class LiveTransmissionService
             }
 
             $liveAccess->embed_last_entered_at = $now;
+            if ($this->embedLastSeenColumnAvailable()) {
+                $liveAccess->embed_last_seen_at = $now;
+            }
             $liveAccess->save();
 
             $participant->setRelation('liveAccess', $liveAccess->fresh());
@@ -188,6 +191,15 @@ class LiveTransmissionService
                 'participant_id' => $participant->id,
                 'error' => $e->getMessage(),
             ]);
+        }
+    }
+
+    private function embedLastSeenColumnAvailable(): bool
+    {
+        try {
+            return Schema::connection('pneadm')->hasColumn('participant_live_access', 'embed_last_seen_at');
+        } catch (\Throwable) {
+            return false;
         }
     }
 

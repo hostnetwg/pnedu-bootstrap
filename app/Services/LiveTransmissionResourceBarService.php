@@ -6,6 +6,7 @@ use App\Models\Course;
 use App\Models\CourseFileLink;
 use App\Models\CourseOnlineDetail;
 use App\Models\PneadmCourseSurveyLink;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * Linki belki zasobów na /transmisja — te same flagi co panel ADM `/courses/{id}/live`.
@@ -27,6 +28,49 @@ class LiveTransmissionResourceBarService
      * wróci, gdy live będzie dostępny bez konta pnedu (np. zamknięty link od dyrektora).
      */
     public const ATTENDANCE_VISIBLE_ON_AUTHENTICATED_EMBED = false;
+
+    /** Poll belki u uczestnika — tani JSON; API ClickMeeting i tak ma cache 12 s. */
+    public const VIEWER_POLL_MS = 5000;
+
+    public const VIEWER_POLL_FIRST_MS = 400;
+
+    /** Wspólny cache belki+oferty na czas jednego „piku” wielu widzów. */
+    public const VIEWER_PAYLOAD_CACHE_SECONDS = 2;
+
+    /**
+     * @return array{resource_links: list<array{key: string, label: string, url: string}>, live_offer: array<string, mixed>|null}
+     */
+    public function viewerPayload(?Course $course): array
+    {
+        if (! $course) {
+            return [
+                'resource_links' => [],
+                'live_offer' => null,
+            ];
+        }
+
+        $courseId = (int) $course->id;
+        if ($courseId <= 0) {
+            return [
+                'resource_links' => [],
+                'live_offer' => null,
+            ];
+        }
+
+        /** @var array{resource_links: list<array{key: string, label: string, url: string}>, live_offer: array<string, mixed>|null} */
+        return Cache::remember(
+            'live_tx_bar:'.$courseId,
+            self::VIEWER_PAYLOAD_CACHE_SECONDS,
+            function () use ($course): array {
+                $fresh = $course->fresh(['onlineDetail', 'fileLinks']) ?? $course;
+
+                return [
+                    'resource_links' => $this->visibleLinks($fresh),
+                    'live_offer' => $this->visibleOffer($fresh),
+                ];
+            }
+        );
+    }
 
     /**
      * @return list<array{key: string, label: string, url: string}>

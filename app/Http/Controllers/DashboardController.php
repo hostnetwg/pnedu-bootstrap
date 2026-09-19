@@ -8,6 +8,7 @@ use App\Models\ParticipantTrainingVideoNote;
 use App\Models\PneadmCourseSurveyLink;
 use App\Services\ClickMeetingService;
 use App\Services\DashboardCourseLiveAccessService;
+use App\Services\LiveEmbedPresenceService;
 use App\Services\LiveTransmissionPresenceService;
 use App\Services\LiveTransmissionResourceBarService;
 use App\Services\LiveTransmissionService;
@@ -393,6 +394,8 @@ class DashboardController extends Controller
                 ? route('post-training.thank-you', ['course' => $courseId])
                 : route('post-training.thank-you'),
             'meetingStatusUrl' => route('dashboard.szkolenia.transmisja.meeting-status', $participant),
+            'meetingStatusPollMs' => LiveTransmissionResourceBarService::VIEWER_POLL_MS,
+            'meetingStatusFirstMs' => LiveTransmissionResourceBarService::VIEWER_POLL_FIRST_MS,
             'presenceHeartbeatUrl' => route('dashboard.szkolenia.transmisja.heartbeat', $participant),
             'presenceLeaveUrl' => route('dashboard.szkolenia.transmisja.leave', $participant),
             'presenceHeartbeatMs' => $presenceService->heartbeatIntervalSeconds() * 1000,
@@ -430,14 +433,15 @@ class DashboardController extends Controller
 
         $this->assertParticipantBelongsToUser($participant);
 
-        $participant->loadMissing('course.onlineDetail', 'course.fileLinks');
+        $participant->loadMissing('course.onlineDetail');
         $eventId = trim((string) ($participant->course?->onlineDetail?->clickmeeting_event_id ?? ''));
         $courseId = (int) ($participant->course_id ?? $participant->course?->id ?? 0);
         $thankYouUrl = $courseId > 0
             ? route('post-training.thank-you', ['course' => $courseId])
             : route('post-training.thank-you');
-        $resourceLinks = $resourceBar->visibleLinks($participant->course);
-        $liveOffer = $resourceBar->visibleOffer($participant->course);
+        $payload = $resourceBar->viewerPayload($participant->course);
+        $resourceLinks = $payload['resource_links'];
+        $liveOffer = $payload['live_offer'];
 
         if ($eventId === '') {
             return response()->json([
@@ -478,7 +482,8 @@ class DashboardController extends Controller
     public function szkoleniaTransmisjaHeartbeat(
         Request $request,
         Participant $participant,
-        LiveTransmissionPresenceService $presenceService
+        LiveTransmissionPresenceService $presenceService,
+        LiveEmbedPresenceService $embedPresence
     ): JsonResponse {
         if ($redirect = $this->redirectToLoginWhenTrainingEmailMismatch($request, $participant)) {
             return response()->json(['ok' => false, 'error' => 'auth'], 401);
@@ -492,13 +497,18 @@ class DashboardController extends Controller
             $presenceService->ttlSeconds(false)
         );
 
+        if ($ok) {
+            $embedPresence->touch($participant);
+        }
+
         return response()->json(['ok' => $ok], $ok ? 200 : 409);
     }
 
     public function szkoleniaTransmisjaLeave(
         Request $request,
         Participant $participant,
-        LiveTransmissionPresenceService $presenceService
+        LiveTransmissionPresenceService $presenceService,
+        LiveEmbedPresenceService $embedPresence
     ): JsonResponse {
         if ($redirect = $this->redirectToLoginWhenTrainingEmailMismatch($request, $participant)) {
             return response()->json(['ok' => false, 'error' => 'auth'], 401);
@@ -510,6 +520,7 @@ class DashboardController extends Controller
             (int) $participant->id,
             (string) $request->session()->getId()
         );
+        $embedPresence->clear($participant);
 
         return response()->json(['ok' => true]);
     }

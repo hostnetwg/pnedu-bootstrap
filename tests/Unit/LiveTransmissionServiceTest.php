@@ -259,6 +259,9 @@ class LiveTransmissionServiceTest extends TestCase
             $second->embed_first_entered_at?->toDateTimeString(),
         );
         $this->assertSame('2026-07-18 11:15:00', $second->embed_last_entered_at?->format('Y-m-d H:i:s'));
+        if (Schema::connection('pneadm')->hasColumn('participant_live_access', 'embed_last_seen_at')) {
+            $this->assertSame('2026-07-18 11:15:00', $second->embed_last_seen_at?->format('Y-m-d H:i:s'));
+        }
     }
 
     /**

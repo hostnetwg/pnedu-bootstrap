@@ -716,6 +716,8 @@
     // Auto: prezenter zakończył wydarzenie (CM status=inactive) → podziękowanie.
     // Ten sam poll dociąga belkę zasobów (lista / materiały / ankieta) bez odświeżania strony.
     const meetingStatusUrl = @json($meetingStatusUrl ?? null);
+    const meetingStatusPollMs = {{ (int) ($meetingStatusPollMs ?? 5000) }};
+    const meetingStatusFirstMs = {{ (int) ($meetingStatusFirstMs ?? 400) }};
     let meetingEndedHandled = false;
 
     const liveBarCourseId = {{ (int) ($course?->id ?? 0) }};
@@ -1010,10 +1012,39 @@
             closeTransmission();
         }).catch(function () {});
     }
-    if (meetingStatusUrl) {
-        setTimeout(pollMeetingEnded, 400);
-        setInterval(pollMeetingEnded, 12000);
+    let meetingStatusTimer = null;
+    let meetingStatusInterval = null;
+
+    function stopMeetingStatusPoll() {
+        if (meetingStatusTimer) {
+            clearTimeout(meetingStatusTimer);
+            meetingStatusTimer = null;
+        }
+        if (meetingStatusInterval) {
+            clearInterval(meetingStatusInterval);
+            meetingStatusInterval = null;
+        }
     }
+
+    function startMeetingStatusPoll() {
+        stopMeetingStatusPoll();
+        if (!meetingStatusUrl) {
+            return;
+        }
+        meetingStatusTimer = setTimeout(pollMeetingEnded, meetingStatusFirstMs);
+        meetingStatusInterval = setInterval(pollMeetingEnded, meetingStatusPollMs);
+    }
+
+    document.addEventListener('visibilitychange', function () {
+        if (document.visibilityState === 'hidden') {
+            stopMeetingStatusPoll();
+            return;
+        }
+        pollMeetingEnded();
+        startMeetingStatusPoll();
+    });
+
+    startMeetingStatusPoll();
 
     btn.addEventListener('click', toggleFullscreen);
     if (exitBtn) {
