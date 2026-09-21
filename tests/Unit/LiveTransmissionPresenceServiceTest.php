@@ -52,4 +52,10 @@ class LiveTransmissionPresenceServiceTest extends TestCase
         $this->assertTrue($this->service->heartbeat(10, 'sess-a', 90));
         $this->assertFalse($this->service->heartbeat(10, 'sess-b', 90));
     }
+
+    public function test_heartbeat_reclaims_expired_slot_for_same_tab(): void
+    {
+        $this->assertTrue($this->service->heartbeat(10, 'sess-a', 90));
+        $this->assertFalse($this->service->heartbeat(10, 'sess-b', 90));
+    }
 }

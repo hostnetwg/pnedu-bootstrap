@@ -384,6 +384,10 @@ class CertificateController extends Controller
             'homeUrl' => $homeUrl,
             'redirectLabel' => 'na stronę główną',
             'isDashboardContext' => false,
+            'participant' => $this->findParticipantForEmailAndCourse(
+                $tokenRecord->email_normalized,
+                (int) $courseId
+            ),
         ]);
     }
 
@@ -391,6 +395,7 @@ class CertificateController extends Controller
     {
         $user = $request->user();
         $courseId = (int) $courseId;
+        $emailNormalized = ParticipantDownloadToken::normalizeEmail($user->email);
         $downloadUrl = route('dashboard.zaswiadczenia.course.download', ['course' => $courseId]);
         $homeUrl = route('home');
 
@@ -399,7 +404,19 @@ class CertificateController extends Controller
             'homeUrl' => $homeUrl,
             'redirectLabel' => 'na stronę główną',
             'isDashboardContext' => true,
+            'participant' => $this->findParticipantForEmailAndCourse($emailNormalized, $courseId),
         ]);
+    }
+
+    private function findParticipantForEmailAndCourse(string $emailNormalized, int $courseId): ?Participant
+    {
+        if ($emailNormalized === '') {
+            return null;
+        }
+
+        return Participant::whereRaw('LOWER(TRIM(email)) = ?', [$emailNormalized])
+            ->where('course_id', $courseId)
+            ->first();
     }
 
     /**

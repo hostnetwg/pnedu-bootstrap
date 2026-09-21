@@ -44,6 +44,10 @@ class LiveTransmissionPresenceService
         return ['ok' => true];
     }
 
+    /**
+     * Odświeża slot. Pusty/wygasły slot ta sama karta odzyskuje (np. po bfcache).
+     * Obca sesja nadal dostaje false.
+     */
     public function heartbeat(int $participantId, string $ownerSessionId, int $ttlSeconds): bool
     {
         $ownerSessionId = trim($ownerSessionId);
@@ -53,12 +57,10 @@ class LiveTransmissionPresenceService
 
         $key = $this->cacheKey($participantId);
         $existing = Cache::get($key);
-        if (! is_array($existing)) {
-            return false;
-        }
-
-        if (trim((string) ($existing['owner'] ?? '')) !== $ownerSessionId) {
-            return false;
+        if (is_array($existing)) {
+            if (trim((string) ($existing['owner'] ?? '')) !== $ownerSessionId) {
+                return false;
+            }
         }
 
         Cache::put($key, [

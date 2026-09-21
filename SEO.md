@@ -131,6 +131,7 @@ Docelowe długości (audyt 2026-08-23): title **~50–65 znaków**, description 
 Przy każdej zmianie dotyczącej **treści widocznej dla użytkownika i Google** uwzględnij powyższe punkty automatycznie.
 
 - Nowa **podstrona publiczna** → `title`, `meta_description`, ewentualnie wpis w `SitemapUrlBuilder::staticUrls()`.
+- Sekretny `/live/{token}` (gość, szkolenie zamknięte) **nie** idzie do sitemapy ani katalogu — `noindex`.
 - Nowy **artykuł** → wytyczne sekcji 3a; nie twórz statycznego `public/sitemap.xml`.
 - Zmiana **kursu** → rozważ wpis w `config/course_seo.php` gdy title/description wymagają ręcznej korekty.
 

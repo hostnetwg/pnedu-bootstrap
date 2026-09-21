@@ -13,6 +13,7 @@
             <div class="card border-0 shadow-sm rounded-3">
                 <div class="card-body p-4">
                     <h1 class="h4 mb-2">{{ $optional ?? false ? 'Data i miejsce urodzenia na zaświadczeniu (opcjonalnie)' : 'Uzupełnij dane do zaświadczenia' }}</h1>
+                    @include('certificates.partials.participant-name')
                     <p class="text-muted mb-3">
                         Szkolenie:
                         <strong>

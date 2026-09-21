@@ -31,6 +31,7 @@ class Participant extends Model
         'first_name',
         'last_name',
         'email',
+        'email_normalized',
         'birth_date',
         'birth_place',
         'phone',

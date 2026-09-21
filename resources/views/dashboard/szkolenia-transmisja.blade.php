@@ -31,7 +31,7 @@
             </button>
             </div>
         </div>
-        @include('dashboard.partials.transmisja-live-offer-bar', ['variant' => 'fs'])
+        {{-- Oferta: modal zamiast złotej belki (wewnątrz shella = widoczny też w fullscreen) --}}
 
         <div class="transmisja-toolbar" id="cm-page-toolbar">
             <div class="transmisja-toolbar__brand">
@@ -39,6 +39,7 @@
             </div>
             <div class="cm-live-resource-links" data-live-resource-links hidden></div>
             <div class="transmisja-toolbar__actions">
+                @if(! empty($rejoinUrl))
                 <a href="{{ $rejoinUrl }}"
                    class="btn btn-sm btn-light transmisja-toolbar__btn"
                    title="Wejdź ponownie (gdy ClickMeeting zgłasza wykorzystany token)"
@@ -46,6 +47,7 @@
                     <i class="bi bi-arrow-clockwise" aria-hidden="true"></i>
                     <span class="transmisja-toolbar__btn-label">Wejdź ponownie</span>
                 </a>
+                @endif
                 <button type="button"
                         class="btn btn-sm btn-outline-light transmisja-toolbar__btn"
                         id="cm-fullscreen-btn"
@@ -64,7 +66,6 @@
                 </button>
             </div>
         </div>
-        @include('dashboard.partials.transmisja-live-offer-bar', ['variant' => 'page'])
 
         <div class="cm-embed-body">
             <div id="cm-embed-container">
@@ -89,6 +90,7 @@
         </div>
 
         {{-- Modal musi być wewnątrz shella — natywny Fullscreen API pokazuje tylko elementy w fullscreenElement --}}
+        @include('dashboard.partials.transmisja-live-offer-modal')
         <div class="modal fade" id="cmCloseTransmissionModal" tabindex="-1" aria-labelledby="cmCloseTransmissionModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
@@ -350,133 +352,89 @@
     #cm-embed-shell.is-fullscreen .cm-transmisja-brand-bar__actions {
         display: flex;
     }
-    /* Modal + backdrop wewnątrz shella (natywny FS i CSS FS) */
+    /* Modal + backdrop: w FS muszą być WEWNĄTRZ shella i modal NAD backdropem.
+       Oferta: BEZ przyciemnienia — tło (czat CM) zostaje klikalne. */
     #cm-embed-shell {
         position: relative;
     }
-    #cmCloseTransmissionModal {
-        z-index: 2100;
-    }
     #cm-embed-shell > .modal-backdrop {
-        z-index: 2090;
-        position: absolute;
-        inset: 0;
+        position: absolute !important;
+        inset: 0 !important;
+        width: auto !important;
+        height: auto !important;
+        z-index: 1 !important;
     }
-    body.cm-transmisja-fs .modal-backdrop,
-    .modal-backdrop.show {
-        z-index: 2090;
+    #cm-embed-shell > .modal {
+        position: absolute !important;
+        inset: 0 !important;
+        width: auto !important;
+        height: auto !important;
+        z-index: 2 !important;
+        pointer-events: none;
+    }
+    #cm-embed-shell > .modal .modal-dialog {
+        pointer-events: auto;
+    }
+    /* Oferta: przezroczysta warstwa, kliknięcia poza kartą idą do iframe/czatu. */
+    #cmLiveOfferModal,
+    #cm-embed-shell > #cmLiveOfferModal,
+    body > #cmLiveOfferModal {
+        pointer-events: none !important;
+        background: transparent !important;
+    }
+    #cmLiveOfferModal .modal-dialog,
+    #cmLiveOfferModal .cm-live-offer-modal__dialog {
+        pointer-events: auto !important;
+        /* Lekko w lewo — więcej miejsca na czat CM po prawej. */
+        margin-left: clamp(0.75rem, 5vw, 2.5rem);
+        margin-right: clamp(0.75rem, 22vw, 18rem);
+        max-width: min(32rem, calc(100vw - 2rem));
+    }
+    #cmLiveOfferModal .modal-content {
+        box-shadow: 0 0.75rem 2rem rgba(0, 0, 0, 0.35);
+    }
+    /* Poza shellem — standard Bootstrap dla innych modali (np. zamknięcie transmisji). */
+    body > .modal-backdrop {
+        z-index: 1050;
+    }
+    body > .modal {
+        z-index: 1055;
     }
     .transmisja-page.is-browser-fullscreen #cm-page-toolbar {
         display: none;
     }
-    .cm-live-offer-bar {
-        display: grid;
-        grid-template-rows: 0fr;
-        opacity: 0;
-        pointer-events: none;
-        background: linear-gradient(90deg, #f7e7b4 0%, #fff8e1 48%, #f3d98a 100%);
-        color: #1c1910;
-        border-bottom: 1px solid rgba(122, 88, 12, 0.22);
-        box-shadow: 0 8px 18px rgba(0, 0, 0, 0.16);
-        flex: 0 0 auto;
-        z-index: 1;
-        transition: grid-template-rows 0.42s ease, opacity 0.28s ease;
-    }
-    .cm-live-offer-bar.is-visible {
-        grid-template-rows: 1fr;
-        opacity: 1;
-        pointer-events: auto;
-    }
-    .cm-live-offer-bar__clip {
+    .cm-live-offer-modal__image-wrap {
         overflow: hidden;
-        min-height: 0;
+        border-radius: 0.5rem;
+        background: #f1f3f5;
+        text-align: center;
     }
-    .cm-live-offer-bar__inner {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 0.85rem 1.25rem;
-        padding: 0.55rem 1rem;
-        min-width: 0;
+    .cm-live-offer-modal__image {
+        display: block;
+        width: 100%;
+        height: auto;
+        max-height: min(52vh, 420px);
+        object-fit: contain;
+        margin: 0 auto;
     }
-    .cm-live-offer-bar__copy {
-        min-width: 0;
-        flex: 1 1 auto;
-    }
-    .cm-live-offer-bar__kicker {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.3rem;
-        font-size: 0.68rem;
-        font-weight: 700;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        color: #7a580c;
-        margin-bottom: 0.1rem;
-    }
-    .cm-live-offer-bar__title {
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-        font-size: 0.98rem;
-        font-weight: 700;
-        line-height: 1.3;
-        color: #1a1408;
-    }
-    .cm-live-offer-bar__meta {
+    .cm-live-offer-modal__meta {
         display: flex;
         flex-wrap: wrap;
-        gap: 0.35rem 0.9rem;
-        margin-top: 0.2rem;
-        font-size: 0.82rem;
-        color: #4a3d1c;
+        gap: 0.35rem 0;
     }
-    .cm-live-offer-bar__meta-item {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.3rem;
-        min-width: 0;
+    .cm-live-offer-modal__description {
+        white-space: pre-wrap;
+        line-height: 1.45;
     }
-    .cm-live-offer-bar__cta {
-        flex-shrink: 0;
-        background: #0b3d2e;
-        border-color: #0b3d2e;
-        color: #fff;
-        font-weight: 600;
-        padding: 0.4rem 0.9rem;
-        box-shadow: 0 2px 0 rgba(0, 0, 0, 0.12);
+    .cm-live-offer-modal__price-current {
+        font-size: 1.15rem;
     }
-    .cm-live-offer-bar__cta:hover,
-    .cm-live-offer-bar__cta:focus-visible {
-        background: #0f5240;
-        border-color: #0f5240;
-        color: #fff;
+    .cm-live-offer-modal__price-current.is-promo {
+        color: #b02a37;
     }
-    .cm-live-offer-bar--fs {
-        display: none;
-    }
-    #cm-embed-shell.is-fullscreen .cm-live-offer-bar--fs {
-        display: grid;
-    }
-    .transmisja-page.is-browser-fullscreen .cm-live-offer-bar--page {
-        display: none;
-    }
-    @media (max-width: 767.98px) {
-        .cm-live-offer-bar__inner {
-            flex-wrap: wrap;
-            padding: 0.5rem 0.75rem;
-        }
-        .cm-live-offer-bar__cta {
-            width: 100%;
-        }
-        .cm-live-offer-bar__title {
-            font-size: 0.9rem;
-        }
-    }
-    @media (prefers-reduced-motion: reduce) {
-        .cm-live-offer-bar {
-            transition: none;
+    @media (min-width: 576px) {
+        .w-sm-auto {
+            width: auto !important;
         }
     }
     body.cm-transmisja-fs {
@@ -521,25 +479,42 @@
         }).catch(function () {});
     }
 
-    if (heartbeatUrl && heartbeatMs > 0) {
-        setInterval(function () {
-            postPresence(heartbeatUrl, false);
-        }, heartbeatMs);
+    function beat() {
+        postPresence(heartbeatUrl, false);
     }
 
-    function releasePresence() {
+    function resumeLiveSignals() {
+        beat();
+        if (typeof pollMeetingEnded === 'function') {
+            pollMeetingEnded();
+        }
+        if (typeof startMeetingStatusPoll === 'function') {
+            startMeetingStatusPoll();
+        }
+    }
+
+    if (heartbeatUrl && heartbeatMs > 0) {
+        beat();
+        setInterval(beat, heartbeatMs);
+        document.addEventListener('visibilitychange', function () {
+            if (document.visibilityState === 'visible') {
+                resumeLiveSignals();
+            }
+        });
+        window.addEventListener('pageshow', resumeLiveSignals);
+        window.addEventListener('focus', resumeLiveSignals);
+    }
+
+    function releasePresence(event) {
+        if (event && event.persisted) {
+            return;
+        }
         postPresence(leaveUrl, true);
     }
 
     window.addEventListener('pagehide', releasePresence);
-    document.addEventListener('visibilitychange', function () {
-        if (document.visibilityState === 'hidden') {
-            // Nie zwalniamy przy samym przełączeniu karty — tylko pagehide/nawigacja.
-        }
-    });
 
-    if (!shell || !btn) return;
-
+    // Pełny ekran wymaga shell + btn; belka/poll/obecność działają i bez tego.
     const bareLayout = @json(!empty($bareLayout));
     const inHostedFrame = (function () {
         try {
@@ -582,6 +557,9 @@
             page.classList.toggle('is-browser-fullscreen', cssFullscreen);
         }
         document.body.classList.toggle('cm-transmisja-fs', cssFullscreen);
+        if (!btn) {
+            return;
+        }
         const icon = btn.querySelector('i');
         const label = btn.querySelector('.transmisja-toolbar__btn-label');
         if (icon) {
@@ -650,26 +628,29 @@
             return;
         }
 
-        // Backdrop Bootstrapa ląduje w body — poza natywnym fullscreenElement jest niewidoczny.
-        const fsRoot = document.fullscreenElement || shell;
-        if (modalEl.parentElement !== fsRoot) {
-            fsRoot.appendChild(modalEl);
+        const host = liveOfferModalHost();
+        if (modalEl.parentElement !== host) {
+            host.appendChild(modalEl);
         }
 
-        function relocateBackdrop() {
-            const backdrop = document.querySelector('.modal-backdrop');
-            if (backdrop && backdrop.parentElement !== fsRoot) {
-                fsRoot.appendChild(backdrop);
-            }
+        function relocateCloseBackdrop() {
+            placeLiveOfferModalLayer(modalEl);
         }
 
         modalEl.addEventListener('show.bs.modal', function () {
-            queueMicrotask(relocateBackdrop);
-            setTimeout(relocateBackdrop, 0);
+            queueMicrotask(relocateCloseBackdrop);
+            setTimeout(relocateCloseBackdrop, 0);
+        }, { once: true });
+        modalEl.addEventListener('shown.bs.modal', relocateCloseBackdrop, { once: true });
+        modalEl.addEventListener('hidden.bs.modal', function () {
+            cleanupLiveOfferChrome();
+            if (shell && modalEl.parentElement !== shell) {
+                shell.appendChild(modalEl);
+            }
         }, { once: true });
 
         bootstrap.Modal.getOrCreateInstance(modalEl).show();
-        relocateBackdrop();
+        relocateCloseBackdrop();
     }
 
     function goToThankYouPage() {
@@ -719,12 +700,17 @@
     const meetingStatusPollMs = {{ (int) ($meetingStatusPollMs ?? 5000) }};
     const meetingStatusFirstMs = {{ (int) ($meetingStatusFirstMs ?? 400) }};
     let meetingEndedHandled = false;
+    let lastMeetingStatusOkAt = 0;
+    let authRecoverTried = false;
 
     const liveBarCourseId = {{ (int) ($course?->id ?? 0) }};
     const liveBarSeenCookie = 'pne_live_bar_seen_' + liveBarCourseId;
     const liveBarSeenMaxAge = 60 * 60 * 18;
     let lastResourceSignature = null;
     let lastOfferSignature = null;
+    let dismissedOfferSignature = null;
+    let liveOfferModalBound = false;
+    let liveOfferAutoHideTimer = null;
 
     function liveBarIconClass(key) {
         const k = typeof key === 'string' ? key : '';
@@ -894,76 +880,402 @@
         if (!offer || typeof offer !== 'object') {
             return '';
         }
+        const price = offer.price && typeof offer.price === 'object' ? offer.price : {};
         return [
             offer.course_id || '',
+            offer.enabled_at || '',
+            offer.expires_at || '',
             offer.title || '',
             offer.start_date || '',
             offer.instructor || '',
+            offer.image_url || '',
+            offer.description || '',
             offer.order_url || '',
+            offer.description_url || '',
+            price.amount_label || '',
+            price.original_amount_label || '',
+            price.is_promotion ? '1' : '0',
+            price.promotion_end_label || '',
         ].join('\t');
     }
 
+    function fillLiveOfferModal(modalEl, item) {
+        const titleEl = modalEl.querySelector('[data-live-offer-title]');
+        const dateWrap = modalEl.querySelector('[data-live-offer-date-wrap]');
+        const dateEl = modalEl.querySelector('[data-live-offer-date]');
+        const instructorWrap = modalEl.querySelector('[data-live-offer-instructor-wrap]');
+        const instructorEl = modalEl.querySelector('[data-live-offer-instructor]');
+        const imageWrap = modalEl.querySelector('[data-live-offer-image-wrap]');
+        const imageEl = modalEl.querySelector('[data-live-offer-image]');
+        const descriptionEl = modalEl.querySelector('[data-live-offer-description]');
+        const descLinkWrap = modalEl.querySelector('[data-live-offer-desc-link-wrap]');
+        const descLink = modalEl.querySelector('[data-live-offer-desc-link]');
+        const priceWrap = modalEl.querySelector('[data-live-offer-price-wrap]');
+        const priceCurrent = modalEl.querySelector('[data-live-offer-price-current]');
+        const priceOriginal = modalEl.querySelector('[data-live-offer-price-original]');
+        const promoBadge = modalEl.querySelector('[data-live-offer-promo-badge]');
+        const promoEnd = modalEl.querySelector('[data-live-offer-promo-end]');
+        const omnibusEl = modalEl.querySelector('[data-live-offer-omnibus]');
+        const cta = modalEl.querySelector('[data-live-offer-cta]');
+
+        if (titleEl) {
+            titleEl.textContent = item.title || 'Szkolenie';
+        }
+        if (dateWrap && dateEl) {
+            if (item.start_date) {
+                dateEl.textContent = item.start_date;
+                dateWrap.removeAttribute('hidden');
+            } else {
+                dateEl.textContent = '';
+                dateWrap.setAttribute('hidden', 'hidden');
+            }
+        }
+        if (instructorWrap && instructorEl) {
+            if (item.instructor) {
+                instructorEl.textContent = item.instructor;
+                instructorWrap.removeAttribute('hidden');
+            } else {
+                instructorEl.textContent = '';
+                instructorWrap.setAttribute('hidden', 'hidden');
+            }
+        }
+        if (imageWrap && imageEl) {
+            if (item.image_url) {
+                imageEl.src = item.image_url;
+                imageEl.alt = item.title || 'Grafika szkolenia';
+                imageWrap.removeAttribute('hidden');
+            } else {
+                imageEl.removeAttribute('src');
+                imageEl.alt = '';
+                imageWrap.setAttribute('hidden', 'hidden');
+            }
+        }
+        if (descriptionEl) {
+            if (item.description) {
+                descriptionEl.textContent = item.description;
+                descriptionEl.removeAttribute('hidden');
+            } else {
+                descriptionEl.textContent = '';
+                descriptionEl.setAttribute('hidden', 'hidden');
+            }
+        }
+        if (descLinkWrap && descLink) {
+            if (item.description_url) {
+                descLink.href = item.description_url;
+                descLinkWrap.removeAttribute('hidden');
+                if (!descLink.dataset.offerBound) {
+                    descLink.dataset.offerBound = '1';
+                    descLink.addEventListener('click', function () {
+                        exitNativeFullscreenOnly();
+                    });
+                }
+            } else {
+                descLink.removeAttribute('href');
+                descLinkWrap.setAttribute('hidden', 'hidden');
+            }
+        }
+        if (priceWrap && priceCurrent) {
+            const price = item.price && typeof item.price === 'object' ? item.price : null;
+            if (price && price.amount_label) {
+                priceCurrent.textContent = price.amount_label;
+                priceCurrent.classList.toggle('is-promo', !!price.is_promotion && !price.is_free);
+                if (priceOriginal) {
+                    if (price.original_amount_label) {
+                        priceOriginal.textContent = price.original_amount_label;
+                        priceOriginal.removeAttribute('hidden');
+                    } else {
+                        priceOriginal.textContent = '';
+                        priceOriginal.setAttribute('hidden', 'hidden');
+                    }
+                }
+                if (promoBadge) {
+                    if (price.is_promotion && !price.is_free) {
+                        promoBadge.removeAttribute('hidden');
+                    } else {
+                        promoBadge.setAttribute('hidden', 'hidden');
+                    }
+                }
+                if (promoEnd) {
+                    if (price.promotion_end_label) {
+                        promoEnd.textContent = 'Promocja do ' + price.promotion_end_label;
+                        promoEnd.removeAttribute('hidden');
+                    } else {
+                        promoEnd.textContent = '';
+                        promoEnd.setAttribute('hidden', 'hidden');
+                    }
+                }
+                if (omnibusEl) {
+                    if (price.omnibus_lowest_label) {
+                        omnibusEl.textContent = price.omnibus_lowest_label;
+                        omnibusEl.removeAttribute('hidden');
+                    } else {
+                        omnibusEl.textContent = '';
+                        omnibusEl.setAttribute('hidden', 'hidden');
+                    }
+                }
+                priceWrap.removeAttribute('hidden');
+            } else {
+                priceWrap.setAttribute('hidden', 'hidden');
+            }
+        }
+        if (cta) {
+            cta.href = item.order_url;
+            if (!cta.dataset.offerBound) {
+                cta.dataset.offerBound = '1';
+                cta.addEventListener('click', function () {
+                    exitNativeFullscreenOnly();
+                });
+            }
+        }
+    }
+
+    function clearLiveOfferAutoHide() {
+        if (liveOfferAutoHideTimer) {
+            clearTimeout(liveOfferAutoHideTimer);
+            liveOfferAutoHideTimer = null;
+        }
+    }
+
+    function liveOfferModalHost() {
+        // Natywny FS albo CSS FS (is-fullscreen) — host = shell/FS root.
+        // Poza FS — body (normalny Bootstrap, bez konfliktu z-index).
+        if (document.fullscreenElement) {
+            return document.fullscreenElement;
+        }
+        if (shell && shell.classList.contains('is-fullscreen')) {
+            return shell;
+        }
+        return document.body;
+    }
+
+    function placeLiveOfferModalLayer(modalEl) {
+        if (!modalEl) {
+            return;
+        }
+        const host = liveOfferModalHost();
+        if (modalEl.parentElement !== host) {
+            host.appendChild(modalEl);
+        }
+
+        const backdrops = Array.prototype.slice.call(document.querySelectorAll('.modal-backdrop'));
+        if (backdrops.length === 0) {
+            return;
+        }
+        // Jeden backdrop — reszta to orphan po poprzednich show/hide.
+        backdrops.slice(0, -1).forEach(function (el) {
+            el.remove();
+        });
+        const backdrop = document.querySelector('.modal-backdrop');
+        if (!backdrop) {
+            return;
+        }
+
+        if (host === document.body) {
+            if (backdrop.parentElement !== document.body) {
+                document.body.appendChild(backdrop);
+            }
+            // Modal po backdropie w DOM.
+            document.body.appendChild(modalEl);
+            modalEl.style.removeProperty('position');
+            modalEl.style.removeProperty('inset');
+            modalEl.style.removeProperty('z-index');
+            modalEl.style.removeProperty('width');
+            modalEl.style.removeProperty('height');
+            modalEl.style.removeProperty('pointer-events');
+            backdrop.style.removeProperty('position');
+            backdrop.style.removeProperty('inset');
+            backdrop.style.removeProperty('z-index');
+            backdrop.style.removeProperty('width');
+            backdrop.style.removeProperty('height');
+            return;
+        }
+
+        // W shell/FS: najpierw backdrop, potem modal (wyższy stacking + kolejność DOM).
+        if (backdrop.parentElement !== host) {
+            host.insertBefore(backdrop, modalEl);
+        } else if (backdrop.nextElementSibling !== modalEl) {
+            host.insertBefore(backdrop, modalEl);
+        }
+        if (modalEl.parentElement !== host) {
+            host.appendChild(modalEl);
+        } else if (backdrop.compareDocumentPosition(modalEl) & Node.DOCUMENT_POSITION_PRECEDING) {
+            host.appendChild(modalEl);
+        }
+    }
+
+    function cleanupLiveOfferChrome() {
+        // Zostający .modal-backdrop / modal-open blokuje kliknięcia w iframe CM (przyciemnienie).
+        const openModals = document.querySelectorAll('.modal.show');
+        if (openModals.length > 0) {
+            return;
+        }
+        document.querySelectorAll('.modal-backdrop').forEach(function (el) {
+            el.remove();
+        });
+        document.body.classList.remove('modal-open');
+        document.body.style.removeProperty('overflow');
+        document.body.style.removeProperty('padding-right');
+        if (shell) {
+            shell.querySelectorAll(':scope > .modal-backdrop').forEach(function (el) {
+                el.remove();
+            });
+        }
+        const offerModal = document.getElementById('cmLiveOfferModal');
+        if (offerModal) {
+            offerModal.style.removeProperty('position');
+            offerModal.style.removeProperty('inset');
+            offerModal.style.removeProperty('z-index');
+            offerModal.style.removeProperty('width');
+            offerModal.style.removeProperty('height');
+            offerModal.style.removeProperty('pointer-events');
+            // Wróć do shella (kanoniczne miejsce w DOM), żeby kolejny show miał stabilny parent.
+            if (shell && offerModal.parentElement !== shell) {
+                shell.appendChild(offerModal);
+            }
+        }
+    }
+
+    function relocateLiveOfferBackdrop(modalEl) {
+        placeLiveOfferModalLayer(modalEl);
+    }
+
+    function scheduleLiveOfferAutoHide(offer) {
+        clearLiveOfferAutoHide();
+        if (!offer || typeof offer !== 'object') {
+            return;
+        }
+        if (offer.auto_hide === false) {
+            return;
+        }
+        let delayMs = null;
+        if (typeof offer.expires_at === 'string' && offer.expires_at !== '') {
+            const end = Date.parse(offer.expires_at);
+            if (Number.isFinite(end)) {
+                delayMs = end - Date.now();
+                if (delayMs <= 0) {
+                    hideLiveOfferModal(true);
+                    return;
+                }
+            }
+        }
+        if (delayMs === null) {
+            if (!offer.expires_at && offer.auto_hide === false) {
+                return;
+            }
+            // Bez expires_at przy auto_hide: nie wymuszaj sztucznego 120s od teraz
+            // (serwer i tak ustawi expires_at). Brak daty = brak lokalnego timera.
+            return;
+        }
+        delayMs = Math.max(250, delayMs);
+        liveOfferAutoHideTimer = setTimeout(function () {
+            liveOfferAutoHideTimer = null;
+            hideLiveOfferModal(true);
+        }, delayMs);
+    }
+
+    function hideLiveOfferModal(markDismissed) {
+        clearLiveOfferAutoHide();
+        const modalEl = document.getElementById('cmLiveOfferModal');
+        if (!modalEl || typeof bootstrap === 'undefined') {
+            cleanupLiveOfferChrome();
+            return;
+        }
+        if (markDismissed && lastOfferSignature) {
+            dismissedOfferSignature = lastOfferSignature;
+        }
+        const instance = bootstrap.Modal.getInstance(modalEl) || ensureLiveOfferModalInstance(modalEl);
+        instance.hide();
+        // Na wypadek, gdy Bootstrap nie zdążył zdjąć backdropu (FS / przeniesiony parent).
+        setTimeout(cleanupLiveOfferChrome, 50);
+        setTimeout(cleanupLiveOfferChrome, 350);
+    }
+
+    function ensureLiveOfferModalInstance(modalEl) {
+        let instance = bootstrap.Modal.getInstance(modalEl);
+        if (instance) {
+            return instance;
+        }
+        return bootstrap.Modal.getOrCreateInstance(modalEl, {
+            backdrop: false,
+            keyboard: true,
+            focus: false,
+        });
+    }
+
     function renderLiveOffer(offer) {
-        const bars = document.querySelectorAll('[data-live-offer-bar]');
+        const modalEl = document.getElementById('cmLiveOfferModal');
+        if (!modalEl || typeof bootstrap === 'undefined') {
+            return;
+        }
+
         const item = offer && typeof offer === 'object' && typeof offer.order_url === 'string' && offer.order_url !== ''
             ? offer
             : null;
         const signature = liveOfferSignature(item);
+        const instance = ensureLiveOfferModalInstance(modalEl);
+
+        if (!liveOfferModalBound) {
+            liveOfferModalBound = true;
+            modalEl.addEventListener('hide.bs.modal', function () {
+                if (lastOfferSignature) {
+                    dismissedOfferSignature = lastOfferSignature;
+                }
+                clearLiveOfferAutoHide();
+            });
+            modalEl.addEventListener('hidden.bs.modal', function () {
+                cleanupLiveOfferChrome();
+            });
+            modalEl.addEventListener('shown.bs.modal', function () {
+                // Oferta bez backdropu — upewnij się, że nic nie zasłania iframe.
+                document.querySelectorAll('.modal-backdrop').forEach(function (el) {
+                    el.remove();
+                });
+                document.body.classList.remove('modal-open');
+                document.body.style.removeProperty('overflow');
+                document.body.style.removeProperty('padding-right');
+                placeLiveOfferModalLayer(modalEl);
+                queueMicrotask(function () {
+                    placeLiveOfferModalLayer(modalEl);
+                    document.querySelectorAll('.modal-backdrop').forEach(function (el) {
+                        el.remove();
+                    });
+                });
+            });
+        }
+
         if (signature === lastOfferSignature) {
+            if (item && signature !== dismissedOfferSignature) {
+                scheduleLiveOfferAutoHide(item);
+            }
             return;
         }
         lastOfferSignature = signature;
 
-        bars.forEach(function (bar) {
-            const titleEl = bar.querySelector('[data-live-offer-title]');
-            const dateWrap = bar.querySelector('[data-live-offer-date-wrap]');
-            const dateEl = bar.querySelector('[data-live-offer-date]');
-            const instructorWrap = bar.querySelector('[data-live-offer-instructor-wrap]');
-            const instructorEl = bar.querySelector('[data-live-offer-instructor]');
-            const cta = bar.querySelector('[data-live-offer-cta]');
-
-            if (!item) {
-                bar.classList.remove('is-visible');
-                bar.setAttribute('aria-hidden', 'true');
-                if (cta) {
-                    cta.removeAttribute('href');
-                }
-                return;
-            }
-
-            if (titleEl) {
-                titleEl.textContent = item.title || 'Szkolenie';
-            }
-            if (dateWrap && dateEl) {
-                if (item.start_date) {
-                    dateEl.textContent = item.start_date;
-                    dateWrap.removeAttribute('hidden');
-                } else {
-                    dateEl.textContent = '';
-                    dateWrap.setAttribute('hidden', 'hidden');
-                }
-            }
-            if (instructorWrap && instructorEl) {
-                if (item.instructor) {
-                    instructorEl.textContent = item.instructor;
-                    instructorWrap.removeAttribute('hidden');
-                } else {
-                    instructorEl.textContent = '';
-                    instructorWrap.setAttribute('hidden', 'hidden');
-                }
-            }
+        if (!item) {
+            dismissedOfferSignature = null;
+            hideLiveOfferModal(false);
+            const cta = modalEl.querySelector('[data-live-offer-cta]');
             if (cta) {
-                cta.href = item.order_url;
-                if (!cta.dataset.offerBound) {
-                    cta.dataset.offerBound = '1';
-                    cta.addEventListener('click', function () {
-                        exitNativeFullscreenOnly();
-                    });
-                }
+                cta.removeAttribute('href');
             }
-            bar.classList.add('is-visible');
-            bar.setAttribute('aria-hidden', 'false');
+            return;
+        }
+
+        fillLiveOfferModal(modalEl, item);
+
+        if (signature === dismissedOfferSignature) {
+            clearLiveOfferAutoHide();
+            return;
+        }
+
+        placeLiveOfferModalLayer(modalEl);
+        instance.show();
+        placeLiveOfferModalLayer(modalEl);
+        document.querySelectorAll('.modal-backdrop').forEach(function (el) {
+            el.remove();
         });
+        document.body.classList.remove('modal-open');
+        scheduleLiveOfferAutoHide(item);
     }
 
     function pollMeetingEnded() {
@@ -978,9 +1290,18 @@
             },
             credentials: 'same-origin',
         }).then(function (res) {
+            if (res.status === 401 || res.status === 419) {
+                // Sesja wygasła przy długiej nieobecności — bez F5 belka i obecność giną.
+                if (!authRecoverTried && document.visibilityState === 'visible') {
+                    authRecoverTried = true;
+                    window.location.reload();
+                }
+                return null;
+            }
             if (!res.ok) {
                 return null;
             }
+            lastMeetingStatusOkAt = Date.now();
             return res.json();
         }).then(function (data) {
             if (data && Array.isArray(data.resource_links)) {
@@ -1014,6 +1335,7 @@
     }
     let meetingStatusTimer = null;
     let meetingStatusInterval = null;
+    let meetingStatusWatchdog = null;
 
     function stopMeetingStatusPoll() {
         if (meetingStatusTimer) {
@@ -1035,18 +1357,42 @@
         meetingStatusInterval = setInterval(pollMeetingEnded, meetingStatusPollMs);
     }
 
-    document.addEventListener('visibilitychange', function () {
-        if (document.visibilityState === 'hidden') {
-            stopMeetingStatusPoll();
+    function ensureMeetingStatusPollAlive() {
+        if (!meetingStatusUrl || meetingEndedHandled) {
             return;
         }
-        pollMeetingEnded();
-        startMeetingStatusPoll();
+        const staleMs = Math.max(meetingStatusPollMs * 3, 15000);
+        if (!meetingStatusInterval || (lastMeetingStatusOkAt > 0 && (Date.now() - lastMeetingStatusOkAt) > staleMs)) {
+            startMeetingStatusPoll();
+            pollMeetingEnded();
+        }
+    }
+
+    // Nie zatrzymujemy pollu przy ukrytej karcie — Chrome i tak go zwalnia,
+    // a stop+brak wznowienia psuje belkę i „Teraz na live” po powrocie bez F5.
+    document.addEventListener('visibilitychange', function () {
+        if (document.visibilityState === 'visible') {
+            resumeLiveSignals();
+            ensureMeetingStatusPollAlive();
+        }
+    });
+    window.addEventListener('pageshow', function () {
+        resumeLiveSignals();
+        ensureMeetingStatusPollAlive();
+    });
+    window.addEventListener('focus', function () {
+        resumeLiveSignals();
+        ensureMeetingStatusPollAlive();
     });
 
     startMeetingStatusPoll();
+    if (!meetingStatusWatchdog) {
+        meetingStatusWatchdog = setInterval(ensureMeetingStatusPollAlive, 15000);
+    }
 
-    btn.addEventListener('click', toggleFullscreen);
+    if (btn) {
+        btn.addEventListener('click', toggleFullscreen);
+    }
     if (exitBtn) {
         exitBtn.addEventListener('click', function () {
             exitNativeFullscreenOnly();

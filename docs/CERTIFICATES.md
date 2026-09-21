@@ -2,7 +2,7 @@
 
 Dokumentacja **frontu** (pnedu). Kanon architektury i szablonów: **`pneadm/docs/CERTIFICATES.md`**.
 
-Ostatnia aktualizacja: **lipiec 2026**.
+Ostatnia aktualizacja: **2026-09-20**.
 
 ---
 
@@ -30,7 +30,7 @@ Po zmianie: `sail artisan config:clear`.
 | Trasa | Kontroler | Opis |
 |-------|-----------|------|
 | `GET /dashboard/zaswiadczenia` | `CertificateController@dashboardCertificatesIndex` | Lista szkoleń użytkownika |
-| `GET /dashboard/zaswiadczenia/{course}` | `dashboardCertificateShow` | Strona certyfikatu |
+| `GET /dashboard/zaswiadczenia/{course}` | `dashboardCertificateShow` | Strona certyfikatu. Pokazuje **imię i nazwisko uczestnika** (`participants`), dla którego powstanie PDF — na formularzu danych urodzenia, na podglądzie i na stronie „Trwa pobieranie…”. |
 | `GET /dashboard/zaswiadczenia/{course}/download` | `dashboardCertificateDownload` | Pobranie PDF |
 | `GET /certificates/{token}` | `showListByToken` | Lista bez logowania |
 | `GET /certificate/{token}/{course}/download` | `downloadByToken` | PDF bez logowania |

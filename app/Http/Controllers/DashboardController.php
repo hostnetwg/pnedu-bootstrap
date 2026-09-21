@@ -419,7 +419,8 @@ class DashboardController extends Controller
         Request $request,
         Participant $participant,
         ClickMeetingService $clickMeeting,
-        LiveTransmissionResourceBarService $resourceBar
+        LiveTransmissionResourceBarService $resourceBar,
+        LiveEmbedPresenceService $embedPresence
     ): JsonResponse {
         if ($redirect = $this->redirectToLoginWhenTrainingEmailMismatch($request, $participant)) {
             return response()->json([
@@ -432,6 +433,7 @@ class DashboardController extends Controller
         }
 
         $this->assertParticipantBelongsToUser($participant);
+        $embedPresence->touch($participant);
 
         $participant->loadMissing('course.onlineDetail');
         $eventId = trim((string) ($participant->course?->onlineDetail?->clickmeeting_event_id ?? ''));

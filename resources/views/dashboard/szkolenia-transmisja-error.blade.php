@@ -35,7 +35,7 @@
                 document.exitFullscreen();
             }
         } catch (e2) {}
-        window.location.href = @json(route('dashboard.szkolenia'));
+        window.location.href = @json($exitUrl ?? route('dashboard.szkolenia'));
     }
 
     document.addEventListener('DOMContentLoaded', function () {

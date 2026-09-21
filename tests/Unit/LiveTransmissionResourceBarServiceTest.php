@@ -65,6 +65,48 @@ class LiveTransmissionResourceBarServiceTest extends TestCase
         $this->assertFalse(LiveTransmissionResourceBarService::ATTENDANCE_VISIBLE_ON_AUTHENTICATED_EMBED);
     }
 
+    public function test_attendance_stays_hidden_on_guest_embed_because_gate_form_collects_it(): void
+    {
+        if (! $this->pneadmReady()) {
+            $this->markTestSkipped('Brak tabel/kolumn pneadm.');
+        }
+
+        $course = $this->seedCourse();
+        $course->forceFill([
+            'certificate_registration_open' => true,
+            'certificate_registration_token' => 'reg-live-token',
+        ])->save();
+        $course->onlineDetail->update(['live_bar_attendance_enabled' => true]);
+
+        $links = app(LiveTransmissionResourceBarService::class)->visibleLinks(
+            $course->fresh(['onlineDetail', 'fileLinks']),
+            forGuest: true
+        );
+
+        $this->assertSame([], $links);
+    }
+
+    public function test_guest_embed_hides_certificate_even_when_flag_is_on(): void
+    {
+        if (! $this->pneadmReady()) {
+            $this->markTestSkipped('Brak tabel/kolumn pneadm.');
+        }
+
+        $course = $this->seedCourse();
+        $course->forceFill(['certificate_download_status' => 'download_enabled'])->save();
+        $course->onlineDetail->update(['live_bar_certificate_enabled' => true]);
+
+        $guest = app(LiveTransmissionResourceBarService::class)->visibleLinks(
+            $course->fresh(['onlineDetail']),
+            forGuest: true
+        );
+        $this->assertSame([], $guest);
+
+        $auth = app(LiveTransmissionResourceBarService::class)->visibleLinks($course->fresh(['onlineDetail']));
+        $this->assertCount(1, $auth);
+        $this->assertSame('certificate', $auth[0]['key']);
+    }
+
     public function test_certificate_appears_when_flag_and_download_status_are_set(): void
     {
         if (! $this->pneadmReady()) {
@@ -151,7 +193,8 @@ class LiveTransmissionResourceBarServiceTest extends TestCase
         $live = $this->seedCourse();
         $promo = Course::query()->create([
             'title' => 'Następne szkolenie promo',
-            'description' => 'Opis',
+            'description' => '<p>Krótki opis promocji z <strong>HTML</strong> &nbsp; i  spacjami.</p><p>Druga linia.</p>',
+            'image' => 'courses/images/promo-test.jpg',
             'start_date' => Carbon::parse('2026-09-21 15:00:00', 'Europe/Warsaw'),
             'end_date' => Carbon::parse('2026-09-21 17:00:00', 'Europe/Warsaw'),
             'is_paid' => true,
@@ -163,6 +206,7 @@ class LiveTransmissionResourceBarServiceTest extends TestCase
         $live->onlineDetail->update([
             'live_offer_course_id' => $promo->id,
             'live_offer_enabled' => true,
+            'live_offer_enabled_at' => now(),
         ]);
 
         $offer = app(LiveTransmissionResourceBarService::class)->visibleOffer($live->fresh(['onlineDetail']));
@@ -171,10 +215,110 @@ class LiveTransmissionResourceBarServiceTest extends TestCase
         $this->assertSame($promo->id, $offer['course_id']);
         $this->assertSame('Następne szkolenie promo', $offer['title']);
         $this->assertSame('21.09.2026 15:00', $offer['start_date']);
-        $this->assertSame(route('courses.show', $promo->id, true), $offer['order_url']);
+        $this->assertSame(route('payment.order-form', $promo->id, true), $offer['order_url']);
+        $this->assertSame(route('courses.show', $promo->id, true), $offer['description_url']);
+        $this->assertNotNull($offer['image_url']);
+        $this->assertStringContainsString('courses/images/promo-test.jpg', (string) $offer['image_url']);
+        $this->assertSame(
+            "Krótki opis promocji z HTML i spacjami.\nDruga linia.",
+            $offer['description']
+        );
+        $this->assertSame(120, $offer['auto_hide_seconds']);
+        $this->assertTrue($offer['auto_hide']);
+        $this->assertNotNull($offer['expires_at']);
 
-        $live->onlineDetail->update(['live_offer_enabled' => false]);
+        $live->onlineDetail->update(['live_offer_enabled' => false, 'live_offer_enabled_at' => null]);
         $this->assertNull(app(LiveTransmissionResourceBarService::class)->visibleOffer($live->fresh(['onlineDetail'])));
+    }
+
+    public function test_visible_offer_auto_hides_after_two_minutes(): void
+    {
+        if (! $this->pneadmReady()) {
+            $this->markTestSkipped('Brak tabel/kolumn pneadm.');
+        }
+
+        $live = $this->seedCourse();
+        $promo = Course::query()->create([
+            'title' => 'Promo auto hide',
+            'description' => 'Test',
+            'start_date' => now()->addDays(5),
+            'end_date' => now()->addDays(5)->addHours(2),
+            'is_paid' => true,
+            'type' => 'online',
+            'category' => 'open',
+            'is_active' => true,
+            'certificate_format' => '{nr}/PNE',
+        ]);
+        $live->onlineDetail->update([
+            'live_offer_course_id' => $promo->id,
+            'live_offer_enabled' => true,
+            'live_offer_auto_hide' => true,
+            'live_offer_enabled_at' => now()->subSeconds(121),
+        ]);
+
+        $this->assertNull(
+            app(LiveTransmissionResourceBarService::class)->visibleOffer($live->fresh(['onlineDetail']))
+        );
+        $details = $live->fresh('onlineDetail')->onlineDetail;
+        $this->assertFalse((bool) $details->live_offer_enabled);
+        $this->assertNull($details->live_offer_enabled_at);
+    }
+
+    public function test_visible_offer_stays_when_auto_hide_disabled(): void
+    {
+        if (! $this->pneadmReady()) {
+            $this->markTestSkipped('Brak tabel/kolumn pneadm.');
+        }
+
+        $live = $this->seedCourse();
+        $promo = Course::query()->create([
+            'title' => 'Promo bez limitu',
+            'description' => 'Test',
+            'start_date' => now()->addDays(5),
+            'end_date' => now()->addDays(5)->addHours(2),
+            'is_paid' => true,
+            'type' => 'online',
+            'category' => 'open',
+            'is_active' => true,
+            'certificate_format' => '{nr}/PNE',
+        ]);
+        $live->onlineDetail->update([
+            'live_offer_course_id' => $promo->id,
+            'live_offer_enabled' => true,
+            'live_offer_auto_hide' => false,
+            'live_offer_enabled_at' => now()->subMinutes(30),
+        ]);
+
+        $offer = app(LiveTransmissionResourceBarService::class)->visibleOffer($live->fresh(['onlineDetail']));
+        $this->assertNotNull($offer);
+        $this->assertFalse($offer['auto_hide']);
+        $this->assertNull($offer['expires_at']);
+        $this->assertTrue((bool) $live->fresh('onlineDetail')->onlineDetail->live_offer_enabled);
+    }
+
+    public function test_offer_description_preserves_line_breaks_and_prefers_offer_html(): void
+    {
+        $course = new Course([
+            'offer_description_html' => '<p>Pierwszy akapit</p><p>Drugi<br>z enterem</p>',
+            'description' => 'Fallback nie powinien wejść',
+        ]);
+
+        $text = app(LiveTransmissionResourceBarService::class)->offerDescriptionText($course);
+
+        $this->assertSame("Pierwszy akapit\nDrugi\nz enterem", $text);
+    }
+
+    public function test_short_offer_description_is_truncated_for_modal(): void
+    {
+        $course = new Course([
+            'offer_description_html' => '<p>'.str_repeat('A ', 200).'</p>',
+        ]);
+
+        $short = app(LiveTransmissionResourceBarService::class)->shortOfferDescription($course);
+
+        $this->assertNotNull($short);
+        $this->assertLessThanOrEqual(LiveTransmissionResourceBarService::OFFER_DESCRIPTION_MAX + 3, mb_strlen($short));
+        $this->assertStringEndsWith('...', $short);
     }
 
     public function test_visible_offer_ignores_the_course_currently_on_air(): void
@@ -245,6 +389,8 @@ class LiveTransmissionResourceBarServiceTest extends TestCase
                 && Schema::connection('pneadm')->hasColumn('course_online_details', 'live_bar_attendance_enabled')
                 && Schema::connection('pneadm')->hasColumn('course_online_details', 'live_bar_certificate_enabled')
                 && Schema::connection('pneadm')->hasColumn('course_online_details', 'live_offer_enabled')
+                && Schema::connection('pneadm')->hasColumn('course_online_details', 'live_offer_enabled_at')
+                && Schema::connection('pneadm')->hasColumn('course_online_details', 'live_offer_auto_hide')
                 && Schema::connection('pneadm')->hasTable('course_file_links')
                 && Schema::connection('pneadm')->hasTable('course_survey_links');
         } catch (\Throwable) {

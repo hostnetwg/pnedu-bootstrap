@@ -26,7 +26,7 @@ Obie ścieżki korzystają z tego samego rekordu `participant_live_access` (toke
 | 7 | Embed widoczny dla **wszystkich** uczestników kursu (wg radio w adm). `CLICKMEETING_EMBED_ALLOWLIST` opcjonalny; pusty/brak = bez ograniczenia |
 | 8 | Przy trybie embed admin ma checkbox **Link w e-mailu do osadzonego w PNEDU pokoju** (domyślnie ON). ON = główny link maila do `/transmisja` + alternatywny bezpośredni CM; OFF = mail jak dotychczas (bezpośredni CM). |
 
-Belka zasobów na transmisji (materiały / ankieta / zaświadczenie, włączana z ADM `/courses/{id}/live`; rejestracja listy obecności zaparkowana na obecnym osadzonym live): kanon etapu 1 — `pneadm/docs/LIVE_EMBED_RESOURCE_BAR.md`. Portal prowadzącego: `pneadm/docs/INSTRUCTOR_PORTAL.md`.
+Belka zasobów na transmisji (materiały / ankieta / zaświadczenie na koncie). Gość `/live/{token}`: formularz imię / nazwisko / e-mail przed pokojem, belka bez rejestracji i bez zaświadczenia. Kanon — `pneadm/docs/LIVE_EMBED_RESOURCE_BAR.md`. Portal prowadzącego: `pneadm/docs/INSTRUCTOR_PORTAL.md`.
 
 ## Adm (pneadm)
 
@@ -77,6 +77,10 @@ Pola formularza:
 4. Na liście widać szkolenie, licznik i przycisk „Dołącz do spotkania na żywo” (aktywny w oknie live).
 
 Szczegóły maila provision: `pneadm/docs/FORM_ORDERS_PNEDU_PROVISION.md`.
+
+### Live bez logowania (gość, szkolenie zamknięte)
+
+Sekretny `GET /live/{token}` (poza sitemapą, `noindex`). Najpierw formularz imię / nazwisko / e-mail + RODO (`POST /live/{token}`) zapisuje lub aktualizuje `participants` (ten sam e-mail = jeden wiersz). Potem iframe z autologinem ClickMeeting (`nickname` = Imię Nazwisko). Sesja `guest_live_registered_{courseId}`. Mobile: redirect do CM. Belka: materiały / ankieta / oferta — bez rejestracji i bez zaświadczenia. Kanon: `pneadm/docs/LIVE_EMBED_RESOURCE_BAR.md`.
 
 ### Wejście na żywo (konto istniejące)
 
@@ -167,9 +171,11 @@ W ustawieniach wydarzenia CM (**Edycja → Ustawienia → Działania follow-up �
 # pnedu
 sail test --filter=LiveTransmission
 sail test --filter=LiveTransmissionResourceBar
+sail test --filter=GuestLiveTransmission
 sail test --filter=LiveTransmissionMeetingStatusResourceBar
 sail test --filter=DashboardCourseLiveAccessServiceTest
 sail test --filter=PostTrainingThankYouPageTest
+```
 
 # pneadm (provision / live mail — bez zmiany CTA embed)
 sail test --filter=ParticipantLiveMeetingLink

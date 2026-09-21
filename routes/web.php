@@ -390,6 +390,19 @@ Route::middleware([
     Route::post('/certificate-registration/{token}', [App\Http\Controllers\CertificateRegistrationController::class, 'submit'])->name('certificate-registration.submit');
 });
 
+// Sekretny live bez konta (zamknięte szkolenia). Nie w sitemapie / katalogu.
+Route::middleware('throttle:60,1')->group(function () {
+    Route::get('/live/{token}', [App\Http\Controllers\GuestLiveController::class, 'show'])
+        ->where('token', '[A-Za-z0-9]{32,64}')
+        ->name('guest-live.show');
+    Route::post('/live/{token}', [App\Http\Controllers\GuestLiveController::class, 'register'])
+        ->where('token', '[A-Za-z0-9]{32,64}')
+        ->name('guest-live.register');
+    Route::get('/live/{token}/meeting-status', [App\Http\Controllers\GuestLiveController::class, 'meetingStatus'])
+        ->where('token', '[A-Za-z0-9]{32,64}')
+        ->name('guest-live.meeting-status');
+});
+
 // Link z tokenem – lista szkoleń i pobieranie zaświadczeń (bez logowania)
 Route::get('/certificates/{token}', [App\Http\Controllers\CertificateController::class, 'showListByToken'])->name('certificates.list-by-token');
 Route::get('/certificate/{token}/{course}', [App\Http\Controllers\CertificateController::class, 'showCertificateByToken'])->name('certificates.show-by-token');

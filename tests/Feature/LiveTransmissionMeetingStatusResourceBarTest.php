@@ -113,6 +113,7 @@ class LiveTransmissionMeetingStatusResourceBarTest extends TestCase
         $participant->course->onlineDetail->update([
             'live_offer_course_id' => $promo->id,
             'live_offer_enabled' => true,
+            'live_offer_enabled_at' => now(),
         ]);
 
         $user = User::factory()->create(['email' => 'anna@example.test']);
@@ -122,9 +123,14 @@ class LiveTransmissionMeetingStatusResourceBarTest extends TestCase
             ->assertOk()
             ->assertJsonPath('live_offer.course_id', $promo->id)
             ->assertJsonPath('live_offer.title', 'Oferta z meeting-status')
-            ->assertJsonPath('live_offer.order_url', route('courses.show', $promo->id, true));
+            ->assertJsonPath('live_offer.order_url', route('payment.order-form', $promo->id, true))
+            ->assertJsonPath('live_offer.description_url', route('courses.show', $promo->id, true))
+            ->assertJsonPath('live_offer.auto_hide_seconds', 120);
 
-        $participant->course->onlineDetail->update(['live_offer_enabled' => false]);
+        $participant->course->onlineDetail->update([
+            'live_offer_enabled' => false,
+            'live_offer_enabled_at' => null,
+        ]);
 
         $this->actingAs($user)
             ->getJson(route('dashboard.szkolenia.transmisja.meeting-status', $participant))
@@ -227,6 +233,8 @@ class LiveTransmissionMeetingStatusResourceBarTest extends TestCase
                 && Schema::connection('pneadm')->hasColumn('course_online_details', 'live_bar_attendance_enabled')
                 && Schema::connection('pneadm')->hasColumn('course_online_details', 'live_bar_certificate_enabled')
                 && Schema::connection('pneadm')->hasColumn('course_online_details', 'live_offer_enabled')
+                && Schema::connection('pneadm')->hasColumn('course_online_details', 'live_offer_enabled_at')
+                && Schema::connection('pneadm')->hasColumn('course_online_details', 'live_offer_auto_hide')
                 && Schema::connection('pneadm')->hasTable('course_file_links');
         } catch (\Throwable) {
             return false;

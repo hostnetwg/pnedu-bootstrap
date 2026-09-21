@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Course;
 use App\Models\Participant;
 use App\Models\ParticipantLiveAccess;
 use Illuminate\Support\Facades\Log;
@@ -153,6 +154,123 @@ class LiveTransmissionService
             'room_autologin_url' => $roomAutologinUrl,
             'room_token_url' => $roomTokenUrl,
             'token_rotated' => $tokenRotated,
+        ];
+    }
+
+    /**
+     * Osadzony pokój dla gościa bez konta (zamknięte + CM „Dla wszystkich”).
+     *
+     * @return array{
+     *   ok: bool,
+     *   error?: string,
+     *   course_title?: string,
+     *   iframe_src?: string|null,
+     *   room_autologin_url?: string|null,
+     *   room_token_url?: string|null,
+     *   token_rotated?: bool
+     * }
+     */
+    public function buildForGuest(Course $course, string $email, string $nickname): array
+    {
+        $course->loadMissing('onlineDetail');
+        $online = $course->onlineDetail;
+
+        if ($online === null) {
+            return ['ok' => false, 'error' => 'Brak danych szkolenia online.'];
+        }
+
+        if (($course->category ?? '') !== 'closed') {
+            return ['ok' => false, 'error' => 'Ten link jest nieaktywny.'];
+        }
+
+        if (! $this->liveAccessService->isLiveWindowOpen($course)) {
+            return ['ok' => false, 'error' => 'Okno spotkania na żywo jest zamknięte.'];
+        }
+
+        if (! (bool) ($online->embed_on_pnedu ?? false)) {
+            return ['ok' => false, 'error' => 'Osadzony pokój nie jest włączony dla tego szkolenia.'];
+        }
+
+        $platform = strtolower(trim((string) ($online->platform ?? '')));
+        $eventId = trim((string) ($online->clickmeeting_event_id ?? ''));
+
+        if ($platform !== 'clickmeeting' || $eventId === '') {
+            return ['ok' => false, 'error' => 'Brak konfiguracji ClickMeeting dla tego szkolenia.'];
+        }
+
+        $email = strtolower(trim($email));
+        $nickname = trim($nickname);
+        if ($nickname === '') {
+            $nickname = 'Gość';
+        }
+
+        $conferenceResult = $this->clickMeeting->getConference($eventId);
+        if (! ($conferenceResult['success'] ?? false)) {
+            $raw = (string) ($conferenceResult['error'] ?? 'Nie udało się pobrać wydarzenia ClickMeeting.');
+            Log::error('LiveTransmissionService: GET conference failed (guest)', [
+                'course_id' => $course->id,
+                'event_id' => $eventId,
+                'error' => $raw,
+            ]);
+
+            $error = $raw;
+            if (str_contains($raw, 'Brak konfiguracji ClickMeeting API token')) {
+                $error = 'Nie można otworzyć transmisji: platforma nie ma klucza API ClickMeeting.';
+            }
+
+            return [
+                'ok' => false,
+                'error' => $error,
+            ];
+        }
+
+        $accessType = isset($conferenceResult['access_type']) ? (int) $conferenceResult['access_type'] : null;
+        if ($accessType !== ClickMeetingService::ACCESS_TYPE_OPEN) {
+            return [
+                'ok' => false,
+                'error' => 'To spotkanie ClickMeeting nie jest ustawione jako «Dla wszystkich».',
+            ];
+        }
+
+        $conference = $conferenceResult['conference'] ?? [];
+        $roomUrl = $this->clickMeeting->extractRoomUrl($conference)
+            ?: trim((string) ($online->meeting_link ?? ''));
+        $roomPin = $this->clickMeeting->extractRoomPin($conference);
+
+        if ($roomUrl === '' || $roomPin === null) {
+            return ['ok' => false, 'error' => 'Brak room_url lub room_pin z ClickMeeting.'];
+        }
+
+        $hashResult = $this->clickMeeting->generateAutologinHash(
+            $eventId,
+            $email,
+            $nickname,
+            'listener',
+            null,
+            null
+        );
+
+        if (! ($hashResult['success'] ?? false)) {
+            return [
+                'ok' => false,
+                'error' => (string) ($hashResult['error'] ?? 'Nie udało się wygenerować auto-login.'),
+            ];
+        }
+
+        $hash = (string) $hashResult['autologin_hash'];
+        $pinEmbed = $this->clickMeeting->buildPinEmbedUrl($roomUrl, $roomPin);
+        $iframeSrc = $pinEmbed !== null
+            ? $this->clickMeeting->buildAutologinUrl($pinEmbed, $hash)
+            : null;
+        $roomAutologinUrl = $this->clickMeeting->buildAutologinUrl($roomUrl, $hash);
+
+        return [
+            'ok' => true,
+            'course_title' => (string) $course->title,
+            'iframe_src' => $iframeSrc,
+            'room_autologin_url' => $roomAutologinUrl,
+            'room_token_url' => $roomUrl,
+            'token_rotated' => false,
         ];
     }
 

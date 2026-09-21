@@ -19,6 +19,7 @@
                         </div>
                     </div>
                     <h2 class="h5 mb-2">Trwa pobieranie zaświadczenia</h2>
+                    @include('certificates.partials.participant-name', ['participant' => $participant ?? null])
                     <p class="text-muted mb-0">
                         Za chwilę plik PDF z zaświadczeniem zostanie zapisany na Twoim komputerze. Następnie automatycznie przekierujemy Cię
                         {{ $redirectLabel }}.
