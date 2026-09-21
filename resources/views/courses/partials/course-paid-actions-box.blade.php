@@ -90,6 +90,13 @@
     <p class="small text-muted text-center mb-2 px-1">Domyślnie wybrany jest wariant o <strong>najniższym numerze ID</strong> w systemie (pierwszy na liście); możesz go zmienić przed przejściem do zamówienia.</p>
     <div class="text-start mb-3 px-1">
         @foreach($activeCoursePriceVariants as $v)
+            @php
+                $variantPromo = $v->isPromotionActive();
+                $variantCurrent = $v->getCurrentPrice();
+                $variantOmnibus = $variantPromo
+                    ? app(\App\Services\PriceOmnibusService::class)->lowestFor($v)
+                    : null;
+            @endphp
             <div class="form-check mb-2">
                 <input
                     class="form-check-input"
@@ -101,7 +108,16 @@
                 >
                 <label class="form-check-label small" for="cv_{{ $suffix }}_{{ $v->id }}">
                     {{ filled($v->name) ? $v->name : 'Wariant #'.$v->id }}
-                    — <strong>{{ number_format($v->getCurrentPrice(), 2, ',', ' ') }} PLN</strong> (brutto)
+                    @if($variantPromo && (float) $v->price > (float) $variantCurrent)
+                        — <span class="text-muted text-decoration-line-through">{{ number_format((float) $v->price, 2, ',', ' ') }} PLN</span>
+                        <strong class="text-danger">{{ number_format($variantCurrent, 2, ',', ' ') }} PLN</strong> (brutto)
+                        <span class="d-block" style="font-size: 0.75rem; color: #aaa;">
+                            Najniższa cena z 30 dni przed obniżką:
+                            <strong style="color: #aaa;">{{ number_format((float) ($variantOmnibus ?? $v->price), 2, ',', ' ') }} PLN</strong>
+                        </span>
+                    @else
+                        — <strong>{{ number_format($variantCurrent, 2, ',', ' ') }} PLN</strong> (brutto)
+                    @endif
                 </label>
             </div>
         @endforeach

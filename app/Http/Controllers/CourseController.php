@@ -379,7 +379,7 @@ class CourseController extends Controller
         // - legacy (wsteczna zgodność): certgen_Publigo + id_old
         $archivedSearch = trim((string) $request->query('q', ''));
 
-        $archivedQuery = Course::with('instructor')
+        $archivedQuery = Course::with(['instructor', 'priceVariants'])
             ->where('is_active', true)
             ->where('type', 'online')
             ->whereNull('deleted_at')

@@ -26,6 +26,7 @@
                 <strong>{{ $course->trainer_title }}:</strong> {{ $course->trainer }}
             </p>
             <div class="mt-auto pt-3">
+                @include('courses.partials.course-card-price', ['course' => $course])
                 <a href="{{ route('courses.show', $course->id) }}"
                    class="btn btn-outline-secondary w-100 fw-bold d-flex align-items-center justify-content-center gap-2 shadow-sm"
                    style="font-size:1.15rem; letter-spacing:0.5px;">

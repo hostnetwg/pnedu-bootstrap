@@ -157,7 +157,7 @@ Kompaktowy blok „Zamawiasz szkolenie” — tylko V2:
 - Partial: `courses/partials/order-form-v2-offer-summary.blade.php`
 - Adapter: `App\Support\OrderFormV2OfferSummary`
 
-Cel: użytkownik z newslettera/reklamy od razu widzi tytuł, datę, cenę i elementy w cenie. Responsywnie: od `lg` cena w prawej kolumnie.
+Cel: użytkownik z newslettera/reklamy od razu widzi tytuł, datę, cenę i elementy w cenie. Responsywnie: od `lg` cena w prawej kolumnie. Przy aktywnej promocji partial `order-form-v2-offer-price` pokazuje też linię Omnibus („Najniższa cena z 30 dni przed obniżką”).
 
 ---
 

@@ -82,6 +82,10 @@
                     @if($priceInfo['is_promotion'] && $priceInfo['original_price'])
                         <span class="text-muted text-decoration-line-through">{{ number_format($priceInfo['original_price'], 2, ',', ' ') }} PLN</span>
                         <span class="fw-bold text-danger">{{ number_format($priceInfo['price'], 2, ',', ' ') }} PLN</span> (brutto)
+                        <br><small style="font-size: 0.75rem; color: #aaa;">
+                            Najniższa cena z 30 dni przed obniżką:
+                            <strong style="color: #aaa;">{{ number_format($priceInfo['omnibus_lowest_price'] ?? $priceInfo['original_price'], 2, ',', ' ') }} PLN</strong>
+                        </small>
                     @else
                         <span class="fw-bold text-primary">{{ number_format($priceInfo['price'], 2, ',', ' ') }} PLN</span> (brutto)
                     @endif
