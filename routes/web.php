@@ -390,6 +390,18 @@ Route::middleware([
     Route::post('/certificate-registration/{token}', [App\Http\Controllers\CertificateRegistrationController::class, 'submit'])->name('certificate-registration.submit');
 });
 
+// Dopisanie do nagrania po szkoleniu (link dla dyrektora, token).
+Route::middleware('throttle:30,1')->withoutMiddleware([
+    \App\Http\Middleware\CaptureMarketingSource::class,
+])->group(function () {
+    Route::get('/dostep-do-szkolenia/{token}', [App\Http\Controllers\RecordingEnrollmentController::class, 'show'])
+        ->where('token', '[A-Za-z0-9]{32,64}')
+        ->name('recording-enrollment.show');
+    Route::post('/dostep-do-szkolenia/{token}', [App\Http\Controllers\RecordingEnrollmentController::class, 'submit'])
+        ->where('token', '[A-Za-z0-9]{32,64}')
+        ->name('recording-enrollment.submit');
+});
+
 // Sekretny live bez konta (zamknięte szkolenia). Nie w sitemapie / katalogu.
 Route::middleware('throttle:60,1')->group(function () {
     Route::get('/live/{token}', [App\Http\Controllers\GuestLiveController::class, 'show'])

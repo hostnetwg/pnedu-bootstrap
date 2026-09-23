@@ -8,8 +8,22 @@
                 <div class="card-header">{{ __('Register') }}</div>
 
                 <div class="card-body">
+                    @php
+                        $prefillEmail = old('email', request('email'));
+                        $prefillLock = old('email_lock', request('email_lock'));
+                        $emailLocked = \App\Support\RegistrationEmailLock::matches($prefillEmail, $prefillLock);
+                    @endphp
+                    @if($emailLocked)
+                        <p class="mb-4">
+                            Dokończ rejestrację i ustaw hasło. Adres e-mail jest z listy szkolenia i zostaje bez zmian.
+                            Imię i nazwisko możesz poprawić, jeśli trzeba.
+                        </p>
+                    @endif
                     <form method="POST" action="{{ route('register') }}">
                         @csrf
+                        @if($emailLocked)
+                            <input type="hidden" name="email_lock" value="{{ $prefillLock }}">
+                        @endif
 
                         @if ($errors->any())
                             <div class="alert alert-danger" role="alert">
@@ -26,7 +40,7 @@
                             <label for="first_name" class="col-md-4 col-form-label text-md-end">{{ __('Imię') }} <span class="text-danger">*</span></label>
 
                             <div class="col-md-6">
-                                <input id="first_name" type="text" class="form-control @error('first_name') is-invalid @enderror" name="first_name" value="{{ old('first_name') }}" required autocomplete="given-name" autofocus>
+                                <input id="first_name" type="text" class="form-control @error('first_name') is-invalid @enderror" name="first_name" value="{{ old('first_name', request('first_name')) }}" required autocomplete="given-name" autofocus>
 
                                 @error('first_name')
                                     <span class="invalid-feedback" role="alert">
@@ -40,7 +54,7 @@
                             <label for="last_name" class="col-md-4 col-form-label text-md-end">{{ __('Nazwisko') }}</label>
 
                             <div class="col-md-6">
-                                <input id="last_name" type="text" class="form-control @error('last_name') is-invalid @enderror" name="last_name" value="{{ old('last_name') }}" autocomplete="family-name">
+                                <input id="last_name" type="text" class="form-control @error('last_name') is-invalid @enderror" name="last_name" value="{{ old('last_name', request('last_name')) }}" autocomplete="family-name">
 
                                 @error('last_name')
                                     <span class="invalid-feedback" role="alert">
@@ -54,7 +68,13 @@
                             <label for="email" class="col-md-4 col-form-label text-md-end">{{ __('Email') }} <span class="text-danger">*</span></label>
 
                             <div class="col-md-6">
-                                <input id="email" type="email" class="form-control @error('email') is-invalid @enderror" name="email" value="{{ old('email', request('email')) }}" required autocomplete="email">
+                                @if($emailLocked)
+                                    <input id="email" type="email" class="form-control bg-light" value="{{ $prefillEmail }}" readonly aria-readonly="true">
+                                    <input type="hidden" name="email" value="{{ $prefillEmail }}">
+                                    <div class="form-text">Tego adresu nie można zmienić — nagranie jest przypisane do listy uczestników.</div>
+                                @else
+                                    <input id="email" type="email" class="form-control @error('email') is-invalid @enderror" name="email" value="{{ old('email', request('email')) }}" required autocomplete="email">
+                                @endif
 
                                 @error('email')
                                     <span class="invalid-feedback" role="alert">
@@ -139,16 +159,18 @@
                             </div>
                         </div>
 
-                        <div class="row mb-3">
-                            <div class="col-md-8 offset-md-4">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="newsletter_consent" id="newsletter_consent" value="1" {{ old('newsletter_consent') ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="newsletter_consent">
-                                        Wyrażam zgodę na otrzymywanie newslettera z materiałami edukacyjnymi i informacjami o nowych usługach (zgoda dobrowolna, można ją wycofać w każdej chwili).
-                                    </label>
+                        @unless($emailLocked)
+                            <div class="row mb-3">
+                                <div class="col-md-8 offset-md-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="newsletter_consent" id="newsletter_consent" value="1" {{ old('newsletter_consent') ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="newsletter_consent">
+                                            Wyrażam zgodę na otrzymywanie newslettera z materiałami edukacyjnymi i informacjami o nowych usługach (zgoda dobrowolna, można ją wycofać w każdej chwili).
+                                        </label>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        @endunless
 
                         <div class="row mb-0">
                             <div class="col-md-8 offset-md-4">

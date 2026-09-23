@@ -2,6 +2,13 @@
 
 Krótka numeracja frontu. Szczegóły w `docs/` tego repo i w kanonie `pneadm/docs/`. Nowy numer wersji tylko po potwierdzeniu Waldemara. Hotfixy dopisujemy do bieżącej wersji.
 
+## 1.2 — 2026-09-23
+
+Dostęp do nagrania po szkoleniu.
+
+- Formularz `/dostep-do-szkolenia/{token}` zbiera imię, nazwisko, e-mail i hasło dostępu do nagrania. Nowy adres dostaje konto na pnedu.pl i wejście do panelu szkoleń. Gdy konto już jest, hasła nie zmieniamy — zostaje logowanie dotychczasowym hasłem.
+- Kanon: [RECORDING_ENROLLMENT.md](../pneadm/docs/RECORDING_ENROLLMENT.md)
+
 ## 1.1 — 2026-09-19
 
 Belka zasobów i oferta na `/transmisja`.
