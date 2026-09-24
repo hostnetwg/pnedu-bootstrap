@@ -5,6 +5,7 @@
     $teaserDate = $publishedAt ?? null;
     $teaserReadingMinutes = $readingMinutes ?? 1;
     $teaserImageUrl = $imageUrl ?? null;
+    $teaserAuthor = trim((string) ($authorName ?? ''));
     $teaserIsExample = $isExample ?? false;
     $showExampleNotice = $showExampleNotice ?? false;
 @endphp
@@ -52,9 +53,17 @@
                 @endif
             </h2>
 
-            <p class="blog-teaser__excerpt text-muted mb-4 mb-lg-5">
+            <p class="blog-teaser__excerpt text-muted mb-2">
                 {{ $teaserExcerpt }}
             </p>
+
+            @if($teaserAuthor !== '')
+                <p class="blog-teaser__author text-muted small text-end mb-4 mb-lg-5">
+                    {{ $teaserAuthor }}
+                </p>
+            @else
+                <div class="mb-4 mb-lg-5"></div>
+            @endif
 
             @unless($teaserIsExample)
                 <a href="{{ route('blog.show', $teaserSlug) }}" class="btn btn-outline-primary">

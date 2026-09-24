@@ -150,6 +150,7 @@
                         'publishedAt' => $article->published_at,
                         'readingMinutes' => $article->readingTimeMinutes(),
                         'imageUrl' => $article->publicImageUrl(),
+                        'authorName' => $article->author_name,
                     ])
                 @endforeach
 

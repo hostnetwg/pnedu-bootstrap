@@ -35,10 +35,15 @@
                 'image' => array_values(array_filter([$articleImage])),
                 'datePublished' => $article->published_at?->toAtomString(),
                 'dateModified' => $article->updated_at?->toAtomString() ?? $article->published_at?->toAtomString(),
-                'author' => [
-                    '@type' => 'Organization',
-                    '@id' => $baseUrl.'/#organization',
-                ],
+                'author' => filled($article->author_name)
+                    ? [
+                        '@type' => 'Person',
+                        'name' => $article->author_name,
+                    ]
+                    : [
+                        '@type' => 'Organization',
+                        '@id' => $baseUrl.'/#organization',
+                    ],
                 'publisher' => [
                     '@type' => 'Organization',
                     '@id' => $baseUrl.'/#organization',
@@ -315,6 +320,10 @@
                         {{ $article->readingTimeMinutes() }} min czytania
                         <span class="mx-1">|</span>
                         {{ $article->viewCountLabel() }}
+                        @if(filled($article->author_name))
+                            <span class="mx-1">|</span>
+                            {{ $article->author_name }}
+                        @endif
                     </div>
                 </div>
             </div>

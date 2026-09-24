@@ -33,7 +33,8 @@ Kolejność listy: `sort_order` → `published_at` → `created_at` (ustawiana w
 
 ## Funkcje publiczne artykułu
 
-- **Hero:** tytuł (`h1`), excerpt, data, czas czytania, **licznik wyświetleń**
+- **Hero:** tytuł (`h1`), excerpt, data, czas czytania, **licznik wyświetleń**, opcjonalnie **autor**
+- **Lista `/blog`:** zajawka z excerptem; **autor** (`author_name`) po prawej pod krótkim opisem
 - **Okładka** (jeśli ustawiona w panelu)
 - **Treść HTML** z responsywnymi stylami (tabele, typografia)
 - **Udostępnianie:** Facebook, LinkedIn, X, e-mail, kopiuj link
