@@ -12,6 +12,7 @@ use Tests\TestCase;
 class MarketingCampaignLinkTrackerTest extends TestCase
 {
     private ?string $testCampaignCode = null;
+
     private ?string $secondTestCampaignCode = null;
 
     protected function setUp(): void
@@ -71,6 +72,46 @@ class MarketingCampaignLinkTrackerTest extends TestCase
         )->assertOk();
 
         $this->assertSame(0, $this->linkEntriesTotal($this->testCampaignCode));
+    }
+
+    public function test_utm_link_counts_without_analytics_consent_and_does_not_store_attribution(): void
+    {
+        config([
+            'consent.required' => true,
+            'consent.first_party_operational_without_analytics_consent' => true,
+        ]);
+
+        $courseId = $this->firstCourseId();
+        $url = "/courses/{$courseId}?utm_campaign={$this->testCampaignCode}&utm_source=newsletter&utm_medium=email";
+
+        $this->get($url)
+            ->assertOk()
+            ->assertCookieMissing('pne_marketing');
+
+        $this->assertSame(1, $this->linkEntriesTotal());
+
+        Cache::flush();
+
+        $this->call('GET', $url, [], [
+            'pne_cookie_consent' => 'necessary',
+        ])->assertOk()->assertCookieMissing('pne_marketing');
+
+        $this->assertSame(2, $this->linkEntriesTotal());
+    }
+
+    public function test_utm_link_is_not_counted_when_first_party_tracking_requires_analytics_consent(): void
+    {
+        config([
+            'consent.required' => true,
+            'consent.first_party_operational_without_analytics_consent' => false,
+        ]);
+
+        $courseId = $this->firstCourseId();
+
+        $this->get("/courses/{$courseId}?utm_campaign={$this->testCampaignCode}&utm_source=newsletter&utm_medium=email")
+            ->assertOk();
+
+        $this->assertSame(0, $this->linkEntriesTotal());
     }
 
     public function test_utm_campaign_in_query_increments_link_entry_once_per_day(): void

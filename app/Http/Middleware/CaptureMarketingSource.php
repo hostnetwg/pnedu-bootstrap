@@ -27,9 +27,12 @@ class CaptureMarketingSource
 
     /**
      * Persist marketing attribution (UTM + legacy fb) in session and cookie.
+     * Wejście z linku kampanii (kolumna Wejś.) liczy się także bez zgody na Google Analytics.
      */
     public function handle(Request $request, Closure $next): Response
     {
+        $this->campaignLinkTracker->trackFromRequest($request);
+
         if (! $this->consent->hasAnalyticsConsent($request)) {
             return $next($request);
         }
@@ -43,10 +46,6 @@ class CaptureMarketingSource
 
         $this->placement->captureFromRequest($request);
         $this->formAttribution->captureFromRequest($request);
-
-        if (! empty($payload['campaign_code'])) {
-            $this->campaignLinkTracker->trackCampaignCode($request, (string) $payload['campaign_code']);
-        }
 
         $response = $next($request);
 
