@@ -125,6 +125,20 @@ Docelowe długości (audyt 2026-08-23): title **~50–65 znaków**, description 
 - Diagnostyka prod: `php artisan seo:sitemap-diagnose` (w katalogu frontu).
 - Smoke: `curl -sS -o /dev/null -w "%{http_code}\n" https://pnedu.pl/sitemap.xml` → oczekiwane `200`.
 
+### Hosty techniczne DNS (pop / smtp / mail / ftp)
+
+Rekordy `pop`, `smtp`, `mail` itd. w strefie DNS wskazują na ten sam IP co `pnedu.pl` i są potrzebne do poczty — **nie usuwać ich**. Bez osobnego VirtualHosta serwer WWW domyślnie serwowałby kopię strony (duplikat SEO).
+
+W `public/.htaccess` jest reguła allowlist: HTTP/HTTPS dla DocumentRoot frontu działa tylko dla `pnedu.pl` i `www.pnedu.pl` (oraz localhost w dev). Pozostałe hosty (np. `pop.pnedu.pl`, `smtp.pnedu.pl`) dostają **403 Forbidden**. Poczta (SMTP/POP/IMAP) nie używa tej reguły. Panel `adm.pnedu.pl` ma osobny DocumentRoot — ta reguła go nie dotyczy.
+
+Smoke po deployu `.htaccess`:
+
+```bash
+curl -sS -o /dev/null -w "%{http_code}\n" -H "Host: pop.pnedu.pl" https://185.200.44.189/   # oczekiwane 403 (lub przez DNS)
+curl -sS -o /dev/null -w "%{http_code}\n" https://pop.pnedu.pl/
+curl -sS -o /dev/null -w "%{http_code}\n" https://pnedu.pl/   # oczekiwane 200
+```
+
 ---
 
 ## 6. Dla Cursor / AI
@@ -146,4 +160,4 @@ Przy każdej zmianie dotyczącej **treści widocznej dla użytkownika i Google**
 | [docs/GSC_CHECKLIST.md](docs/GSC_CHECKLIST.md) | Google Search Console |
 | [../pneadm/docs/ARTICLES.md](../pneadm/docs/ARTICLES.md) | Panel admin — zarządzanie artykułami |
 
-*Ostatnia aktualizacja: 2026-08-23 (audyt SEO, sitemap, meta kursów, schema Course, blog).*
+*Ostatnia aktualizacja: 2026-09-29 (blokada WWW hostów technicznych pop/smtp w `.htaccess`).*

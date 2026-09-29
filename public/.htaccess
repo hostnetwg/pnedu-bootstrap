@@ -5,6 +5,16 @@
 
     RewriteEngine On
 
+    # Hosty techniczne (pop/smtp/mail/ftp itd.) wskazują DNS-em na ten sam IP co pnedu.pl
+    # i bez osobnego VirtualHosta serwowałyby kopię strony (duplikat SEO).
+    # Dozwolone: pnedu.pl, www.pnedu.pl. Panel adm.pnedu.pl ma osobny DocumentRoot.
+    # Localhost* zostawione pod Sail / lokalny rozwój.
+    RewriteCond %{HTTP_HOST} !^(www\.)?pnedu\.pl(?::\d+)?$ [NC]
+    RewriteCond %{HTTP_HOST} !^localhost(?::\d+)?$ [NC]
+    RewriteCond %{HTTP_HOST} !^127\.0\.0\.1(?::\d+)?$ [NC]
+    RewriteCond %{HTTP_HOST} !^[\w.-]+\.localhost(?::\d+)?$ [NC]
+    RewriteRule ^ - [F,L]
+
     # Krótkie linki kampanii: /l/{campaign_code} → l.php (działa także przy starym route:cache)
     RewriteRule ^l/([A-Za-z0-9._-]+)$ l.php?code=$1 [L,QSA]
 
