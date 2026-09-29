@@ -473,19 +473,27 @@
     </div>
 </section>
 
-<!-- ===== STATS SECTION (wartości w HTML, bez odliczania od zera) ============================= -->
+{{--
+  Statystyki „Dane na żywo” MUSZĄ być w HTML z serwera (SSR), nie dopiero po JS.
+  Powód: SEO / Googlebot / crawlers / AI search / accessibility — View Source i klient bez JS
+  muszą widzieć te same liczby co użytkownik (bez cloakingu, bez placeholderów 0).
+  Źródło: StatisticsService (cache 24 h + last-good); wartości z HomeController → $statistics.
+  Progressive enhancement: JS może animować count-up od 0 do wartości z data-count-to,
+  ale tekst w HTML od pierwszego bajtu to prawdziwa wartość (data-count-final = ten sam string).
+--}}
 @php
     $hasLiveStats = collect(\App\Services\StatisticsService::METRIC_KEYS)
         ->contains(fn (string $key) => ($statistics[$key] ?? null) !== null);
 @endphp
 @if($hasLiveStats)
-<section class="py-3" id="homepage-statistics" style="background: #f6f8fa; scroll-margin-top: 5rem;" aria-labelledby="live-stats-title">
+<section class="py-3 live-stats" id="homepage-statistics" style="background: #f6f8fa; scroll-margin-top: 5rem;" aria-labelledby="live-stats-title">
     <div class="container">
         <h2 id="live-stats-title" class="live-stats-title text-center mb-3">
             <span class="badge bg-success px-3 py-2" style="font-size: 0.85rem;">
                 <span class="spinner-grow spinner-grow-sm me-1" role="status" aria-hidden="true"></span>
                 Dane na żywo
             </span>
+            <span class="visually-hidden"> Platformy Nowoczesnej Edukacji</span>
         </h2>
 
         <div class="row text-center g-4 align-items-center" data-aos="fade-up">
@@ -493,6 +501,9 @@
             <div class="col-6 col-md-3">
                 <div class="display-5 fw-bold mb-1" style="color:#0056b3;">
                     <strong class="counter"
+                          data-count-to="{{ $statistics['trained_teachers'] }}"
+                          data-count-decimals="0"
+                          data-count-final="{{ $statistics['trained_teachers_display'] }}"
                           data-bs-toggle="tooltip"
                           data-bs-placement="top"
                           title="Unikalni uczestnicy przeprowadzonych szkoleń">{{ $statistics['trained_teachers_display'] }}</strong>
@@ -504,6 +515,9 @@
             <div class="col-6 col-md-3">
                 <div class="display-5 fw-bold" style="color:#0056b3; margin-bottom: 0.67rem; font-size: 2.68rem;">
                     <strong class="counter"
+                          data-count-to="{{ $statistics['courses_this_year'] }}"
+                          data-count-decimals="0"
+                          data-count-final="{{ $statistics['courses_this_year_display'] }}"
                           data-bs-toggle="tooltip"
                           data-bs-placement="top"
                           title="Szkolenia z ostatnich 12 miesięcy">{{ $statistics['courses_this_year_display'] }}</strong>
@@ -515,6 +529,9 @@
             <div class="col-6 col-md-3">
                 <div class="display-5 fw-bold" style="color:#0056b3; margin-bottom: 0.67rem; font-size: 2.68rem;">
                     ★<strong class="counter"
+                          data-count-to="{{ $statistics['average_rating'] }}"
+                          data-count-decimals="1"
+                          data-count-final="{{ $statistics['average_rating_display'] }}"
                           data-bs-toggle="tooltip"
                           data-bs-placement="top"
                           title="Średnia ocena ze wszystkich ankiet uczestników">{{ $statistics['average_rating_display'] }}</strong><span class="fs-4 text-muted">/5</span>
@@ -526,6 +543,9 @@
             <div class="col-6 col-md-3">
                 <div class="display-5 fw-bold" style="color:#0056b3; margin-bottom: 0.67rem; font-size: 2.68rem;">
                     <strong class="counter"
+                          data-count-to="{{ $statistics['nps'] }}"
+                          data-count-decimals="1"
+                          data-count-final="{{ $statistics['nps_display'] }}"
                           data-bs-toggle="tooltip"
                           data-bs-placement="top"
                           title="Net Promoter Score - obliczany na podstawie odpowiedzi o polecanie szkoleń">{{ $statistics['nps_display'] }}</strong>%
@@ -1076,6 +1096,97 @@
     });
 
     document.addEventListener('DOMContentLoaded', () => {
+        // Count-up: HTML ma już prawdziwe wartości (SEO). Animacja od 0 tylko w viewport,
+        // bez osobnego requestu; kończy zawsze na data-count-final ze SSR.
+        const initLiveStatCounters = () => {
+            const section = document.getElementById('homepage-statistics');
+            if (!section) {
+                return;
+            }
+
+            const counters = Array.from(section.querySelectorAll('.counter[data-count-to]'));
+            if (counters.length === 0) {
+                return;
+            }
+
+            const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+            const formatDuring = (value, decimals) => {
+                if (decimals > 0) {
+                    const rounded = Math.round(value * 10) / 10;
+                    if (Math.abs(rounded - Math.round(rounded)) < 0.00001) {
+                        return String(Math.round(rounded));
+                    }
+
+                    return rounded.toFixed(1);
+                }
+
+                return Math.round(value).toLocaleString('pl-PL').replace(/\u00a0/g, ' ');
+            };
+
+            const restoreFinal = (el) => {
+                const finalText = el.getAttribute('data-count-final');
+                if (finalText !== null && finalText !== '') {
+                    el.textContent = finalText;
+                }
+            };
+
+            const animateCounter = (el) => {
+                if (el.dataset.countAnimated === '1') {
+                    return;
+                }
+                el.dataset.countAnimated = '1';
+
+                const target = parseFloat(el.getAttribute('data-count-to') || '');
+                const decimals = parseInt(el.getAttribute('data-count-decimals') || '0', 10) || 0;
+                if (!Number.isFinite(target)) {
+                    restoreFinal(el);
+                    return;
+                }
+
+                if (reduceMotion) {
+                    restoreFinal(el);
+                    return;
+                }
+
+                const duration = 1400;
+                const start = performance.now();
+                el.textContent = decimals > 0 ? formatDuring(0, decimals) : '0';
+
+                const tick = (now) => {
+                    const progress = Math.min(1, (now - start) / duration);
+                    const eased = 1 - Math.pow(1 - progress, 3);
+                    el.textContent = formatDuring(target * eased, decimals);
+                    if (progress < 1) {
+                        requestAnimationFrame(tick);
+                    } else {
+                        restoreFinal(el);
+                    }
+                };
+
+                requestAnimationFrame(tick);
+            };
+
+            if (!('IntersectionObserver' in window)) {
+                counters.forEach(animateCounter);
+                return;
+            }
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach((entry) => {
+                    if (!entry.isIntersecting) {
+                        return;
+                    }
+                    counters.forEach(animateCounter);
+                    observer.disconnect();
+                });
+            }, { threshold: 0.35 });
+
+            observer.observe(section);
+        };
+
+        initLiveStatCounters();
+
         const initFeaturedOfferSummaries = (root = document) => {
             root.querySelectorAll('[data-featured-offer-summary]').forEach((summary) => {
                 if (summary.dataset.summaryBound === '1') {

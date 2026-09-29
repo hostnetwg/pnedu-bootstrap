@@ -8,7 +8,7 @@ Dostęp do nagrania po szkoleniu.
 
 - Formularz `/dostep-do-szkolenia/{token}` zbiera imię, nazwisko, e-mail i hasło dostępu do nagrania. Nowy adres dostaje konto na pnedu.pl i wejście do panelu szkoleń. Gdy konto już jest, hasła nie zmieniamy — zostaje logowanie dotychczasowym hasłem.
 - Kanon: [RECORDING_ENROLLMENT.md](../pneadm/docs/RECORDING_ENROLLMENT.md)
-- Hotfix 2026-09-29: sekcja „Dane na żywo” na stronie głównej ma prawdziwe liczby już w HTML. Gdy wyliczenie się nie uda, zostaje ostatni poprawny odczyt, a nie zero.
+- Hotfix 2026-09-29: sekcja „Dane na żywo” na stronie głównej ma prawdziwe liczby już w HTML. Gdy wyliczenie się nie uda, zostaje ostatni poprawny odczyt, a nie zero. Count-up od zera działa dopiero w przeglądarce (progressive enhancement); źródło HTML i crawler bez JS nadal widzą finalne wartości.
 - Kanon: [STATISTICS_CALCULATION.md](STATISTICS_CALCULATION.md)
 
 ## 1.1 — 2026-09-19

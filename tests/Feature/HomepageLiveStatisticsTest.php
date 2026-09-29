@@ -24,14 +24,20 @@ class HomepageLiveStatisticsTest extends TestCase
         ]);
 
         $this->assertStringContainsString('id="live-stats-title"', $content);
+        $this->assertStringContainsString('class="py-3 live-stats"', $content);
         $this->assertStringContainsString('Dane na żywo', $content);
+        $this->assertStringContainsString('Platformy Nowoczesnej Edukacji', $content);
         $this->assertStringContainsString('>12 345</strong>', $content);
         $this->assertStringContainsString('>210</strong>', $content);
         $this->assertStringContainsString('>4.9</strong>', $content);
         $this->assertStringContainsString('>72.5</strong>', $content);
+        $this->assertStringContainsString('data-count-to="12345"', $content);
+        $this->assertStringContainsString('data-count-to="210"', $content);
+        $this->assertStringContainsString('data-count-final="12 345"', $content);
+        $this->assertStringContainsString('data-count-final="4.9"', $content);
         $this->assertStringContainsString('Przeszkolonych nauczycieli', $content);
         $this->assertStringContainsString('Dane aktualizowane raz dziennie na podstawie systemu PNE.', $content);
-        $this->assertStringNotContainsString('data-target=', $content);
+        $this->assertStringContainsString('initLiveStatCounters', $content);
         $this->assertStringNotContainsString('class="counter">0<', $content);
         $this->assertStringNotContainsString('>0</strong>', $content);
         $this->assertStringNotContainsString('0/5', $content);

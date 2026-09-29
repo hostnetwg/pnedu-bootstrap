@@ -28,7 +28,7 @@ Dokument obowiązuje przy **każdej nowej treści publicznej** (strony, podstron
 | **Robots.txt** | Dynamicznie: `GET /robots.txt` → ten sam kontroler; **nie dodawaj** statycznych `public/robots.txt` ani `public/sitemap.xml` (nadpisują Laravel). |
 | **JSON-LD** | Globalne dane marki: `resources/views/layouts/partials/global-structured-data.blade.php`; przy nowych typach treści dodawaj zgodne z treścią `BlogPosting`, `BreadcrumbList`, `ItemList`, `Course` itp. |
 | **Semantyka HTML** | Jeden `h1` na widok; hierarchia `h2`–`h3`; linki z sensownym tekstem kotwicy (nie „kliknij tutaj”). |
-| **Statystyki na stronie głównej** | Sekcja „Dane na żywo” renderuje liczby w HTML (`StatisticsService`, cache 24 h). Brak wiarygodnej wartości ukrywa kafelek. Nie dodawać `AggregateRating` ani własnych pól schema dla liczby uczestników. |
+| **Statystyki na stronie głównej** | Sekcja „Dane na żywo” renderuje liczby w HTML (`StatisticsService`, cache 24 h). Brak wiarygodnej wartości ukrywa kafelek. Opcjonalny count-up w JS (od 0 w viewport) nie zastępuje SSR — kończy na `data-count-final`. Nie dodawać `AggregateRating` ani własnych pól schema dla liczby uczestników. |
 | **Obrazy** | Zawsze `alt` opisowy; pliki z nazwą sensowną (np. `szkolenie-tik-nauczyciele.jpg`). |
 
 ---
