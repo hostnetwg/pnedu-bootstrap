@@ -35,19 +35,29 @@ class RefreshStatisticsCommand extends Command
             $this->table(
                 ['Statystyka', 'Wartość'],
                 [
-                    ['Przeszkolonych nauczycieli', number_format($statistics['trained_teachers'], 0, ',', ' ')],
-                    ['Szkoleń rocznie', number_format($statistics['courses_this_year'], 0, ',', ' ')],
-                    ['Średnia ocena', number_format($statistics['average_rating'], 1, ',', '.')],
-                    ['Wskaźnik poleceń (NPS)', number_format($statistics['nps'], 1, ',', '.')],
+                    ['Przeszkolonych nauczycieli', $this->formatStat($statistics['trained_teachers'] ?? null, 0)],
+                    ['Szkoleń rocznie', $this->formatStat($statistics['courses_this_year'] ?? null, 0)],
+                    ['Średnia ocena', $this->formatStat($statistics['average_rating'] ?? null, 1)],
+                    ['Wskaźnik poleceń (NPS)', $this->formatStat($statistics['nps'] ?? null, 1)],
                 ]
             );
 
             $this->info('✅ Statystyki zostały pomyślnie zaktualizowane i zapisane w cache.');
+
             return Command::SUCCESS;
         } catch (\Exception $e) {
-            $this->error('❌ Błąd podczas odświeżania statystyk: ' . $e->getMessage());
+            $this->error('❌ Błąd podczas odświeżania statystyk: '.$e->getMessage());
+
             return Command::FAILURE;
         }
     }
-}
 
+    private function formatStat(mixed $value, int $decimals): string
+    {
+        if (! is_numeric($value)) {
+            return 'brak danych';
+        }
+
+        return number_format((float) $value, $decimals, ',', $decimals === 0 ? ' ' : '.');
+    }
+}

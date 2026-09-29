@@ -3,14 +3,15 @@
 ## ⏱️ Interwał czasowy
 
 ### Cache Laravel
-- **Interwał odświeżania**: **1 godzina (3600 sekund)**
-- **Mechanizm**: Cache Laravel (`Cache::remember()`)
-- **Lokalizacja**: `app/Services/StatisticsService.php` - stała `CACHE_TTL = 3600`
+- **Interwał odświeżania**: **24 godziny (86400 sekund)**
+- **Mechanizm**: cache Laravel (`homepage_statistics`); osobny klucz `homepage_statistics_last_good` trzyma ostatni wiarygodny odczyt przez 90 dni
+- **Lokalizacja**: `app/Services/StatisticsService.php` — stała `CACHE_TTL = 86400`
 
 ### Jak to działa:
-1. **Przy pierwszym otwarciu strony** - statystyki są obliczane z bazy danych i zapisywane w cache
-2. **Przy kolejnych otwarciach** (w ciągu 1 godziny) - statystyki są pobierane z cache (bardzo szybko)
-3. **Po 1 godzinie** - cache wygasa, przy następnym otwarciu strony statystyki są ponownie obliczane
+1. **Przy pierwszym otwarciu strony albo po wygaśnięciu cache** — statystyki są obliczane z bazy i zapisywane w cache
+2. **Przy kolejnych otwarciach** (w ciągu 24 godzin) — statystyki są pobierane z cache, bez ponownego liczenia
+3. **HTML strony głównej** zawiera już sformatowane liczby. Crawler bez JavaScript widzi te same wartości co użytkownik
+4. **Gdy wyliczenie się nie uda** albo wynik nie jest wiarygodny (pusty zbiór ankiet, liczba 0 po błędzie, brak danych) — używany jest ostatni poprawny odczyt. Jeśli go nie ma, konkretna statystyka nie jest renderowana
 
 ### Ręczne odświeżanie:
 ```bash
@@ -143,20 +144,16 @@ NPS = (Promoters / Total) * 100 - (Detractors / Total) * 100
 
 1. **Wywołanie**: `HomeController::index()` → `StatisticsService::getStatistics()`
 
-2. **Sprawdzenie cache**:
-   ```php
-   Cache::remember('homepage_statistics', 3600, function() {
-       return $this->calculateStatistics();
-   });
-   ```
+2. **Sprawdzenie cache** `homepage_statistics` (TTL 24 godziny).
 
-3. **Jeśli cache istnieje** (mniej niż 1 godzina):
+3. **Jeśli cache istnieje**:
    - Zwraca dane z cache (bez zapytań do bazy)
+   - Widok wstawia sformatowane liczby w treść HTML
 
-4. **Jeśli cache wygasł** (więcej niż 1 godzina):
+4. **Jeśli cache wygasł**:
    - Wykonuje wszystkie 4 metody obliczeniowe
-   - Zapisuje wyniki w cache na 1 godzinę
-   - Zwraca wyniki
+   - Nieudany lub niewiarygodny wskaźnik zastępuje ostatnim poprawnym odczytem (`homepage_statistics_last_good`)
+   - Zapisuje wyniki w cache na 24 godziny (albo 5 minut, gdy nie ma żadnej wartości do pokazania)
 
 ---
 

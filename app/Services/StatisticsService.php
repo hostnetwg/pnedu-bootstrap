@@ -10,25 +10,48 @@ class StatisticsService
 {
     const CACHE_KEY = 'homepage_statistics';
 
+    const LAST_GOOD_KEY = 'homepage_statistics_last_good';
+
     const CACHE_TTL = 86400; // 24 godziny (w sekundach)
 
+    const LAST_GOOD_TTL = 7776000; // 90 dni — ostatni wiarygodny odczyt po błędzie źródła
+
+    const EMPTY_CACHE_TTL = 300; // krótki retry, gdy nie ma żadnej wartości do pokazania
+
+    /** @var list<string> */
+    public const METRIC_KEYS = [
+        'trained_teachers',
+        'courses_this_year',
+        'average_rating',
+        'nps',
+    ];
+
     /**
-     * Pobiera wszystkie statystyki z cache lub generuje nowe
+     * Pobiera statystyki z cache. Liczenie z bazy tylko przy braku cache (raz na dobę).
+     *
+     * @return array{
+     *     trained_teachers: int|null,
+     *     trained_teachers_display: string|null,
+     *     courses_this_year: int|null,
+     *     courses_this_year_display: string|null,
+     *     average_rating: float|null,
+     *     average_rating_display: string|null,
+     *     nps: float|null,
+     *     nps_display: string|null,
+     *     last_updated: \Carbon\Carbon|null
+     * }
      */
     public function getStatistics(): array
     {
-        $statistics = Cache::remember(self::CACHE_KEY, self::CACHE_TTL, function () {
-            $stats = $this->calculateStatistics();
-            $stats['last_updated'] = now();
+        $cached = Cache::get(self::CACHE_KEY);
 
-            return $stats;
-        });
-
-        if (isset($statistics['last_updated']) && is_string($statistics['last_updated'])) {
-            $statistics['last_updated'] = \Carbon\Carbon::parse($statistics['last_updated']);
+        if (! is_array($cached)) {
+            return $this->refreshStatistics();
         }
 
-        return $statistics;
+        $this->rememberLastGoodFromCache($cached);
+
+        return $this->hydrate($cached);
     }
 
     /**
@@ -47,7 +70,7 @@ class StatisticsService
     /**
      * Oblicza ilość przeszkolonych nauczycieli (unikalni uczestnicy)
      */
-    public function getTrainedTeachersCount(): int
+    public function getTrainedTeachersCount(): ?int
     {
         try {
             // Unikalni uczestnicy po emailu
@@ -73,7 +96,7 @@ class StatisticsService
         } catch (\Exception $e) {
             \Log::error('Błąd obliczania przeszkolonych nauczycieli: '.$e->getMessage());
 
-            return 0;
+            return null;
         }
     }
 
@@ -81,7 +104,7 @@ class StatisticsService
      * Oblicza średnią roczną ilość szkoleń na podstawie ostatnich 12 miesięcy
      * Liczy szkolenia z ostatnich 12 miesięcy od daty obliczenia
      */
-    public function getCoursesThisYearCount(): int
+    public function getCoursesThisYearCount(): ?int
     {
         try {
             // Data 12 miesięcy wstecz od teraz
@@ -98,7 +121,7 @@ class StatisticsService
         } catch (\Exception $e) {
             \Log::error('Błąd obliczania średniej rocznej szkoleń: '.$e->getMessage());
 
-            return 0;
+            return null;
         }
     }
 
@@ -106,7 +129,7 @@ class StatisticsService
      * Oblicza średnią ocenę ze wszystkich ankiet
      * (podobnie jak w DashboardController w pneadm-bootstrap)
      */
-    public function getAverageRating(): float
+    public function getAverageRating(): ?float
     {
         try {
             // Pobierz wszystkie ankiety z pytaniami i odpowiedziami
@@ -117,7 +140,7 @@ class StatisticsService
                 ->get();
 
             if ($surveys->isEmpty()) {
-                return 0;
+                return null;
             }
 
             $totalRating = 0;
@@ -176,11 +199,11 @@ class StatisticsService
                 }
             }
 
-            return $surveysWithRatings > 0 ? round($totalRating / $surveysWithRatings, 2) : 0;
+            return $surveysWithRatings > 0 ? round($totalRating / $surveysWithRatings, 2) : null;
         } catch (\Exception $e) {
             \Log::error('Błąd obliczania średniej oceny: '.$e->getMessage());
 
-            return 0;
+            return null;
         }
     }
 
@@ -189,7 +212,7 @@ class StatisticsService
      * Na podstawie pytań o polecanie szkoleń innym (skala 1-5)
      * Używa DOKŁADNIE tej samej logiki co SurveyController::calculateNPS w pneadm-bootstrap
      */
-    public function getNPS(): float
+    public function getNPS(): ?float
     {
         try {
             // Wzorce pytania NPS - IDENTYCZNE jak w SurveyController
@@ -210,7 +233,7 @@ class StatisticsService
             if ($surveys->isEmpty()) {
                 \Log::info('Brak ankiet z odpowiedziami dla obliczenia NPS');
 
-                return 0;
+                return null;
             }
 
             $npsResponses = [];
@@ -256,7 +279,7 @@ class StatisticsService
                 }
                 \Log::info('Brak odpowiedzi NPS w ankietach. Przykładowe pytania: '.json_encode(array_slice($sampleQuestions, 0, 10)));
 
-                return 0;
+                return null;
             }
 
             $totalResponses = count($npsResponses);
@@ -285,24 +308,23 @@ class StatisticsService
             \Log::error('Błąd obliczania wskaźnika poleceń (NPS): '.$e->getMessage());
             \Log::error('Stack trace: '.$e->getTraceAsString());
 
-            return 0;
+            return null;
         }
     }
 
     /**
-     * Odświeża statystyki (czyści cache i generuje nowe)
+     * Odświeża statystyki (czyści cache bieżącego odczytu i generuje nowe).
+     * Ostatni wiarygodny odczyt zostaje, dopóki nowe wartości nie są poprawne.
      */
     public function refreshStatistics(): array
     {
         Cache::forget(self::CACHE_KEY);
         Cache::forget(self::CACHE_KEY.'_timestamp');
 
-        $statistics = $this->calculateStatistics();
-        $statistics['last_updated'] = now();
+        $resolved = $this->resolveWithFallback($this->calculateStatistics());
+        Cache::put(self::CACHE_KEY, $this->forCache($resolved), $this->cacheTtl($resolved));
 
-        Cache::put(self::CACHE_KEY, $statistics, self::CACHE_TTL);
-
-        return $statistics;
+        return $this->hydrate($this->forCache($resolved));
     }
 
     /**
@@ -312,12 +334,216 @@ class StatisticsService
     {
         $statistics = Cache::get(self::CACHE_KEY);
 
-        if (! is_array($statistics) || ! isset($statistics['last_updated'])) {
-            return Cache::get(self::CACHE_KEY.'_timestamp');
+        if (! is_array($statistics) || empty($statistics['last_updated'])) {
+            $statistics = Cache::get(self::LAST_GOOD_KEY);
+        }
+
+        if (! is_array($statistics) || empty($statistics['last_updated'])) {
+            $legacy = Cache::get(self::CACHE_KEY.'_timestamp');
+
+            return $legacy instanceof \Carbon\Carbon ? $legacy : null;
         }
 
         $lastUpdated = $statistics['last_updated'];
 
         return is_string($lastUpdated) ? \Carbon\Carbon::parse($lastUpdated) : $lastUpdated;
+    }
+
+    /**
+     * Tekst liczby taki, jaki ma trafić do HTML (bez odliczania od zera).
+     */
+    public function formatMetric(string $key, int|float|null $value): ?string
+    {
+        if (! is_numeric($value)) {
+            return null;
+        }
+
+        if (in_array($key, ['average_rating', 'nps'], true)) {
+            $rounded = round((float) $value, 1);
+
+            if (abs($rounded - round($rounded)) < 0.00001) {
+                return number_format($rounded, 0, '.', '');
+            }
+
+            return number_format($rounded, 1, '.', '');
+        }
+
+        return number_format((int) $value, 0, ',', ' ');
+    }
+
+    /**
+     * @param  array<string, mixed>  $fresh
+     * @return array<string, mixed>
+     */
+    private function resolveWithFallback(array $fresh): array
+    {
+        $lastGood = $this->lastGood();
+        $resolved = [];
+        $updatedGood = $lastGood;
+        $usedFresh = false;
+
+        foreach (self::METRIC_KEYS as $key) {
+            $value = $fresh[$key] ?? null;
+
+            if ($this->isPublishable($key, $value)) {
+                $resolved[$key] = $this->normalizeNumber($key, $value);
+                $updatedGood[$key] = $resolved[$key];
+                $usedFresh = true;
+
+                continue;
+            }
+
+            $fallback = $lastGood[$key] ?? null;
+            $resolved[$key] = $this->isPublishable($key, $fallback)
+                ? $this->normalizeNumber($key, $fallback)
+                : null;
+        }
+
+        if ($usedFresh) {
+            $updatedGood['last_updated'] = now()->toIso8601String();
+            Cache::put(self::LAST_GOOD_KEY, $updatedGood, self::LAST_GOOD_TTL);
+            $resolved['last_updated'] = $updatedGood['last_updated'];
+        } else {
+            $resolved['last_updated'] = $lastGood['last_updated'] ?? null;
+        }
+
+        return $resolved;
+    }
+
+    /**
+     * @param  array<string, mixed>  $statistics
+     * @return array<string, mixed>
+     */
+    private function hydrate(array $statistics): array
+    {
+        $lastGood = null;
+
+        foreach (self::METRIC_KEYS as $key) {
+            $value = $statistics[$key] ?? null;
+
+            if (! $this->isPublishable($key, $value)) {
+                $lastGood ??= $this->lastGood();
+                $fallback = $lastGood[$key] ?? null;
+                $value = $this->isPublishable($key, $fallback) ? $fallback : null;
+            }
+
+            $statistics[$key] = is_numeric($value) ? $this->normalizeNumber($key, $value) : null;
+            $statistics[$key.'_display'] = $this->formatMetric($key, $statistics[$key]);
+        }
+
+        $lastUpdated = $statistics['last_updated'] ?? null;
+        if ($lastUpdated instanceof \DateTimeInterface) {
+            $statistics['last_updated'] = \Carbon\Carbon::parse($lastUpdated->format('c'));
+        } elseif (is_string($lastUpdated) && $lastUpdated !== '') {
+            $statistics['last_updated'] = \Carbon\Carbon::parse($lastUpdated);
+        } else {
+            $statistics['last_updated'] = null;
+        }
+
+        return $statistics;
+    }
+
+    /**
+     * Zapisuje bieżący poprawny cache jako ostatni wiarygodny odczyt,
+     * jeśli ten zapas jeszcze nie istnieje. Bez ponownego liczenia z bazy.
+     *
+     * @param  array<string, mixed>  $cached
+     */
+    private function rememberLastGoodFromCache(array $cached): void
+    {
+        $existing = $this->lastGood();
+        $updated = $existing;
+        $changed = false;
+
+        foreach (self::METRIC_KEYS as $key) {
+            if ($this->isPublishable($key, $cached[$key] ?? null) && ! $this->isPublishable($key, $existing[$key] ?? null)) {
+                $updated[$key] = $this->normalizeNumber($key, $cached[$key]);
+                $changed = true;
+            }
+        }
+
+        if (! $changed) {
+            return;
+        }
+
+        if (empty($updated['last_updated']) && ! empty($cached['last_updated'])) {
+            $lastUpdated = $cached['last_updated'];
+            $updated['last_updated'] = $lastUpdated instanceof \DateTimeInterface
+                ? \Carbon\Carbon::parse($lastUpdated->format('c'))->toIso8601String()
+                : $lastUpdated;
+        }
+
+        Cache::put(self::LAST_GOOD_KEY, $updated, self::LAST_GOOD_TTL);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function lastGood(): array
+    {
+        $lastGood = Cache::get(self::LAST_GOOD_KEY);
+
+        return is_array($lastGood) ? $lastGood : [];
+    }
+
+    private function isPublishable(string $key, mixed $value): bool
+    {
+        if (! is_numeric($value)) {
+            return false;
+        }
+
+        $number = (float) $value;
+
+        return match ($key) {
+            'trained_teachers', 'courses_this_year' => $number > 0,
+            'average_rating' => $number > 0 && $number <= 5,
+            'nps' => $number >= -100 && $number <= 100,
+            default => false,
+        };
+    }
+
+    private function normalizeNumber(string $key, mixed $value): int|float
+    {
+        if (in_array($key, ['trained_teachers', 'courses_this_year'], true)) {
+            return (int) $value;
+        }
+
+        return (float) $value;
+    }
+
+    /**
+     * @param  array<string, mixed>  $statistics
+     * @return array<string, mixed>
+     */
+    private function forCache(array $statistics): array
+    {
+        $payload = [];
+
+        foreach (self::METRIC_KEYS as $key) {
+            $payload[$key] = $statistics[$key] ?? null;
+        }
+
+        $lastUpdated = $statistics['last_updated'] ?? null;
+        if ($lastUpdated instanceof \DateTimeInterface) {
+            $lastUpdated = \Carbon\Carbon::parse($lastUpdated->format('c'))->toIso8601String();
+        }
+
+        $payload['last_updated'] = is_string($lastUpdated) ? $lastUpdated : null;
+
+        return $payload;
+    }
+
+    /**
+     * @param  array<string, mixed>  $statistics
+     */
+    private function cacheTtl(array $statistics): int
+    {
+        foreach (self::METRIC_KEYS as $key) {
+            if ($this->isPublishable($key, $statistics[$key] ?? null)) {
+                return self::CACHE_TTL;
+            }
+        }
+
+        return self::EMPTY_CACHE_TTL;
     }
 }

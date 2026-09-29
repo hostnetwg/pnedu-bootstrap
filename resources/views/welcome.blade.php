@@ -473,66 +473,76 @@
     </div>
 </section>
 
-<!-- ===== STATS SECTION WITH COUNTER (CLEAN & LOW HEIGHT) ============================= -->
-<section class="py-3" style="background: #f6f8fa;">
+<!-- ===== STATS SECTION (wartości w HTML, bez odliczania od zera) ============================= -->
+@php
+    $hasLiveStats = collect(\App\Services\StatisticsService::METRIC_KEYS)
+        ->contains(fn (string $key) => ($statistics[$key] ?? null) !== null);
+@endphp
+@if($hasLiveStats)
+<section class="py-3" id="homepage-statistics" style="background: #f6f8fa; scroll-margin-top: 5rem;" aria-labelledby="live-stats-title">
     <div class="container">
-        <!-- Badge "Dane na żywo" — kotwica przy rozwijaniu metodologii (sticky navbar) -->
-        <div class="text-center mb-3" id="homepage-statistics" style="scroll-margin-top: 5rem;">
+        <h2 id="live-stats-title" class="live-stats-title text-center mb-3">
             <span class="badge bg-success px-3 py-2" style="font-size: 0.85rem;">
                 <span class="spinner-grow spinner-grow-sm me-1" role="status" aria-hidden="true"></span>
                 Dane na żywo
             </span>
-        </div>
+        </h2>
 
         <div class="row text-center g-4 align-items-center" data-aos="fade-up">
+            @if(($statistics['trained_teachers'] ?? null) !== null)
             <div class="col-6 col-md-3">
                 <div class="display-5 fw-bold mb-1" style="color:#0056b3;">
-                    <span class="counter" data-target="{{ $statistics['trained_teachers'] ?? 10000 }}" 
-                          data-bs-toggle="tooltip" 
-                          data-bs-placement="top" 
-                          title="Unikalni uczestnicy przeprowadzonych szkoleń">0</span>
+                    <strong class="counter"
+                          data-bs-toggle="tooltip"
+                          data-bs-placement="top"
+                          title="Unikalni uczestnicy przeprowadzonych szkoleń">{{ $statistics['trained_teachers_display'] }}</strong>
                 </div>
                 <p class="text-secondary fw-light small">Przeszkolonych nauczycieli</p>
             </div>
+            @endif
+            @if(($statistics['courses_this_year'] ?? null) !== null)
             <div class="col-6 col-md-3">
                 <div class="display-5 fw-bold" style="color:#0056b3; margin-bottom: 0.67rem; font-size: 2.68rem;">
-                    <span class="counter" data-target="{{ $statistics['courses_this_year'] ?? 200 }}"
-                          data-bs-toggle="tooltip" 
-                          data-bs-placement="top" 
-                          title="Szkolenia z ostatnich 12 miesięcy">0</span>
+                    <strong class="counter"
+                          data-bs-toggle="tooltip"
+                          data-bs-placement="top"
+                          title="Szkolenia z ostatnich 12 miesięcy">{{ $statistics['courses_this_year_display'] }}</strong>
                 </div>
                 <p class="text-secondary fw-light small">Szkoleń rocznie</p>
             </div>
+            @endif
+            @if(($statistics['average_rating'] ?? null) !== null)
             <div class="col-6 col-md-3">
                 <div class="display-5 fw-bold" style="color:#0056b3; margin-bottom: 0.67rem; font-size: 2.68rem;">
-                    ★<span class="counter" data-target="{{ $statistics['average_rating'] ?? 4.9 }}"
-                          data-bs-toggle="tooltip" 
-                          data-bs-placement="top" 
-                          title="Średnia ocena ze wszystkich ankiet uczestników">0</span><span class="fs-4 text-muted">/5</span>
+                    ★<strong class="counter"
+                          data-bs-toggle="tooltip"
+                          data-bs-placement="top"
+                          title="Średnia ocena ze wszystkich ankiet uczestników">{{ $statistics['average_rating_display'] }}</strong><span class="fs-4 text-muted">/5</span>
                 </div>
                 <p class="text-secondary fw-light small">Średnia ocena</p>
             </div>
+            @endif
+            @if(($statistics['nps'] ?? null) !== null)
             <div class="col-6 col-md-3">
                 <div class="display-5 fw-bold" style="color:#0056b3; margin-bottom: 0.67rem; font-size: 2.68rem;">
-                    <span class="counter" data-target="{{ $statistics['nps'] ?? 0 }}"
-                          data-bs-toggle="tooltip" 
-                          data-bs-placement="top" 
-                          title="Net Promoter Score - obliczany na podstawie odpowiedzi o polecanie szkoleń">0</span>%
+                    <strong class="counter"
+                          data-bs-toggle="tooltip"
+                          data-bs-placement="top"
+                          title="Net Promoter Score - obliczany na podstawie odpowiedzi o polecanie szkoleń">{{ $statistics['nps_display'] }}</strong>%
                 </div>
                 <p class="text-secondary fw-light small">Wskaźnik poleceń (NPS)</p>
             </div>
+            @endif
         </div>
 
         <!-- Informacja o aktualizacji i link do metodologii -->
         <div class="text-center mt-4">
-            <small class="text-muted d-block mb-2">
-                Ostatnia aktualizacja: 
-                @if(isset($statistics['last_updated']))
-                    {{ $statistics['last_updated']->format('d.m.Y, H:i') }}
-                @else
-                    {{ now()->format('d.m.Y, H:i') }}
+            <p class="text-muted small mb-2">
+                Dane aktualizowane raz dziennie na podstawie systemu PNE.
+                @if(($statistics['last_updated'] ?? null) instanceof \Carbon\Carbon)
+                    Ostatnia aktualizacja: {{ $statistics['last_updated']->timezone(config('app.timezone'))->format('d.m.Y, H:i') }}.
                 @endif
-            </small>
+            </p>
             <a href="#homepage-statistics"
                class="text-decoration-none small text-primary"
                data-bs-toggle="collapse"
@@ -548,31 +558,31 @@
         <!-- Rozwijana sekcja metodologii -->
         <div class="collapse mt-3" id="statistics-methodology">
             <div class="card card-body bg-white shadow-sm border-0 mt-3">
-                <h6 class="fw-bold mb-3">Metodologia obliczeń</h6>
+                <h3 class="h6 fw-bold mb-3">Metodologia obliczeń</h3>
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <h6 class="small fw-bold text-primary">Przeszkolonych nauczycieli</h6>
+                        <h4 class="h6 small fw-bold text-primary">Przeszkolonych nauczycieli</h4>
                         <p class="small text-muted mb-0">
                             Liczymy unikalnych uczestników wszystkich przeprowadzonych szkoleń. Uczestnicy z emailem są liczeni po unikalnym adresie email, 
                             a uczestnicy bez emaila po unikalnej kombinacji imię + nazwisko.
                         </p>
                     </div>
                     <div class="col-md-6 mb-3">
-                        <h6 class="small fw-bold text-primary">Szkoleń rocznie</h6>
+                        <h4 class="h6 small fw-bold text-primary">Szkoleń rocznie</h4>
                         <p class="small text-muted mb-0">
                             Liczba szkoleń z ostatnich 12 miesięcy od daty obliczenia. Zliczamy wszystkie szkolenia 
                             (online i stacjonarne) z datą rozpoczęcia w tym okresie.
                         </p>
                     </div>
                     <div class="col-md-6 mb-3">
-                        <h6 class="small fw-bold text-primary">Średnia ocena</h6>
+                        <h4 class="h6 small fw-bold text-primary">Średnia ocena</h4>
                         <p class="small text-muted mb-0">
                             Obliczana ze wszystkich ankiet uczestników. Dla każdej ankiety wyliczamy średnią z pytań typu "rating" (skala 1-5), 
                             a następnie obliczamy średnią ze wszystkich ankiet.
                         </p>
                     </div>
                     <div class="col-md-6 mb-3">
-                        <h6 class="small fw-bold text-primary">Wskaźnik poleceń (NPS)</h6>
+                        <h4 class="h6 small fw-bold text-primary">Wskaźnik poleceń (NPS)</h4>
                         <p class="small text-muted mb-0">
                             Net Promoter Score obliczany na podstawie odpowiedzi na pytania o polecanie szkoleń innym. 
                             Promotorzy (4-5), Krytycy (1-2), Neutralni (3). Formuła: (Procent promotorów - Procent krytyków).
@@ -596,6 +606,7 @@
         </div>
     </div>
 </section>
+@endif
 
 
 <!-- ===== WHY CHOOSE US =========================================== -->
@@ -1010,6 +1021,19 @@
         animation: countUp 1s forwards;
     }
 
+    .live-stats-title {
+        font-size: inherit;
+        font-weight: inherit;
+        line-height: inherit;
+        margin-top: 0;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .counter {
+            animation: none;
+        }
+    }
+
     .cta-btn {
         transition: background 0.18s, color 0.18s, box-shadow 0.18s;
     }
@@ -1051,42 +1075,7 @@
         offset: 100
     });
 
-    // Counter Animation
     document.addEventListener('DOMContentLoaded', () => {
-        const counters = document.querySelectorAll('.counter');
-        
-        const runCounter = (counter) => {
-            const target = parseFloat(counter.dataset.target);
-            const isDecimal = target % 1 !== 0;
-            let current = 0;
-            const increment = target / 50; // Speed up the animation
-            const duration = 1500; // Total animation duration in ms
-            const stepTime = duration / (target / increment);
-
-            const update = () => {
-                current += increment;
-                if (current < target) {
-                    counter.textContent = isDecimal ? current.toFixed(1) : Math.floor(current).toLocaleString('pl-PL');
-                    setTimeout(update, stepTime);
-                } else {
-                    counter.textContent = isDecimal ? target.toFixed(1) : target.toLocaleString('pl-PL');
-                }
-            };
-            
-            update();
-        };
-
-        const observer = new IntersectionObserver((entries, obs) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    runCounter(entry.target);
-                    obs.unobserve(entry.target);
-                }
-            });
-        }, { threshold: 0.1 });
-
-        counters.forEach(counter => observer.observe(counter));
-
         const initFeaturedOfferSummaries = (root = document) => {
             root.querySelectorAll('[data-featured-offer-summary]').forEach((summary) => {
                 if (summary.dataset.summaryBound === '1') {
