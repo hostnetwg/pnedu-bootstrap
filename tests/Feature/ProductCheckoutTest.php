@@ -182,6 +182,7 @@ class ProductCheckoutTest extends TestCase
 
     public function test_catalog_shows_promotion_end_omnibus_and_countdown(): void
     {
+        CarbonImmutable::setTestNow('2026-09-20 12:00:00');
         [$product, $price] = $this->createOffer();
         $price->forceFill([
             'is_promotion' => true,
@@ -196,7 +197,9 @@ class ProductCheckoutTest extends TestCase
             ->assertSee('Najniższa cena z 30 dni przed obniżką')
             ->assertSee('199,00 PLN')
             ->assertSee('Do końca promocji:')
-            ->assertSee('data-promotion-countdown', false);
+            ->assertSee('data-promotion-countdown', false)
+            ->assertSee('data-catalog-price', false)
+            ->assertSee('2026-10-01T15:00:00', false);
 
         $this->get(route('online-courses.catalog.show', $product->slug))
             ->assertOk()

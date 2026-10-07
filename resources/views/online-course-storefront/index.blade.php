@@ -45,6 +45,25 @@
                                     ? route('online-courses.free-signup.create', ['product' => $product->slug, 'price' => $complimentaryPrice->id])
                                     : null);
                             $orderLabel = $featuredPrice ? 'Zamawiam dostęp' : 'Zapisz się bezpłatnie';
+                            $catalogPriceOffers = $paidPrices->map(function ($price) use ($product) {
+                                $promoActive = $price->isPromotionActive();
+
+                                return [
+                                    'id' => (int) $price->id,
+                                    'regularAmount' => (float) $price->price,
+                                    'regular' => number_format((float) $price->price, 2, ',', ' '),
+                                    'promoAmount' => $promoActive && $price->promotion_price !== null ? (float) $price->promotion_price : null,
+                                    'promo' => $promoActive && $price->promotion_price !== null ? number_format((float) $price->promotion_price, 2, ',', ' ') : null,
+                                    'ends' => $promoActive && $price->promotion_ends_at ? $price->promotion_ends_at->utc()->toIso8601String() : null,
+                                    'endLabel' => $promoActive ? $price->promotionEndLabel() : null,
+                                    'omnibus' => $promoActive ? number_format((float) ($price->omnibusLowestPrice() ?? $price->price), 2, ',', ' ') : null,
+                                    'countdown' => $promoActive && $price->shouldShowPromotionCountdown(),
+                                    'orderUrl' => route('online-courses.checkout.create', ['product' => $product->slug, 'price' => $price->id]),
+                                ];
+                            })->values();
+                            $catalogPriceKey = ($featuredPrice && $featuredPrice->isPromotionActive())
+                                ? 'promo-'.$featuredPrice->id
+                                : 'regular-'.$featuredPrice?->id;
                         @endphp
                         <article class="col-md-6 col-xl-4">
                             <div class="card h-100 shadow-sm border-0">
@@ -95,12 +114,17 @@
                                                 <p class="small text-muted mb-2">Dostęp skończył się {{ $ownerAccess->endsLabel() }}.</p>
                                             @endif
                                             @if($featuredPrice?->isPromotionActive() && $ownerAccess?->state !== \App\Support\StorefrontCourseAccess::STATE_SCHEDULED)
-                                                <div class="d-flex flex-column gap-1 mb-3">
-                                                    <div class="d-flex flex-wrap align-items-baseline gap-2">
-                                                        <span class="text-muted text-decoration-line-through" style="font-size: 0.85rem;">{{ number_format((float) $featuredPrice->price, 2, ',', ' ') }} PLN</span>
-                                                        <strong class="text-danger">{{ number_format((float) $lowestPrice, 2, ',', ' ') }} PLN</strong>
+                                                <div data-catalog-price data-shown-key="{{ $catalogPriceKey }}">
+                                                    <script type="application/json" class="js-catalog-price-offers">@json($catalogPriceOffers)</script>
+                                                    <div class="js-catalog-price-view">
+                                                        <div class="d-flex flex-column gap-1 mb-3">
+                                                            <div class="d-flex flex-wrap align-items-baseline gap-2">
+                                                                <span class="text-muted text-decoration-line-through" style="font-size: 0.85rem;">{{ number_format((float) $featuredPrice->price, 2, ',', ' ') }} PLN</span>
+                                                                <strong class="text-danger">{{ number_format((float) $lowestPrice, 2, ',', ' ') }} PLN</strong>
+                                                            </div>
+                                                            @include('online-course-storefront.partials.promotion-notice', ['price' => $featuredPrice])
+                                                        </div>
                                                     </div>
-                                                    @include('online-course-storefront.partials.promotion-notice', ['price' => $featuredPrice])
                                                 </div>
                                             @elseif($ownerAccess?->state !== \App\Support\StorefrontCourseAccess::STATE_SCHEDULED && $lowestPrice !== null)
                                                 <p class="mb-3"><strong>{{ number_format((float) $lowestPrice, 2, ',', ' ') }} zł</strong></p>
@@ -109,7 +133,7 @@
                                             @endif
                                             <div class="d-grid gap-2">
                                                 @if($orderUrl)
-                                                    <a href="{{ $orderUrl }}" class="btn {{ $featuredPrice ? 'btn-primary' : 'btn-success' }}">{{ $orderLabel }}</a>
+                                                    <a href="{{ $orderUrl }}" class="btn {{ $featuredPrice ? 'btn-primary' : 'btn-success' }}" @if($featuredPrice) data-catalog-order @endif>{{ $orderLabel }}</a>
                                                 @endif
                                                 <a href="{{ $detailsUrl }}" class="btn btn-outline-primary">Zobacz szczegóły</a>
                                             </div>
