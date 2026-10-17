@@ -21,7 +21,8 @@
     <p><strong>Imię i nazwisko:</strong> {{ $data['name'] }}</p>
     <p><strong>Adres e-mail:</strong> {{ $data['email'] }}</p>
     <p><strong>Telefon:</strong> {{ $data['phone'] ?: 'Nie podano' }}</p>
-    <p><strong>Placówka:</strong> {{ $data['institution'] ?: 'Nie podano' }}</p>
+    <p><strong>Rodzaj placówki:</strong> {{ $data['institution_type_label'] ?? 'Nie podano' }}</p>
+    <p><strong>Nazwa szkoły / placówki:</strong> {{ $data['institution'] ?: 'Nie podano' }}</p>
     <p><strong>Preferowana forma:</strong> {{ [
         'online' => 'Online',
         'onsite' => 'Stacjonarnie',

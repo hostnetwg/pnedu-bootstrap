@@ -125,6 +125,8 @@ class TrainingOfferPublicTest extends TestCase
             'email' => 'anna.kowalska@example.com',
             'phone' => '500 600 700',
             'institution' => 'Szkoła Podstawowa nr 1',
+            'institution_type' => ClosedTrainingCase::INSTITUTION_PRIMARY,
+            'institution_type_other' => 'Ten tekst nie może zostać zapisany',
             'preferred_format' => 'onsite',
             'message' => 'Proszę o kontakt w sprawie terminu szkolenia.',
             'consent' => '1',
@@ -138,14 +140,17 @@ class TrainingOfferPublicTest extends TestCase
             return $mail->data['offer_title'] === 'Oferta do zapytania'
                 && $mail->data['name'] === 'Anna Kowalska'
                 && $mail->data['email'] === 'anna.kowalska@example.com'
+                && $mail->data['institution_type_label'] === 'Szkoła podstawowa'
                 && $mail->hasTo(config('mail.system.reply_to_address'));
         });
 
-        $this->assertInquiryStored(
+        $case = $this->assertInquiryStored(
             source: ClosedTrainingCase::SOURCE_OFFER_FORM,
             email: 'anna.kowalska@example.com',
             topic: 'Oferta do zapytania',
         );
+        $this->assertSame(ClosedTrainingCase::INSTITUTION_PRIMARY, $case->institution_type);
+        $this->assertNull($case->institution_type_other);
     }
 
     public function test_general_inquiry_is_stored_without_an_offer_and_sends_email(): void
@@ -163,6 +168,7 @@ class TrainingOfferPublicTest extends TestCase
             'email' => $email,
             'phone' => '600 700 800',
             'institution' => 'Przykładowa szkoła',
+            'institution_type' => ClosedTrainingCase::INSTITUTION_PRIMARY,
             'offer_topic' => 'Stres w pracy nauczyciela',
             'preferred_format' => 'online',
             'message' => 'Proszę o propozycję terminu.',
@@ -182,6 +188,51 @@ class TrainingOfferPublicTest extends TestCase
             topic: 'Stres w pracy nauczyciela',
         );
         $this->assertNull($case->training_offer_id);
+        $this->assertSame(ClosedTrainingCase::INSTITUTION_PRIMARY, $case->institution_type);
+    }
+
+    public function test_general_inquiry_requires_institution_type_and_keeps_other_detail_only_for_other(): void
+    {
+        Mail::fake();
+
+        if (! Schema::connection('pneadm')->hasTable('closed_training_cases')) {
+            $this->markTestSkipped('Brak tabeli closed_training_cases w bazie pneadm.');
+        }
+
+        $payload = [
+            'name' => 'Jan Testowy',
+            'email' => 'rodzaj.'.Str::lower(Str::random(8)).'@example.com',
+            'message' => 'Proszę o kontakt.',
+            'consent' => '1',
+        ];
+
+        $this->post(route('training-offers.pedagogical-councils.inquiry.general.store'), $payload)
+            ->assertSessionHasErrors(['institution_type']);
+
+        $this->post(route('training-offers.pedagogical-councils.inquiry.general.store'), [
+            ...$payload,
+            'institution_type' => ClosedTrainingCase::INSTITUTION_OTHER,
+        ])->assertSessionHasErrors(['institution_type_other']);
+
+        $this->post(route('training-offers.pedagogical-councils.inquiry.general.store'), [
+            ...$payload,
+            'institution_type' => ClosedTrainingCase::INSTITUTION_OTHER,
+            'institution_type_other' => 'Poradnia psychologiczno-pedagogiczna',
+        ])->assertRedirect(route('training-offers.pedagogical-councils.inquiry.general'))
+            ->assertSessionHas('success');
+
+        $case = $this->assertInquiryStored(
+            source: ClosedTrainingCase::SOURCE_GENERAL_FORM,
+            email: $payload['email'],
+            topic: '(temat nie określony)',
+        );
+        $this->assertSame(ClosedTrainingCase::INSTITUTION_OTHER, $case->institution_type);
+        $this->assertSame('Poradnia psychologiczno-pedagogiczna', $case->institution_type_other);
+        $this->assertNull($case->institution);
+
+        Mail::assertSent(TrainingOfferInquiryMail::class, function (TrainingOfferInquiryMail $mail) {
+            return $mail->data['institution_type_label'] === 'Inna — Poradnia psychologiczno-pedagogiczna';
+        });
     }
 
     public function test_general_inquiry_keeps_the_case_when_mail_fails(): void
@@ -200,6 +251,7 @@ class TrainingOfferPublicTest extends TestCase
             'name' => 'Jan Testowy',
             'email' => $email,
             'offer_topic' => 'Odpowiedzialność prawna nauczyciela',
+            'institution_type' => ClosedTrainingCase::INSTITUTION_PRIMARY,
             'message' => 'Proszę o kontakt w sprawie terminu.',
             'consent' => '1',
         ])->assertRedirect(route('training-offers.pedagogical-councils.inquiry.general'))
@@ -238,7 +290,7 @@ class TrainingOfferPublicTest extends TestCase
                 'message' => '',
             ])
             ->assertRedirect(route('training-offers.pedagogical-councils.show', $this->publicSlug))
-            ->assertSessionHasErrors(['name', 'email', 'message', 'consent']);
+            ->assertSessionHasErrors(['name', 'email', 'message', 'consent', 'institution_type']);
 
         Mail::assertNothingSent();
     }

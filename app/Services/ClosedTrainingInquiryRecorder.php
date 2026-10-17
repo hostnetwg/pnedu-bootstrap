@@ -57,6 +57,8 @@ class ClosedTrainingInquiryRecorder
                 'contact_email' => $data['email'],
                 'contact_phone' => $data['phone'] ?? null,
                 'institution' => $data['institution'] ?? null,
+                'institution_type' => $data['institution_type'],
+                'institution_type_other' => $data['institution_type_other'] ?? null,
                 'message' => $data['message'],
                 'consent_at' => now(),
             ]);

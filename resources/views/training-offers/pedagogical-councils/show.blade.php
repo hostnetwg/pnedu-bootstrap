@@ -184,11 +184,15 @@
                                     @error('phone')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                 </div>
 
-                                <div class="col-md-6 mb-3">
-                                    <label for="inquiry_institution" class="form-label">Szkoła / placówka</label>
-                                    <input type="text" name="institution" id="inquiry_institution" class="form-control @error('institution') is-invalid @enderror" value="{{ old('institution') }}">
-                                    @error('institution')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                                </div>
+                            </div>
+
+                            @include('training-offers.pedagogical-councils.partials.institution-fields')
+
+                            <div class="mb-3">
+                                <label for="inquiry_institution" class="form-label">Nazwa szkoły / placówki (opcjonalnie)</label>
+                                <input type="text" name="institution" id="inquiry_institution" class="form-control @error('institution') is-invalid @enderror" value="{{ old('institution') }}">
+                                <div class="form-text">Nie musisz podawać pełnej nazwy placówki na tym etapie.</div>
+                                @error('institution')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
 
                             <div class="mb-3">

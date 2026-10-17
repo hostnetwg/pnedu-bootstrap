@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Mail\TrainingOfferInquiryMail;
+use App\Models\ClosedTrainingCase;
 use App\Models\TrainingOffer;
 use App\Services\ClosedTrainingInquiryRecorder;
 use Illuminate\Http\RedirectResponse;
@@ -10,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class TrainingOfferInquiryController extends Controller
 {
@@ -55,11 +57,15 @@ class TrainingOfferInquiryController extends Controller
 
     private function validateInquiry(Request $request): array
     {
-        return $request->validate([
+        $data = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255',
             'phone' => 'nullable|string|max:50',
             'institution' => 'nullable|string|max:255',
+            'institution_type' => ['required', Rule::in(array_keys(ClosedTrainingCase::institutionTypeOptions()))],
+            'institution_type_other' => ['nullable', 'string', 'max:255', Rule::requiredIf(
+                fn () => $request->input('institution_type') === ClosedTrainingCase::INSTITUTION_OTHER
+            )],
             'offer_topic' => 'nullable|string|max:500',
             'preferred_format' => ['nullable', Rule::in(['online', 'onsite', 'to_discuss'])],
             'message' => 'required|string|max:3000',
@@ -68,15 +74,41 @@ class TrainingOfferInquiryController extends Controller
             'name.required' => 'Podaj imię i nazwisko.',
             'email.required' => 'Podaj adres e-mail.',
             'email.email' => 'Podaj prawidłowy adres e-mail.',
+            'institution_type.required' => 'Wybierz rodzaj placówki.',
+            'institution_type.in' => 'Wybierz rodzaj placówki.',
+            'institution_type_other.required' => 'Podaj rodzaj placówki.',
             'message.required' => 'Napisz krótką wiadomość.',
             'consent.accepted' => 'Zgoda na przetwarzanie danych jest wymagana.',
         ]);
+
+        return $this->normalizeInstitutionType($data);
+    }
+
+    private function normalizeInstitutionType(array $data): array
+    {
+        if (($data['institution_type'] ?? null) === ClosedTrainingCase::INSTITUTION_OTHER) {
+            $detail = trim((string) ($data['institution_type_other'] ?? ''));
+            if ($detail === '') {
+                throw ValidationException::withMessages([
+                    'institution_type_other' => 'Podaj rodzaj placówki.',
+                ]);
+            }
+            $data['institution_type_other'] = $detail;
+        } else {
+            $data['institution_type_other'] = null;
+        }
+
+        return $data;
     }
 
     private function notify(array $data, string $offerTitle, ?string $offerUrl): void
     {
         $data['offer_title'] = $offerTitle;
         $data['offer_url'] = $offerUrl;
+        $data['institution_type_label'] = ClosedTrainingCase::formatInstitutionType(
+            $data['institution_type'] ?? null,
+            $data['institution_type_other'] ?? null,
+        );
 
         try {
             Mail::to(config('mail.system.reply_to_address'))
