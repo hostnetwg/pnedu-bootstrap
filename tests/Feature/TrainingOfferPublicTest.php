@@ -184,6 +184,34 @@ class TrainingOfferPublicTest extends TestCase
         $this->assertNull($case->training_offer_id);
     }
 
+    public function test_general_inquiry_keeps_the_case_when_mail_fails(): void
+    {
+        if (! Schema::connection('pneadm')->hasTable('closed_training_cases')) {
+            $this->markTestSkipped('Brak tabeli closed_training_cases w bazie pneadm.');
+        }
+
+        $pending = \Mockery::mock();
+        $pending->shouldReceive('send')->once()->andThrow(new \RuntimeException('smtp down'));
+        Mail::shouldReceive('to')->once()->andReturn($pending);
+
+        $email = 'mail-fail.'.Str::lower(Str::random(8)).'@example.com';
+
+        $this->post(route('training-offers.pedagogical-councils.inquiry.general.store'), [
+            'name' => 'Jan Testowy',
+            'email' => $email,
+            'offer_topic' => 'Odpowiedzialność prawna nauczyciela',
+            'message' => 'Proszę o kontakt w sprawie terminu.',
+            'consent' => '1',
+        ])->assertRedirect(route('training-offers.pedagogical-councils.inquiry.general'))
+            ->assertSessionHas('success');
+
+        $this->assertInquiryStored(
+            source: ClosedTrainingCase::SOURCE_GENERAL_FORM,
+            email: $email,
+            topic: 'Odpowiedzialność prawna nauczyciela',
+        );
+    }
+
     public function test_training_offer_inquiry_validates_required_fields_and_consent(): void
     {
         Mail::fake();
