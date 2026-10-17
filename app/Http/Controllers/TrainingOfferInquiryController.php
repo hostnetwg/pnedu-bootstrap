@@ -4,13 +4,17 @@ namespace App\Http\Controllers;
 
 use App\Mail\TrainingOfferInquiryMail;
 use App\Models\TrainingOffer;
+use App\Services\ClosedTrainingInquiryRecorder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
 
 class TrainingOfferInquiryController extends Controller
 {
+    public function __construct(private readonly ClosedTrainingInquiryRecorder $inquiries) {}
+
     /** Formularz ogólnego zapytania bez powiązania z konkretną ofertą. */
     public function create()
     {
@@ -22,13 +26,8 @@ class TrainingOfferInquiryController extends Controller
     {
         $data = $this->validateInquiry($request);
 
-        $data['offer_title'] = filled($data['offer_topic'] ?? null)
-            ? $data['offer_topic']
-            : '(temat nie określony)';
-        $data['offer_url'] = null;
-
-        Mail::to(config('mail.system.reply_to_address'))
-            ->send(new TrainingOfferInquiryMail($data));
+        $this->inquiries->fromGeneralForm($data);
+        $this->notify($data, filled($data['offer_topic'] ?? null) ? $data['offer_topic'] : '(temat nie określony)', null);
 
         return redirect()
             ->route('training-offers.pedagogical-councils.inquiry.general')
@@ -45,11 +44,9 @@ class TrainingOfferInquiryController extends Controller
 
         $data = $this->validateInquiry($request);
 
-        $data['offer_title'] = $offer->title;
-        $data['offer_url'] = route('training-offers.pedagogical-councils.show', $offer->slug);
-
-        Mail::to(config('mail.system.reply_to_address'))
-            ->send(new TrainingOfferInquiryMail($data));
+        $offerUrl = route('training-offers.pedagogical-councils.show', $offer->slug);
+        $this->inquiries->fromOffer($offer, $data, $offerUrl);
+        $this->notify($data, $offer->title, $offerUrl);
 
         return redirect()
             ->route('training-offers.pedagogical-councils.show', $offer->slug)
@@ -74,5 +71,20 @@ class TrainingOfferInquiryController extends Controller
             'message.required' => 'Napisz krótką wiadomość.',
             'consent.accepted' => 'Zgoda na przetwarzanie danych jest wymagana.',
         ]);
+    }
+
+    private function notify(array $data, string $offerTitle, ?string $offerUrl): void
+    {
+        $data['offer_title'] = $offerTitle;
+        $data['offer_url'] = $offerUrl;
+
+        try {
+            Mail::to(config('mail.system.reply_to_address'))
+                ->send(new TrainingOfferInquiryMail($data));
+        } catch (\Throwable $exception) {
+            Log::warning('Nie wysłano powiadomienia o zapytaniu szkolenia zamkniętego. Sprawa jest zapisana.', [
+                'message' => $exception->getMessage(),
+            ]);
+        }
     }
 }

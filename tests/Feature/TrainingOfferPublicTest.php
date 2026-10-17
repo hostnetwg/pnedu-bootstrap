@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Mail\TrainingOfferInquiryMail;
+use App\Models\ClosedTrainingCase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Schema;
@@ -17,6 +18,9 @@ class TrainingOfferPublicTest extends TestCase
 
     /** @var list<string> */
     private array $extraSlugs = [];
+
+    /** @var list<int> */
+    private array $caseIds = [];
 
     protected function setUp(): void
     {
@@ -38,6 +42,11 @@ class TrainingOfferPublicTest extends TestCase
                 ->table('training_offers')
                 ->where('slug', $slug)
                 ->delete();
+        }
+
+        if (Schema::connection('pneadm')->hasTable('closed_training_cases') && $this->caseIds !== []) {
+            DB::connection('pneadm')->table('closed_training_case_events')->whereIn('closed_training_case_id', $this->caseIds)->delete();
+            DB::connection('pneadm')->table('closed_training_cases')->whereIn('id', $this->caseIds)->delete();
         }
 
         parent::tearDown();
@@ -131,6 +140,48 @@ class TrainingOfferPublicTest extends TestCase
                 && $mail->data['email'] === 'anna.kowalska@example.com'
                 && $mail->hasTo(config('mail.system.reply_to_address'));
         });
+
+        $this->assertInquiryStored(
+            source: ClosedTrainingCase::SOURCE_OFFER_FORM,
+            email: 'anna.kowalska@example.com',
+            topic: 'Oferta do zapytania',
+        );
+    }
+
+    public function test_general_inquiry_is_stored_without_an_offer_and_sends_email(): void
+    {
+        Mail::fake();
+
+        if (! Schema::connection('pneadm')->hasTable('closed_training_cases')) {
+            $this->markTestSkipped('Brak tabeli closed_training_cases w bazie pneadm.');
+        }
+
+        $email = 'dyrektor.'.Str::lower(Str::random(8)).'@example.com';
+
+        $this->post(route('training-offers.pedagogical-councils.inquiry.general.store'), [
+            'name' => 'Jan Testowy',
+            'email' => $email,
+            'phone' => '600 700 800',
+            'institution' => 'Przykładowa szkoła',
+            'offer_topic' => 'Stres w pracy nauczyciela',
+            'preferred_format' => 'online',
+            'message' => 'Proszę o propozycję terminu.',
+            'consent' => '1',
+        ])->assertRedirect(route('training-offers.pedagogical-councils.inquiry.general'))
+            ->assertSessionHas('success');
+
+        Mail::assertSent(TrainingOfferInquiryMail::class, function (TrainingOfferInquiryMail $mail) use ($email) {
+            return $mail->data['offer_title'] === 'Stres w pracy nauczyciela'
+                && $mail->data['offer_url'] === null
+                && $mail->data['email'] === $email;
+        });
+
+        $case = $this->assertInquiryStored(
+            source: ClosedTrainingCase::SOURCE_GENERAL_FORM,
+            email: $email,
+            topic: 'Stres w pracy nauczyciela',
+        );
+        $this->assertNull($case->training_offer_id);
     }
 
     public function test_training_offer_inquiry_validates_required_fields_and_consent(): void
@@ -310,5 +361,23 @@ class TrainingOfferPublicTest extends TestCase
             $fragment->assertSee($offer->title);
         }
         $this->assertGreaterThanOrEqual(7, (int) $fragment->headers->get('X-Featured-Offers-Total'));
+    }
+
+    private function assertInquiryStored(string $source, string $email, string $topic): ClosedTrainingCase
+    {
+        if (! Schema::connection('pneadm')->hasTable('closed_training_cases')) {
+            $this->fail('Brak tabeli closed_training_cases. Uruchom migrację w pneadm.');
+        }
+
+        $case = ClosedTrainingCase::query()->where('contact_email', $email)->latest('id')->first();
+        $this->assertNotNull($case);
+        $this->assertSame($source, $case->source);
+        $this->assertSame(ClosedTrainingCase::STATUS_NEW, $case->status);
+        $this->assertSame($topic, $case->topic);
+        $this->assertNotNull($case->consent_at);
+        $this->assertSame(1, $case->events()->count());
+        $this->caseIds[] = $case->id;
+
+        return $case;
     }
 }
