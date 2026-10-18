@@ -14,6 +14,7 @@ class ClosedTrainingInquiryRecorder
         return $this->store(
             source: ClosedTrainingCase::SOURCE_OFFER_FORM,
             topic: $offer->title,
+            offerTitle: $offer->title,
             offerUrl: $offerUrl,
             trainingOfferId: $offer->id,
             data: $data,
@@ -30,6 +31,7 @@ class ClosedTrainingInquiryRecorder
         return $this->store(
             source: ClosedTrainingCase::SOURCE_GENERAL_FORM,
             topic: $topic,
+            offerTitle: null,
             offerUrl: null,
             trainingOfferId: null,
             data: $data,
@@ -40,12 +42,27 @@ class ClosedTrainingInquiryRecorder
     private function store(
         string $source,
         string $topic,
+        ?string $offerTitle,
         ?string $offerUrl,
         ?int $trainingOfferId,
         array $data,
         string $eventBody,
     ): ClosedTrainingCase {
-        return DB::connection('pneadm')->transaction(function () use ($source, $topic, $offerUrl, $trainingOfferId, $data, $eventBody) {
+        return DB::connection('pneadm')->transaction(function () use ($source, $topic, $offerTitle, $offerUrl, $trainingOfferId, $data, $eventBody) {
+            $snapshot = ClosedTrainingCase::submittedSnapshot([
+                'contact_name' => $data['name'],
+                'contact_email' => $data['email'],
+                'contact_phone' => $data['phone'] ?? null,
+                'institution' => $data['institution'] ?? null,
+                'institution_type' => $data['institution_type'],
+                'institution_type_other' => $data['institution_type_other'] ?? null,
+                'preferred_format' => $data['preferred_format'] ?? null,
+                'training_offer_id' => $trainingOfferId,
+                'offer_title' => $offerTitle,
+                'topic' => $topic,
+                'message' => $data['message'],
+            ]);
+
             $case = ClosedTrainingCase::query()->create([
                 'source' => $source,
                 'training_offer_id' => $trainingOfferId,
@@ -60,6 +77,7 @@ class ClosedTrainingInquiryRecorder
                 'institution_type' => $data['institution_type'],
                 'institution_type_other' => $data['institution_type_other'] ?? null,
                 'message' => $data['message'],
+                'submitted_payload' => $snapshot,
                 'consent_at' => now(),
             ]);
 

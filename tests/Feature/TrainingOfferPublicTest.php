@@ -151,6 +151,9 @@ class TrainingOfferPublicTest extends TestCase
         );
         $this->assertSame(ClosedTrainingCase::INSTITUTION_PRIMARY, $case->institution_type);
         $this->assertNull($case->institution_type_other);
+        $this->assertSame('Oferta do zapytania', $case->submitted_payload['offer_title']);
+        $this->assertSame('anna.kowalska@example.com', $case->submitted_payload['contact_email']);
+        $this->assertNull($case->submitted_payload['institution_type_other']);
     }
 
     public function test_general_inquiry_is_stored_without_an_offer_and_sends_email(): void
@@ -228,6 +231,8 @@ class TrainingOfferPublicTest extends TestCase
         );
         $this->assertSame(ClosedTrainingCase::INSTITUTION_OTHER, $case->institution_type);
         $this->assertSame('Poradnia psychologiczno-pedagogiczna', $case->institution_type_other);
+        $this->assertNull($case->submitted_payload['offer_title']);
+        $this->assertSame('Poradnia psychologiczno-pedagogiczna', $case->submitted_payload['institution_type_other']);
         $this->assertNull($case->institution);
 
         Mail::assertSent(TrainingOfferInquiryMail::class, function (TrainingOfferInquiryMail $mail) {
