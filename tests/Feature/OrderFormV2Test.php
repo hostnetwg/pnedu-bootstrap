@@ -163,6 +163,21 @@ class OrderFormV2Test extends TestCase
             ->assertSessionHasErrors('payment_terms');
     }
 
+    public function test_v2_post_rejects_email_without_tld(): void
+    {
+        $course = $this->activeCourse();
+        $this->setFlag(true);
+        $payload = $this->validPayload($course);
+        // Reguła RFC przepuszczała domenę bez TLD; email:filter musi odrzucić.
+        $payload['contact_email'] = 'spnowagora@gminakrzeszowice';
+        $payload['participant_email'] = 'spnowagora@gminakrzeszowice';
+
+        $this->from($this->orderFormUrl($course, 'payment.order-form-v2'))
+            ->post(route('payment.order-form-v2.store', $course->id), $payload)
+            ->assertRedirect()
+            ->assertSessionHasErrors(['contact_email', 'participant_email']);
+    }
+
     public function test_legacy_order_form_remains_available_when_v2_is_disabled(): void
     {
         $course = $this->activeCourse();

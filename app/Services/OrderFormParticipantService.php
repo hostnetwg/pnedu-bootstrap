@@ -39,10 +39,12 @@ class OrderFormParticipantService
             'participants' => ['nullable', 'array', 'min:1', 'max:'.$max],
             'participants.*.first_name' => ['required_with:participants', 'string', 'max:255'],
             'participants.*.last_name' => ['required_with:participants', 'string', 'max:255'],
-            'participants.*.email' => ['required_with:participants', 'email', 'max:255'],
+            // email:filter = FILTER_VALIDATE_EMAIL (wymaga domeny z TLD, np. .pl).
+            // Sama reguła email (RFC) przepuszcza spnowagora@gminakrzeszowice.
+            'participants.*.email' => ['required_with:participants', 'email:filter', 'max:255'],
             'participant_first_name' => ['required_without:participants', 'nullable', 'string', 'max:255'],
             'participant_last_name' => ['required_without:participants', 'nullable', 'string', 'max:255'],
-            'participant_email' => ['required_without:participants', 'nullable', 'email', 'max:255'],
+            'participant_email' => ['required_without:participants', 'nullable', 'email:filter', 'max:255'],
         ];
     }
 
@@ -59,11 +61,11 @@ class OrderFormParticipantService
             'participants.*.first_name.required_with' => 'Imię uczestnika jest wymagane.',
             'participants.*.last_name.required_with' => 'Nazwisko uczestnika jest wymagane.',
             'participants.*.email.required_with' => 'E-mail uczestnika jest wymagany.',
-            'participants.*.email.email' => 'Podaj prawidłowy adres e-mail uczestnika.',
+            'participants.*.email.email' => 'Podaj prawidłowy adres e-mail uczestnika (z domeną, np. nazwa@szkola.pl).',
             'participant_first_name.required_without' => 'Imię uczestnika jest wymagane.',
             'participant_last_name.required_without' => 'Nazwisko uczestnika jest wymagane.',
             'participant_email.required_without' => 'E-mail uczestnika jest wymagany.',
-            'participant_email.email' => 'Podaj prawidłowy adres e-mail uczestnika.',
+            'participant_email.email' => 'Podaj prawidłowy adres e-mail uczestnika (z domeną, np. nazwa@szkola.pl).',
         ];
     }
 

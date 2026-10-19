@@ -564,8 +564,8 @@ class CourseController extends Controller
         $rules = [
             'buyer_type' => 'required|in:person,company,organisation,jdg',
             'payment_gateway' => 'required|in:paynow,payu',
-            'email' => 'required|email',
-            'email_confirmation' => 'required|email|same:email',
+            'email' => 'required|email:filter',
+            'email_confirmation' => 'required|email:filter|same:email',
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
             'phone' => 'required|string|max:50',
@@ -578,7 +578,7 @@ class CourseController extends Controller
             'payment_gateway.required' => 'Wybierz bramkę płatności.',
             'payment_gateway.in' => 'Wybierz prawidłową bramkę płatności.',
             'email.required' => 'Adres e-mail jest wymagany.',
-            'email.email' => 'Podaj prawidłowy adres e-mail.',
+            'email.email' => 'Podaj prawidłowy adres e-mail (z domeną, np. nazwa@szkola.pl).',
             'email_confirmation.required' => 'Powtórzenie adresu e-mail jest wymagane.',
             'email_confirmation.same' => 'Adresy e-mail muszą być identyczne.',
             'first_name.required' => 'Imię jest wymagane.',
@@ -1617,7 +1617,7 @@ class CourseController extends Controller
             'recipient_nip' => 'nullable|string|max:50',
             'contact_name' => 'required|string|max:255',
             'contact_phone' => 'required|string|max:50',
-            'contact_email' => 'required|email|max:255',
+            'contact_email' => 'required|email:filter|max:255',
             'invoice_notes' => 'nullable|string',
             'payment_terms' => 'required|integer|min:0|max:31',
             'fb_source' => 'nullable|string|max:255',
@@ -1636,7 +1636,7 @@ class CourseController extends Controller
             'contact_name.required' => 'Nazwa/imię nazwisko jest wymagane.',
             'contact_phone.required' => 'Telefon kontaktowy jest wymagany.',
             'contact_email.required' => 'E-mail jest wymagany.',
-            'contact_email.email' => 'Podaj prawidłowy adres e-mail.',
+            'contact_email.email' => 'Podaj prawidłowy adres e-mail (z domeną, np. nazwa@szkola.pl).',
             'payment_terms.required' => 'Termin płatności jest wymagany.',
             'payment_terms.min' => 'Termin płatności musi być od 0 do 31 dni.',
             'payment_terms.max' => 'Termin płatności musi być od 0 do 31 dni.',
@@ -1823,7 +1823,8 @@ class CourseController extends Controller
 
             'contact_name' => 'required|string|max:255',
             'contact_phone' => 'required|string|max:50',
-            'contact_email' => 'required|email|max:255',
+            // email:filter odrzuca domenę bez TLD (np. user@gminakrzeszowice); sama email (RFC) by przepuściła.
+            'contact_email' => 'required|email:filter|max:255',
 
             'buyer_address' => 'required|string|max:500',
             'buyer_postcode' => 'required|string|max:50',
@@ -1866,6 +1867,7 @@ class CourseController extends Controller
                 'payment_type.required' => 'Wybierz sposób rozliczenia.',
                 'payment_type.in' => 'Wybierz prawidłowy sposób rozliczenia.',
                 'payment_terms.max' => sprintf('Termin płatności nie może przekraczać %d dni.', $paymentTermsMax),
+                'contact_email.email' => 'Podaj prawidłowy adres e-mail (z domeną, np. nazwa@szkola.pl).',
             ], $this->orderFormParticipantValidationMessages()));
         } catch (ValidationException $e) {
             $backendAnalyticsTracker->trackOrderFormValidationFailed(

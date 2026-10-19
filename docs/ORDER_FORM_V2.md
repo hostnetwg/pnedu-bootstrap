@@ -93,6 +93,10 @@ Link `/order-form/edit/{ident}` z podsumowania zamówienia lub e-maila oznacza p
 
 Automatyczne wznowienie checkoutu z sesji nadal działa ostrożnie: bez `order_edit_intent=1` aktualizacja ostatniego zamówienia wymaga tego samego e-maila uczestnika. Dla innego uczestnika użytkownik powinien użyć akcji „Zamówienie dla innego uczestnika”.
 
+### Walidacja e-mail (kontakt i uczestnicy)
+
+Laravelowa reguła `email` (RFC) **przepuszcza** adresy bez TLD w domenie, np. `spnowagora@gminakrzeszowice`. Od 2026-10-19 na ścieżkach zamówień (legacy/V2, checkout produktu, edycja publiczna tym samym POST, oraz create/update w adm) używamy `email:filter` (`FILTER_VALIDATE_EMAIL`), które wymaga domeny z kropką (np. `.pl`). HTML5 `type="email"` też może przepuścić taki adres — ochrona jest po stronie serwera.
+
 ---
 
 ## Kampanie marketingowe
