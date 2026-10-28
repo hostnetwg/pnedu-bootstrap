@@ -111,6 +111,17 @@ Skróty `/l/{campaign_code}` i linki UTM z adm:
 
 Preview linku w adm pokazuje pełny URL z bramą.
 
+### Operacyjna atrybucja zamówienia a zgoda analityczna
+
+Kod kampanii potrzebny do przypisania zamówienia jest obsługiwany niezależnie od Google Analytics:
+
+1. `OrderCampaignAttributionService` odczytuje `utm_campaign`, legacy `fb` lub `fb_source`.
+2. Kod trafia do bieżącej sesji Laravel (`marketing.order_campaign`) i hidden `fb_source`.
+3. Ten sam kod zapisuje się w `form_orders.fb_source` dla faktury odroczonej, PayU i Paynow.
+4. Wejście na opis szkolenia, a następnie przejście do formularza zachowuje kod w tej samej sesji.
+
+Nie powstaje nowe trwałe cookie. `pne_marketing`, pełny zestaw UTM oraz GA/GTM nadal wymagają zgody analitycznej i zachowują dotychczasowe 7-dniowe okno. Odrzucenie lub brak decyzji na banerze nie usuwa operacyjnego powiązania bieżącego zamówienia z linkiem kampanii.
+
 ---
 
 ## CTA na stronie kursu

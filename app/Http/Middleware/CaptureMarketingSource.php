@@ -8,6 +8,7 @@ use App\Services\Analytics\OrderFormAttributionService;
 use App\Services\CoursePageViewTracker;
 use App\Services\MarketingAttributionService;
 use App\Services\MarketingCampaignLinkTracker;
+use App\Services\OrderCampaignAttributionService;
 use App\Services\OrderEntryPlacementService;
 use Closure;
 use Illuminate\Http\Request;
@@ -20,6 +21,7 @@ class CaptureMarketingSource
         private readonly AnalyticsConsentService $consent,
         private readonly OrderEntryPlacementService $placement,
         private readonly MarketingCampaignLinkTracker $campaignLinkTracker,
+        private readonly OrderCampaignAttributionService $orderCampaignAttribution,
         private readonly CoursePageViewTracker $coursePageViewTracker,
         private readonly BackendAnalyticsTracker $analyticsTracker,
         private readonly OrderFormAttributionService $formAttribution,
@@ -32,6 +34,7 @@ class CaptureMarketingSource
     public function handle(Request $request, Closure $next): Response
     {
         $this->campaignLinkTracker->trackFromRequest($request);
+        $this->orderCampaignAttribution->captureFromRequest($request);
 
         if (! $this->consent->hasAnalyticsConsent($request)) {
             return $next($request);

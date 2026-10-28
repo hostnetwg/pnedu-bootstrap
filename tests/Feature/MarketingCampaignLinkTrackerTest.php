@@ -15,6 +15,8 @@ class MarketingCampaignLinkTrackerTest extends TestCase
 
     private ?string $secondTestCampaignCode = null;
 
+    private ?int $testCourseId = null;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -24,6 +26,20 @@ class MarketingCampaignLinkTrackerTest extends TestCase
         if (! $this->pneadmMarketingTablesAvailable()) {
             $this->markTestSkipped('Brak połączenia z bazą pneadm lub tabel marketingowych w środowisku testowym.');
         }
+
+        $this->testCourseId = (int) DB::connection('pneadm')->table('courses')->insertGetId([
+            'title' => 'Marketing campaign tracker test '.Str::random(6),
+            'description' => 'Testowe szkolenie',
+            'start_date' => now()->addDays(30),
+            'end_date' => now()->addDays(30)->addHours(2),
+            'is_paid' => true,
+            'type' => 'online',
+            'category' => 'open',
+            'is_active' => true,
+            'show_on_pnedu' => true,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
 
         $this->testCampaignCode = 't'.Str::lower(Str::random(8));
         $this->insertTestCampaign($this->testCampaignCode, $this->firstCourseId());
@@ -38,6 +54,12 @@ class MarketingCampaignLinkTrackerTest extends TestCase
 
             DB::connection('pneadm')->table('marketing_campaigns')
                 ->where('campaign_code', $code)
+                ->delete();
+        }
+
+        if ($this->testCourseId !== null) {
+            DB::connection('pneadm')->table('courses')
+                ->where('id', $this->testCourseId)
                 ->delete();
         }
 
@@ -74,7 +96,7 @@ class MarketingCampaignLinkTrackerTest extends TestCase
         $this->assertSame(0, $this->linkEntriesTotal($this->testCampaignCode));
     }
 
-    public function test_utm_link_counts_without_analytics_consent_and_does_not_store_attribution(): void
+    public function test_utm_link_counts_without_analytics_consent_and_does_not_store_analytics_cookie(): void
     {
         config([
             'consent.required' => true,
@@ -243,6 +265,6 @@ class MarketingCampaignLinkTrackerTest extends TestCase
 
     private function firstCourseId(): int
     {
-        return (int) DB::connection('pneadm')->table('courses')->orderBy('id')->value('id');
+        return (int) $this->testCourseId;
     }
 }

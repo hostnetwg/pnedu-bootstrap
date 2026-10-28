@@ -1517,7 +1517,7 @@ class CourseController extends Controller
         }
 
         if ($raw === null || $raw === '') {
-            $raw = app(\App\Services\MarketingAttributionService::class)->resolveCampaignCode(request());
+            $raw = app(\App\Services\OrderCampaignAttributionService::class)->resolveCampaignCode(request());
         }
 
         if ($raw !== null && $raw !== '') {
@@ -1536,7 +1536,7 @@ class CourseController extends Controller
      */
     protected function resolveFbSourceDefaultForForm(?FormOrder $existingOrder = null): ?string
     {
-        $raw = app(\App\Services\MarketingAttributionService::class)->resolveCampaignCode(request());
+        $raw = app(\App\Services\OrderCampaignAttributionService::class)->resolveCampaignCode(request());
 
         if ($raw !== null && $raw !== '') {
             return Str::limit($raw, 255, '');
