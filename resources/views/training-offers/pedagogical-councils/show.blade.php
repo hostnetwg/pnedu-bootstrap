@@ -179,8 +179,8 @@
 
                             <div class="row">
                                 <div class="col-md-6 mb-3">
-                                    <label for="inquiry_phone" class="form-label">Telefon</label>
-                                    <input type="text" name="phone" id="inquiry_phone" class="form-control @error('phone') is-invalid @enderror" value="{{ old('phone') }}">
+                                    <label for="inquiry_phone" class="form-label">Telefon <span class="text-danger">*</span></label>
+                                    <input type="text" name="phone" id="inquiry_phone" class="form-control @error('phone') is-invalid @enderror" value="{{ old('phone') }}" required>
                                     @error('phone')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                 </div>
 

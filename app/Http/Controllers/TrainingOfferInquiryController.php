@@ -60,7 +60,7 @@ class TrainingOfferInquiryController extends Controller
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255',
-            'phone' => 'nullable|string|max:50',
+            'phone' => 'required|string|max:50',
             'institution' => 'nullable|string|max:255',
             'institution_type' => ['required', Rule::in(array_keys(ClosedTrainingCase::institutionTypeOptions()))],
             'institution_type_other' => ['nullable', 'string', 'max:255', Rule::requiredIf(
@@ -74,6 +74,7 @@ class TrainingOfferInquiryController extends Controller
             'name.required' => 'Podaj imię i nazwisko.',
             'email.required' => 'Podaj adres e-mail.',
             'email.email' => 'Podaj prawidłowy adres e-mail.',
+            'phone.required' => 'Podaj numer telefonu.',
             'institution_type.required' => 'Wybierz rodzaj placówki.',
             'institution_type.in' => 'Wybierz rodzaj placówki.',
             'institution_type_other.required' => 'Podaj rodzaj placówki.',

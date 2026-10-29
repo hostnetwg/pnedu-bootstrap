@@ -205,6 +205,7 @@ class TrainingOfferPublicTest extends TestCase
         $payload = [
             'name' => 'Jan Testowy',
             'email' => 'rodzaj.'.Str::lower(Str::random(8)).'@example.com',
+            'phone' => '600 700 800',
             'message' => 'Proszę o kontakt.',
             'consent' => '1',
         ];
@@ -255,6 +256,7 @@ class TrainingOfferPublicTest extends TestCase
         $this->post(route('training-offers.pedagogical-councils.inquiry.general.store'), [
             'name' => 'Jan Testowy',
             'email' => $email,
+            'phone' => '600 700 800',
             'offer_topic' => 'Odpowiedzialność prawna nauczyciela',
             'institution_type' => ClosedTrainingCase::INSTITUTION_PRIMARY,
             'message' => 'Proszę o kontakt w sprawie terminu.',
@@ -295,7 +297,7 @@ class TrainingOfferPublicTest extends TestCase
                 'message' => '',
             ])
             ->assertRedirect(route('training-offers.pedagogical-councils.show', $this->publicSlug))
-            ->assertSessionHasErrors(['name', 'email', 'message', 'consent', 'institution_type']);
+            ->assertSessionHasErrors(['name', 'email', 'phone', 'message', 'consent', 'institution_type']);
 
         Mail::assertNothingSent();
     }
