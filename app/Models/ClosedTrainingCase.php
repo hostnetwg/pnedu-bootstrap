@@ -45,10 +45,12 @@ class ClosedTrainingCase extends Model
         'message',
         'submitted_payload',
         'consent_at',
+        'inquired_at',
     ];
 
     protected $casts = [
         'consent_at' => 'datetime',
+        'inquired_at' => 'datetime',
         'submitted_payload' => 'array',
     ];
 

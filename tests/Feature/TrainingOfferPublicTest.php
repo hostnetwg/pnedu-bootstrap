@@ -462,6 +462,7 @@ class TrainingOfferPublicTest extends TestCase
         $this->assertSame(ClosedTrainingCase::STATUS_NEW, $case->status);
         $this->assertSame($topic, $case->topic);
         $this->assertNotNull($case->consent_at);
+        $this->assertNotNull($case->inquired_at);
         $this->assertSame(1, $case->events()->count());
         $this->caseIds[] = $case->id;
 

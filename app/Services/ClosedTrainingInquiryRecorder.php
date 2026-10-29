@@ -79,6 +79,7 @@ class ClosedTrainingInquiryRecorder
                 'message' => $data['message'],
                 'submitted_payload' => $snapshot,
                 'consent_at' => now(),
+                'inquired_at' => now(),
             ]);
 
             $case->events()->create([
