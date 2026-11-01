@@ -211,6 +211,10 @@ sail artisan make:seeder TableNameSeeder
 
 **Wszystkie nowe treści i zmiany na froncie** (strony, podstrony, artykuły, layouty, landingi) **mocno wspierają SEO**: unikalne `@section('title')` i `@section('meta_description')`, sensowna hierarchia nagłówków, `alt` przy obrazach, linki wewnętrzne. Nie twórz statycznych `public/robots.txt` ani `public/sitemap.xml` — używaj `App\Http\Controllers\SeoController` (dynamiczny sitemap z kursami). Nowe ważne publiczne trasy: rozważ dopisanie do `SeoController::staticUrls()`. Pełna lista: **[SEO.md](./SEO.md)**.
 
+## 🔄 Synchronizacja PROD → DEV — OBOWIĄZKOWE ZASADY
+
+Kanon: `pneadm/docs/deploy/DEV_SYNC.md` (sekcja „Dla agentów AI”). Odświeżanie deva (kod, bazy `pnedu`/`pneadm`, pliki) **tylko** przez `pneadm/scripts/dev-sync/dev-pull.sh`, kierunek wyłącznie prod → dev, **nic nie zapisuj na produkcji**. Nie łącz się z prod innym kluczem niż ograniczony klucz dev. Nie czytaj ani nie wklejaj zawartości `~/.ssh/`, `~/.config/pne/`, plików `.env` i zrzutów baz. Lokalnie po imporcie dane są **prawdziwe**: `PAYU_SANDBOX=true`, `PAYNOW_SANDBOX=true`, poczta tylko Mailpit. `dev-pull --db` zastępuje lokalne bazy, więc tylko po wyraźnej zgodzie Waldemara.
+
 ## 🗄️ Database Migrations - CRITICAL RULE
 
 ### ⚠️ MIGRATION LOCATION RULE - ALWAYS FOLLOW THIS:
