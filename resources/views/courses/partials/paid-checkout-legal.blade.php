@@ -7,12 +7,14 @@
     );
     $legalPriceInfo = $priceInfo ?? $course->getCurrentPrice();
     $legalUnitPrice = isset($legalPriceInfo['price']) ? (float) $legalPriceInfo['price'] : null;
+    $legalFlatPrice = (bool) ($legalPriceInfo['flat_order_price'] ?? false);
     $legalProfile = old('customer_profile', $customerProfile ?? old('buyer_type', $defaultCustomerProfile ?? 'school'));
 @endphp
 
 <section class="border rounded bg-light p-3 mt-4 paid-checkout-legal"
     data-early-window="{{ $earlyWindow ? '1' : '0' }}"
     data-unit-price="{{ $legalUnitPrice !== null ? number_format($legalUnitPrice, 2, '.', '') : '' }}"
+    data-flat-price="{{ $legalFlatPrice ? '1' : '0' }}"
     data-payment-mode="{{ $paymentMode ?? '' }}"
     aria-labelledby="paid-checkout-summary-title">
     <h3 class="h6 mb-3" id="paid-checkout-summary-title">Podsumowanie zamówienia</h3>
@@ -95,6 +97,7 @@
             var paymentOutput = box.querySelector('[data-legal-payment-label]');
             var onlineHint = box.querySelector('[data-online-payment-hint]');
             var unitPrice = parseFloat(box.dataset.unitPrice || '');
+            var flatPrice = box.dataset.flatPrice === '1';
             var forcedPaymentMode = box.dataset.paymentMode || '';
 
             function profile() {
@@ -128,7 +131,7 @@
 
                 var count = participantCount();
                 if (countOutput) countOutput.textContent = String(count);
-                if (totalOutput && !isNaN(unitPrice)) totalOutput.textContent = formatPrice(unitPrice * count);
+                if (totalOutput && !isNaN(unitPrice)) totalOutput.textContent = formatPrice(flatPrice ? unitPrice : unitPrice * count);
 
                 var payment = form.querySelector('[name="payment_type"]:checked');
                 var gateway = form.querySelector('[name="payment_gateway"]:checked');

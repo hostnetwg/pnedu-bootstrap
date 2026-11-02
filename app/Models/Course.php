@@ -378,6 +378,7 @@ class Course extends Model
             'promotion_type' => $priceVariant->promotion_type,
             'price_variant_id' => (int) $priceVariant->id,
             'variant_name' => (is_string($name) && $name !== '') ? $name : null,
+            'flat_order_price' => (bool) $priceVariant->flat_order_price,
         ];
     }
 

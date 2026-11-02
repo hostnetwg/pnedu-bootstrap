@@ -38,6 +38,7 @@ class CoursePriceVariant extends Model
     protected $casts = [
         'is_active' => 'boolean',
         'is_promotion' => 'boolean',
+        'flat_order_price' => 'boolean',
         'price' => 'decimal:2',
         'promotion_price' => 'decimal:2',
         'promotion_start' => 'datetime',
@@ -58,13 +59,11 @@ class CoursePriceVariant extends Model
 
     /**
      * Check if promotion is currently active.
-     *
-     * @return bool
      */
     public function isPromotionActive(): bool
     {
         // Jeśli promocja wyłączona
-        if (!$this->is_promotion || $this->promotion_type === 'disabled') {
+        if (! $this->is_promotion || $this->promotion_type === 'disabled') {
             return false;
         }
 
@@ -95,15 +94,13 @@ class CoursePriceVariant extends Model
 
     /**
      * Get the current price (promotional or regular).
-     *
-     * @return float
      */
     public function getCurrentPrice(): float
     {
         if ($this->isPromotionActive() && $this->promotion_price !== null) {
             return (float) $this->promotion_price;
         }
+
         return (float) $this->price;
     }
 }
-

@@ -5,12 +5,15 @@
 @php
     $maxParticipants = (int) config('order_form.max_participants', 50);
     $unitPrice = null;
+    $flatOrderPrice = false;
     if (isset($priceInfo) && is_array($priceInfo) && isset($priceInfo['price'])) {
         $unitPrice = (float) $priceInfo['price'];
+        $flatOrderPrice = (bool) ($priceInfo['flat_order_price'] ?? false);
     } elseif (isset($course) && method_exists($course, 'getPriceInfoForOrderFormHeader')) {
         $headerVariantId = $prefillPriceVariantId ?? null;
         $pi = $course->getPriceInfoForOrderFormHeader(filled($headerVariantId) ? (int) $headerVariantId : null);
         $unitPrice = $pi['price'] ?? null;
+        $flatOrderPrice = (bool) ($pi['flat_order_price'] ?? false);
     }
     $prefillRows = old('participants');
     if (! is_array($prefillRows) || $prefillRows === []) {
@@ -30,6 +33,7 @@
      class="order-form-participants {{ $variantClass }}"
      data-max-participants="{{ $maxParticipants }}"
      data-unit-price="{{ $unitPrice !== null ? number_format((float) $unitPrice, 2, '.', '') : '' }}"
+     data-flat-price="{{ $flatOrderPrice ? '1' : '0' }}"
      data-email-availability-url="{{ route('courses.participant-email-availability', $course->id) }}"
      data-except-ident="{{ $testData['order_ident'] ?? '' }}"
      data-analytics-section="participants">

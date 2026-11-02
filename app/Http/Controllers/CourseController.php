@@ -1083,8 +1083,11 @@ class CourseController extends Controller
         $developerSymbolicPayment = DeveloperOnlinePaymentTest::shouldApplySymbolicAmount($displayOptions, $user);
         $registrationRedirectNotice = app(CourseRegistrationAvailabilityService::class)
             ->redirectedFromNotice($course, request());
+        $priceInfo = $course->getPriceInfoForOrderFormHeader(
+            filled($prefillPriceVariantId) ? (int) $prefillPriceVariantId : null
+        );
 
-        return view('courses.order-form', compact('course', 'testData', 'isTestMode', 'isEditMode', 'user', 'prefillPriceVariantId', 'fbSourceDefault', 'conversionPlacementDefault', 'checkoutResumeBanner', 'developerSymbolicPayment', 'registrationRedirectNotice'));
+        return view('courses.order-form', compact('course', 'testData', 'isTestMode', 'isEditMode', 'user', 'prefillPriceVariantId', 'fbSourceDefault', 'conversionPlacementDefault', 'checkoutResumeBanner', 'developerSymbolicPayment', 'registrationRedirectNotice', 'priceInfo'));
     }
 
     /**
@@ -1148,8 +1151,11 @@ class CourseController extends Controller
         $developerSymbolicPayment = DeveloperOnlinePaymentTest::shouldApplySymbolicAmount($displayOptions, $user);
         $registrationRedirectNotice = app(CourseRegistrationAvailabilityService::class)
             ->redirectedFromNotice($course, request());
+        $priceInfo = $course->getPriceInfoForOrderFormHeader(
+            filled($prefillPriceVariantId) ? (int) $prefillPriceVariantId : null
+        );
 
-        return view($viewName, compact('course', 'testData', 'isTestMode', 'isEditMode', 'user', 'prefillPriceVariantId', 'fbSourceDefault', 'conversionPlacementDefault', 'checkoutResumeBanner', 'developerSymbolicPayment', 'registrationRedirectNotice'));
+        return view($viewName, compact('course', 'testData', 'isTestMode', 'isEditMode', 'user', 'prefillPriceVariantId', 'fbSourceDefault', 'conversionPlacementDefault', 'checkoutResumeBanner', 'developerSymbolicPayment', 'registrationRedirectNotice', 'priceInfo'));
     }
 
     /**
@@ -1707,6 +1713,7 @@ class CourseController extends Controller
                 'publigo_product_id' => $publicoProductId,
                 'publigo_price_id' => $publigoPriceId,
                 'course_price_variant_id' => $coursePriceVariantId,
+                'flat_order_price' => $this->orderFormUsesFlatPrice($course, $coursePriceVariantId),
                 'orderer_name' => $validated['contact_name'],
                 'orderer_address' => $validated['buyer_address'],
                 'orderer_postal_code' => $validated['buyer_postcode'],
@@ -2010,6 +2017,7 @@ class CourseController extends Controller
                 'publigo_product_id' => $publicoProductId,
                 'publigo_price_id' => $publigoPriceId,
                 'course_price_variant_id' => $coursePriceVariantId,
+                'flat_order_price' => $this->orderFormUsesFlatPrice($course, $coursePriceVariantId),
                 'orderer_name' => $validated['contact_name'],
                 'orderer_address' => $validated['buyer_address'],
                 'orderer_postal_code' => $validated['buyer_postcode'],
@@ -2177,6 +2185,7 @@ class CourseController extends Controller
                 'publigo_product_id' => $publicoProductId,
                 'publigo_price_id' => $publigoPriceId,
                 'course_price_variant_id' => $coursePriceVariantId,
+                'flat_order_price' => $this->orderFormUsesFlatPrice($course, $coursePriceVariantId),
                 'orderer_name' => $validated['contact_name'],
                 'orderer_address' => $validated['buyer_address'],
                 'orderer_postal_code' => $validated['buyer_postcode'],
@@ -2966,7 +2975,28 @@ class CourseController extends Controller
 
         return app(OrderFormParticipantService::class)->totalPrice(
             $unit !== null ? (float) $unit : null,
-            $participantCount
+            $participantCount,
+            $this->orderFormUsesFlatPrice($course, $coursePriceVariantId)
         );
+    }
+
+    /**
+     * Wariant ze stałą ceną: kwota zamówienia nie zależy od liczby uczestników.
+     */
+    protected function orderFormUsesFlatPrice(Course $course, ?int $coursePriceVariantId): bool
+    {
+        $variant = null;
+        if ($coursePriceVariantId !== null) {
+            $variant = CoursePriceVariant::query()
+                ->where('id', $coursePriceVariantId)
+                ->where('course_id', $course->id)
+                ->first();
+        }
+
+        if ($variant === null) {
+            return (bool) ($course->getCurrentPrice()['flat_order_price'] ?? false);
+        }
+
+        return (bool) $variant->flat_order_price;
     }
 }

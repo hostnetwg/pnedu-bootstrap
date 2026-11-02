@@ -234,7 +234,13 @@
             </div>
             <div id="v2-participant-fields" @class(['order-v2__participant-fields--org-profile' => $profile !== 'person'])>
                 <h3 class="h6">Dane uczestników</h3>
-                <p class="text-muted small mb-3">Na te dane zostaną przesłane dane dostępowe do szkolenia oraz zaświadczenie. Szkoła lub firma może dodać wielu uczestników — kwota przelicza się automatycznie.</p>
+                <p class="text-muted small mb-3">Na te dane zostaną przesłane dane dostępowe do szkolenia oraz zaświadczenie. Szkoła lub firma może dodać wielu uczestników —
+                    @if(!empty($priceInfo['flat_order_price']))
+                        kwota zostaje ceną za całe szkolenie.
+                    @else
+                        kwota przelicza się automatycznie.
+                    @endif
+                </p>
                 @include('courses.partials.order-form-participants', [
                     'course' => $course,
                     'testData' => $testData ?? [],

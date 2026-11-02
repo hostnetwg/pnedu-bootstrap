@@ -21,6 +21,7 @@ class OrderFormParticipantServiceTest extends TestCase
         $this->assertSame(597.0, $service->totalPrice(199.0, 3));
         $this->assertSame(199.0, $service->totalPrice(199.0, 1));
         $this->assertNull($service->totalPrice(null, 2));
+        $this->assertSame(1250.0, $service->totalPrice(1250.0, 4, true));
     }
 
     public function test_parse_from_request_slices_person_to_one(): void

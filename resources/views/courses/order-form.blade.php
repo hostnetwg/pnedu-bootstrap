@@ -831,7 +831,12 @@
                         'formVariant' => 'legacy',
                     ])
                     <div class="form-info-text mt-2" id="participant-email-info-text">
-                        Zalecane jest podanie indywidualnego adresu e-mail uczestnika, a nie ogólnego adresu placówki – adres e-mail jest powiązany z danym uczestnikiem szkolenia; w przeciwnym razie mogą wystąpić błędy przy generowaniu zaświadczenia. Na podany adres zostanie utworzone konto na platformie z dostępem do zasobów szkolenia; jeśli konto już istnieje, zasoby zostaną do niego dodane. Szkoła lub firma może dodać do jednego zamówienia wielu uczestników (limit {{ (int) config('order_form.max_participants', 50) }}) — kwota przelicza się automatycznie.
+                        Zalecane jest podanie indywidualnego adresu e-mail uczestnika, a nie ogólnego adresu placówki – adres e-mail jest powiązany z danym uczestnikiem szkolenia; w przeciwnym razie mogą wystąpić błędy przy generowaniu zaświadczenia. Na podany adres zostanie utworzone konto na platformie z dostępem do zasobów szkolenia; jeśli konto już istnieje, zasoby zostaną do niego dodane. Szkoła lub firma może dodać do jednego zamówienia wielu uczestników (limit {{ (int) config('order_form.max_participants', 50) }}) —
+                        @if(!empty($priceInfo['flat_order_price']))
+                            kwota zostaje ceną za całe szkolenie.
+                        @else
+                            kwota przelicza się automatycznie.
+                        @endif
                     </div>
                 </fieldset>
                 <div class="order-form-section form-section-full-width" data-analytics-section="payment_method" data-analytics-section-v2="payment">

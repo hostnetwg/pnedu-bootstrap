@@ -74,6 +74,7 @@ class FormOrder extends Model
         'publigo_product_id',
         'publigo_price_id',
         'course_price_variant_id',
+        'flat_order_price',
         'publigo_sent',
         'publigo_sent_at',
         'pnedu_provisioned_at',
@@ -147,6 +148,7 @@ class FormOrder extends Model
         'legal_confirmation_failed_at' => 'datetime',
         'product_price' => 'decimal:2',
         'course_price_variant_id' => 'integer',
+        'flat_order_price' => 'boolean',
         'publigo_sent' => 'boolean',
         'status_completed' => 'boolean',
     ];

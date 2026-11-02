@@ -25,6 +25,7 @@
         var breakdownEl = document.getElementById('order-form-price-breakdown');
         var max = parseInt(root.dataset.maxParticipants || '50', 10) || 50;
         var unitPrice = parseFloat(root.dataset.unitPrice || '');
+        var flatPrice = root.dataset.flatPrice === '1';
         var availabilityUrl = root.dataset.emailAvailabilityUrl || '';
         var exceptIdent = root.dataset.exceptIdent || '';
 
@@ -150,12 +151,18 @@
                 return;
             }
             var count = Math.max(1, rows().length);
-            var total = Math.round(unitPrice * count * 100) / 100;
+            var total = flatPrice
+                ? Math.round(unitPrice * 100) / 100
+                : Math.round(unitPrice * count * 100) / 100;
             totalEl.textContent = formatPln(total);
             if (breakdownEl) {
-                breakdownEl.textContent = count > 1
-                    ? (formatPln(unitPrice) + ' PLN × ' + count + ' os.')
-                    : '';
+                if (flatPrice && count > 1) {
+                    breakdownEl.textContent = 'Cena za całe szkolenie, niezależnie od liczby osób';
+                } else if (!flatPrice && count > 1) {
+                    breakdownEl.textContent = formatPln(unitPrice) + ' PLN × ' + count + ' os.';
+                } else {
+                    breakdownEl.textContent = '';
+                }
             }
             try {
                 if (window.pneduAnalytics && typeof window.pneduAnalytics.track === 'function') {

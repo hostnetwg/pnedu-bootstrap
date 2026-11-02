@@ -11,8 +11,7 @@ use Illuminate\Validation\ValidationException;
 /**
  * Uczestnicy publicznego formularza zamówienia: parsowanie, limit, unikalność e-maila, cena × N.
  *
- * Rabat grupowy nie jest liczony (v1) — hook {@see totalPrice()} zostawia miejsce na przyszłą zniżkę
- * przy wariancie cenowym.
+ * Przy wariancie ze stałą ceną {@see totalPrice()} zwraca kwotę raz, bez mnożenia przez liczbę osób.
  */
 class OrderFormParticipantService
 {
@@ -130,12 +129,16 @@ class OrderFormParticipantService
     }
 
     /**
-     * Kwota całkowita zamówienia. Miejsce na przyszły rabat grupowy (np. z wariantu cenowego).
+     * Kwota całkowita zamówienia. Przy stałej cenie wariantu liczba osób nie zmienia sumy.
      */
-    public function totalPrice(?float $unitPrice, int $participantCount): ?float
+    public function totalPrice(?float $unitPrice, int $participantCount, bool $flat = false): ?float
     {
         if ($unitPrice === null) {
             return null;
+        }
+
+        if ($flat) {
+            return round($unitPrice, 2);
         }
 
         $count = max(1, $participantCount);
