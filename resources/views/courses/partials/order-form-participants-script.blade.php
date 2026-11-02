@@ -156,13 +156,9 @@
                 : Math.round(unitPrice * count * 100) / 100;
             totalEl.textContent = formatPln(total);
             if (breakdownEl) {
-                if (flatPrice && count > 1) {
-                    breakdownEl.textContent = 'Cena za całe szkolenie, niezależnie od liczby osób';
-                } else if (!flatPrice && count > 1) {
-                    breakdownEl.textContent = formatPln(unitPrice) + ' PLN × ' + count + ' os.';
-                } else {
-                    breakdownEl.textContent = '';
-                }
+                breakdownEl.textContent = !flatPrice && count > 1
+                    ? (formatPln(unitPrice) + ' PLN × ' + count + ' os.')
+                    : '';
             }
             try {
                 if (window.pneduAnalytics && typeof window.pneduAnalytics.track === 'function') {
