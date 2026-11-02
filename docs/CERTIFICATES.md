@@ -2,7 +2,7 @@
 
 Dokumentacja **frontu** (pnedu). Kanon architektury i szablonów: **`pneadm/docs/CERTIFICATES.md`**.
 
-Ostatnia aktualizacja: **2026-09-20**.
+Ostatnia aktualizacja: **2026-11-02** (przepływ linku tokenowego).
 
 ---
 
@@ -36,6 +36,16 @@ Po zmianie: `sail artisan config:clear`.
 | `GET /certificate/{token}/{course}/download` | `downloadByToken` | PDF bez logowania |
 
 Szczegóły tokenów: `pneadm/docs/CERTIFICATE_DOWNLOAD_LINKS.md`.
+
+### Przepływ `/certificate/{token}/{course}`
+
+1. Zalogowany użytkownik z tym samym, zweryfikowanym e-mailem → przekierowanie na `/dashboard/zaswiadczenia/{course}`; zalogowany na inne konto → 403 (`certificates.errors.wrong-account-for-link`).
+2. `courses.certificate_download_status` musi być `download_enabled` (inaczej 403).
+3. Formularz daty i miejsca urodzenia (`certificates.birth-data-form`) pokazuje się, gdy szkolenie jest płatne (`courses.is_paid`) i brakuje danych albo jest `?edit=1`. Dla bezpłatnych pola są opcjonalne. Wymóg wynika z rejestru zaświadczeń, **nie** z ustawienia szablonu (`show_birth_info`).
+4. Zapis → API `POST /api/participants/update-birth-data` (kasuje istniejący PDF, żeby następne pobranie miało nowe dane).
+5. Pobranie → `ensure` → `data` → `generate` (`save_to_storage=true`) → `mark-downloaded`. Jeśli plik PDF już istnieje w adm, API zwraca go bez ponownego renderowania.
+
+Jak szablon zamienia się w PDF (bloki, daty, znane problemy): `pneadm/docs/CERTIFICATE_TEMPLATES.md`.
 
 ---
 
