@@ -25,6 +25,15 @@ class CourseOnlineDetail extends Model
     protected $table = 'course_online_details';
 
     /**
+     * Link prezentera jest uprawnieniem do roli. Nie serializujemy go na stronę publiczną.
+     *
+     * @var list<string>
+     */
+    protected $hidden = [
+        'presenter_meeting_link',
+    ];
+
+    /**
      * The attributes that are mass assignable.
      *
      * @var array<int, string>
