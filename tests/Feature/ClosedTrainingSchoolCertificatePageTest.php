@@ -249,7 +249,7 @@ class ClosedTrainingSchoolCertificatePageTest extends TestCase
 
         $this->get(route('closed-training-certificates.show', ['token' => $token]))
             ->assertOk()
-            ->assertSee('Link jest już aktywny', false)
+            ->assertDontSee('Link jest już aktywny', false)
             ->assertSee('Szkolenie przed wysyłką', false);
     }
 
