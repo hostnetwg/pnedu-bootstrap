@@ -19,7 +19,7 @@ class ClosedTrainingSchoolCertificatePage
      *     course_id: int,
      *     course_title: string,
      *     schedule_label: string,
-     *     valid_until: string,
+     *     valid_until: string|null,
      *     download_enabled: bool,
      *     participants: list<array{
      *         id: int,
@@ -91,7 +91,9 @@ class ClosedTrainingSchoolCertificatePage
             'course_id' => (int) $course->id,
             'course_title' => $title !== '' ? $title : 'Szkolenie',
             'schedule_label' => $this->scheduleLabel($course->start_date, $course->end_date),
-            'valid_until' => Carbon::parse($case->school_certificate_token_expires_at)->timezone('Europe/Warsaw')->format('d.m.Y'),
+            'valid_until' => $case->school_certificate_token_expires_at
+                ? Carbon::parse($case->school_certificate_token_expires_at)->timezone('Europe/Warsaw')->format('d.m.Y')
+                : null,
             'download_enabled' => (string) ($course->certificate_download_status ?? '') === 'download_enabled',
             'participants' => $rows,
         ];
@@ -218,7 +220,7 @@ class ClosedTrainingSchoolCertificatePage
     private function tokenIsActive(mixed $expiresAt): bool
     {
         if ($expiresAt === null || $expiresAt === '') {
-            return false;
+            return true;
         }
 
         return Carbon::parse($expiresAt)->isFuture();

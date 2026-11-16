@@ -219,6 +219,40 @@ class ClosedTrainingSchoolCertificatePageTest extends TestCase
         $this->get(route('closed-training-certificates.show', ['token' => $token]))->assertNotFound();
     }
 
+    public function test_prepared_link_opens_before_the_email_is_sent(): void
+    {
+        $token = bin2hex(random_bytes(32));
+        $this->caseId = (int) DB::connection('pneadm')->table('closed_training_cases')->insertGetId([
+            'source' => 'manual',
+            'status' => 'in_progress',
+            'topic' => 'Przed wysyłką',
+            'contact_name' => 'Dyrekcja',
+            'message' => 'Zapytanie.',
+            'school_certificate_token' => $token,
+            'school_certificate_token_expires_at' => null,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $this->courseId = (int) DB::connection('pneadm')->table('courses')->insertGetId([
+            'title' => 'Szkolenie przed wysyłką',
+            'description' => 'Opis',
+            'start_date' => now()->subHours(3),
+            'end_date' => now()->subHour(),
+            'is_paid' => true,
+            'type' => 'online',
+            'category' => 'closed',
+            'is_active' => true,
+            'closed_training_case_id' => $this->caseId,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->get(route('closed-training-certificates.show', ['token' => $token]))
+            ->assertOk()
+            ->assertSee('Link jest już aktywny', false)
+            ->assertSee('Szkolenie przed wysyłką', false);
+    }
+
     private function insertParticipant(string $firstName, string $lastName, string $email, int $order): int
     {
         $id = (int) Participant::query()->create([

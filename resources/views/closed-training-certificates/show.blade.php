@@ -9,7 +9,11 @@
         @if($schedule_label !== '')
             <p class="text-secondary mb-1">{{ $schedule_label }}</p>
         @endif
-        <p class="text-danger fw-semibold mb-2">Link jest ważny do {{ $valid_until }} r. Po tej dacie albo po unieważnieniu na karcie sprawy przestanie działać.</p>
+        @if($valid_until)
+            <p class="text-danger fw-semibold mb-2">Link jest ważny do {{ $valid_until }} r. Po tej dacie albo po unieważnieniu na karcie sprawy przestanie działać.</p>
+        @else
+            <p class="text-danger fw-semibold mb-2">Link jest już aktywny. Termin ważności zostanie policzony od wysłania wiadomości do szkoły.</p>
+        @endif
         <div class="mb-4" id="uniewaznij-link">
             <p class="mb-2">Po pobraniu wszystkich zaświadczeń możesz od razu unieważnić ten link wyświetlający listę uczestników. Po unieważnieniu ten adres przestaje działać.</p>
             <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#revokeSchoolCertificateLinkModal">
