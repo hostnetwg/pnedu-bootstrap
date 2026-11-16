@@ -20,6 +20,13 @@ class ClosedTrainingSchoolCertificateController extends Controller
         return view('closed-training-certificates.show', $data);
     }
 
+    public function revoke(string $token, ClosedTrainingSchoolCertificatePage $page): View
+    {
+        abort_if(! $page->revoke($token), 404);
+
+        return view('closed-training-certificates.revoked');
+    }
+
     public function download(
         string $token,
         int $participant,

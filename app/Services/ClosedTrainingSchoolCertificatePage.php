@@ -113,6 +113,46 @@ class ClosedTrainingSchoolCertificatePage
         return false;
     }
 
+    public function revoke(string $token): bool
+    {
+        if (preg_match('/^[a-f0-9]{64}$/', $token) !== 1) {
+            return false;
+        }
+
+        $case = DB::connection('pneadm')
+            ->table('closed_training_cases')
+            ->where('school_certificate_token', $token)
+            ->first(['id', 'school_certificate_token_expires_at']);
+        if ($case === null || ! $this->tokenIsActive($case->school_certificate_token_expires_at)) {
+            return false;
+        }
+
+        $updated = DB::connection('pneadm')
+            ->table('closed_training_cases')
+            ->where('id', $case->id)
+            ->where('school_certificate_token', $token)
+            ->update([
+                'school_certificate_token' => null,
+                'school_certificate_token_expires_at' => null,
+                'updated_at' => now(),
+            ]);
+        if ($updated !== 1) {
+            return false;
+        }
+
+        DB::connection('pneadm')->table('closed_training_case_events')->insert([
+            'closed_training_case_id' => $case->id,
+            'user_id' => null,
+            'event_type' => 'updated',
+            'body' => 'Szkoła unieważniła link do listy zaświadczeń ze strony pobierania.',
+            'happened_at' => now(),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        return true;
+    }
+
     /**
      * @param  list<int>  $participantIds
      * @return array<int, true>

@@ -46,6 +46,7 @@ class ClosedTrainingSchoolCertificatePageTest extends TestCase
         }
 
         if ($this->caseId !== null) {
+            DB::connection('pneadm')->table('closed_training_case_events')->where('closed_training_case_id', $this->caseId)->delete();
             DB::connection('pneadm')->table('closed_training_cases')->where('id', $this->caseId)->delete();
         }
 
@@ -116,7 +117,10 @@ class ClosedTrainingSchoolCertificatePageTest extends TestCase
             ->assertSee('Jan Nowak', false)
             ->assertSee('nie wysłany', false)
             ->assertSee('nie pobrane', false)
-            ->assertSee('Pobierz PDF', false);
+            ->assertSee('Pobierz PDF', false)
+            ->assertSee('Po tej dacie albo po unieważnieniu na karcie sprawy przestanie działać.', false)
+            ->assertSee('text-danger', false)
+            ->assertSee('Unieważnij link', false);
 
         $this->get('/szkolenie-zamkniete/zaswiadczenia/'.str_repeat('a', 64))->assertNotFound();
 
@@ -142,6 +146,15 @@ class ClosedTrainingSchoolCertificatePageTest extends TestCase
         Http::assertNotSent(function ($request): bool {
             return str_contains($request->url(), 'mark-downloaded');
         });
+
+        $this->post(route('closed-training-certificates.revoke', ['token' => $token]))
+            ->assertOk()
+            ->assertSee('Link został unieważniony', false);
+
+        $this->assertNull(DB::connection('pneadm')->table('closed_training_cases')->where('id', $this->caseId)->value('school_certificate_token'));
+        $this->assertNotNull(DB::connection('pneadm')->table('closed_training_case_events')->where('closed_training_case_id', $this->caseId)->where('body', 'Szkoła unieważniła link do listy zaświadczeń ze strony pobierania.')->first());
+        $this->get(route('closed-training-certificates.show', ['token' => $token]))->assertNotFound();
+        $this->post(route('closed-training-certificates.revoke', ['token' => $token]))->assertNotFound();
     }
 
     public function test_page_is_hidden_until_the_online_training_ends(): void

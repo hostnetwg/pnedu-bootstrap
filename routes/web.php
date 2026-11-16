@@ -424,6 +424,9 @@ Route::middleware('throttle:60,1')->group(function () {
         ->where('token', '[a-f0-9]{64}')
         ->whereNumber('participant')
         ->name('closed-training-certificates.download');
+    Route::post('/szkolenie-zamkniete/zaswiadczenia/{token}/uniewaznij', [App\Http\Controllers\ClosedTrainingSchoolCertificateController::class, 'revoke'])
+        ->where('token', '[a-f0-9]{64}')
+        ->name('closed-training-certificates.revoke');
 });
 
 // Link z tokenem – lista szkoleń i pobieranie zaświadczeń (bez logowania)

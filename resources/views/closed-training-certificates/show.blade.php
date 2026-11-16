@@ -9,7 +9,13 @@
         @if($schedule_label !== '')
             <p class="text-secondary mb-1">{{ $schedule_label }}</p>
         @endif
-        <p class="text-secondary mb-3">Link jest ważny do {{ $valid_until }} r.</p>
+        <p class="text-danger fw-semibold mb-2">Link jest ważny do {{ $valid_until }} r. Po tej dacie albo po unieważnieniu na karcie sprawy przestanie działać.</p>
+        <div class="mb-4" id="uniewaznij-link">
+            <p class="mb-2">Po pobraniu wszystkich zaświadczeń możesz od razu unieważnić ten link wyświetlający listę uczestników. Po unieważnieniu ten adres przestaje działać.</p>
+            <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#revokeSchoolCertificateLinkModal">
+                Unieważnij link
+            </button>
+        </div>
         <p>Lista osób zapisanych na to szkolenie. Przy każdej widać, czy link do zaświadczenia został wysłany na jej e-mail oraz czy sama je pobrała. Plik można pobrać i wydrukować dla nauczyciela.</p>
         <p class="small text-secondary">Pobranie przez szkołę nie zmienia informacji, czy uczestnik sam pobrał zaświadczenie.</p>
 
@@ -64,4 +70,29 @@
             </div>
         @endif
     </div>
+
+    <div class="modal fade" id="revokeSchoolCertificateLinkModal" tabindex="-1" aria-labelledby="revokeSchoolCertificateLinkTitle" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title h5" id="revokeSchoolCertificateLinkTitle">Unieważnić link?</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Zamknij"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-0">Po unieważnieniu ta strona przestanie działać. Lista uczestników i pobieranie zaświadczeń z tego adresu nie będą już dostępne.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Anuluj</button>
+                    <form method="POST" action="{{ route('closed-training-certificates.revoke', ['token' => $token]) }}">
+                        @csrf
+                        <button type="submit" class="btn btn-danger">Unieważnij link</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
+
+@push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+@endpush
