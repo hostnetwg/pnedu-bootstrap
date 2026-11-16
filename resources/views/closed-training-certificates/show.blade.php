@@ -18,7 +18,7 @@
                 Unieważnij link
             </button>
         </div>
-        <p>Lista osób zapisanych na to szkolenie. Przy każdej widać, czy link do zaświadczenia został wysłany na jej e-mail oraz czy sama je pobrała. Plik można pobrać i wydrukować dla nauczyciela.</p>
+        <p>Poniżej lista uczestników szkolenia, którzy wypełnili formularz obecności udostępniony podczas szkolenia. Przy każdej widać, czy link do zaświadczenia został wysłany na jej e-mail oraz czy sama je pobrała. Plik można pobrać i wydrukować dla nauczyciela.</p>
         <p class="small text-secondary">Pobranie przez szkołę nie zmienia informacji, czy uczestnik sam pobrał zaświadczenie.</p>
 
         @if(session('error'))

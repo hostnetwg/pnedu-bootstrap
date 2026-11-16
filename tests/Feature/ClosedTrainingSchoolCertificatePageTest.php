@@ -118,6 +118,8 @@ class ClosedTrainingSchoolCertificatePageTest extends TestCase
             ->assertSee('nie wysłany', false)
             ->assertSee('nie pobrane', false)
             ->assertSee('Pobierz PDF', false)
+            ->assertSee('Poniżej lista uczestników szkolenia, którzy wypełnili formularz obecności udostępniony podczas szkolenia.', false)
+            ->assertDontSee('Lista osób zapisanych na to szkolenie.', false)
             ->assertSee('Po tej dacie albo po unieważnieniu na karcie sprawy przestanie działać.', false)
             ->assertSee('text-danger', false)
             ->assertSee('Unieważnij link', false);
