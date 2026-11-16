@@ -147,6 +147,7 @@ Przy każdej zmianie dotyczącej **treści widocznej dla użytkownika i Google**
 
 - Nowa **podstrona publiczna** → `title`, `meta_description`, ewentualnie wpis w `SitemapUrlBuilder::staticUrls()`.
 - Sekretny `/live/{token}` (gość, szkolenie zamknięte) **nie** idzie do sitemapy ani katalogu — `noindex`.
+- Sekretny `/szkolenie-zamkniete/zaswiadczenia/{token}` (zaświadczenia jednego szkolenia dla szkoły) **nie** idzie do sitemapy — `noindex, nofollow`.
 - Nowy **artykuł** → wytyczne sekcji 3a; nie twórz statycznego `public/sitemap.xml`.
 - Zmiana **kursu** → rozważ wpis w `config/course_seo.php` gdy title/description wymagają ręcznej korekty.
 

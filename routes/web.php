@@ -415,6 +415,17 @@ Route::middleware('throttle:60,1')->group(function () {
         ->name('guest-live.meeting-status');
 });
 
+// Link szkoły do zaświadczeń jednego zakończonego szkolenia zamkniętego. Nie w sitemapie.
+Route::middleware('throttle:60,1')->group(function () {
+    Route::get('/szkolenie-zamkniete/zaswiadczenia/{token}', [App\Http\Controllers\ClosedTrainingSchoolCertificateController::class, 'show'])
+        ->where('token', '[a-f0-9]{64}')
+        ->name('closed-training-certificates.show');
+    Route::get('/szkolenie-zamkniete/zaswiadczenia/{token}/{participant}/pobierz', [App\Http\Controllers\ClosedTrainingSchoolCertificateController::class, 'download'])
+        ->where('token', '[a-f0-9]{64}')
+        ->whereNumber('participant')
+        ->name('closed-training-certificates.download');
+});
+
 // Link z tokenem – lista szkoleń i pobieranie zaświadczeń (bez logowania)
 Route::get('/certificates/{token}', [App\Http\Controllers\CertificateController::class, 'showListByToken'])->name('certificates.list-by-token');
 Route::get('/certificate/{token}/{course}', [App\Http\Controllers\CertificateController::class, 'showCertificateByToken'])->name('certificates.show-by-token');
