@@ -7,8 +7,9 @@
         <h1 class="h3 mb-2">Zaświadczenia szkolenia</h1>
         <p class="mb-1 fw-semibold">{{ $course_title }}</p>
         @if($schedule_label !== '')
-            <p class="text-secondary mb-3">{{ $schedule_label }}</p>
+            <p class="text-secondary mb-1">{{ $schedule_label }}</p>
         @endif
+        <p class="text-secondary mb-3">Link jest ważny do {{ $valid_until }} r.</p>
         <p>Lista osób zapisanych na to szkolenie. Przy każdej widać, czy link do zaświadczenia został wysłany na jej e-mail oraz czy sama je pobrała. Plik można pobrać i wydrukować dla nauczyciela.</p>
         <p class="small text-secondary">Pobranie przez szkołę nie zmienia informacji, czy uczestnik sam pobrał zaświadczenie.</p>
 
@@ -30,7 +31,7 @@
                             <th scope="col">Lp</th>
                             <th scope="col">Uczestnik</th>
                             <th scope="col">Link do zaświadczenia</th>
-                            <th scope="col">Pobranie</th>
+                            <th scope="col">Pobranie przez uczestnika</th>
                             <th scope="col">Plik</th>
                         </tr>
                     </thead>
@@ -47,8 +48,8 @@
                                         <div class="small text-secondary">Bez daty i miejsca urodzenia — uczestnik ich nie podał.</div>
                                     @endif
                                 </td>
-                                <td>{{ $row['link_sent'] ? 'wysłany na e-mail' : 'nie wysłany' }}</td>
-                                <td>{{ $row['downloaded'] ? 'pobrane' : 'nie pobrane' }}</td>
+                                <td @class(['text-primary' => $row['link_sent']])>{{ $row['link_sent'] ? 'wysłany na e-mail' : 'nie wysłany' }}</td>
+                                <td @class(['text-primary' => $row['downloaded']])>{{ $row['downloaded'] ? 'pobrane' : 'nie pobrane' }}</td>
                                 <td>
                                     @if($download_enabled)
                                         <a class="btn btn-primary btn-sm" href="{{ route('closed-training-certificates.download', ['token' => $token, 'participant' => $row['id']]) }}">Pobierz PDF</a>

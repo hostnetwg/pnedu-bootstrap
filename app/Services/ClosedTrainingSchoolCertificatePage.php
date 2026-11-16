@@ -19,6 +19,7 @@ class ClosedTrainingSchoolCertificatePage
      *     course_id: int,
      *     course_title: string,
      *     schedule_label: string,
+     *     valid_until: string,
      *     download_enabled: bool,
      *     participants: list<array{
      *         id: int,
@@ -39,8 +40,8 @@ class ClosedTrainingSchoolCertificatePage
         $case = DB::connection('pneadm')
             ->table('closed_training_cases')
             ->where('school_certificate_token', $token)
-            ->first(['id']);
-        if ($case === null) {
+            ->first(['id', 'school_certificate_token_expires_at']);
+        if ($case === null || ! $this->tokenIsActive($case->school_certificate_token_expires_at)) {
             return null;
         }
 
@@ -90,6 +91,7 @@ class ClosedTrainingSchoolCertificatePage
             'course_id' => (int) $course->id,
             'course_title' => $title !== '' ? $title : 'Szkolenie',
             'schedule_label' => $this->scheduleLabel($course->start_date, $course->end_date),
+            'valid_until' => Carbon::parse($case->school_certificate_token_expires_at)->timezone('Europe/Warsaw')->format('d.m.Y'),
             'download_enabled' => (string) ($course->certificate_download_status ?? '') === 'download_enabled',
             'participants' => $rows,
         ];
@@ -171,6 +173,15 @@ class ClosedTrainingSchoolCertificatePage
         }
 
         return Carbon::parse($endDate)->isPast();
+    }
+
+    private function tokenIsActive(mixed $expiresAt): bool
+    {
+        if ($expiresAt === null || $expiresAt === '') {
+            return false;
+        }
+
+        return Carbon::parse($expiresAt)->isFuture();
     }
 
     private function scheduleLabel(mixed $startDate, mixed $endDate): string

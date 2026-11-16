@@ -27,8 +27,9 @@ class ClosedTrainingSchoolCertificatePageTest extends TestCase
             'services.pneadm.timeout' => 5,
         ]);
 
-        if (! Schema::connection('pneadm')->hasColumn('closed_training_cases', 'school_certificate_token')) {
-            $this->markTestSkipped('Brak kolumny school_certificate_token w bazie pneadm.');
+        if (! Schema::connection('pneadm')->hasColumn('closed_training_cases', 'school_certificate_token')
+            || ! Schema::connection('pneadm')->hasColumn('closed_training_cases', 'school_certificate_token_expires_at')) {
+            $this->markTestSkipped('Brak kolumny ważności linku do zaświadczeń w bazie pneadm.');
         }
     }
 
@@ -61,6 +62,7 @@ class ClosedTrainingSchoolCertificatePageTest extends TestCase
             'contact_name' => 'Dyrekcja',
             'message' => 'Zapytanie.',
             'school_certificate_token' => $token,
+            'school_certificate_token_expires_at' => now()->addMonths(2),
             'created_at' => now(),
             'updated_at' => now(),
         ]);
@@ -106,6 +108,9 @@ class ClosedTrainingSchoolCertificatePageTest extends TestCase
             ->assertOk()
             ->assertSee('noindex, nofollow', false)
             ->assertSee('Anna Kowalska', false)
+            ->assertSee('ważny do', false)
+            ->assertSee('Pobranie przez uczestnika', false)
+            ->assertSee('text-primary', false)
             ->assertSee('wysłany na e-mail', false)
             ->assertSee('pobrane', false)
             ->assertSee('Jan Nowak', false)
@@ -149,6 +154,7 @@ class ClosedTrainingSchoolCertificatePageTest extends TestCase
             'contact_name' => 'Dyrekcja',
             'message' => 'Zapytanie.',
             'school_certificate_token' => $token,
+            'school_certificate_token_expires_at' => now()->addMonths(2),
             'created_at' => now(),
             'updated_at' => now(),
         ]);
@@ -157,6 +163,37 @@ class ClosedTrainingSchoolCertificatePageTest extends TestCase
             'description' => 'Opis',
             'start_date' => now()->subHour(),
             'end_date' => now()->addHour(),
+            'is_paid' => true,
+            'type' => 'online',
+            'category' => 'closed',
+            'is_active' => true,
+            'closed_training_case_id' => $this->caseId,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->get(route('closed-training-certificates.show', ['token' => $token]))->assertNotFound();
+    }
+
+    public function test_expired_school_link_is_hidden(): void
+    {
+        $token = bin2hex(random_bytes(32));
+        $this->caseId = (int) DB::connection('pneadm')->table('closed_training_cases')->insertGetId([
+            'source' => 'manual',
+            'status' => 'in_progress',
+            'topic' => 'Po terminie',
+            'contact_name' => 'Dyrekcja',
+            'message' => 'Zapytanie.',
+            'school_certificate_token' => $token,
+            'school_certificate_token_expires_at' => now()->subMinute(),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $this->courseId = (int) DB::connection('pneadm')->table('courses')->insertGetId([
+            'title' => 'Szkolenie zakończone',
+            'description' => 'Opis',
+            'start_date' => now()->subHours(3),
+            'end_date' => now()->subHour(),
             'is_paid' => true,
             'type' => 'online',
             'category' => 'closed',
