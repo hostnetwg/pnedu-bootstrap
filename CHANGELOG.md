@@ -6,6 +6,7 @@ Krótka numeracja frontu. Szczegóły w `docs/` tego repo i w kanonie `pneadm/do
 
 Dostęp do nagrania po szkoleniu.
 
+- **Hotfix 2026-11-17:** na stronie weryfikacji e-mail jest informacja, że link może dotrzeć na skrzynkę z małym opóźnieniem. To samo po ponownej wysyłce.
 - Formularz `/dostep-do-szkolenia/{token}` zbiera imię, nazwisko, e-mail i hasło dostępu do nagrania. Nowy adres dostaje konto na pnedu.pl i wejście do panelu szkoleń. Gdy konto już jest, hasła nie zmieniamy — zostaje logowanie dotychczasowym hasłem.
 - Kanon: [RECORDING_ENROLLMENT.md](../pneadm/docs/RECORDING_ENROLLMENT.md)
 - **Hotfix 2026-10-19:** formularz zamówienia (legacy i V2) oraz checkout produktu wymagają e-maila z domeną z końcówką (np. `.pl`). Adresy w stylu `nazwa@gminakrzeszowice` są odrzucane już przy zapisie. Kanon: [ORDER_FORM_V2.md](docs/ORDER_FORM_V2.md)

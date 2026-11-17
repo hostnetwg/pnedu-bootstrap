@@ -71,6 +71,7 @@
                         @if (session('status') === 'verification-link-sent' && ! $undeliverable)
                             <p class="mb-0 mt-2 small text-success fw-semibold">
                                 Wysłaliśmy ponownie link weryfikacyjny na Twój adres e-mail.
+                                Może dotrzeć na skrzynkę z małym opóźnieniem.
                             </p>
                         @endif
                     </div>

@@ -43,6 +43,7 @@ class EmailVerificationNoticeTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('Weryfikacja adresu e-mail', false);
+        $response->assertSee('może dotrzeć na Twoją skrzynkę z małym opóźnieniem', false);
         $response->assertSee('zostanie usunięte', false);
         $response->assertSee('Wyślij link weryfikacyjny ponownie', false);
     }

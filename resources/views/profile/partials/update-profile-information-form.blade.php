@@ -104,7 +104,7 @@
 
                             @if (session('status') === 'verification-link-sent')
                                 <div class="alert alert-success mt-3 mb-0" role="alert">
-                                    {{ __('Nowy link weryfikacyjny został wysłany na Twój adres e-mail.') }}
+                                    {{ __('Nowy link weryfikacyjny został wysłany na Twój adres e-mail. Może dotrzeć na skrzynkę z małym opóźnieniem.') }}
                                 </div>
                             @endif
                         </div>

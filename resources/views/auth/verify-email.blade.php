@@ -63,6 +63,7 @@
                         <p class="mb-3">
                             Dziękujemy za rejestrację! Zanim zaczniesz korzystać z panelu użytkownika, potwierdź swój adres e-mail,
                             klikając link w wiadomości, którą właśnie wysłaliśmy na <strong>{{ $user->email }}</strong>.
+                            Link weryfikacyjny może dotrzeć na Twoją skrzynkę z małym opóźnieniem.
                         </p>
 
                         @if ($protectedFromPurge)
@@ -96,6 +97,7 @@
                         @if (session('status') === 'verification-link-sent')
                             <div class="alert alert-success small mb-3" role="alert">
                                 Wysłaliśmy ponownie link weryfikacyjny na adres <strong>{{ $user->email }}</strong>.
+                                Może dotrzeć na Twoją skrzynkę z małym opóźnieniem.
                             </div>
                         @endif
 
