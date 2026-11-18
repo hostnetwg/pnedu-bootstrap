@@ -13,6 +13,8 @@ use App\Models\User;
 use App\Notifications\OnlineCourseProductAccessGranted;
 use App\Support\DashboardResourceCounts;
 use Carbon\CarbonImmutable;
+use Illuminate\Mail\Markdown;
+use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
@@ -367,13 +369,119 @@ class ProductOrderFulfillmentService
         });
     }
 
+    /**
+     * Podgląd e-maila dostępu (bez wysyłki) — wariant new/existing wg aktualnego stanu konta
+     * albo wg snapshotu fulfillmentu przy ponownej wysyłce.
+     *
+     * @return array<string, mixed>
+     */
+    public function previewAccessEmail(int $formOrderId, ?int $recipientId = null, bool $bulk = false): array
+    {
+        $resolved = $this->resolveAccessEmailContext($formOrderId, $recipientId, $bulk);
+        if (! ($resolved['success'] ?? false)) {
+            return $resolved;
+        }
+
+        $notification = new OnlineCourseProductAccessGranted(
+            $resolved['course_title'],
+            $resolved['is_new_account'] ? 'PODGLAD-LINK-WYGENEROWANY-PRZY-WYSYLCE' : null,
+            $resolved['order'],
+            $resolved['first_name'],
+            $resolved['last_name'],
+            $resolved['email'],
+        );
+        $mail = $notification->toMail($this->mailNotifiableStub($resolved['email']));
+
+        return [
+            'success' => true,
+            'to' => $resolved['email'],
+            'subject' => (string) ($mail->subject ?? ''),
+            'body' => $this->mailMessageToPlainText($mail),
+            'body_html' => $this->mailMessageToHtml($mail),
+            'variant' => $resolved['is_new_account'] ? 'new_user' : 'existing_user',
+            'variant_label' => $resolved['is_new_account']
+                ? 'E-mail z linkiem do ustawienia hasła (nowe konto)'
+                : 'E-mail informacyjny (konto już istnieje)',
+            'participant_name' => $resolved['participant_name'],
+            'recipient_id' => $resolved['recipient_id'],
+            'mode' => $resolved['mode'],
+            'pending_count' => $resolved['pending_count'],
+            'already_granted' => $resolved['already_granted'],
+            'hint' => $resolved['hint'],
+        ];
+    }
+
+    /**
+     * Ponowna wysyłka e-maila dostępu (bez ponownego grantu enrollmentu).
+     *
+     * @return array<string, mixed>
+     */
+    public function resendAccessEmail(int $formOrderId, int $recipientId): array
+    {
+        $order = FormOrder::query()
+            ->whereKey($formOrderId)
+            ->where('order_kind', 'product')
+            ->with(['orderItems.recipients.fulfillments'])
+            ->first();
+
+        if (! $order) {
+            return ['success' => false, 'error' => 'Nie znaleziono zamówienia produktowego.'];
+        }
+
+        $recipient = $order->orderItems
+            ->flatMap(fn (OrderItem $item) => $item->recipients)
+            ->first(fn (OrderItemRecipient $row) => (int) $row->id === $recipientId);
+
+        if (! $recipient instanceof OrderItemRecipient) {
+            return ['success' => false, 'error' => 'Nie znaleziono wskazanego uczestnika.'];
+        }
+
+        $item = $order->orderItems->first(
+            fn (OrderItem $orderItem) => $orderItem->recipients->contains('id', $recipient->id)
+        );
+        $fulfillment = $recipient->fulfillments
+            ->sortByDesc('id')
+            ->first(fn (OrderFulfillment $row) => $row->status === OrderFulfillment::STATUS_SUCCEEDED);
+
+        if (! $item || ! $fulfillment) {
+            return ['success' => false, 'error' => 'Najpierw nadaj dostęp — ponowna wysyłka wymaga udanego fulfillmentu.'];
+        }
+
+        $courseId = (int) ($item->metadata['online_course_id'] ?? 0);
+        $course = OnlineCourse::withTrashed()->find($courseId);
+        if (! $course) {
+            return ['success' => false, 'error' => 'Brak kursu online powiązanego z zamówieniem.'];
+        }
+
+        $email = strtolower(trim((string) $recipient->email));
+        $user = User::query()->where('email', $email)->first();
+        if (! $user) {
+            return ['success' => false, 'error' => 'Brak konta pnedu dla tego e-maila — nadaj dostęp ponownie.'];
+        }
+
+        $userExisted = (bool) ($fulfillment->payload['user_existed'] ?? true);
+
+        try {
+            $this->notifyRecipient($fulfillment, $user, (string) $course->title, $userExisted, force: true);
+        } catch (Throwable $exception) {
+            return ['success' => false, 'error' => 'Nie udało się wysłać e-maila: '.$exception->getMessage()];
+        }
+
+        return [
+            'success' => true,
+            'message' => 'Wysłano ponownie e-mail z dostępem do kursu.',
+            'recipient_id' => $recipient->id,
+        ];
+    }
+
     private function notifyRecipient(
         OrderFulfillment $fulfillment,
         User $user,
         string $courseTitle,
-        bool $userExisted
+        bool $userExisted,
+        bool $force = false
     ): void {
-        if ($fulfillment->notified_at) {
+        if (! $force && $fulfillment->notified_at) {
             return;
         }
 
@@ -395,7 +503,160 @@ class ProductOrderFulfillmentService
                 'order_fulfillment_id' => $fulfillment->id,
                 'error' => $exception->getMessage(),
             ]);
+            if ($force) {
+                throw $exception;
+            }
         }
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function resolveAccessEmailContext(int $formOrderId, ?int $recipientId, bool $bulk): array
+    {
+        $order = FormOrder::query()
+            ->whereKey($formOrderId)
+            ->where('order_kind', 'product')
+            ->with(['orderItems.recipients.fulfillments'])
+            ->first();
+
+        if (! $order) {
+            return ['success' => false, 'error' => 'Nie znaleziono zamówienia produktowego.'];
+        }
+
+        $allRecipients = $order->orderItems->flatMap(fn (OrderItem $item) => $item->recipients)->values();
+        $pending = $allRecipients
+            ->reject(fn (OrderItemRecipient $recipient) => $recipient->isCancelled())
+            ->reject(fn (OrderItemRecipient $recipient) => $recipient->fulfillments->contains(
+                'status',
+                OrderFulfillment::STATUS_SUCCEEDED
+            ))
+            ->values();
+
+        if ($bulk) {
+            $recipient = $recipientId
+                ? $pending->first(fn (OrderItemRecipient $row) => (int) $row->id === $recipientId)
+                : $pending->first();
+            if (! $recipient instanceof OrderItemRecipient) {
+                return ['success' => false, 'error' => 'Brak oczekujących uczestników do zbiorczego nadania dostępu.'];
+            }
+            $mode = 'bulk';
+            $alreadyGranted = false;
+            $hint = 'Podgląd dla pierwszego oczekującego uczestnika. Przy zbiorczej wysyłce każda osoba dostanie właściwy wariant (nowe konto / istniejące).';
+        } elseif ($recipientId) {
+            $recipient = $allRecipients->first(fn (OrderItemRecipient $row) => (int) $row->id === $recipientId);
+            if (! $recipient instanceof OrderItemRecipient) {
+                return ['success' => false, 'error' => 'Nie znaleziono wskazanego uczestnika.'];
+            }
+            $alreadyGranted = $recipient->fulfillments->contains('status', OrderFulfillment::STATUS_SUCCEEDED);
+            $mode = $alreadyGranted ? 'resend' : 'grant';
+            $hint = $alreadyGranted
+                ? 'Ponowna wysyłka tego samego typu wiadomości (bez ponownego grantu dostępu).'
+                : 'Po potwierdzeniu system nada dostęp i wyśle ten e-mail.';
+        } else {
+            return ['success' => false, 'error' => 'Wskaż uczestnika albo użyj trybu zbiorczego.'];
+        }
+
+        $item = $order->orderItems->first(
+            fn (OrderItem $orderItem) => $orderItem->recipients->contains('id', $recipient->id)
+        );
+        $courseId = (int) ($item?->metadata['online_course_id'] ?? 0);
+        $course = $courseId > 0 ? OnlineCourse::withTrashed()->find($courseId) : null;
+        if (! $course) {
+            return ['success' => false, 'error' => 'Brak kursu online powiązanego z zamówieniem.'];
+        }
+
+        $email = strtolower(trim((string) $recipient->email));
+        if ($email === '') {
+            return ['success' => false, 'error' => 'Uczestnik nie ma adresu e-mail.'];
+        }
+
+        if ($alreadyGranted) {
+            $fulfillment = $recipient->fulfillments
+                ->sortByDesc('id')
+                ->first(fn (OrderFulfillment $row) => $row->status === OrderFulfillment::STATUS_SUCCEEDED);
+            $isNewAccount = ! (bool) ($fulfillment?->payload['user_existed'] ?? true);
+        } else {
+            $isNewAccount = ! User::query()->where('email', $email)->exists();
+        }
+
+        $participantName = trim($recipient->first_name.' '.$recipient->last_name);
+
+        return [
+            'success' => true,
+            'order' => $order,
+            'course_title' => (string) $course->title,
+            'email' => $email,
+            'first_name' => $recipient->first_name,
+            'last_name' => $recipient->last_name,
+            'participant_name' => $participantName !== '' ? $participantName : $email,
+            'recipient_id' => (int) $recipient->id,
+            'is_new_account' => $isNewAccount,
+            'mode' => $mode,
+            'pending_count' => $pending->count(),
+            'already_granted' => $alreadyGranted,
+            'hint' => $hint,
+        ];
+    }
+
+    private function mailNotifiableStub(string $email): object
+    {
+        return new class($email)
+        {
+            public function __construct(private string $email) {}
+
+            public function getEmailForPasswordReset(): string
+            {
+                return $this->email;
+            }
+
+            public function routeNotificationFor($channel = null): string
+            {
+                return $this->email;
+            }
+        };
+    }
+
+    private function mailMessageToHtml(MailMessage $mail): string
+    {
+        $theme = $mail->theme ?? 'default';
+        $view = $mail->markdown ?? 'mail::message';
+
+        return (string) (new Markdown(view(), config('mail.markdown')))
+            ->theme($theme)
+            ->render($view, $mail->data());
+    }
+
+    private function mailMessageToPlainText(MailMessage $mail): string
+    {
+        $lines = [];
+        if (filled($mail->greeting)) {
+            $lines[] = strip_tags((string) $mail->greeting);
+            $lines[] = '';
+        }
+        foreach ($mail->introLines as $line) {
+            $text = trim(strip_tags((string) $line));
+            if ($text !== '') {
+                $lines[] = $text;
+            }
+        }
+        if (filled($mail->actionText) && filled($mail->actionUrl)) {
+            $lines[] = '';
+            $lines[] = (string) $mail->actionText.':';
+            $lines[] = (string) $mail->actionUrl;
+        }
+        foreach ($mail->outroLines as $line) {
+            $text = trim(strip_tags((string) $line));
+            if ($text !== '') {
+                $lines[] = $text;
+            }
+        }
+        if (filled($mail->salutation)) {
+            $lines[] = '';
+            $lines[] = strip_tags((string) $mail->salutation);
+        }
+
+        return trim(implode("\n", $lines));
     }
 
     private function resolveEnrollmentStartAt(OrderItem $item, OnlineCourseEnrollment $enrollment): ?CarbonImmutable

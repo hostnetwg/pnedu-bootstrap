@@ -8,6 +8,7 @@ use App\View\Composers\MarketingAnalyticsSkipComposer;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -27,6 +28,13 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         DestructiveDatabaseGuard::register();
+
+        // Linki w mailach / route() muszą używać APP_URL (np. http://localhost:8081),
+        // a nie Host z wewnętrznego wywołania ADM → http://pnedu-app/...
+        $appUrl = rtrim((string) config('app.url'), '/');
+        if ($appUrl !== '') {
+            URL::forceRootUrl($appUrl);
+        }
 
         // Etap B1 — rate limit dla publicznego endpointu JS analityki (per IP, fail-silent).
         RateLimiter::for('analytics-client-events', function (Request $request) {

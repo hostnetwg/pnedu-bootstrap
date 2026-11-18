@@ -52,6 +52,16 @@ Route::post('/api/internal/form-orders/{id}/revoke-product', [App\Http\Controlle
     ->whereNumber('id')
     ->name('internal.form-orders.revoke-product');
 
+Route::get('/api/internal/form-orders/{id}/preview-product-access-email', [App\Http\Controllers\Internal\ProductOrderFulfillmentController::class, 'previewAccessEmail'])
+    ->middleware('internal.api')
+    ->whereNumber('id')
+    ->name('internal.form-orders.preview-product-access-email');
+
+Route::post('/api/internal/form-orders/{id}/resend-product-access-email', [App\Http\Controllers\Internal\ProductOrderFulfillmentController::class, 'resendAccessEmail'])
+    ->middleware('internal.api')
+    ->whereNumber('id')
+    ->name('internal.form-orders.resend-product-access-email');
+
 Route::get('/l/{campaign_code}', App\Http\Controllers\MarketingCampaignShortLinkController::class)
     ->where('campaign_code', '[A-Za-z0-9._-]+')
     ->middleware('throttle:180,1')

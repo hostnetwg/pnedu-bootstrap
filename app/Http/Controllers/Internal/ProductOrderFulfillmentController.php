@@ -24,4 +24,28 @@ class ProductOrderFulfillmentController extends Controller
 
         return response()->json($result, $result['success'] ? 200 : 422);
     }
+
+    public function previewAccessEmail(Request $request, int $id, ProductOrderFulfillmentService $fulfillment): JsonResponse
+    {
+        $recipientId = $request->integer('recipient_id') ?: null;
+        $bulk = $request->boolean('bulk');
+        $result = $fulfillment->previewAccessEmail($id, $recipientId, $bulk);
+
+        return response()->json($result, ($result['success'] ?? false) ? 200 : 422);
+    }
+
+    public function resendAccessEmail(Request $request, int $id, ProductOrderFulfillmentService $fulfillment): JsonResponse
+    {
+        $recipientId = $request->integer('recipient_id');
+        if ($recipientId <= 0) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Wskaż uczestnika (recipient_id).',
+            ], 422);
+        }
+
+        $result = $fulfillment->resendAccessEmail($id, $recipientId);
+
+        return response()->json($result, ($result['success'] ?? false) ? 200 : 422);
+    }
 }

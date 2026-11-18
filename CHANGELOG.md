@@ -6,6 +6,7 @@ Krótka numeracja frontu. Szczegóły w `docs/` tego repo i w kanonie `pneadm/do
 
 Dostęp do nagrania po szkoleniu.
 
+- **Hotfix 2026-11-18:** mail o dostępie do kursu online buduje link „Ustaw hasło” z adresu strony (`APP_URL`, na produkcji pnedu.pl). Wejście z panelu ADM nie podmienia go na wewnętrzną nazwę serwera.
 - **Hotfix 2026-11-17:** na stronie weryfikacji e-mail jest informacja, że link może dotrzeć na skrzynkę z małym opóźnieniem. To samo po ponownej wysyłce.
 - Formularz `/dostep-do-szkolenia/{token}` zbiera imię, nazwisko, e-mail i hasło dostępu do nagrania. Nowy adres dostaje konto na pnedu.pl i wejście do panelu szkoleń. Gdy konto już jest, hasła nie zmieniamy — zostaje logowanie dotychczasowym hasłem.
 - Kanon: [RECORDING_ENROLLMENT.md](../pneadm/docs/RECORDING_ENROLLMENT.md)
