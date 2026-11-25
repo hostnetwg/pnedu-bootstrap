@@ -54,6 +54,13 @@
         </div>
     </div>
 
+    <div class="card mb-4">
+        <div class="card-header">Treść zapytania</div>
+        <div class="card-body">
+            <p class="mb-0" style="white-space: pre-wrap;">{{ $case->message }}</p>
+        </div>
+    </div>
+
     @if(filled($case->trainer_panel_message))
         <div class="card mb-4 border-warning">
             <div class="card-header bg-warning-subtle">Wiadomość od administratora</div>
@@ -62,13 +69,6 @@
             </div>
         </div>
     @endif
-
-    <div class="card mb-4">
-        <div class="card-header">Treść zapytania</div>
-        <div class="card-body">
-            <p class="mb-0" style="white-space: pre-wrap;">{{ $case->message }}</p>
-        </div>
-    </div>
 
     <div class="card">
         <div class="card-header">Termin szkolenia</div>
