@@ -37,6 +37,7 @@ class TrainerPortalController extends Controller
         $courses = Course::query()
             ->where('instructor_id', $instructor->id)
             ->where('is_active', true)
+            ->whereNull('deleted_at')
             ->where('end_date', '>=', now())
             ->orderBy('start_date')
             ->get();

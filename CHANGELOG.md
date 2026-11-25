@@ -17,6 +17,7 @@ Panel trenera pod `/trener`. Osobny widok przy tym samym koncie. Trener widzi ud
 - **Hotfix 2026-11-25:** przy zapisie terminu zaznaczony test zapisuje datę tylko w historii sprawy, na pomarańczowo. Odznaczenie wpisuje datę i notatkę w ustaleniach.
 - **Hotfix 2026-11-25:** na zapytaniu wiadomość dopisana przez administratora jest osobno, jako wiadomość od administratora.
 - **Hotfix 2026-11-25:** na zapytaniu treść zapytania jest od razu pod danymi kontaktowymi. Wiadomość od administratora jest pod nią.
+- **Hotfix 2026-11-25:** kalendarz trenera nie pokazuje szkoleń usuniętych w panelu.
 - **Hotfix 2026-11-25:** po zapisie terminu trener widzi datę i godzinę oraz notatkę. Formularz wraca po **Zmień**.
 - **Hotfix 2026-11-25:** zaznaczony test zapisuje termin tak samo jak zwykłe ustalenie. U trenera i w historii sprawy jest oznaczony jako test, a pod datą w ustaleniach jest czerwony dopisek DATA TESTOWA.
 
