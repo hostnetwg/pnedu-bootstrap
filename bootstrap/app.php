@@ -17,6 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
             'internal.api' => \App\Http\Middleware\VerifyInternalApiToken::class,
+            'trainer' => \App\Http\Middleware\EnsureTrainer::class,
         ]);
 
         $middleware->web(prepend: [

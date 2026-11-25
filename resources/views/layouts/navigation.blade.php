@@ -100,11 +100,27 @@
                             </a>
                         </li>
                     @endif
+                    @if($trainerPortalEnabled ?? false)
+                        <li class="nav-item d-flex align-items-center">
+                            <a class="nav-link nav-panel-trenera @if(request()->routeIs('trainer.*')) nav-panel-trenera--active @endif"
+                               href="{{ route('trainer.index') }}">
+                                <i class="bi bi-mortarboard-fill me-1" aria-hidden="true"></i>
+                                Panel trenera ({{ $trainerPortalCaseCount ?? 0 }})
+                                @if(($trainerUnreadCount ?? 0) > 0)
+                                    <span class="nav-panel-trenera__badge" aria-label="Nieodczytane zgłoszenia: {{ $trainerUnreadCount }}">{{ $trainerUnreadCount }}</span>
+                                @endif
+                            </a>
+                        </li>
+                    @endif
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="bi bi-person-circle me-1"></i> {{ Auth::user()->first_name }}
                         </a>
-                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown" style="max-height: 22rem; overflow-y: auto;">
+                            @include('layouts.partials.trainer-preview-switch')
+                            @if(($trainerSwitchInstructors ?? collect())->isNotEmpty())
+                                <li><hr class="dropdown-divider"></li>
+                            @endif
                             <li><a href="{{ route('profile.edit') }}" class="dropdown-item">Edytuj profil</a></li>
                             <li><a href="{{ route('logout') }}" class="dropdown-item">Wyloguj</a></li>
                         </ul>
@@ -130,7 +146,8 @@
         font-size: 1.05rem;
     }
 }
-.nav-moje-zasoby {
+.nav-moje-zasoby,
+.nav-panel-trenera {
     margin: 0.2rem 0.35rem 0.2rem 0;
     padding: 0.4rem 0.75rem !important;
     border-radius: 0.5rem;
@@ -138,13 +155,40 @@
     font-size: 0.875rem;
     white-space: nowrap;
     color: #fff !important;
-    background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 55%, #084298 100%);
     transition: background 0.15s ease;
+}
+.nav-moje-zasoby {
+    background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 55%, #084298 100%);
+}
+.nav-panel-trenera {
+    position: relative;
+    background: linear-gradient(135deg, #198754 0%, #146c43 55%, #0f5132 100%);
+}
+.nav-panel-trenera__badge {
+    position: absolute;
+    top: -0.45rem;
+    right: -0.45rem;
+    min-width: 1.25rem;
+    height: 1.25rem;
+    padding: 0 0.35rem;
+    border-radius: 999px;
+    background: #dc3545;
+    color: #fff;
+    font-size: 0.75rem;
+    line-height: 1.25rem;
+    text-align: center;
+    font-weight: 700;
+    box-shadow: 0 0 0 2px #fff;
 }
 .nav-moje-zasoby:hover,
 .nav-moje-zasoby:focus-visible {
     color: #fff !important;
     background: linear-gradient(135deg, #0b5ed7 0%, #094bac 55%, #063d8a 100%);
+}
+.nav-panel-trenera:hover,
+.nav-panel-trenera:focus-visible {
+    color: #fff !important;
+    background: linear-gradient(135deg, #157347 0%, #0f6b3c 55%, #0a3d26 100%);
 }
 .nav-moje-zasoby--active,
 .nav-moje-zasoby--active:hover,
@@ -154,11 +198,21 @@
     outline: 2px solid rgba(255, 255, 255, 0.5);
     outline-offset: 0;
 }
-.nav-moje-zasoby i {
+.nav-panel-trenera--active,
+.nav-panel-trenera--active:hover,
+.nav-panel-trenera--active:focus-visible {
+    color: #fff !important;
+    background: linear-gradient(135deg, #0f5132 0%, #0a3622 100%);
+    outline: 2px solid rgba(255, 255, 255, 0.5);
+    outline-offset: 0;
+}
+.nav-moje-zasoby i,
+.nav-panel-trenera i {
     color: rgba(255, 255, 255, 0.92);
 }
 @media (max-width: 991.98px) {
-    .nav-moje-zasoby {
+    .nav-moje-zasoby,
+    .nav-panel-trenera {
         margin: 0.35rem 0 0.5rem;
         display: inline-block;
     }

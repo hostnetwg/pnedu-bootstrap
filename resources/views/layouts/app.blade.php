@@ -87,6 +87,8 @@
 <body class="d-flex flex-column min-vh-100">
     @include('layouts.google-tag-manager-body')
 
+    @include('layouts.partials.trainer-preview-banner')
+
     @include('layouts.navigation')
 
     @include('layouts.email-verification-notice')

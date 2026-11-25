@@ -17,12 +17,13 @@ class Instructor extends Model
      */
     protected $connection = 'pneadm';
 
-    /**
-     * The table associated with the model.
-     *
-     * @var string
-     */
     protected $table = 'instructors';
+
+    protected $casts = [
+        'is_active' => 'boolean',
+        'portal_access_enabled' => 'boolean',
+        'sms_notifications_enabled' => 'boolean',
+    ];
 
     /**
      * The attributes that are mass assignable.
@@ -40,6 +41,9 @@ class Instructor extends Model
         'photo',
         'signature',
         'is_active',
+        'portal_access_enabled',
+        'sms_notifications_enabled',
+        'pnedu_user_id',
         'gender',
     ];
 

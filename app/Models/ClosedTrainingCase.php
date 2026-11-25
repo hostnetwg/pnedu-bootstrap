@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ClosedTrainingCase extends Model
@@ -52,6 +53,12 @@ class ClosedTrainingCase extends Model
         'consent_at' => 'datetime',
         'inquired_at' => 'datetime',
         'submitted_payload' => 'array',
+        'start_date' => 'datetime',
+        'end_date' => 'datetime',
+        'schedule_time_known' => 'boolean',
+        'show_in_trainer_panel' => 'boolean',
+        'trainer_declined_at' => 'datetime',
+        'trainer_schedule_is_test' => 'boolean',
     ];
 
     /**
@@ -73,6 +80,11 @@ class ClosedTrainingCase extends Model
             'topic' => $fields['topic'],
             'message' => $fields['message'],
         ];
+    }
+
+    public function instructor(): BelongsTo
+    {
+        return $this->belongsTo(Instructor::class);
     }
 
     public static function institutionTypeOptions(): array

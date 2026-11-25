@@ -17,6 +17,10 @@ class ClosedTrainingCaseEvent extends Model
         'user_id',
         'event_type',
         'body',
+        'note_channel',
+        'note_channel_other',
+        'note_party',
+        'note_party_name',
         'happened_at',
     ];
 

@@ -2,7 +2,11 @@
 
 namespace App\Providers;
 
+use App\Models\ClosedTrainingCase;
+use App\Models\Instructor;
+use App\Models\TrainerPortalNotification;
 use App\Support\DestructiveDatabaseGuard;
+use App\Support\TrainerImpersonation;
 use App\View\Composers\DashboardResourceCountsComposer;
 use App\View\Composers\MarketingAnalyticsSkipComposer;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -56,5 +60,63 @@ class AppServiceProvider extends ServiceProvider
             'layouts.cookie-consent',
             'courses.partials.marketing-ga-event',
         ], MarketingAnalyticsSkipComposer::class);
+
+        View::composer(['layouts.app', 'layouts.trainer', 'layouts.navigation'], function ($view): void {
+            $view->with([
+                'trainerPreviewInstructor' => TrainerImpersonation::previewInstructor(),
+                'trainerSwitchInstructors' => TrainerImpersonation::switchList(),
+            ]);
+        });
+
+        View::composer('layouts.navigation', function ($view): void {
+            $enabled = false;
+            $caseCount = 0;
+            $unread = 0;
+            $userId = auth()->id();
+            if ($userId) {
+                try {
+                    $instructorId = Instructor::query()
+                        ->where('pnedu_user_id', $userId)
+                        ->where('portal_access_enabled', true)
+                        ->value('id');
+                    $enabled = $instructorId !== null;
+                    if ($enabled) {
+                        $caseCount = ClosedTrainingCase::query()
+                            ->where('instructor_id', $instructorId)
+                            ->where('show_in_trainer_panel', true)
+                            ->count();
+                        $unread = TrainerPortalNotification::query()
+                            ->where('audience', TrainerPortalNotification::AUDIENCE_TRAINER)
+                            ->where('pnedu_user_id', $userId)
+                            ->whereNull('read_at')
+                            ->count();
+                    }
+                } catch (\Throwable) {
+                    $enabled = false;
+                    $caseCount = 0;
+                    $unread = 0;
+                }
+            }
+            $view->with('trainerPortalEnabled', $enabled);
+            $view->with('trainerPortalCaseCount', $caseCount);
+            $view->with('trainerUnreadCount', $unread);
+        });
+
+        View::composer('layouts.trainer', function ($view): void {
+            $unread = 0;
+            $userId = TrainerImpersonation::previewInstructor()?->pnedu_user_id ?: auth()->id();
+            if ($userId) {
+                try {
+                    $unread = TrainerPortalNotification::query()
+                        ->where('audience', TrainerPortalNotification::AUDIENCE_TRAINER)
+                        ->where('pnedu_user_id', $userId)
+                        ->whereNull('read_at')
+                        ->count();
+                } catch (\Throwable) {
+                    $unread = 0;
+                }
+            }
+            $view->with('trainerUnreadCount', $unread);
+        });
     }
 }

@@ -217,6 +217,32 @@ Route::get('/dashboard', [App\Http\Controllers\DashboardController::class, 'inde
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
+Route::middleware(['auth', 'verified'])->prefix('trener')->name('trainer.')->group(function () {
+    Route::post('/podglad/{instructor}', [App\Http\Controllers\TrainerImpersonationController::class, 'start'])
+        ->whereNumber('instructor')
+        ->name('preview.start');
+    Route::post('/podglad/zakoncz', [App\Http\Controllers\TrainerImpersonationController::class, 'stop'])
+        ->name('preview.stop');
+});
+
+Route::middleware(['auth', 'verified', 'trainer'])->prefix('trener')->name('trainer.')->group(function () {
+    Route::get('/', [App\Http\Controllers\TrainerPortalController::class, 'index'])->name('index');
+    Route::get('/kalendarz', [App\Http\Controllers\TrainerPortalController::class, 'calendar'])->name('calendar');
+    Route::get('/powiadomienia', [App\Http\Controllers\TrainerPortalController::class, 'notifications'])->name('notifications');
+    Route::get('/powiadomienia/{notification}', [App\Http\Controllers\TrainerPortalController::class, 'openNotification'])
+        ->whereNumber('notification')
+        ->name('notifications.open');
+    Route::get('/zapytania/{case}', [App\Http\Controllers\TrainerPortalController::class, 'show'])
+        ->whereNumber('case')
+        ->name('cases.show');
+    Route::post('/zapytania/{case}/termin', [App\Http\Controllers\TrainerPortalController::class, 'schedule'])
+        ->whereNumber('case')
+        ->name('cases.schedule');
+    Route::post('/zapytania/{case}/rezygnacja', [App\Http\Controllers\TrainerPortalController::class, 'decline'])
+        ->whereNumber('case')
+        ->name('cases.decline');
+});
+
 Route::get('/dashboard/szkolenia', [App\Http\Controllers\DashboardController::class, 'szkolenia'])
     ->middleware(['auth', 'verified'])
     ->name('dashboard.szkolenia');

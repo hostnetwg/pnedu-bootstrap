@@ -2,6 +2,23 @@
 
 Krótka numeracja frontu. Szczegóły w `docs/` tego repo i w kanonie `pneadm/docs/`. Nowy numer wersji tylko po potwierdzeniu Waldemara. Hotfixy dopisujemy do bieżącej wersji.
 
+## 1.3 — 2026-11-25
+
+Panel trenera pod `/trener`. Osobny widok przy tym samym koncie. Trener widzi udostępnione zapytania o szkolenia zamknięte i wpisuje termin.
+
+- Kanon: [TRAINER_PORTAL.md](../pneadm/docs/TRAINER_PORTAL.md)
+- **Hotfix 2026-11-25:** na zapytaniu telefon jest w grupach (np. +48 501 654 274). Pod datą jest pole Notatka. Widzi ją administrator przy terminie.
+- **Hotfix 2026-11-25:** w menu strony przycisk **Panel trenera (liczba)** wygląda jak „Twoje zasoby”, ale jest zielony. Liczba to udostępnione zapytania. W panelu logo PNE po lewej wraca na stronę startową.
+- **Hotfix 2026-11-25:** na liście zapytań i na zapytaniu jest data zapytania.
+- **Hotfix 2026-11-25:** w panelu trenera menu po lewej ma **Kalendarz** i **Zapytania**. Kalendarz pokazuje zaplanowane szkolenia tego trenera.
+- **Hotfix 2026-11-25:** w panelu trenera nie ma linku „Panel uczestnika”. Przy przycisku **Panel trenera** na stronie głównej czerwone kółko pokazuje liczbę nieodczytanych zgłoszeń.
+- **Hotfix 2026-11-25:** administrator w menu konta ma **Panele trenerów**. Podgląd otwiera panel wybranego instruktora bez zmiany hasła. Na górze jest powrót do własnego konta.
+- **Hotfix 2026-11-25:** na zapytaniu trener może zaznaczyć, że nie poprowadzi szkolenia, i dopisać krótkie wyjaśnienie. Administrator widzi je na sprawie.
+- **Hotfix 2026-11-25:** przy zapisie terminu zaznaczony test zapisuje datę tylko w historii sprawy, na pomarańczowo. Odznaczenie wpisuje datę i notatkę w ustaleniach.
+- **Hotfix 2026-11-25:** na zapytaniu wiadomość dopisana przez administratora jest osobno, jako wiadomość od administratora.
+- **Hotfix 2026-11-25:** po zapisie terminu trener widzi datę i godzinę oraz notatkę. Formularz wraca po **Zmień**.
+- **Hotfix 2026-11-25:** zaznaczony test zapisuje termin tak samo jak zwykłe ustalenie. U trenera i w historii sprawy jest oznaczony jako test, a pod datą w ustaleniach jest czerwony dopisek DATA TESTOWA.
+
 ## 1.2 — 2026-09-23
 
 Dostęp do nagrania po szkoleniu.
